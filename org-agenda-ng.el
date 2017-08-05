@@ -3,6 +3,23 @@
 (require 'dash)
 (require 'cl-lib)
 
+(defun org-agenda-ng--test-agenda ()
+  (interactive)
+  (with-current-buffer (find-buffer-visiting "~/org/main.org")
+    (let* ((tree (cddr (org-element-parse-buffer 'headline)))
+           (filter-fns '((org-agenda-ng--todo-p "TODO")
+                         (org-agenda-ng--scheduled-p < "2017-08-04")))
+           (entries (--> (org-agenda-ng--filter-tree tree :filter-fns filter-fns)
+                         (mapcar #'org-agenda-ng--add-text-properties it)))
+           (result-string (org-agenda-finalize-entries entries 'agenda))
+           (target-buffer (get-buffer-create "test-agenda-ng")))
+      (with-current-buffer target-buffer
+        (read-only-mode -1)
+        (erase-buffer)
+        (insert result-string)
+        (read-only-mode 1)
+        (pop-to-buffer (current-buffer))))))
+
 (defun org-agenda-ng--filter-tree (tree &key filter-fns)
   (let* ((types '(headline))
          (info nil)
@@ -14,15 +31,6 @@
                               filter-fns)
                   element))))
     (org-element-map tree types fun info first-match)))
-
-
-(defun org-agenda-ng--test ()
-  (let ((tree (cddr (org-element-parse-buffer 'headline)))
-        (filter-fns '((org-agenda-ng--todo-p "TODO")
-                      (org-agenda-ng--scheduled-p < "2017-08-04"))))
-    (org-agenda-ng--filter-tree tree :filter-fns filter-fns)))
-
-
 
 (defun org-agenda-ng--todo-p (element &optional keyword)
   "Return non-nil if ELEMENT is a TODO item.
@@ -96,11 +104,7 @@ Its property list should be the second item in the list, as returned by `org-ele
                               append (list key val)))
          (title (--> (org-agenda-ng--add-faces element)
                      (org-element-property :title it)
-                     (org-link-display-format it)
-                     ;; Add element properties to the title so --add-faces can find them.
-                     ;; MAYBE: Rewrite --add-faces/etc. to take a props argument.
-                     (org-add-props it properties)
-                     ))
+                     (org-link-display-format it)))
          (todo-keyword (--> (org-element-property :todo-keyword element)
                             (org-agenda-ng--add-todo-face it)))
          (string (s-join " " (list todo-keyword title))))
@@ -117,20 +121,7 @@ Its property list should be the second item in the list, as returned by `org-ele
 ;;   (with-current-buffer buffer
 ;;     (length (org-agenda-ng--test))))
 
-(defun argh ()
-  (interactive)
-  (with-current-buffer (find-buffer-visiting "~/org/main.org")
-    (let* ((entries (org-agenda-ng--test))
-           (result-string (org-agenda-finalize-entries (mapcar #'org-agenda-ng--add-text-properties
-                                                               entries)
-                                                       'agenda))
-           (target-buffer (get-buffer-create "test-agenda-ng")))
-      (with-current-buffer target-buffer
-        (read-only-mode -1)
-        (erase-buffer)
-        (insert result-string)
-        (read-only-mode 1)
-        (pop-to-buffer (current-buffer))))))
+
 
 ;; (with-current-buffer (find-file "~/src/org-agenda-ng/org-agenda-ng.el")
 ;;   (eval-buffer))
