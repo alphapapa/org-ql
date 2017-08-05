@@ -1,3 +1,17 @@
+;;; Commentary:
+
+;;;; Principles
+
+;;;;; Work on elements
+
+;; We want to work on elements as returned by =org-element-parse-buffer=.  We only convert to strings at the very end, when we send the list of those to =org-agenda-finalize-entries=.
+
+;;;;; Preserve the call to =org-agenda-finalize-entries=
+
+;; We want to preserve the final call to =org-agenda-finalize-entries= to preserve compatibility with other packages and functions.
+
+;;; Code:
+
 (require 'org)
 (require 'org-agenda)
 (require 'dash)
@@ -5,11 +19,11 @@
 
 ;;;; Commands
 
-(defun org-agenda-ng--agenda (&key filter-fns)
+(cl-defun org-agenda-ng--agenda (&key match-fns)
   (with-current-buffer (find-buffer-visiting "~/org/main.org")
     (let* ((tree (cddr (org-element-parse-buffer 'headline)))
-           (entries (--> (org-agenda-ng--filter-tree tree :filter-fns filter-fns)
-                         (mapcar #'org-agenda-ng--element-to-string it)))
+           (entries (--> (org-agenda-ng--filter-tree tree :match-fns match-fns)
+                         (mapcar #'org-agenda-ng--format-element it)))
            (result-string (org-agenda-finalize-entries entries 'agenda))
            (target-buffer (get-buffer-create "test-agenda-ng")))
       (with-current-buffer target-buffer
@@ -22,17 +36,17 @@
 (defun org-agenda-ng--test-agenda ()
   (interactive)
   (org-agenda-ng--agenda
-   :filter-fns '((org-agenda-ng--todo-p "TODO")
-                 (org-agenda-ng--date-p :deadline < "2017-08-05"))))
+   :match-fns '((org-agenda-ng--todo-p "TODO")
+                (org-agenda-ng--date-p :deadline < "2017-08-05"))))
 
 (defun org-agenda-ng--todo-list ()
   (interactive)
   (org-agenda-ng--agenda
-   :filter-fns '((org-agenda-ng--todo-p "TODO"))))
+   :match-fns '((org-agenda-ng--todo-p "TODO"))))
 
 ;;;; Functions
 
-(defun org-agenda-ng--filter-tree (tree &key filter-fns)
+(defun org-agenda-ng--filter-tree (tree &key match-fns)
   (let* ((types '(headline))
          (info nil)
          (first-match nil)
@@ -40,13 +54,16 @@
                 (when (--all? (cl-typecase it
                                 (function (funcall it element))
                                 (cons (apply (car it) element (cdr it))))
-                              filter-fns)
+                              match-fns)
                   element))))
     (org-element-map tree types fun info first-match)))
 
+
 ;;;; Faces/properties
 
-(defun org-agenda-ng--element-to-string (element)
+(defun org-agenda-ng--format-element (element)
+  ;; This essentially needs to do what `org-agenda-format-item' does,
+  ;; which is a lot.
   "Return ELEMENT as a string with its text-properties set according to its property list.
 Its property list should be the second item in the list, as returned by `org-element-parse-buffer'."
   (let* ((properties (second element))
@@ -63,13 +80,16 @@ Its property list should be the second item in the list, as returned by `org-ele
          (title (--> (org-agenda-ng--add-faces element)
                      (org-element-property :title it)
                      (org-link-display-format it)))
-         (todo-keyword (--> (org-element-property :todo-keyword element)
-                            (org-agenda-ng--add-todo-face it)))
-         (tags (--> (org-element-property :tags element)
-                    (s-join ":" it)
-                    (s-wrap it ":")
-                    (org-add-props it nil 'face 'org-tag)))
+         (todo-keyword (-some--> (org-element-property :todo-keyword element)
+                                 (org-agenda-ng--add-todo-face it)))
+         (tags (-some--> (org-element-property :tags element)
+                         (s-join ":" it)
+                         (s-wrap it ":")
+                         (org-add-props it nil 'face 'org-tag)))
+         (level (org-element-property :level element))
+         (category (org-element-property :category element))
          (string (s-join " " (list todo-keyword title tags))))
+    (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
     ;; Add all the necessary properties and faces to the whole string
     (--> string
          (org-add-props it properties))))
