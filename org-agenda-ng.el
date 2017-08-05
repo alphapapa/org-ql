@@ -89,7 +89,7 @@
 
 (defun org-agenda-ng--format-element (element)
   ;; This essentially needs to do what `org-agenda-format-item' does,
-  ;; which is a lot.
+  ;; which is a lot.  We are a long way from that, but it's a start.
   "Return ELEMENT as a string with its text-properties set according to its property list.
 Its property list should be the second item in the list, as returned by `org-element-parse-buffer'."
   (let* ((properties (second element))
