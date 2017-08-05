@@ -54,51 +54,73 @@ date compares with TARGET-DATE according to COMPARATOR."
                    target-day-number))))
       (otherwise (error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string" comparator target-date)))))
 
-(defun org-agenda-ng--add-scheduled-faces (entry)
-  "Add faces to ENTRY for its scheduled status."
-  (if-let ((scheduled-date (org-find-text-property-in-string 'scheduled entry)))
+(defun org-agenda-ng--add-faces (element)
+  (org-agenda-ng--add-scheduled-faces element))
+
+(defun org-agenda-ng--add-scheduled-faces (element)
+  "Add faces to ELEMENT's title for its scheduled status."
+  (if-let ((scheduled-date (org-element-property :scheduled element)))
       (let* ((today-day-number (org-today))
              (scheduled-day-number (org-time-string-to-absolute
                                     (org-element-timestamp-interpreter scheduled-date 'ignore)))
-             (todo-keyword (org-find-text-property-in-string 'todo-keyword entry))
+             (todo-keyword (org-element-property :todo-keyword element))
              (done-p (member todo-keyword org-done-keywords))
              (today-p (= today-day-number scheduled-day-number))
              (face (cond
                     (done-p 'org-agenda-done)
                     (today-p 'org-scheduled-today)
-                    (t 'org-scheduled))))
-        (org-add-props entry nil
-          'face face))
+                    (t 'org-scheduled)))
+             (title (--> (org-element-property :title element)
+                         (org-add-props it nil
+                           'face face)))
+             (properties (--> (second element)
+                              (plist-put it :title title))))
+        (list (car element)
+              properties))
     ;; Not scheduled
-    entry))
-
-
+    element))
 
 (defun org-agenda-ng--add-text-properties (element)
   "Return ELEMENT as a string with its text-properties set according to its property list.
 Its property list should be the second item in the list, as returned by `org-element-parse-buffer'."
-  (let* ((string (org-element-property :title element))
-         (properties (second element))
-                                        ;(properties (seq-subseq properties 0 (1- (length properties))))  ;; FIXME
-                                        ;         (properties (cl-subseq properties (- (length properties) 2)))
+  (let* ((properties (second element))
+         ;; Remove the :parent property, which so bloats the size of
+         ;; the properties list that it makes it essentially
+         ;; impossible to debug, because Emacs takes approximately
+         ;; forever to show it in the minibuffer or with
+         ;; `describe-text-properties'.  Also, remove ":" from key
+         ;; symbols.
          (properties (cl-loop for (key val) on properties by #'cddr
                               for key = (intern (cl-subseq (symbol-name key) 1))
-                              unless (member key '(raw-value parent)) ; FIXME: Is this the right way to do this, or really necessary?
+                              unless (member key '(parent))
+                              append (list key val)))
+         (title (--> (org-agenda-ng--add-faces element)
+                     (org-element-property :title it)
+                     (org-link-display-format it)
+                     ;; Add element properties to the title so --add-faces can find them.
+                     ;; MAYBE: Rewrite --add-faces/etc. to take a props argument.
+                     (org-add-props it properties)
+                     ))
+         (todo-keyword (--> (org-element-property :todo-keyword element)
+                            (org-agenda-ng--add-todo-face it)))
+         (string (s-join " " (list todo-keyword title))))
+    ;; Add all the necessary properties and faces to the whole string
+    (--> string
+         (org-add-props it properties))))
 
-                              append (list key val))))
-    (setq string (org-add-props string properties))
-    (setq string (org-agenda-ng--add-scheduled-faces string))
-    string))
+(defun org-agenda-ng--add-todo-face (keyword)
+  (when-let ((face (org-get-todo-face keyword)))
+    (org-add-props keyword nil 'face face)))
 
-(find-file-noselect "~/org/main.org")
-(let ((buffer (find-buffer-visiting "~/org/main.org")))
-  (with-current-buffer buffer
-    (length (org-agenda-ng--test))))
+;; (find-file-noselect "~/org/main.org")
+;; (let ((buffer (find-buffer-visiting "~/org/main.org")))
+;;   (with-current-buffer buffer
+;;     (length (org-agenda-ng--test))))
 
 (defun argh ()
   (interactive)
   (with-current-buffer (find-buffer-visiting "~/org/main.org")
-    (let* ((entries (cl-subseq (org-agenda-ng--test) 0 2))
+    (let* ((entries (org-agenda-ng--test))
            (result-string (org-agenda-finalize-entries (mapcar #'org-agenda-ng--add-text-properties
                                                                entries)
                                                        'agenda))
