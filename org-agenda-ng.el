@@ -5,12 +5,9 @@
 
 ;;;; Commands
 
-(defun org-agenda-ng--test-agenda ()
-  (interactive)
+(defun org-agenda-ng--agenda (&key filter-fns)
   (with-current-buffer (find-buffer-visiting "~/org/main.org")
     (let* ((tree (cddr (org-element-parse-buffer 'headline)))
-           (filter-fns '((org-agenda-ng--todo-p "TODO")
-                         (org-agenda-ng--date-p :deadline < "2017-08-05")))
            (entries (--> (org-agenda-ng--filter-tree tree :filter-fns filter-fns)
                          (mapcar #'org-agenda-ng--element-to-string it)))
            (result-string (org-agenda-finalize-entries entries 'agenda))
@@ -21,6 +18,17 @@
         (insert result-string)
         (read-only-mode 1)
         (pop-to-buffer (current-buffer))))))
+
+(defun org-agenda-ng--test-agenda ()
+  (interactive)
+  (org-agenda-ng--agenda
+   :filter-fns '((org-agenda-ng--todo-p "TODO")
+                 (org-agenda-ng--date-p :deadline < "2017-08-05"))))
+
+(defun org-agenda-ng--todo-list ()
+  (interactive)
+  (org-agenda-ng--agenda
+   :filter-fns '((org-agenda-ng--todo-p "TODO"))))
 
 ;;;; Functions
 
@@ -57,7 +65,11 @@ Its property list should be the second item in the list, as returned by `org-ele
                      (org-link-display-format it)))
          (todo-keyword (--> (org-element-property :todo-keyword element)
                             (org-agenda-ng--add-todo-face it)))
-         (string (s-join " " (list todo-keyword title))))
+         (tags (--> (org-element-property :tags element)
+                    (s-join ":" it)
+                    (s-wrap it ":")
+                    (org-add-props it nil 'face 'org-tag)))
+         (string (s-join " " (list todo-keyword title tags))))
     ;; Add all the necessary properties and faces to the whole string
     (--> string
          (org-add-props it properties))))
