@@ -124,7 +124,11 @@ Its property list should be the second item in the list, as returned by `org-ele
                                (org-add-props it nil 'face 'org-tag)))
          (level (org-element-property :level element))
          (category (org-element-property :category element))
-         (string (s-join " " (list todo-keyword title tag-string))))
+         (priority-string (-some->> (org-element-property :priority element)
+                                    (char-to-string)
+                                    (format "[#%s]")
+                                    (org-agenda-ng--add-priority-face)))
+         (string (s-join " " (list todo-keyword priority-string title tag-string))))
     (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
     ;; Add all the necessary properties and faces to the whole string
     (--> string
@@ -134,6 +138,12 @@ Its property list should be the second item in the list, as returned by `org-ele
   (->> element
        (org-agenda-ng--add-scheduled-face)
        (org-agenda-ng--add-deadline-face)))
+
+(defun org-agenda-ng--add-priority-face (string)
+  "Return STRING with priority face added."
+  (when (string-match "\\(\\[#\\(.\\)\\]\\)" string)
+    (let ((face (org-get-priority-face (string-to-char (match-string 2)))))
+      (org-add-props string nil 'face face 'font-lock-fontified t))))
 
 (defun org-agenda-ng--add-scheduled-face (element)
   "Add faces to ELEMENT's title for its scheduled status."
