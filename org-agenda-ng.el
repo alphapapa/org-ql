@@ -33,10 +33,30 @@
       (read-only-mode 1)
       (pop-to-buffer (current-buffer)))))
 
+(cl-defun org-agenda-ng--agenda-multi (&key files any-fns none-fns)
+  (let* ((entries (-flatten
+                   (--map (org-agenda-ng--get-entries it
+                                                      :any-fns any-fns
+                                                      :none-fns none-fns)
+                          files)))
+         (result-string (org-agenda-finalize-entries entries 'agenda))
+         (target-buffer (get-buffer-create "test-agenda-ng")))
+    (with-current-buffer target-buffer
+      (read-only-mode -1)
+      (erase-buffer)
+      (insert result-string)
+      (read-only-mode 1)
+      (pop-to-buffer (current-buffer)))))
+
 (defmacro org-agenda-ng--test (&rest args)
   `(with-current-buffer (find-buffer-visiting "~/org/main.org")
      (org-agenda-ng--agenda
       ,@args)))
+
+(defmacro org-agenda-ng--test-multi (&rest args)
+  `(org-agenda-ng--agenda-multi
+    :files '("~/org/main.org")
+    ,@args))
 
 (defun org-agenda-ng--test-agenda ()
   (interactive)
@@ -46,19 +66,28 @@
 
 (defun org-agenda-ng--test-agenda-today ()
   (interactive)
-  (org-agenda-ng--test
+  (org-agenda-ng--test-multi
    :any-fns `((org-agenda-ng--date-p :date <= ,(org-today))
               (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
               (org-agenda-ng--date-p :scheduled <= ,(org-today)))
-   :none-fns `((org-agenda-ng--todo-p ,org-done-keywords))))
+   :none-fns `((org-agenda-ng--todo-p org-done-keywords))))
 
 (defun org-agenda-ng--test-todo-list ()
   (interactive)
   (org-agenda-ng--test
    :any-fns '(org-agenda-ng--todo-p)
-   :none-fns `((org-agenda-ng--todo-p ,org-done-keywords))))
+   :none-fns '((org-agenda-ng--todo-p org-done-keywords))))
 
 ;;;; Functions
+
+(cl-defun org-agenda-ng--get-entries (file &key any-fns none-fns)
+  "Return list of entries from FILE."
+  (with-current-buffer (find-buffer-visiting file)
+    (let* ((org-use-tag-inheritance t)
+           (tree (cddr (org-element-parse-buffer 'headline)))
+           (entries (--> (org-agenda-ng--filter-tree tree :any-fns any-fns :none-fns none-fns)
+                         (mapcar #'org-agenda-ng--format-element it))))
+      entries)))
 
 (cl-defun org-agenda-ng--filter-tree (tree &key any-fns none-fns)
   (let* ((types '(headline))
@@ -211,6 +240,8 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
        (string= element-keyword keywords))
       ((pred listp)
        (member element-keyword keywords))
+      ((pred symbolp)
+       (member element-keyword (symbol-value keywords)))
       (otherwise (error "Invalid keyword argument: %s" otherwise)))))
 
 (defun org-agenda-ng--date-p (entry type &optional comparator target-date)
