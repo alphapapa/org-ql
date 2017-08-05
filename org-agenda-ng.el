@@ -56,30 +56,34 @@ date compares with TARGET-DATE according to COMPARATOR."
 
 (defun org-agenda-ng--add-scheduled-faces (entry)
   "Add faces to ENTRY for its scheduled status."
-  (if-let ((today-day-number (org-today))
-           (scheduled-date (org-element-property :scheduled entry))
-           (scheduled-day-number (org-time-string-to-absolute
-                                  (org-element-timestamp-interpreter scheduled-date 'ignore)))
-           (todo-keyword (org-element-property :todo-keyword))
-           (done-p (member todo-keyword org-done-keywords))
-           (today-p (= today-day-number scheduled-day-number))
-           (face (cond
-                  (donep 'org-agenda-done)
-                  (today-p 'org-scheduled-today)
-                  (t 'org-scheduled))))
-      (org-add-props entry nil
-        'face face)
+  (if-let ((scheduled-date (org-find-text-property-in-string 'scheduled entry)))
+      (let* ((today-day-number (org-today))
+             (scheduled-day-number (org-time-string-to-absolute
+                                    (org-element-timestamp-interpreter scheduled-date 'ignore)))
+             (todo-keyword (org-find-text-property-in-string 'todo-keyword entry))
+             (done-p (member todo-keyword org-done-keywords))
+             (today-p (= today-day-number scheduled-day-number))
+             (face (cond
+                    (done-p 'org-agenda-done)
+                    (today-p 'org-scheduled-today)
+                    (t 'org-scheduled))))
+        (org-add-props entry nil
+          'face face))
+    ;; Not scheduled
     entry))
+
+
 
 (defun org-agenda-ng--add-text-properties (element)
   "Return ELEMENT as a string with its text-properties set according to its property list.
 Its property list should be the second item in the list, as returned by `org-element-parse-buffer'."
   (let* ((string (org-element-property :title element))
          (properties (second element))
-         (properties (seq-subseq properties 0 24))  ;; FIXME
+                                        ;(properties (seq-subseq properties 0 (1- (length properties))))  ;; FIXME
+                                        ;         (properties (cl-subseq properties (- (length properties) 2)))
          (properties (cl-loop for (key val) on properties by #'cddr
                               for key = (intern (cl-subseq (symbol-name key) 1))
-                              unless (equal key 'raw-value)
+                              unless (member key '(raw-value parent)) ; FIXME: Is this the right way to do this, or really necessary?
 
                               append (list key val))))
     (setq string (org-add-props string properties))
