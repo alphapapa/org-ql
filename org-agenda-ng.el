@@ -20,7 +20,8 @@
 ;;;; Commands
 
 (cl-defun org-agenda-ng--agenda (&key match-fns filter-fns)
-  (let* ((tree (cddr (org-element-parse-buffer 'headline)))
+  (let* ((org-use-tag-inheritance t)
+         (tree (cddr (org-element-parse-buffer 'headline)))
          (entries (--> (org-agenda-ng--filter-tree tree :match-fns match-fns :filter-fns filter-fns)
                        (mapcar #'org-agenda-ng--format-element it)))
          (result-string (org-agenda-finalize-entries entries 'agenda))
@@ -46,7 +47,8 @@
 (defun org-agenda-ng--test-agenda-today ()
   (interactive)
   (org-agenda-ng--test
-   :match-fns `((org-agenda-ng--date-p :deadline <= ,(org-today))
+   :match-fns `((org-agenda-ng--date-p :date <= ,(org-today))
+                (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
                 (org-agenda-ng--date-p :scheduled <= ,(org-today)))
    :filter-fns `((org-agenda-ng--todo-p ,org-done-keywords))))
 
@@ -72,6 +74,13 @@
                                           (function (funcall it element))
                                           (cons (apply (car it) element (cdr it))))
                                         filter-fns)))
+                  ;; Add marker to element properties
+                  ;; TODO: Probably want to use a list of transforming functions here
+                  (let* ((marker (org-agenda-new-marker (org-element-property :begin element)))
+                         (properties (second element))
+                         (properties (plist-put properties :org-hd-marker marker)))
+                    (setf (second element) properties))
+                  ;; Return element
                   element))))
     (org-element-map tree types fun info first-match)))
 
@@ -99,22 +108,34 @@ Its property list should be the second item in the list, as returned by `org-ele
                      (org-link-display-format it)))
          (todo-keyword (-some--> (org-element-property :todo-keyword element)
                                  (org-agenda-ng--add-todo-face it)))
-         (tags (-some--> (org-element-property :tags element)
-                         (s-join ":" it)
-                         (s-wrap it ":")
-                         (org-add-props it nil 'face 'org-tag)))
+         (tag-list (if org-agenda-use-tag-inheritance
+                       (if-let ((marker (or (org-element-property :org-hd-marker element)
+                                            (org-element-property :org-marker element))))
+                           (org-with-point-at marker
+                             (message "Getting tags for: %s" title)
+                             (org-get-tags-at))
+                         ;; No marker found
+                         (warn "No marker found for item: %s" title)
+                         (org-element-property :tags element))
+                     (org-element-property :tags element)))
+         (tag-string (-some--> tag-list
+                               (s-join ":" it)
+                               (s-wrap it ":")
+                               (org-add-props it nil 'face 'org-tag)))
          (level (org-element-property :level element))
          (category (org-element-property :category element))
-         (string (s-join " " (list todo-keyword title tags))))
+         (string (s-join " " (list todo-keyword title tag-string))))
     (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
     ;; Add all the necessary properties and faces to the whole string
     (--> string
-         (org-add-props it properties))))
+         (org-add-props it properties 'tags tag-list))))
 
 (defun org-agenda-ng--add-faces (element)
-  (org-agenda-ng--add-scheduled-faces element))
+  (->> element
+       (org-agenda-ng--add-scheduled-face)
+       (org-agenda-ng--add-deadline-face)))
 
-(defun org-agenda-ng--add-scheduled-faces (element)
+(defun org-agenda-ng--add-scheduled-face (element)
   "Add faces to ELEMENT's title for its scheduled status."
   (if-let ((scheduled-date (org-element-property :scheduled element)))
       (let* ((today-day-number (org-today))
@@ -136,6 +157,32 @@ Its property list should be the second item in the list, as returned by `org-ele
               properties))
     ;; Not scheduled
     element))
+
+(defun org-agenda-ng--add-deadline-face (element)
+  "Add faces to ELEMENT's title for its deadline status."
+  (if-let ((deadline-date (org-element-property :deadline element)))
+      (let* ((today-day-number (org-today))
+             (deadline-day-number (org-time-string-to-absolute
+                                   (org-element-timestamp-interpreter deadline-date 'ignore)))
+             (todo-keyword (org-element-property :todo-keyword element))
+             (done-p (member todo-keyword org-done-keywords))
+             (today-p (= today-day-number deadline-day-number))
+             (deadline-passed-fraction (--> (- deadline-day-number today-day-number)
+                                            (float it)
+                                            (/ it (max org-deadline-warning-days 1))
+                                            (- 1 it)))
+             (face (org-agenda-deadline-face deadline-passed-fraction))
+             (title (--> (org-element-property :title element)
+                         (org-add-props it nil
+                           'face face)))
+             (properties (--> (second element)
+                              (plist-put it :title title))))
+        (list (car element)
+              properties))
+    ;; No deadline
+    element))
+
+
 
 (defun org-agenda-ng--add-todo-face (keyword)
   (when-let ((face (org-get-todo-face keyword)))
