@@ -34,6 +34,7 @@
       (pop-to-buffer (current-buffer)))))
 
 (cl-defun org-agenda-ng--agenda-multi (&key files any-fns none-fns)
+  (mapc 'find-file-noselect files)
   (let* ((entries (-flatten
                    (--map (org-agenda-ng--get-entries it
                                                       :any-fns any-fns
@@ -55,7 +56,7 @@
 
 (defmacro org-agenda-ng--test-multi (&rest args)
   `(org-agenda-ng--agenda-multi
-    :files '("~/org/main.org")
+    :files org-agenda-files
     ,@args))
 
 (defun org-agenda-ng--test-agenda ()

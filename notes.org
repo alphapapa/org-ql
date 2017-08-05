@@ -1,0 +1,294 @@
+
+
+* Profiling
+
+This basically works, as a very basic kind of agenda view, but we can already see that it's much slower (at least, for single-day views) because =org-element-parse-buffer= is slow compared to the agenda code.
+
+** Macro
+
+#+BEGIN_SRC elisp
+  (defmacro elp-profile (times &rest body)
+    (declare (indent defun))
+    `(let ((prefixes '("org-" "string-" "s-" "buffer-" "append" "delq" "map"
+                       "list" "car" "save-" "outline-" "delete-dups"
+                       "sort" "line-" "nth" "concat" "char-to-string"
+                       "rx-" "goto-" "when" "search-" "re-"))
+           output)
+       (dolist (prefix prefixes)
+         (elp-instrument-package prefix))
+       (dotimes (x ,times)
+         ,@body)
+       (elp-results)
+       (elp-restore-all)
+       (point-min)
+       (forward-line 20)
+       (delete-region (point) (point-max))
+       (setq output (buffer-substring-no-properties (point-min) (point-max)))
+       (kill-buffer)
+       (delete-window)
+       output))
+#+END_SRC
+
+** ng
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 (org-agenda-ng--test-agenda-today))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+org-element--parse-elements                                   5832        18.501891926  0.0031724780
+mapcar                                                        98          6.3412930759  0.0647070722
+org-agenda-ng--test-agenda-today                              1           6.30112088    6.30112088
+org-agenda-ng--agenda-multi                                   1           6.301086333   6.301086333
+org-agenda-ng--get-entries                                    8           6.249823971   0.7812279963
+mapc                                                          2803        5.9078545849  0.0021076898
+org-element-parse-buffer                                      8           4.796204625   0.5995255781
+org-element--current-element                                  6557        3.7164850469  0.0005667965
+org-element-headline-parser                                   6557        3.5548915590  0.0005421521
+org-end-of-subtree                                            6557        1.3663438270  0.0002083794
+org-agenda-ng--filter-tree                                    8           1.3661297829  0.1707662228
+org-element-map                                               8           1.365995685   0.1707494606
+line-end-position                                             9503        0.4900104040  5.156...e-05
+org-at-heading-p                                              12389       0.4574876539  3.692...e-05
+re-search-forward                                             20193       0.4566419319  2.261...e-05
+outline-on-heading-p                                          19286       0.4559736580  2.364...e-05
+org-outline-level                                             6775        0.3970647569  5.860...e-05
+org-back-to-heading                                           6897        0.3689033409  5.348...e-05
+outline-back-to-heading                                       6897        0.3587580889  5.201...e-05
+line-beginning-position                                       11702       0.2887473860  2.467...e-05
+#+end_example
+
+** orig
+
+Make sure to kill any existing agenda buffers first.
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 (org-agenda-list nil nil 'week))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+org-agenda-list                                               1           1.717467214   1.717467214
+org-agenda-get-day-entries                                    7           1.124906724   0.1607009605
+org-agenda-get-scheduled                                      7           0.9354116170  0.1336302310
+org-get-tags-at                                               62          0.5598817790  0.0090303512
+org-up-heading-safe                                           262         0.5531687240  0.0021113310
+org-back-to-heading                                           2646        0.5316139889  0.0002009123
+org-agenda-finalize                                           1           0.485185818   0.485185818
+org-agenda-skip                                               749         0.4059732339  0.0005420203
+org-at-planning-p                                             921         0.2137141959  0.0002320458
+org-is-habit-p                                                574         0.1953095319  0.0003402605
+org-entry-get                                                 579         0.195275877   0.0003372640
+org--property-local-values                                    574         0.1899641870  0.0003309480
+org-get-property-block                                        574         0.1789142650  0.0003116973
+re-search-backward                                            3586        0.1769497870  4.934...e-05
+org-inlinetask-in-task-p                                      1495        0.1639709820  0.0001096795
+outline-back-to-heading                                       2646        0.1387423440  5.243...e-05
+re-search-forward                                             3177        0.1353034909  4.258...e-05
+org-agenda-get-deadlines                                      7           0.1341101260  0.0191585894
+line-beginning-position                                       2041        0.1000089939  4.899...e-05
+org-get-todo-state                                            749         0.070545971   9.418...e-05
+org-agenda-prepare                                            1           0.052788647   0.052788647
+org-agenda-prepare-buffers                                    1           0.050402675   0.050402675
+org-agenda-get-timestamps                                     7           0.0428353419  0.0061193345
+org-agenda--timestamp-to-absolute                             1498        0.0414448099  2.766...e-05
+org-time-string-to-absolute                                   1498        0.0385546620  2.573...e-05
+org-agenda-finalize-entries                                   7           0.03400573    0.0048579614
+org-super-agenda--finalize-entries                            7           0.0339819269  0.0048545609
+org-outline-level                                             505         0.0335176070  6.637...e-05
+org-super-agenda--group-items                                 7           0.0268096709  0.0038299529
+org-super-agenda--group-dispatch                              84          0.024216379   0.0002882902
+org-parse-time-string                                         1572        0.0211881319  1.347...e-05
+org-closest-date                                              749         0.0178231690  2.379...e-05
+org-before-first-heading-p                                    578         0.0142076310  2.458...e-05
+org-refresh-category-properties                               1           0.013815263   0.013815263
+org-in-src-block-p                                            753         0.0135235599  1.795...e-05
+org-refresh-stats-properties                                  1           0.012230309   0.012230309
+org-habit-parse-todo                                          5           0.0121474539  0.0024294907
+org-get-limited-outline-regexp                                1502        0.0100960829  6.721...e-06
+mapcar                                                        309         0.009495786   3.073...e-05
+org-super-agenda--group-habit                                 7           0.009318616   0.0013312308
+string-match                                                  6253        0.0090207890  1.442...e-06
+org-super-agenda--group-dispatch-and                          7           0.0067444     0.0009634857
+org-agenda-get-blocks                                         7           0.0060974240  0.0008710605
+outline-on-heading-p                                          2655        0.0060741090  2.287...e-06
+org-agenda-get-sexps                                          7           0.0057924309  0.0008274901
+org-super-agenda--group-regexp                                7           0.005592509   0.0007989298
+org-refresh-properties                                        2           0.005461118   0.002730559
+org-super-agenda--get-item-entry                              31          0.004812809   0.0001552519
+org-agenda-align-tags                                         1           0.004677699   0.004677699
+org-set-regexps-and-options                                   1           0.004533983   0.004533983
+org--setup-collect-keywords                                   2           0.004499168   0.002249584
+org-agenda-format-item                                        31          0.0039898020  0.0001287032
+org-date-to-gregorian                                         420         0.0039648049  9.440...e-06
+org-agenda-highlight-todo                                     31          0.0039479179  0.0001273521
+string-to-number                                              8202        0.0031924329  3.892...e-07
+org-end-of-subtree                                            12          0.003047285   0.0002539404
+org-super-agenda--group-tag                                   35          0.002941374   8.403...e-05
+org-inlinetask-outline-regexp                                 1495        0.002887697   1.931...e-06
+org-get-wdays                                                 749         0.0027946290  3.731...e-06
+org-refresh-effort-properties                                 1           0.002750279   0.002750279
+org-entry-beginning-position                                  31          0.002345909   7.567...e-05
+sort                                                          25          0.0021000059  8.400...e-05
+mapc                                                          445         0.0018132390  4.074...e-06
+line-end-position                                             72          0.00177188    2.460...e-05
+mapconcat                                                     341         0.0016574119  4.860...e-06
+org-entries-lessp                                             60          0.0016203450  2.700...e-05
+concat                                                        336         0.0016188640  4.818...e-06
+org-habit-insert-consistency-graphs                           1           0.001368346   0.001368346
+org-add-props                                                 137         0.001291149   9.424...e-06
+org-element-at-point                                          1           0.001266403   0.001266403
+org-agenda-new-marker                                         62          0.001253987   2.022...e-05
+outline-next-heading                                          42          0.001123596   2.675...e-05
+org-split-string                                              148         0.0011049120  7.465...e-06
+org-element--parse-to                                         1           0.001074227   0.001074227
+org-get-scheduled-time                                        5           0.0010200300  0.000204006
+org-super-agenda--group-todo                                  21          0.001003225   4.777...e-05
+org-time-string-to-time                                       69          0.0009947770  1.441...e-05
+org-element--current-element                                  4           0.0009597410  0.0002399352
+org-entry-properties                                          5           0.0008807149  0.0001761429
+org-at-date-range-p                                           172         0.0008412679  4.891...e-06
+org-agenda-mode                                               1           0.000787997   0.000787997
+org-super-agenda--group-log                                   14          0.0007874939  5.624...e-05
+buffer-substring                                              31          0.0007650360  2.467...e-05
+org-heading-components                                        9           0.00071644    7.960...e-05
+org-entry-end-position                                        31          0.0007046580  2.273...e-05
+string-prefix-p                                               789         0.0006732279  8.532...e-07
+org-agenda-skip-eval                                          1498        0.0006586869  4.397...e-07
+org-get-repeat                                                5           0.000656577   0.0001313153
+org-activate-bracket-links                                    3           0.000648713   0.0002162376
+org-agenda-fix-displayed-tags                                 31          0.000636446   2.053...e-05
+s-join                                                        252         0.0006324150  2.509...e-06
+org-element-keyword-parser                                    4           0.000530311   0.0001325777
+org-in-commented-heading-p                                    4           0.00051077    0.0001276925
+buffer-substring-no-properties                                308         0.0004763350  1.546...e-06
+org-habit-build-graph                                         5           0.0004689199  9.3784e-05
+car                                                           1626        0.0004469320  2.748...e-07
+org-activate-plain-links                                      3           0.000382191   0.000127397
+org-super-agenda--transform-groups                            7           0.0003747289  5.353...e-05
+org-get-priority                                              26          0.0003598600  1.384...e-05
+org-agenda-fontify-priorities                                 1           0.000357076   0.000357076
+org-super-agenda--group-priority                              14          0.00035224    2.516e-05
+org-agenda-prepare-window                                     1           0.00033704    0.00033704
+org-find-text-property-in-string                              316         0.0003191880  1.010...e-06
+org-not-nil                                                   821         0.0003016530  3.674...e-07
+list                                                          940         0.0002995150  3.186...e-07
+org-super-agenda--group-time-grid                             7           0.0002954999  4.221...e-05
+org-agenda-format-date-aligned                                7           0.0002794120  3.991...e-05
+org-super-agenda--get-tags                                    103         0.0002654610  2.577...e-06
+delq                                                          513         0.0002634709  5.135...e-07
+org-replace-escapes                                           5           0.0002382050  4.7641e-05
+car-safe                                                      911         0.0002314199  2.540...e-07
+org-today                                                     48          0.0002232539  4.651...e-06
+org-get-time-of-day                                           19          0.000219044   1.152...e-05
+org-days-to-iso-week                                          9           0.0002125040  2.361...e-05
+append                                                        433         0.0002083290  4.811...e-07
+org-get-category                                              31          0.000198604   6.406...e-06
+string-match-p                                                31          0.0001787880  5.767...e-06
+org-agenda-today-p                                            21          0.0001658670  7.898...e-06
+org-super-agenda--get-marker                                  54          0.0001629399  3.017...e-06
+delete-dups                                                   111         0.0001343219  1.210...e-06
+org-at-heading-p                                              9           0.000128871   1.4319e-05
+string-equal                                                  361         0.0001168969  3.238...e-07
+org-super-agenda--make-agenda-header                          13          0.0001151760  8.859...e-06
+org-add-prop-inherited                                        142         0.0001142290  8.044...e-07
+org-check-agenda-file                                         8           0.000110448   1.3806e-05
+org-agenda-get-day-face                                       7           0.000110437   1.577...e-05
+org-get-agenda-file-buffer                                    8           0.000107414   1.342675e-05
+org-agenda-files                                              3           0.000102652   3.421...e-05
+org-downcase-keep-props                                       90          0.0001008230  1.120...e-06
+org-super-agenda--get-priority-cookie                         15          9.460...e-05  6.307e-06
+org-get-todo-face                                             31          9.423...e-05  3.039...e-06
+org-find-base-buffer-visiting                                 8           8.7492e-05    1.09365e-05
+org-habit-get-faces                                           140         8.080...e-05  5.771...e-07
+org-remove-uninherited-tags                                   176         7.580...e-05  4.307...e-07
+goto-char                                                     31          7.1014e-05    2.290...e-06
+org-super-agenda--transform-group-order                       7           6.5543e-05    9.363...e-06
+org-agenda-add-time-grid-maybe                                7           5.703...e-05  8.147...e-06
+org-compile-prefix-format                                     1           5.2164e-05    5.2164e-05
+org-link-unescape                                             4           4.4823e-05    1.120575e-05
+listp                                                         133         3.960...e-05  2.977...e-07
+org-habit-duration-to-days                                    5           3.9446e-05    7.8892e-06
+org-make-options-regexp                                       1           3.6054e-05    3.6054e-05
+org-agenda-mark-header-line                                   1           3.3066e-05    3.3066e-05
+org-element--collect-affiliated-keywords                      4           3.2661e-05    8.16525e-06
+org-habit-get-priority                                        5           2.9857e-05    5.9714e-06
+org-agenda-get-category-icon                                  31          2.673...e-05  8.624...e-07
+org-face-from-face-or-color                                   61          2.1803e-05    3.574...e-07
+org-reduced-level                                             40          2.1692e-05    5.423e-07
+org-link-get-parameter                                        26          2.062...e-05  7.930...e-07
+buffer-name                                                   57          1.9875e-05    3.486...e-07
+org-defkey                                                    5           1.9835e-05    3.966...e-06
+string-to-char                                                56          1.929...e-05  3.446...e-07
+org-string-nw-p                                               5           1.7894e-05    3.578...e-06
+s-wrap                                                        7           1.6955e-05    2.422...e-06
+org-link-expand-abbrev                                        2           1.5491e-05    7.7455e-06
+map-keymap                                                    2           1.4987e-05    7.4935e-06
+search-forward                                                7           1.403...e-05  2.004...e-06
+string-lessp                                                  41          1.394...e-05  3.400...e-07
+org-agenda-reset-markers                                      1           1.3927e-05    1.3927e-05
+org-agenda-deadline-face                                      7           1.2592e-05    1.798...e-06
+search-backward                                               5           1.1253e-05    2.2506e-06
+org-agenda-span-name                                          5           9.758e-06     1.9516e-06
+outline-previous-heading                                      1           8.678e-06     8.678e-06
+buffer-modified-p                                             10          4.618e-06     4.617...e-07
+buffer-file-name                                              13          4.608...e-06  3.544...e-07
+buffer-live-p                                                 11          4.473e-06     4.066...e-07
+buffer-local-value                                            10          4.278e-06     4.278...e-07
+buffer-base-buffer                                            10          3.858e-06     3.858...e-07
+org-agenda-set-mode-name                                      1           3.118e-06     3.118e-06
+org-remove-flyspell-overlays-in                               4           2.926...e-06  7.315...e-07
+buffer-size                                                   8           2.791...e-06  3.489...e-07
+org-key                                                       5           2.707e-06     5.414e-07
+org-unbracket-string                                          1           2.692e-06     2.692e-06
+save-place-to-alist                                           1           2.276e-06     2.276e-06
+org-element--cache-put                                        4           1.907e-06     4.7675e-07
+org-property-inherit-p                                        2           1.414e-06     7.07e-07
+org-agenda-ndays-to-span                                      2           1.293...e-06  6.465...e-07
+maphash                                                       1           1.171e-06     1.171e-06
+org-set-sorting-strategy                                      1           1.165e-06     1.165e-06
+org-file-menu-entry                                           1           1.12e-06      1.12e-06
+string-width                                                  2           1.093e-06     5.465e-07
+org-time-stamp-format                                         1           1.054e-06     1.054e-06
+org-agenda-fit-window-to-buffer                               1           9.31e-07      9.31e-07
+org-font-lock-add-tag-faces                                   1           9.13e-07      9.13e-07
+org-agenda-span-to-ndays                                      1           8.3e-07       8.3e-07
+org-element-property                                          2           8.12e-07      4.06e-07
+org-agenda-mark-clocking-task                                 1           8.03e-07      8.03e-07
+org-tag-alist-to-groups                                       1           7.55e-07      7.55e-07
+org-element-type                                              1           6.14e-07      6.14e-07
+org-agenda-use-sticky-p                                       1           4.73e-07      4.73e-07
+mapatoms                                                      1           0             0.0
+#+end_example
+
+** Profile org-element-map
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 (with-current-buffer (find-buffer-visiting "~/org/main.org")
+                   (org-element-parse-buffer 'headline)))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+org-element--parse-elements                                   1002        4.1612395469  0.0041529336
+org-element-parse-buffer                                      1           0.859981956   0.859981956
+org-element--current-element                                  1225        0.8236391779  0.0006723585
+org-element-headline-parser                                   1225        0.7952382879  0.0006491741
+org-end-of-subtree                                            1225        0.5557043549  0.0004536362
+line-end-position                                             1995        0.0751104350  3.764...e-05
+re-search-forward                                             3743        0.0516547359  1.380...e-05
+org-outline-level                                             1225        0.0477962079  3.901...e-05
+org-back-to-heading                                           1225        0.0469223529  3.830...e-05
+outline-back-to-heading                                       1225        0.0450936199  3.681...e-05
+org-element--get-node-properties                              1225        0.0434517140  3.547...e-05
+line-beginning-position                                       2003        0.0334129610  1.668...e-05
+org-element--get-time-properties                              1225        0.0306394040  2.501...e-05
+org-get-limited-outline-regexp                                2072        0.0140703559  6.790...e-06
+org-element-timestamp-parser                                  249         0.0124751890  5.010...e-05
+outline-next-heading                                          847         0.0115396399  1.362...e-05
+org-at-heading-p                                              2227        0.0109473260  4.915...e-06
+outline-on-heading-p                                          3452        0.0101107139  2.928...e-06
+string-match                                                  4594        0.0064121759  1.395...e-06
+mapcar                                                        30          0.0041008740  0.0001366958
+#+end_example
