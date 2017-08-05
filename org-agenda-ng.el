@@ -19,10 +19,10 @@
 
 ;;;; Commands
 
-(cl-defun org-agenda-ng--agenda (&key match-fns filter-fns)
+(cl-defun org-agenda-ng--agenda (&key any-fns none-fns)
   (let* ((org-use-tag-inheritance t)
          (tree (cddr (org-element-parse-buffer 'headline)))
-         (entries (--> (org-agenda-ng--filter-tree tree :match-fns match-fns :filter-fns filter-fns)
+         (entries (--> (org-agenda-ng--filter-tree tree :any-fns any-fns :none-fns none-fns)
                        (mapcar #'org-agenda-ng--format-element it)))
          (result-string (org-agenda-finalize-entries entries 'agenda))
          (target-buffer (get-buffer-create "test-agenda-ng")))
@@ -41,26 +41,26 @@
 (defun org-agenda-ng--test-agenda ()
   (interactive)
   (org-agenda-ng--test
-   :match-fns '((org-agenda-ng--todo-p "TODO")
-                (org-agenda-ng--date-p :deadline < "2017-08-05"))))
+   :any-fns '((org-agenda-ng--todo-p "TODO")
+              (org-agenda-ng--date-p :deadline < "2017-08-05"))))
 
 (defun org-agenda-ng--test-agenda-today ()
   (interactive)
   (org-agenda-ng--test
-   :match-fns `((org-agenda-ng--date-p :date <= ,(org-today))
-                (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
-                (org-agenda-ng--date-p :scheduled <= ,(org-today)))
-   :filter-fns `((org-agenda-ng--todo-p ,org-done-keywords))))
+   :any-fns `((org-agenda-ng--date-p :date <= ,(org-today))
+              (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
+              (org-agenda-ng--date-p :scheduled <= ,(org-today)))
+   :none-fns `((org-agenda-ng--todo-p ,org-done-keywords))))
 
 (defun org-agenda-ng--test-todo-list ()
   (interactive)
   (org-agenda-ng--test
-   :match-fns '(org-agenda-ng--todo-p)
-   :filter-fns `((org-agenda-ng--todo-p ,org-done-keywords))))
+   :any-fns '(org-agenda-ng--todo-p)
+   :none-fns `((org-agenda-ng--todo-p ,org-done-keywords))))
 
 ;;;; Functions
 
-(cl-defun org-agenda-ng--filter-tree (tree &key match-fns filter-fns)
+(cl-defun org-agenda-ng--filter-tree (tree &key any-fns none-fns)
   (let* ((types '(headline))
          (info nil)
          (first-match nil)
@@ -68,24 +68,28 @@
                 (when (and (--any? (cl-typecase it
                                      (function (funcall it element))
                                      (cons (apply (car it) element (cdr it))))
-                                   match-fns)
-                           (or (null filter-fns)
+                                   any-fns)
+                           ;; Don't return if any filters match
+                           (or (null none-fns)
                                (--none? (cl-typecase it
                                           (function (funcall it element))
                                           (cons (apply (car it) element (cdr it))))
-                                        filter-fns)))
-                  ;; Add marker to element properties
-                  ;; TODO: Probably want to use a list of transforming functions here
-                  (let* ((marker (org-agenda-new-marker (org-element-property :begin element)))
-                         (properties (second element))
-                         (properties (plist-put properties :org-hd-marker marker)))
-                    (setf (second element) properties))
+                                        none-fns)))
                   ;; Return element
-                  element))))
+                  (->> element
+                       (org-agenda-ng--add-markers))))))
     (org-element-map tree types fun info first-match)))
 
-
 ;;;; Faces/properties
+
+(defun org-agenda-ng--add-markers (element)
+  "Return ELEMENT with marker properties added."
+  (let* ((marker (org-agenda-new-marker (org-element-property :begin element)))
+         (properties (--> (second element)
+                          (plist-put it :org-marker marker)
+                          (plist-put it :org-hd-marker marker))))
+    (setf (second element) properties)
+    element))
 
 (defun org-agenda-ng--format-element (element)
   ;; This essentially needs to do what `org-agenda-format-item' does,
@@ -112,7 +116,6 @@ Its property list should be the second item in the list, as returned by `org-ele
                        (if-let ((marker (or (org-element-property :org-hd-marker element)
                                             (org-element-property :org-marker element))))
                            (org-with-point-at marker
-                             (message "Getting tags for: %s" title)
                              (org-get-tags-at))
                          ;; No marker found
                          (warn "No marker found for item: %s" title)
@@ -191,8 +194,6 @@ Its property list should be the second item in the list, as returned by `org-ele
               properties))
     ;; No deadline
     element))
-
-
 
 (defun org-agenda-ng--add-todo-face (keyword)
   (when-let ((face (org-get-todo-face keyword)))
