@@ -1,5 +1,22 @@
 ;;; Commentary:
 
+;; This is just a proof-of-concept for how the agenda code might be
+;; written in a more functional way, to avoid making multiple passes
+;; through each file when building a multi-day agenda.
+
+;; Unfortunately, however, it's more like a proof-of-nope, because
+;; it's significantly slower than the existing agenda code.  Profiling
+;; shows that =org-element-parse-buffer= is just not a fast function,
+;; so most of the time spent is in that function, parsing the whole
+;; buffer into a lisp tree.  The existing agenda code is not written
+;; in a functional style, and it makes multiple passes through each
+;; file when preparing a multi-day agenda view, but it avoids parsing
+;; the /entire/ buffer the way =org-element-parse-buffer= does.
+
+;; So I guess this approach won't work, unless someone can come up
+;; with a version of =org-element-parse-buffer= that's about 10x
+;; faster.
+
 ;;;; Principles
 
 ;;;;; Work on elements
