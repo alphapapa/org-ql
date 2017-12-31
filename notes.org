@@ -1,5 +1,11 @@
 
 
+* Ideas
+
+** Operate on list of heading positions
+
+[2017-12-31 Sun 17:54]  I wonder if, instead of parsing the whole buffer with =org-element-parse-buffer=, we could simply work on a list of heading positions, e.g. a loop would search forward to the next heading position, then call whatever predicates it needed at the heading's position, using =save-excursion= around each function call.  The predicates would need to be updated to get their data from the buffer, instead of using =org-element-property=, but that wouldn't be hard.
+
 * Profiling
 
 This basically works, as a very basic kind of agenda view, but we can already see that it's much slower (at least, for single-day views) because =org-element-parse-buffer= is slow compared to the agenda code.
