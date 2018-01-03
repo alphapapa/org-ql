@@ -435,6 +435,9 @@ scheduled date compares with TARGET-DATE according to COMPARATOR.
 TARGET-DATE may be a string like \"2017-08-05\", or an integer
 like one returned by `date-to-day'."
   (when-let ((timestamp (pcase type
+                          ;; FIXME: Add :date selector, since I put it
+                          ;; in the examples but forgot to actually
+                          ;; make it.
                           (:deadline (org-entry-get (point) "DEADLINE"))
                           (:scheduled (org-entry-get (point) "SCHEDULED"))
                           (:closed (org-entry-get (point) "CLOSED"))))
