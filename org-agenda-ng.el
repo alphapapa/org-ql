@@ -34,28 +34,113 @@
 (require 'dash)
 (require 'cl-lib)
 
+;;;; Macros
+
+(cl-defun org-agenda-ng--test-lambda (&key all any none)
+  `(lambda ()
+     (and ,@(-non-nil (list (when all
+                              `(and ,@(--map (cl-typecase it
+                                               (function (list it))
+                                               (cons `(apply #',(car it) ',(cdr it))))
+                                             all)))
+                            (when any
+                              `(or ,@(--map (cl-typecase it
+                                              (function (list it))
+                                              (cons `(apply #',(car it) ',(cdr it))))
+                                            any)))
+                            (when none
+                              `(not (or ,@(--map (cl-typecase it
+                                                   (function (list it))
+                                                   (cons `(apply #',(car it) ',(cdr it))))
+                                                 none)))))))))
+
+;;;; Tests
+
+(defun org-agenda-ng--test-test.org (&rest args)
+  ;; Helper function
+  (apply #'org-agenda-ng--agenda :files '("~/src/emacs/org-super-agenda/test/test.org")
+         args))
+
+(defun org-agenda-ng--test-agenda ()
+  (interactive)
+  (org-agenda-ng--test-test.org
+   :any '((org-agenda-ng--todo-p "TODO")
+          (org-agenda-ng--date-p :deadline < "2017-08-05"))))
+
+(defun org-agenda-ng--test-agenda2 ()
+  (interactive)
+  (org-agenda-ng--test-test.org
+   :any `((org-agenda-ng--date-p :date <= ,(org-today))
+          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
+          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
+   :none `((org-agenda-ng--todo-p org-done-keywords))))
+
+(defun org-agenda-ng--test-agenda3 ()
+  (interactive)
+  (org-agenda-ng--test-test.org
+   :any `((org-agenda-ng--date-p :date <= ,(org-today))
+          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
+          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
+   :none `((org-agenda-ng--todo-p org-done-keywords))))
+
+(defun org-agenda-ng--test-agenda-today ()
+  (interactive)
+  (org-agenda-ng--agenda
+   :files "~/src/emacs/org-super-agenda/test/test.org"
+   :any `((org-agenda-ng--date-p :date <= ,(org-today))
+          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
+          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
+   :none `((org-agenda-ng--todo-p org-done-keywords))))
+
+(defun org-agenda-ng--test-agenda-today ()
+  (interactive)
+  (org-agenda-ng--agenda
+   :files "~/src/emacs/org-super-agenda/test/test.org"
+   :any `((org-agenda-ng--date-p :date <= ,(org-today))
+          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
+          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
+   :none `((org-agenda-ng--todo-p org-done-keywords))))
+
+(defun org-agenda-ng--test-agenda-today ()
+  (interactive)
+  (org-agenda-ng--agenda
+   :files org-agenda-files
+   :any `((org-agenda-ng--date-p :date <= ,(org-today))
+          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
+          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
+   :none `((org-agenda-ng--todo-p org-done-keywords))))
+
+(defun org-agenda-ng--test-todo-list ()
+  (interactive)
+  (org-agenda-ng--test-test.org
+   :any '(org-agenda-ng--todo-p)
+   :none '((org-agenda-ng--todo-p org-done-keywords))))
+
 ;;;; Commands
 
-(cl-defun org-agenda-ng--agenda (&key any-fns none-fns)
-  (let* ((org-use-tag-inheritance t)
-         (tree (cddr (org-element-parse-buffer 'headline)))
-         (entries (--> (org-agenda-ng--filter-tree tree :any-fns any-fns :none-fns none-fns)
-                       (mapcar #'org-agenda-ng--format-element it)))
-         (result-string (org-agenda-finalize-entries entries 'agenda))
-         (target-buffer (get-buffer-create "test-agenda-ng")))
-    (with-current-buffer target-buffer
-      (read-only-mode -1)
-      (erase-buffer)
-      (insert result-string)
-      (read-only-mode 1)
-      (pop-to-buffer (current-buffer)))))
-
-(cl-defun org-agenda-ng--agenda-multi (&key files any-fns none-fns)
+(cl-defun org-agenda-ng--agenda (&key files all any none)
+  (unless files
+    (setq files (buffer-file-name (current-buffer))))
+  (unless (listp files)
+    (setq files (list files)))
   (mapc 'find-file-noselect files)
-  (let* ((entries (-flatten
-                   (--map (org-agenda-ng--get-entries it
-                                                      :any-fns any-fns
-                                                      :none-fns none-fns)
+  (let* ((org-use-tag-inheritance t)
+         (entries (-flatten
+                   (--map (with-current-buffer (find-buffer-visiting it)
+                            ;; FIXME: It would be more optimal to
+                            ;; gather the entry at each matching
+                            ;; position instead of returning a list of
+                            ;; positions and then having to go back
+                            ;; and get the entries at each position.
+                            (let* ((positions (org-agenda-ng--filter-buffer :all all :any any :none none))
+                                   (elements (--map (org-with-point-at it
+                                                      (org-element-headline-parser
+                                                       ;; FIXME: This is a hack
+                                                       (save-excursion
+                                                         (forward-line 3)
+                                                         (point))))
+                                                    positions)))
+                              (mapcar #'org-agenda-ng--format-element elements)))
                           files)))
          (result-string (org-agenda-finalize-entries entries 'agenda))
          (target-buffer (get-buffer-create "test-agenda-ng")))
@@ -66,66 +151,62 @@
       (read-only-mode 1)
       (pop-to-buffer (current-buffer)))))
 
-(defmacro org-agenda-ng--test (&rest args)
-  `(with-current-buffer (find-buffer-visiting "~/org/main.org")
-     (org-agenda-ng--agenda
-      ,@args)))
-
-(defmacro org-agenda-ng--test-multi (&rest args)
-  `(org-agenda-ng--agenda-multi
-    :files org-agenda-files
-    ,@args))
-
-(defun org-agenda-ng--test-agenda ()
-  (interactive)
-  (org-agenda-ng--test
-   :any-fns '((org-agenda-ng--todo-p "TODO")
-              (org-agenda-ng--date-p :deadline < "2017-08-05"))))
-
-(defun org-agenda-ng--test-agenda-today ()
-  (interactive)
-  (org-agenda-ng--test-multi
-   :any-fns `((org-agenda-ng--date-p :date <= ,(org-today))
-              (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
-              (org-agenda-ng--date-p :scheduled <= ,(org-today)))
-   :none-fns `((org-agenda-ng--todo-p org-done-keywords))))
-
-(defun org-agenda-ng--test-todo-list ()
-  (interactive)
-  (org-agenda-ng--test
-   :any-fns '(org-agenda-ng--todo-p)
-   :none-fns '((org-agenda-ng--todo-p org-done-keywords))))
-
 ;;;; Functions
 
-(cl-defun org-agenda-ng--get-entries (file &key any-fns none-fns)
-  "Return list of entries from FILE."
-  (with-current-buffer (find-buffer-visiting file)
-    (let* ((org-use-tag-inheritance t)
-           (tree (cddr (org-element-parse-buffer 'headline)))
-           (entries (--> (org-agenda-ng--filter-tree tree :any-fns any-fns :none-fns none-fns)
-                         (mapcar #'org-agenda-ng--format-element it))))
-      entries)))
+;; (cl-defun org-agenda-ng--get-entries (file &key any-preds none-preds)
+;;   "Return list of entries from FILE."
+;;   (with-current-buffer (find-buffer-visiting file)
+;;     (let* ((org-use-tag-inheritance t)
+;;            (tree (cddr (org-element-parse-buffer 'headline)))
+;;            (entries (--> (org-agenda-ng--filter-tree tree :any any-preds :none none-preds)
+;;                          (mapcar #'org-agenda-ng--format-element it))))
+;;       entries)))
 
-(cl-defun org-agenda-ng--filter-tree (tree &key any-fns none-fns)
-  (let* ((types '(headline))
-         (info nil)
-         (first-match nil)
-         (fun (lambda (element)
-                (when (and (--any? (cl-typecase it
-                                     (function (funcall it element))
-                                     (cons (apply (car it) element (cdr it))))
-                                   any-fns)
-                           ;; Don't return if any filters match
-                           (or (null none-fns)
-                               (--none? (cl-typecase it
-                                          (function (funcall it element))
-                                          (cons (apply (car it) element (cdr it))))
-                                        none-fns)))
-                  ;; Return element
-                  (->> element
-                       (org-agenda-ng--add-markers))))))
-    (org-element-map tree types fun info first-match)))
+(cl-defun org-agenda-ng--heading-positions (file)
+  "Return list of heading positions in FILE."
+  (with-current-buffer (find-buffer-visiting file)
+    (save-excursion
+      (goto-char (point-min))
+      (cl-loop initially do (when (org-before-first-heading-p)
+                              (outline-next-heading))
+               collect (point)
+               while (outline-next-heading)))))
+
+;; (cl-defun org-agenda-ng--filter-buffer (&key any-preds none-preds)
+;;   "Return positions of matching headings in current buffer.
+;; Headings should return non-nil for any ANY-PREDS and nil for all
+;; NONE-PREDS."
+;;   (cl-flet ((pred () (and (--any? (cl-typecase it
+;;                                     (function (funcall it))
+;;                                     (cons (apply (car it) (cdr it))))
+;;                                   any-preds)
+;;                           ;; Don't return if any filters match
+;;                           (or (null none-preds)
+;;                               (--none? (cl-typecase it
+;;                                          (function (funcall it))
+;;                                          (cons (apply (car it) (cdr it))))
+;;                                        none-preds)))))
+;;     (org-with-wide-buffer
+;;      (goto-char (point-min))
+;;      (when (org-before-first-heading-p)
+;;        (outline-next-heading))
+;;      (cl-loop when (pred)
+;;               collect (point)
+;;               while (outline-next-heading)))))
+
+(cl-defun org-agenda-ng--filter-buffer (&key all any none)
+  "Return positions of matching headings in current buffer.
+Headings should return non-nil for any ANY-PREDS and nil for all
+NONE-PREDS."
+  ;; NOTE: Build lambda so typecase doesn't run for every item
+  (let ((pred (org-agenda-ng--test-lambda :all all :any any :none none)))
+    (org-with-wide-buffer
+     (goto-char (point-min))
+     (when (org-before-first-heading-p)
+       (outline-next-heading))
+     (cl-loop when (funcall pred)
+              collect (point)
+              while (outline-next-heading)))))
 
 ;;;; Faces/properties
 
@@ -155,13 +236,15 @@ Its property list should be the second item in the list, as returned by `org-ele
                               unless (member key '(parent))
                               append (list key val)))
          (title (--> (org-agenda-ng--add-faces element)
-                     (org-element-property :title it)
-                     (org-link-display-format it)))
+                     (org-element-property :raw-value it)
+                     ;; (org-link-display-format it)
+                     ))
          (todo-keyword (-some--> (org-element-property :todo-keyword element)
                                  (org-agenda-ng--add-todo-face it)))
          (tag-list (if org-agenda-use-tag-inheritance
                        (if-let ((marker (or (org-element-property :org-hd-marker element)
-                                            (org-element-property :org-marker element))))
+                                            (org-element-property :org-marker element)
+                                            (org-element-property :begin element))))
                            (org-with-point-at marker
                              (org-get-tags-at))
                          ;; No marker found
@@ -182,6 +265,7 @@ Its property list should be the second item in the list, as returned by `org-ele
     (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
     ;; Add all the necessary properties and faces to the whole string
     (--> string
+         (concat "  " it)
          (org-add-props it properties 'tags tag-list))))
 
 (defun org-agenda-ng--add-faces (element)
@@ -208,7 +292,7 @@ Its property list should be the second item in the list, as returned by `org-ele
                     (done-p 'org-agenda-done)
                     (today-p 'org-scheduled-today)
                     (t 'org-scheduled)))
-             (title (--> (org-element-property :title element)
+             (title (--> (org-element-property :raw-value element)
                          (org-add-props it nil
                            'face face)))
              (properties (--> (second element)
@@ -232,7 +316,7 @@ Its property list should be the second item in the list, as returned by `org-ele
                                             (/ it (max org-deadline-warning-days 1))
                                             (- 1 it)))
              (face (org-agenda-deadline-face deadline-passed-fraction))
-             (title (--> (org-element-property :title element)
+             (title (--> (org-element-property :raw-value element)
                          (org-add-props it nil
                            'face face)))
              (properties (--> (second element)
@@ -248,29 +332,42 @@ Its property list should be the second item in the list, as returned by `org-ele
 
 ;;;; Predicates
 
-(defun org-agenda-ng--todo-p (element &optional keywords)
-  "Return non-nil if ELEMENT is a TODO item.
+(defun org-agenda-ng--todo-p (keywords &rest more)
+  "Return non-nil if current heading is a TODO item.
 With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
-  (when-let ((element-keyword (org-element-property :todo-keyword element)))
+  (when more
+    (cons more keywords))
+  (when-let ((state (org-get-todo-state)))
     (pcase keywords
       ('nil t)
       ((pred stringp)
-       (string= element-keyword keywords))
+       (string= state keywords))
       ((pred listp)
-       (member element-keyword keywords))
+       (member state keywords))
       ((pred symbolp)
-       (member element-keyword (symbol-value keywords)))
+       (member state (symbol-value keywords)))
       (otherwise (error "Invalid keyword argument: %s" otherwise)))))
 
-(defun org-agenda-ng--date-p (entry type &optional comparator target-date)
-  "Return non-nil if ENTRY has a date property of TYPE.
+(defun org-agenda-ng--date-p (type &optional comparator target-date)
+  "Return non-nil if current heading has a date property of TYPE.
 TYPE should be a keyword symbol, like :scheduled or :deadline.
 
 With COMPARATOR and TARGET-DATE, return non-nil if entry's
 scheduled date compares with TARGET-DATE according to COMPARATOR.
 TARGET-DATE may be a string like \"2017-08-05\", or an integer
 like one returned by `date-to-day'."
-  (when-let ((entry-date (org-element-property type entry)))
+  (when-let ((entry-date (awhen (pcase type
+                                  (:deadline (org-entry-get (point) "DEADLINE"))
+                                  (:scheduled (org-entry-get (point) "SCHEDULED")))
+                           ;; FIXME: Hack: since we're using
+                           ;; (org-element-property :type entry-date)
+                           ;; below, we need this date parsed into an
+                           ;; org-element element
+                           (with-temp-buffer
+                             (insert it)
+                             (goto-char 0)
+                             (org-element-timestamp-parser))
+                           )))
     (pcase comparator
       ;; Not comparing, just checking if it has one
       ('nil t)
