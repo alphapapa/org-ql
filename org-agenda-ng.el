@@ -167,7 +167,8 @@
       (erase-buffer)
       (insert result-string)
       (read-only-mode 1)
-      (pop-to-buffer (current-buffer)))))
+      (pop-to-buffer (current-buffer))
+      (org-agenda-finalize))))
 
 ;;;; Functions
 
@@ -187,6 +188,7 @@ Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
   (org-agenda-ng--flet ((category (lambda (&rest args) (apply #'org-agenda-ng--category-p args)))
                         (date (lambda (&rest args) (apply #'org-agenda-ng--date-p args)))
+                        (habit (lambda (&rest args) (apply #'org-agenda-ng--habit-p args)))
                         (todo (lambda (&rest args) (apply #'org-agenda-ng--todo-p args)))
                         (tags (lambda (&rest args) (apply #'org-agenda-ng--tags-p args))))
     (let* ((our-lambda (when (or all any none)
@@ -235,7 +237,7 @@ Its property list should be the second item in the list, as returned by `org-ele
                               append (list key val)))
          (title (--> (org-agenda-ng--add-faces element)
                      (org-element-property :raw-value it)
-                     ;; (org-link-display-format it)
+                     (org-link-display-format it)
                      ))
          (todo-keyword (-some--> (org-element-property :todo-keyword element)
                                  (org-agenda-ng--add-todo-face it)))
@@ -259,12 +261,18 @@ Its property list should be the second item in the list, as returned by `org-ele
                                     (char-to-string)
                                     (format "[#%s]")
                                     (org-agenda-ng--add-priority-face)))
+         (habit-property (org-with-point-at (org-element-property :begin element)
+                           (when (org-is-habit-p)
+                             (org-habit-parse-todo))))
          (string (s-join " " (list todo-keyword priority-string title tag-string))))
     (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
     ;; Add all the necessary properties and faces to the whole string
     (--> string
          (concat "  " it)
-         (org-add-props it properties 'tags tag-list))))
+         (org-add-props it properties
+           'todo-state todo-keyword
+           'tags tag-list
+           'org-habit-p habit-property))))
 
 (defun org-agenda-ng--add-faces (element)
   (->> element
@@ -413,8 +421,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   ;; TODO: Try to use `org-make-tags-matcher' to improve performance.
   (when-let ((tags-at (org-get-tags-at (point)
                                        ;; FIXME: Would be nice to not check this for every heading checked.
-                                       ;; (not (member 'agenda org-agenda-use-tag-inheritance))
-                                       )))
+                                       (not (member 'agenda org-agenda-use-tag-inheritance)))))
     (cl-typecase tags
       (null t)
       (otherwise (seq-intersection tags tags-at)))))
@@ -427,18 +434,18 @@ With COMPARATOR and TARGET-DATE, return non-nil if entry's
 scheduled date compares with TARGET-DATE according to COMPARATOR.
 TARGET-DATE may be a string like \"2017-08-05\", or an integer
 like one returned by `date-to-day'."
-  (when-let ((entry-date (awhen (pcase type
-                                  (:deadline (org-entry-get (point) "DEADLINE"))
-                                  (:scheduled (org-entry-get (point) "SCHEDULED")))
+  (when-let ((timestamp (pcase type
+                          (:deadline (org-entry-get (point) "DEADLINE"))
+                          (:scheduled (org-entry-get (point) "SCHEDULED"))
+                          (:closed (org-entry-get (point) "CLOSED"))))
+             (date-element (with-temp-buffer
                            ;; FIXME: Hack: since we're using
-                           ;; (org-element-property :type entry-date)
+                           ;; (org-element-property :type date-element)
                            ;; below, we need this date parsed into an
                            ;; org-element element
-                           (with-temp-buffer
-                             (insert it)
-                             (goto-char 0)
-                             (org-element-timestamp-parser))
-                           )))
+                           (insert timestamp)
+                           (goto-char 0)
+                           (org-element-timestamp-parser))))
     (pcase comparator
       ;; Not comparing, just checking if it has one
       ('nil t)
@@ -449,11 +456,14 @@ like one returned by `date-to-day'."
                                   ;; because `date-to-day' requires it
                                   (string (date-to-day (concat target-date " 00:00")))
                                   (integer target-date))))
-         (pcase (org-element-property :type entry-date)
+         (pcase (org-element-property :type date-element)
            ((or 'active 'inactive)
             (funcall comparator
                      (org-time-string-to-absolute
-                      (org-element-timestamp-interpreter entry-date 'ignore))
+                      (org-element-timestamp-interpreter date-element 'ignore))
                      target-day-number))
-           (error "Unknown entry-date type: %s" (org-element-property :type entry-date)))))
+           (error "Unknown date-element type: %s" (org-element-property :type date-element)))))
       (otherwise (error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string" comparator target-date)))))
+
+(defun org-agenda-ng--habit-p ()
+  (org-is-habit-p))
