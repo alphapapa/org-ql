@@ -47,96 +47,15 @@
                                 (symbol-function ,target)))
      ,@body))
 
-(cl-defun org-agenda-ng--test-lambda (&key all any none)
-  ;; Not actually a macro, but...
-  `(lambda ()
-     (and ,@(-non-nil (list (when all
-                              `(and ,@(--map (cl-typecase it
-                                               (function (list it))
-                                               (cons `(apply #',(car it) ',(cdr it))))
-                                             all)))
-                            (when any
-                              `(or ,@(--map (cl-typecase it
-                                              (function (list it))
-                                              (cons `(apply #',(car it) ',(cdr it))))
-                                            any)))
-                            (when none
-                              `(not (or ,@(--map (cl-typecase it
-                                                   (function (list it))
-                                                   (cons `(apply #',(car it) ',(cdr it))))
-                                                 none)))))))))
-
-(cl-defmacro org-agenda-ng (files &rest pred)
+(cl-defmacro org-agenda-ng (files &rest pred-body)
   (declare (indent defun))
   `(org-agenda-ng--agenda :files ,files
                           :pred (lambda ()
-                                  ,@pred)))
-
-;;;; Tests
-
-(defun org-agenda-ng--test-test.org (&rest args)
-  ;; Helper function
-  (apply #'org-agenda-ng--agenda :files '("~/src/emacs/org-super-agenda/test/test.org")
-         args))
-
-(defun org-agenda-ng--test-agenda ()
-  (interactive)
-  (org-agenda-ng--test-test.org
-   :any '((org-agenda-ng--todo-p "TODO")
-          (org-agenda-ng--date-p :deadline < "2017-08-05"))))
-
-(defun org-agenda-ng--test-agenda2 ()
-  (interactive)
-  (org-agenda-ng--test-test.org
-   :any `((org-agenda-ng--date-p :date <= ,(org-today))
-          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
-          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
-   :none `((org-agenda-ng--todo-p org-done-keywords))))
-
-(defun org-agenda-ng--test-agenda3 ()
-  (interactive)
-  (org-agenda-ng--test-test.org
-   :any `((org-agenda-ng--date-p :date <= ,(org-today))
-          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
-          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
-   :none `((org-agenda-ng--todo-p org-done-keywords))))
-
-(defun org-agenda-ng--test-agenda-today ()
-  (interactive)
-  (org-agenda-ng--agenda
-   :files "~/src/emacs/org-super-agenda/test/test.org"
-   :any `((org-agenda-ng--date-p :date <= ,(org-today))
-          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
-          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
-   :none `((org-agenda-ng--todo-p org-done-keywords))))
-
-(defun org-agenda-ng--test-agenda-today ()
-  (interactive)
-  (org-agenda-ng--agenda
-   :files "~/src/emacs/org-super-agenda/test/test.org"
-   :any `((org-agenda-ng--date-p :date <= ,(org-today))
-          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
-          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
-   :none `((org-agenda-ng--todo-p org-done-keywords))))
-
-(defun org-agenda-ng--test-agenda-today ()
-  (interactive)
-  (org-agenda-ng--agenda
-   :files org-agenda-files
-   :any `((org-agenda-ng--date-p :date <= ,(org-today))
-          (org-agenda-ng--date-p :deadline <= ,(+ org-deadline-warning-days (org-today)))
-          (org-agenda-ng--date-p :scheduled <= ,(org-today)))
-   :none `((org-agenda-ng--todo-p org-done-keywords))))
-
-(defun org-agenda-ng--test-todo-list ()
-  (interactive)
-  (org-agenda-ng--test-test.org
-   :any '(org-agenda-ng--todo-p)
-   :none '((org-agenda-ng--todo-p org-done-keywords))))
+                                  ,@pred-body)))
 
 ;;;; Commands
 
-(cl-defun org-agenda-ng--agenda (&key files all any none pred)
+(cl-defun org-agenda-ng--agenda (&key files pred)
   (unless files
     (setq files (buffer-file-name (current-buffer))))
   (unless (listp files)
@@ -150,7 +69,7 @@
                             ;; position instead of returning a list of
                             ;; positions and then having to go back
                             ;; and get the entries at each position.
-                            (let* ((positions (org-agenda-ng--filter-buffer :all all :any any :none none :pred pred))
+                            (let* ((positions (org-agenda-ng--filter-buffer :pred pred))
                                    (elements (--map (org-with-point-at it
                                                       (org-element-headline-parser
                                                        ;; FIXME: This is a hack
@@ -182,7 +101,7 @@
                collect (point)
                while (outline-next-heading)))))
 
-(cl-defun org-agenda-ng--filter-buffer (&key all any none pred)
+(cl-defun org-agenda-ng--filter-buffer (&key pred)
   ;; TODO: Remove all, any, and none, and just use the predicate lambda.
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
@@ -192,22 +111,13 @@ NONE-PREDS."
                         (habit #'org-agenda-ng--habit-p)
                         (todo #'org-agenda-ng--todo-p)
                         (tags #'org-agenda-ng--tags-p))
-    (let* ((our-lambda (when (or all any none)
-                         (org-agenda-ng--test-lambda :all all :any any :none none)))
-           (pred (cond ((and our-lambda pred)
-                        (lambda ()
-                          (and (funcall our-lambda)
-                               (funcall pred))))
-                       (our-lambda our-lambda)
-                       (pred pred)
-                       (t (user-error "No tests given")))))
-      (org-with-wide-buffer
-       (goto-char (point-min))
-       (when (org-before-first-heading-p)
-         (outline-next-heading))
-       (cl-loop when (funcall pred)
-                collect (point)
-                while (outline-next-heading))))))
+    (org-with-wide-buffer
+     (goto-char (point-min))
+     (when (org-before-first-heading-p)
+       (outline-next-heading))
+     (cl-loop when (funcall pred)
+              collect (point)
+              while (outline-next-heading)))))
 
 ;;;; Faces/properties
 
