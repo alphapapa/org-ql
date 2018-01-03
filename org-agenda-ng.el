@@ -56,10 +56,10 @@
 ;;;; Commands
 
 (cl-defun org-agenda-ng--agenda (&key files pred)
-  (unless files
-    (setq files (buffer-file-name (current-buffer))))
-  (unless (listp files)
-    (setq files (list files)))
+  (setq files (cl-typecase files
+                (null (list (buffer-file-name (current-buffer))))
+                (list files)
+                (string (list files))))
   (mapc 'find-file-noselect files)
   (let* ((org-use-tag-inheritance t)
          (entries (-flatten
