@@ -78,16 +78,6 @@
 
 ;;;; Functions
 
-(cl-defun org-agenda-ng--heading-positions (file)
-  "Return list of heading positions in FILE."
-  (with-current-buffer (find-buffer-visiting file)
-    (save-excursion
-      (goto-char (point-min))
-      (cl-loop initially do (when (org-before-first-heading-p)
-                              (outline-next-heading))
-               collect (point)
-               while (outline-next-heading)))))
-
 (cl-defun org-agenda-ng--filter-buffer (&key pred)
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
