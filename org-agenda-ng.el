@@ -36,6 +36,7 @@
 (require 'org-agenda)
 (require 'dash)
 (require 'cl-lib)
+(require 'seq)
 
 ;;;; Macros
 
@@ -64,6 +65,12 @@
                                                    (function (list it))
                                                    (cons `(apply #',(car it) ',(cdr it))))
                                                  none)))))))))
+
+(cl-defmacro org-agenda-ng (files &rest pred)
+  (declare (indent defun))
+  `(org-agenda-ng--agenda :files ,files
+                          :pred (lambda ()
+                                  ,@pred)))
 
 ;;;; Tests
 
@@ -178,8 +185,10 @@
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
-  (org-agenda-ng--flet ((date (lambda (&rest args) (apply #'org-agenda-ng--date-p args)))
-                        (todo (lambda (&rest args) (apply #'org-agenda-ng--todo-p args))))
+  (org-agenda-ng--flet ((category (lambda (&rest args) (apply #'org-agenda-ng--category-p args)))
+                        (date (lambda (&rest args) (apply #'org-agenda-ng--date-p args)))
+                        (todo (lambda (&rest args) (apply #'org-agenda-ng--todo-p args)))
+                        (tags (lambda (&rest args) (apply #'org-agenda-ng--tags-p args))))
     (let* ((our-lambda (when (or all any none)
                          (org-agenda-ng--test-lambda :all all :any any :none none)))
            (pred (cond ((and our-lambda pred)
@@ -275,17 +284,78 @@ Its property list should be the second item in the list, as returned by `org-ele
              (scheduled-day-number (org-time-string-to-absolute
                                     (org-element-timestamp-interpreter scheduled-date 'ignore)))
              (todo-keyword (org-element-property :todo-keyword element))
-             (done-p (member todo-keyword org-done-keywords))
-             (today-p (= today-day-number scheduled-day-number))
              (face (cond
-                    (done-p 'org-agenda-done)
-                    (today-p 'org-scheduled-today)
+                    ((member todo-keyword org-done-keywords) 'org-agenda-done)
+                    ((= today-day-number scheduled-day-number) 'org-scheduled-today)
+                    ((> today-day-number scheduled-day-number) 'org-scheduled-previously)
                     (t 'org-scheduled)))
              (title (--> (org-element-property :raw-value element)
                          (org-add-props it nil
                            'face face)))
              (properties (--> (second element)
                               (plist-put it :title title))))
+        (list (car element)
+              properties))
+    ;; Not scheduled
+    element))
+
+(defun org-agenda-ng--add-scheduled-face (element)
+  "Add faces to ELEMENT's title for its scheduled status."
+  ;; NOTE: Also adding prefix
+  (if-let ((scheduled-date (org-element-property :scheduled element)))
+      (let* ((show-all (or (eq org-agenda-repeating-timestamp-show-all t)
+                           (member todo-keyword org-agenda-repeating-timestamp-show-all)))
+             (raw-value (org-element-property :raw-value scheduled-date))
+             (sexp-p (string-prefix-p "%%" raw-value))
+             (today-day-number (org-today))
+             (current-day-number
+              ;; FIXME: This is supposed to be the, shall we say,
+              ;; pretend, or perspective, day number that this pass
+              ;; through the agenda is being made for.  We need to
+              ;; either set this in the calling function, set it here,
+              ;; or accomplish this in a different way.  See
+              ;; `org-agenda-get-scheduled' and where `date' is set in
+              ;; `org-agenda-list'.
+              today-day-number)
+             (scheduled-day-number (org-time-string-to-absolute
+                                    (org-element-timestamp-interpreter scheduled-date 'ignore)))
+             (repeat-day-number (cond (sexp-p (org-time-string-to-absolute scheduled-date))
+                                      ((< today-day-number scheduled-day-number) scheduled-day-number)
+                                      (t (org-time-string-to-absolute
+                                          raw-value
+                                          (if show-all
+                                              current-day-number
+                                            today-day-number)
+                                          'future
+                                          ;; FIXME: I don't like
+                                          ;; calling `current-buffer'
+                                          ;; here.  If the element has
+                                          ;; a marker, we should use
+                                          ;; that.
+                                          (current-buffer)
+                                          (org-element-property :begin element)))))
+             (todo-keyword (org-element-property :todo-keyword element))
+             (face (cond ((member todo-keyword org-done-keywords) 'org-agenda-done)
+                         ((= today-day-number scheduled-day-number) 'org-scheduled-today)
+                         ((> today-day-number scheduled-day-number) 'org-scheduled-previously)
+                         (t 'org-scheduled)))
+             (title (--> (org-element-property :raw-value element)
+                         (org-add-props it nil
+                           'face face)))
+             (properties (--> (second element)
+                              (plist-put it :title title)))
+             (prefix (cl-destructuring-bind (first next) org-agenda-scheduled-leaders
+                       (cond ((> scheduled-day-number today-day-number)
+                              ;; Future
+                              first)
+                             ((and (not show-all)
+                                   (= repeat today-day-number)))
+                             ((= today-day-number scheduled-day-number)
+                              ;; Today
+                              first)
+                             (t
+                              ;; Subsequent reminders.  Count from base schedule.
+                              (format next (1+ (- today-day-number scheduled-day-number))))))))
         (list (car element)
               properties))
     ;; Not scheduled
@@ -321,19 +391,33 @@ Its property list should be the second item in the list, as returned by `org-ele
 
 ;;;; Predicates
 
+(defun org-agenda-ng--category-p (&rest categories)
+  "Return non-nil if current heading is in one or more of CATEGORIES."
+  (when-let ((category (org-get-category (point))))
+    (cl-typecase categories
+      (null t)
+      (otherwise (member category categories)))))
+
 (defun org-agenda-ng--todo-p (&rest keywords)
   "Return non-nil if current heading is a TODO item.
 With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   (when-let ((state (org-get-todo-state)))
-    (pcase keywords
-      ('nil t)
-      ;; ((pred stringp)
-      ;;  (string= state keywords))
-      ((pred listp)
-       (member state keywords))
-      ((pred symbolp)
-       (member state (symbol-value keywords)))
-      (otherwise (error "Invalid keyword argument: %s" otherwise)))))
+    (cl-typecase keywords
+      (null t)
+      (list (member state keywords))
+      (symbol (member state (symbol-value keywords)))
+      (otherwise (user-error "Invalid todo keywords: %s" keywords)))))
+
+(defun org-agenda-ng--tags-p (&rest tags)
+  "Return non-nil if current heading has TAGS."
+  ;; TODO: Try to use `org-make-tags-matcher' to improve performance.
+  (when-let ((tags-at (org-get-tags-at (point)
+                                       ;; FIXME: Would be nice to not check this for every heading checked.
+                                       ;; (not (member 'agenda org-agenda-use-tag-inheritance))
+                                       )))
+    (cl-typecase tags
+      (null t)
+      (otherwise (seq-intersection tags tags-at)))))
 
 (defun org-agenda-ng--date-p (type &optional comparator target-date)
   "Return non-nil if current heading has a date property of TYPE.
