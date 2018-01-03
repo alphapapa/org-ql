@@ -1,13 +1,16 @@
-This is rudimentary, experimental, proof-of-concept alternative code for generating Org agendas.  It doesn't support nearly as many features as =org-agenda.el= does.  But it might be useful in some way.  It uses some existing code from =org-agenda.el= and tries to be compatible with parts of it, like =org-agenda-finalize-entries= and =org-agenda-finalize=.
+This is rudimentary, experimental, proof-of-concept alternative code for generating Org agendas.  It doesn't support nearly as many features as =org-agenda.el= does, but it might be useful in some way.  It uses some existing code from =org-agenda.el= and tries to be compatible with parts of it, like =org-agenda-finalize-entries= and =org-agenda-finalize=.
 
 Here's an example of generating a kind of agenda view for today:
 
 #+BEGIN_SRC elisp
   (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
-    (and (or (date :deadline '<= (org-today))
+    (and (or (date :date '= (org-today))
+             (date :deadline '<= (+ org-deadline-warning-days (org-today)))
              (date :scheduled '<= (org-today)))
          (not (apply #'todo org-done-keywords-for-agenda))))
 #+END_SRC
+
+[[screenshot.png]]
 
 Here are some other examples:
 
