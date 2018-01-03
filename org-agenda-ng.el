@@ -92,11 +92,33 @@ NONE-PREDS."
      (when (org-before-first-heading-p)
        (outline-next-heading))
      (cl-loop when (funcall pred)
-              collect (org-element-headline-parser
-                       ;; FIXME: This bound is a hack
-                       (save-excursion
-                         (forward-line 3)
-                         (point)))
+              collect (let* ((next-heading (save-excursion
+                                             ;; Limit next search to up to the next heading.  It
+                                             ;; would be nice to avoid doing this extra
+                                             ;; re-search-forward, but I don't see any way to avoid
+                                             ;; it.
+                                             (outline-next-heading)
+                                             (point)))
+                             (limit (save-excursion
+                                      ;; Skip drawers and planning lines (see
+                                      ;; `org-agenda-get-some-entry-text'.  I wish there were a
+                                      ;; cleaner, more canonical way to do this.)
+                                      (if (re-search-forward (rx (or (repeat 2 "\n")
+                                                                     (regexp ;; This is org-drawer-regexp
+                                                                      "^[ 	]*:\\(\\(?:\\w\\|[-_]\\)+\\):[ 	]*$")
+                                                                     (eval (concat "^[ \t]*" org-keyword-time-regexp
+                                                                                   ".*\n?"))))
+                                                             next-heading 'noerror)
+                                          (point)
+                                        (point-max)))))
+                        ;; NOTE: As an alternative to the two searches above, we could just move one
+                        ;; or two lines down so that the headline parser can be sure to get the
+                        ;; planning lines.  And that does work fine in my limited testing.  But then
+                        ;; we have to keep in mind that the headline parser will never see property
+                        ;; drawers, so if we need to search properties, we have to do that manually
+                        ;; in predicates.  So I'm going to leave it this way for now.  It should
+                        ;; probably be profiled both ways to see what the performance impact is.
+                        (org-element-headline-parser limit))
               while (outline-next-heading)))))
 
 ;;;; Faces/properties

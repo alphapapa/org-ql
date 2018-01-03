@@ -13,26 +13,31 @@ This basically works, as a very basic kind of agenda view, but we can already se
 ** Macro
 
 #+BEGIN_SRC elisp
-  (defmacro elp-profile (times &rest body)
+  (defmacro elp-profile (times prefixes &rest body)
     (declare (indent defun))
-    `(let ((prefixes '("org-" "string-" "s-" "buffer-" "append" "delq" "map"
-                       "list" "car" "save-" "outline-" "delete-dups"
-                       "sort" "line-" "nth" "concat" "char-to-string"
-                       "rx-" "goto-" "when" "search-" "re-"))
-           output)
-       (dolist (prefix prefixes)
-         (elp-instrument-package prefix))
-       (dotimes (x ,times)
-         ,@body)
-       (elp-results)
-       (elp-restore-all)
-       (point-min)
-       (forward-line 20)
-       (delete-region (point) (point-max))
-       (setq output (buffer-substring-no-properties (point-min) (point-max)))
-       (kill-buffer)
-       (delete-window)
-       output))
+    (let ((prefixes (append '(org- string- s- buffer- append delq map
+                                   list car save- outline- delete-dups
+                                   sort line- nth concat char-to-string
+                                   rx- goto- when search- re-)
+                            prefixes)))
+      `(let (output)
+         (dolist (prefix ',prefixes)
+           (elp-instrument-package (symbol-name prefix)))
+         (dotimes (x ,times)
+           ,@body)
+         (elp-results)
+         (elp-restore-all)
+         (point-min)
+         (forward-line 20)
+         (delete-region (point) (point-max))
+         (setq output (buffer-substring-no-properties (point-min) (point-max)))
+         (kill-buffer)
+         (delete-window)
+         (let ((rows (s-lines output)))
+           (append (list (list "Function" "Times called" "Total time" "Average time")
+                         'hline)
+                   (cl-loop for row in rows
+                            collect (s-split (rx (1+ space)) row 'omit-nulls)))))))
 #+END_SRC
 
 ** ng
@@ -298,3 +303,372 @@ outline-on-heading-p                                          3452        0.0101
 string-match                                                  4594        0.0064121759  1.395...e-06
 mapcar                                                        30          0.0041008740  0.0001366958
 #+end_example
+
+* Profiling position-based
+
+** Macro
+
+#+BEGIN_SRC elisp
+  (defmacro elp-profile (times &rest body)
+    (declare (indent defun))
+    `(let ((prefixes '("org-" "string-" "s-" "buffer-" "append" "delq" "map"
+                       "list" "car" "save-" "outline-" "delete-dups"
+                       "sort" "line-" "nth" "concat" "char-to-string"
+                       "rx-" "goto-" "when" "search-" "re-"))
+           output)
+       (dolist (prefix prefixes)
+         (elp-instrument-package prefix))
+       (dotimes (x ,times)
+         ,@body)
+       (elp-results)
+       (elp-restore-all)
+       (point-min)
+       (forward-line 20)
+       (delete-region (point) (point-max))
+       (setq output (buffer-substring-no-properties (point-min) (point-max)))
+       (kill-buffer)
+       (delete-window)
+       output))
+#+END_SRC
+
+
+** orig
+
+Make sure to kill any existing agenda buffers first.
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 (org-agenda-list nil nil 'week))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+org-agenda-list                                               1           9.693596196   9.693596196
+org-agenda-get-day-entries                                    56          8.630330659   0.1541130474
+org-agenda-get-scheduled                                      56          6.6207980570  0.1182285367
+org-is-habit-p                                                2792        2.2907458449  0.0008204677
+org-entry-get                                                 2798        2.287390186   0.0008175090
+org-agenda--timestamp-to-absolute                             7708        2.0970420100  0.0002720604
+org-agenda-get-deadlines                                      56          1.6941886389  0.0302533685
+org-at-planning-p                                             4399        1.3993312159  0.0003181021
+org--property-local-values                                    2793        1.2699226760  0.0004546805
+org-get-property-block                                        2794        1.2182695930  0.0004360306
+org-time-string-to-absolute                                   7708        1.1513844880  0.0001493752
+org-inlinetask-in-task-p                                      6969        1.139932302   0.0001635718
+org-parse-time-string                                         7880        1.0635759220  0.0001349715
+org-closest-date                                              3864        1.0383435800  0.0002687224
+re-search-forward                                             15199       0.9607921779  6.321...e-05
+org-back-to-heading                                           12667       0.8564486210  6.761...e-05
+outline-back-to-heading                                       12667       0.8362207570  6.601...e-05
+line-beginning-position                                       10333       0.7998346869  7.740...e-05
+org-agenda-format-item                                        279         0.7552402350  0.0027069542
+re-search-backward                                            16726       0.5694224969  3.404...e-05
+#+end_example
+
+** ng-funcall
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 (org-agenda-ng--test-agenda-today))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+mapcar                                                        121         0.1296645480  0.0010716078
+org-agenda-ng--test-agenda-today                              5           0.086714029   0.0173428058
+org-agenda-ng--agenda                                         5           0.086584611   0.0173169222
+org-agenda-ng--format-element                                 75          0.0307461019  0.0004099480
+org-agenda-ng--filter-buffer                                  5           0.027136826   0.0054273652
+org-agenda-ng--date-p                                         455         0.0213037090  4.682...e-05
+org-element-headline-parser                                   75          0.016251755   0.0002166900
+org-get-tags-at                                               75          0.008959605   0.0001194614
+org-agenda-ng--add-faces                                      75          0.0072381410  9.650...e-05
+org-element-timestamp-interpreter                             150         0.0069832960  4.655...e-05
+org-entry-get                                                 290         0.0061220340  2.111...e-05
+org-up-heading-safe                                           210         0.0057036860  2.716...e-05
+org-agenda-finalize-entries                                   5           0.005372899   0.0010745798
+org-element-timestamp-parser                                  150         0.0050518689  3.367...e-05
+org-entry-properties                                          290         0.0049517209  1.707...e-05
+org-agenda-ng--add-deadline-face                              75          0.0039273909  5.236...e-05
+org-element--get-time-properties                              75          0.0039059429  5.207...e-05
+org-back-to-heading                                           725         0.0037793259  5.212...e-06
+org-parse-time-string                                         300         0.0032196259  1.073...e-05
+org-agenda-ng--add-scheduled-face                             75          0.0031410580  4.188...e-05
+#+end_example
+
+** ng-flet
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 (org-agenda-ng--test-agenda-today))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+mapcar                                                        121         0.1292609089  0.0010682719
+org-agenda-ng--test-agenda-today                              5           0.0860146149  0.017202923
+org-agenda-ng--agenda                                         5           0.0858901769  0.0171780353
+org-agenda-ng--format-element                                 75          0.0308815090  0.0004117534
+org-agenda-ng--filter-buffer                                  5           0.026709027   0.0053418054
+org-agenda-ng--date-p                                         455         0.0210552310  4.627...e-05
+org-element-headline-parser                                   75          0.016209908   0.0002161321
+org-get-tags-at                                               75          0.008953666   0.0001193822
+org-agenda-ng--add-faces                                      75          0.0072834109  9.711...e-05
+org-element-timestamp-interpreter                             150         0.0068781430  4.585...e-05
+org-entry-get                                                 290         0.0060815609  2.097...e-05
+org-up-heading-safe                                           210         0.005708647   2.718...e-05
+org-agenda-finalize-entries                                   5           0.005201221   0.0010402442
+org-element-timestamp-parser                                  150         0.005191617   3.461078e-05
+org-entry-properties                                          290         0.0048787450  1.682...e-05
+org-element--get-time-properties                              75          0.004112675   5.483...e-05
+org-agenda-ng--add-deadline-face                              75          0.0039314910  5.241...e-05
+org-back-to-heading                                           725         0.0037559990  5.180...e-06
+org-agenda-ng--add-scheduled-face                             75          0.0031766149  4.235...e-05
+org-parse-time-string                                         300         0.0031740200  1.058...e-05
+#+end_example
+
+* Profiling flet across all agenda files
+
+** Without flet
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 (org-agenda-ng--agenda
+                  :files org-agenda-files
+                  :pred (lambda ()
+                          (and (org-agenda-ng--todo-p)
+                               (or (org-agenda-ng--date-p :deadline '<= (org-today))
+                                   (org-agenda-ng--date-p :scheduled '<= (org-today)))
+                               (not (apply #'org-agenda-ng--todo-p org-done-keywords-for-agenda))))))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+mapcar                                                        711         26.910164986  0.0378483333
+org-agenda-ng--agenda                                         5           21.012501837  4.2025003674
+org-agenda-ng--filter-buffer                                  40          13.751964650  0.3437991162
+org-agenda-ng--todo-p                                         37080       5.8788306440  0.0001585445
+org-agenda-ng--format-element                                 1180        4.5712275970  0.0038739216
+org-get-todo-state                                            37080       4.1661659069  0.0001123561
+org-agenda-ng--date-p                                         21595       4.1442710769  0.0001919088
+org-entry-get                                                 22730       2.8275069239  0.0001243953
+org-entry-properties                                          21595       2.6558403739  0.0001229840
+outline-next-heading                                          34625       2.0894695999  6.034...e-05
+org-element-headline-parser                                   1180        1.9110445780  0.0016195293
+re-search-forward                                             42280       1.6994989150  4.019...e-05
+org-agenda-ng--add-faces                                      1180        1.6172592580  0.0013705586
+org-agenda-ng--add-scheduled-face                             1180        1.607386145   0.0013621916
+org-get-tags-at                                               1180        1.1521010509  0.0009763568
+org-back-to-heading                                           64530       1.1005834200  1.705...e-05
+org-up-heading-safe                                           2360        1.0182265390  0.0004314519
+outline-back-to-heading                                       64530       1.0086056729  1.563...e-05
+org-parse-time-string                                         7560        0.8314918499  0.0001099856
+org-time-string-to-absolute                                   3780        0.8277485280  0.0002189810
+#+end_example
+
+
+** With flet
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 (org-agenda-ng--agenda
+                  :files org-agenda-files
+                  :pred (lambda ()
+                          (and (todo)
+                               (or (date :deadline '<= (org-today))
+                                   (date :scheduled '<= (org-today)))
+                               (not (apply #'todo org-done-keywords-for-agenda))))))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+mapcar                                                        711         25.608392569  0.0360174297
+org-agenda-ng--agenda                                         5           24.019318793  4.8038637586
+org-agenda-ng--filter-buffer                                  40          14.160293256  0.3540073313
+org-agenda-ng--date-p                                         21595       4.2111783960  0.0001950071
+org-agenda-finalize-entries                                   5           4.0930243110  0.8186048622
+org-super-agenda--filter-finalize-entries                     5           3.937522006   0.7875044012
+org-agenda-ng--todo-p                                         37080       3.5687476730  9.624...e-05
+org-get-todo-state                                            37080       3.4737076600  9.368...e-05
+outline-next-heading                                          34625       3.4689080650  0.0001001850
+re-search-forward                                             42280       3.0743315830  7.271...e-05
+org-agenda-ng--format-element                                 1180        2.9511605820  0.0025009835
+org-element-headline-parser                                   1180        2.6757063699  0.0022675477
+org-super-agenda--group-items                                 5           2.187362092   0.4374724183
+org-super-agenda--group-dispatch                              70          2.184685662   0.0312097951
+org-entry-get                                                 22730       2.0711872869  9.112...e-05
+org-entry-properties                                          21595       1.8958912070  8.779...e-05
+org-super-agenda--group-tag                                   25          1.8498977799  0.0739959111
+org-element-timestamp-parser                                  3785        1.8234333229  0.0004817525
+org-parse-time-string                                         7560        1.7121709579  0.0002264776
+org-element--get-time-properties                              1180        1.1814058020  0.0010011913
+#+end_example
+
+* Profiling flet on a single file
+
+This shows that the difference between them, if any, is so small as to be irrelevant.  The convenience and clarity are a big win.
+
+** Without flet
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 (org-agenda-ng--agenda
+                  :files "~/org/main.org"
+                  :pred (lambda ()
+                          (and (org-agenda-ng--todo-p)
+                               (or (org-agenda-ng--date-p :deadline '<= (org-today))
+                                   (org-agenda-ng--date-p :scheduled '<= (org-today)))
+                               (not (apply #'org-agenda-ng--todo-p org-done-keywords-for-agenda))))))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+mapcar                                                        526         3.7766218089  0.0071798893
+org-agenda-ng--agenda                                         5           2.75718831    0.551437662
+org-agenda-ng--filter-buffer                                  5           1.402551392   0.2805102784
+org-agenda-ng--format-element                                 265         0.8864161399  0.0033449665
+org-get-tags-at                                               265         0.7896260759  0.0029797210
+org-up-heading-safe                                           1150        0.7589292910  0.0006599385
+re-search-backward                                            3700        0.5956338739  0.0001609821
+org-agenda-ng--todo-p                                         6690        0.5781650060  8.642...e-05
+org-get-todo-state                                            6690        0.5603983020  8.376...e-05
+org-agenda-ng--date-p                                         5940        0.5209897369  8.770...e-05
+org-entry-get                                                 6195        0.4158440950  6.712...e-05
+org-entry-properties                                          5940        0.3640524090  6.128...e-05
+org-element-headline-parser                                   265         0.2810144710  0.0010604319
+outline-next-heading                                          6195        0.2485497380  4.012...e-05
+org-back-to-heading                                           14565       0.1957209180  1.343...e-05
+re-search-forward                                             7850        0.1927130979  2.454...e-05
+outline-back-to-heading                                       14565       0.1751091780  1.202...e-05
+org-outline-level                                             2300        0.1680958539  7.308...e-05
+org-agenda-finalize-entries                                   5           0.1610422239  0.0322084448
+org-super-agenda--filter-finalize-entries                     5           0.132423043   0.0264846085
+#+end_example
+
+
+** With flet
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 (org-agenda-ng--agenda
+                  :files "~/org/main.org"
+                  :pred (lambda ()
+                          (and (todo)
+                               (or (date :deadline '<= (org-today))
+                                   (date :scheduled '<= (org-today)))
+                               (not (apply #'todo org-done-keywords-for-agenda))))))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+mapcar                                                        526         3.7898506779  0.0072050393
+org-agenda-ng--agenda                                         5           2.7695176850  0.5539035370
+org-agenda-ng--filter-buffer                                  5           1.414347774   0.2828695548
+org-agenda-ng--format-element                                 265         0.8871611419  0.0033477778
+org-get-tags-at                                               265         0.7891641319  0.0029779778
+org-up-heading-safe                                           1150        0.7581951110  0.0006593000
+re-search-backward                                            3700        0.5948686769  0.0001607753
+org-agenda-ng--todo-p                                         6690        0.5840980579  8.730...e-05
+org-get-todo-state                                            6690        0.5666448919  8.470...e-05
+org-agenda-ng--date-p                                         5940        0.5196037069  8.747...e-05
+org-entry-get                                                 6195        0.4144106150  6.689...e-05
+org-entry-properties                                          5940        0.3640680380  6.129...e-05
+org-element-headline-parser                                   265         0.2810144920  0.0010604320
+outline-next-heading                                          6195        0.2495287770  4.027...e-05
+org-back-to-heading                                           14565       0.1959557380  1.345...e-05
+re-search-forward                                             7850        0.1933439489  2.462...e-05
+outline-back-to-heading                                       14565       0.1753121230  1.203...e-05
+org-outline-level                                             2300        0.1676228200  7.287...e-05
+org-agenda-finalize-entries                                   5           0.1607656930  0.0321531386
+org-super-agenda--filter-finalize-entries                     5           0.1316961509  0.0263392301
+#+end_example
+
+* Profiling tags matching
+
+** ng
+#+BEGIN_SRC elisp
+  (elp-profile 1 nil
+    (org-agenda-ng "~/org/main.org"
+      (tags "computer")))
+#+END_SRC
+
+#+RESULTS:
+| Function                       | Times called |   Total time | Average time |
+|--------------------------------+--------------+--------------+--------------|
+| mapcar                         |         4217 | 12.612716455 | 0.0029909216 |
+| org-agenda-ng--agenda          |            1 |  9.721410651 |  9.721410651 |
+| org-get-tags-at                |         1845 | 7.4793860389 | 0.0040538677 |
+| org-up-heading-safe            |         9361 | 6.4622674019 | 0.0006903394 |
+| re-search-backward             |        25001 | 5.3399866239 | 0.0002135909 |
+| org-agenda-ng--filter-buffer   |            1 |  4.874598854 |  4.874598854 |
+| org-agenda-ng--tags-p          |         1238 | 4.8067623430 | 0.0038826836 |
+| org-agenda-ng--format-element  |          607 | 3.6325626609 | 0.0059844524 |
+| org-outline-level              |        17484 | 1.0298924459 | 5.890...e-05 |
+| org-add-props                  |         2074 | 0.8305549259 | 0.0004004604 |
+| org-element-headline-parser    |          607 | 0.2092664829 | 0.0003447553 |
+| org-back-to-heading            |        11813 | 0.1252112960 | 1.059...e-05 |
+| outline-back-to-heading        |        11813 | 0.1100693780 | 9.317...e-06 |
+| org-end-of-subtree             |          607 | 0.0721986340 | 0.0001189433 |
+| outline-on-heading-p           |        11813 | 0.0675261030 | 5.716...e-06 |
+| outline-next-heading           |         1239 | 0.0627980999 | 5.068...e-05 |
+| re-search-forward              |         3273 | 0.0612446620 | 1.871...e-05 |
+| org-agenda-finalize-entries    |            1 |  0.041846274 |  0.041846274 |
+| buffer-substring-no-properties |         6329 | 0.0308716979 | 4.877...e-06 |
+| line-end-position              |          903 | 0.0280484950 | 3.106...e-05 |
+
+** ng without inheritance
+#+BEGIN_SRC elisp
+  (elp-profile 1 nil
+    (org-agenda-ng "~/org/main.org"
+      (tags "computer")))
+#+END_SRC
+
+#+RESULTS:
+| Function                       | Times called |   Total time | Average time |
+|--------------------------------+--------------+--------------+--------------|
+| mapcar                         |         4217 | 12.580246839 | 0.0029832219 |
+| org-agenda-ng--agenda          |            1 |  8.777776059 |  8.777776059 |
+| org-get-tags-at                |         1845 | 8.2853503299 | 0.0044907047 |
+| org-up-heading-safe            |         9361 | 7.2710981889 | 0.0007767437 |
+| re-search-backward             |        25001 | 5.3360082060 | 0.0002134317 |
+| org-agenda-ng--filter-buffer   |            1 |  4.865602689 |  4.865602689 |
+| org-agenda-ng--tags-p          |         1238 | 4.7983754310 | 0.0038759090 |
+| org-agenda-ng--format-element  |          607 | 3.6273825100 | 0.0059759184 |
+| org-outline-level              |        17484 | 1.0284417919 | 5.882...e-05 |
+| org-back-to-heading            |        11813 | 0.9390534479 | 7.949...e-05 |
+| org-split-string               |         4940 |  0.833825087 | 0.0001687905 |
+| string-match                   |         9102 | 0.8231629100 | 9.043...e-05 |
+| org-element-headline-parser    |          607 | 0.2034305819 | 0.0003351409 |
+| outline-back-to-heading        |        11813 | 0.1096120189 | 9.278...e-06 |
+| org-end-of-subtree             |          607 | 0.0710802559 | 0.0001171009 |
+| outline-on-heading-p           |        11813 | 0.0670029359 | 5.671...e-06 |
+| outline-next-heading           |         1239 | 0.0622323519 | 5.022...e-05 |
+| re-search-forward              |         3273 | 0.0603102519 | 1.842...e-05 |
+| org-agenda-finalize-entries    |            1 |  0.037286496 |  0.037286496 |
+| buffer-substring-no-properties |         6329 | 0.0285818689 | 4.516...e-06 |
+
+
+** original
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 nil
+    (with-current-buffer "main.org"
+(org-tags-view nil "computer")))
+#+END_SRC
+
+#+RESULTS:
+| Function                    | Times called |   Total time | Average time |
+|-----------------------------+--------------+--------------+--------------|
+| org-tags-view               |            1 |  2.620578129 |  2.620578129 |
+| org-scan-tags               |            1 |  1.448883817 |  1.448883817 |
+| org-agenda-format-item      |          607 | 0.9273893060 | 0.0015278242 |
+| org-add-props               |         2042 | 0.8877267209 | 0.0004347339 |
+| org-agenda-finalize         |            1 |  0.144506782 |  0.144506782 |
+| re-search-forward           |         2154 | 0.1367046650 | 6.346...e-05 |
+| string-match                |         8742 | 0.1002517259 | 1.146...e-05 |
+| org-get-priority            |          607 | 0.0961996220 | 0.0001584837 |
+| org-agenda-align-tags       |            1 |  0.095166495 |  0.095166495 |
+| org-agenda-prepare          |            1 |  0.081724472 |  0.081724472 |
+| org-outline-level           |         1246 | 0.0771033170 | 6.188...e-05 |
+| org-agenda-finalize-entries |            1 |  0.071707404 |  0.071707404 |
+| org-agenda-prepare-buffers  |            1 |  0.057903921 |  0.057903921 |
+| org-get-heading             |          607 | 0.0517784369 | 8.530...e-05 |
+| mapcar                      |         3738 | 0.0418641110 | 1.119...e-05 |
+| org-agenda-highlight-todo   |          607 | 0.0273123070 | 4.499...e-05 |
+| mapconcat                   |          609 |  0.024743305 | 4.062...e-05 |
+| sort                        |            2 |   0.02117069 |  0.010585345 |
+| org-activate-plain-links    |          132 | 0.0203558980 | 0.0001542113 |
+| org-activate-bracket-links  |           78 | 0.0198589680 | 0.0002546021 |
