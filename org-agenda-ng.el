@@ -1,3 +1,6 @@
+;; -*- lexical-binding: t; -*-
+
+
 ;;; Commentary:
 
 ;; This is just a proof-of-concept for how the agenda code might be
@@ -118,7 +121,7 @@
 
 ;;;; Commands
 
-(cl-defun org-agenda-ng--agenda (&key files all any none)
+(cl-defun org-agenda-ng--agenda (&key files all any none pred)
   (unless files
     (setq files (buffer-file-name (current-buffer))))
   (unless (listp files)
@@ -132,7 +135,7 @@
                             ;; position instead of returning a list of
                             ;; positions and then having to go back
                             ;; and get the entries at each position.
-                            (let* ((positions (org-agenda-ng--filter-buffer :all all :any any :none none))
+                            (let* ((positions (org-agenda-ng--filter-buffer :all all :any any :none none :pred pred))
                                    (elements (--map (org-with-point-at it
                                                       (org-element-headline-parser
                                                        ;; FIXME: This is a hack
@@ -194,12 +197,20 @@
 ;;               collect (point)
 ;;               while (outline-next-heading)))))
 
-(cl-defun org-agenda-ng--filter-buffer (&key all any none)
+(cl-defun org-agenda-ng--filter-buffer (&key all any none pred)
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
   ;; NOTE: Build lambda so typecase doesn't run for every item
-  (let ((pred (org-agenda-ng--test-lambda :all all :any any :none none)))
+  (let* ((our-lambda (when (or all any none)
+                       (org-agenda-ng--test-lambda :all all :any any :none none)))
+         (pred (cond ((and our-lambda pred)
+                      (lambda ()
+                        (and (funcall our-lambda)
+                             (funcall pred))))
+                     (our-lambda our-lambda)
+                     (pred pred)
+                     (t (user-error "No tests given")))))
     (org-with-wide-buffer
      (goto-char (point-min))
      (when (org-before-first-heading-p)
@@ -332,16 +343,14 @@ Its property list should be the second item in the list, as returned by `org-ele
 
 ;;;; Predicates
 
-(defun org-agenda-ng--todo-p (keywords &rest more)
+(defun org-agenda-ng--todo-p (&rest keywords)
   "Return non-nil if current heading is a TODO item.
 With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
-  (when more
-    (cons more keywords))
   (when-let ((state (org-get-todo-state)))
     (pcase keywords
       ('nil t)
-      ((pred stringp)
-       (string= state keywords))
+      ;; ((pred stringp)
+      ;;  (string= state keywords))
       ((pred listp)
        (member state keywords))
       ((pred symbolp)
