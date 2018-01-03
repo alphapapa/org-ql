@@ -62,23 +62,10 @@
                 (string (list files))))
   (mapc 'find-file-noselect files)
   (let* ((org-use-tag-inheritance t)
-         (entries (-flatten
-                   (--map (with-current-buffer (find-buffer-visiting it)
-                            ;; FIXME: It would be more optimal to
-                            ;; gather the entry at each matching
-                            ;; position instead of returning a list of
-                            ;; positions and then having to go back
-                            ;; and get the entries at each position.
-                            (let* ((positions (org-agenda-ng--filter-buffer :pred pred))
-                                   (elements (--map (org-with-point-at it
-                                                      (org-element-headline-parser
-                                                       ;; FIXME: This is a hack
-                                                       (save-excursion
-                                                         (forward-line 3)
-                                                         (point))))
-                                                    positions)))
-                              (mapcar #'org-agenda-ng--format-element elements)))
-                          files)))
+         (entries (-flatten (--map (with-current-buffer (find-buffer-visiting it)
+                                     (mapcar #'org-agenda-ng--format-element
+                                             (org-agenda-ng--filter-buffer :pred pred)))
+                                   files)))
          (result-string (org-agenda-finalize-entries entries 'agenda))
          (target-buffer (get-buffer-create "test-agenda-ng")))
     (with-current-buffer target-buffer
@@ -102,7 +89,6 @@
                while (outline-next-heading)))))
 
 (cl-defun org-agenda-ng--filter-buffer (&key pred)
-  ;; TODO: Remove all, any, and none, and just use the predicate lambda.
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
@@ -116,7 +102,11 @@ NONE-PREDS."
      (when (org-before-first-heading-p)
        (outline-next-heading))
      (cl-loop when (funcall pred)
-              collect (point)
+              collect (org-element-headline-parser
+                       ;; FIXME: This bound is a hack
+                       (save-excursion
+                         (forward-line 3)
+                         (point)))
               while (outline-next-heading)))))
 
 ;;;; Faces/properties
