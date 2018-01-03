@@ -1,6 +1,6 @@
 This is rudimentary, experimental, proof-of-concept alternative code for generating Org agendas.  It doesn't support nearly as many features as =org-agenda.el= does, but it might be useful in some way.  It uses some existing code from =org-agenda.el= and tries to be compatible with parts of it, like =org-agenda-finalize-entries= and =org-agenda-finalize=.
 
-Here's an example of generating a kind of agenda view for today:
+Here's an example of generating a kind of agenda view for today (note that the grouping is provided by [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], not this code:
 
 #+BEGIN_SRC elisp
   (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
