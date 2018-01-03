@@ -39,7 +39,15 @@
 
 ;;;; Macros
 
+(defmacro org-agenda-ng--flet (fns &rest body)
+  (declare (indent defun))
+  `(cl-letf ,(cl-loop for (fn def) in fns
+                      collect `((symbol-function ',fn)
+                                ,def))
+     ,@body))
+
 (cl-defun org-agenda-ng--test-lambda (&key all any none)
+  ;; Not actually a macro, but...
   `(lambda ()
      (and ,@(-non-nil (list (when all
                               `(and ,@(--map (cl-typecase it
@@ -156,15 +164,6 @@
 
 ;;;; Functions
 
-;; (cl-defun org-agenda-ng--get-entries (file &key any-preds none-preds)
-;;   "Return list of entries from FILE."
-;;   (with-current-buffer (find-buffer-visiting file)
-;;     (let* ((org-use-tag-inheritance t)
-;;            (tree (cddr (org-element-parse-buffer 'headline)))
-;;            (entries (--> (org-agenda-ng--filter-tree tree :any any-preds :none none-preds)
-;;                          (mapcar #'org-agenda-ng--format-element it))))
-;;       entries)))
-
 (cl-defun org-agenda-ng--heading-positions (file)
   "Return list of heading positions in FILE."
   (with-current-buffer (find-buffer-visiting file)
@@ -175,49 +174,28 @@
                collect (point)
                while (outline-next-heading)))))
 
-;; (cl-defun org-agenda-ng--filter-buffer (&key any-preds none-preds)
-;;   "Return positions of matching headings in current buffer.
-;; Headings should return non-nil for any ANY-PREDS and nil for all
-;; NONE-PREDS."
-;;   (cl-flet ((pred () (and (--any? (cl-typecase it
-;;                                     (function (funcall it))
-;;                                     (cons (apply (car it) (cdr it))))
-;;                                   any-preds)
-;;                           ;; Don't return if any filters match
-;;                           (or (null none-preds)
-;;                               (--none? (cl-typecase it
-;;                                          (function (funcall it))
-;;                                          (cons (apply (car it) (cdr it))))
-;;                                        none-preds)))))
-;;     (org-with-wide-buffer
-;;      (goto-char (point-min))
-;;      (when (org-before-first-heading-p)
-;;        (outline-next-heading))
-;;      (cl-loop when (pred)
-;;               collect (point)
-;;               while (outline-next-heading)))))
-
 (cl-defun org-agenda-ng--filter-buffer (&key all any none pred)
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
-  ;; NOTE: Build lambda so typecase doesn't run for every item
-  (let* ((our-lambda (when (or all any none)
-                       (org-agenda-ng--test-lambda :all all :any any :none none)))
-         (pred (cond ((and our-lambda pred)
-                      (lambda ()
-                        (and (funcall our-lambda)
-                             (funcall pred))))
-                     (our-lambda our-lambda)
-                     (pred pred)
-                     (t (user-error "No tests given")))))
-    (org-with-wide-buffer
-     (goto-char (point-min))
-     (when (org-before-first-heading-p)
-       (outline-next-heading))
-     (cl-loop when (funcall pred)
-              collect (point)
-              while (outline-next-heading)))))
+  (org-agenda-ng--flet ((date (lambda (&rest args) (apply #'org-agenda-ng--date-p args)))
+                        (todo (lambda (&rest args) (apply #'org-agenda-ng--todo-p args))))
+    (let* ((our-lambda (when (or all any none)
+                         (org-agenda-ng--test-lambda :all all :any any :none none)))
+           (pred (cond ((and our-lambda pred)
+                        (lambda ()
+                          (and (funcall our-lambda)
+                               (funcall pred))))
+                       (our-lambda our-lambda)
+                       (pred pred)
+                       (t (user-error "No tests given")))))
+      (org-with-wide-buffer
+       (goto-char (point-min))
+       (when (org-before-first-heading-p)
+         (outline-next-heading))
+       (cl-loop when (funcall pred)
+                collect (point)
+                while (outline-next-heading))))))
 
 ;;;; Faces/properties
 
