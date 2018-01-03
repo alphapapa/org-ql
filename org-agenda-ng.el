@@ -40,11 +40,11 @@
 
 ;;;; Macros
 
-(defmacro org-agenda-ng--flet (fns &rest body)
+(defmacro org-agenda-ng--fmap (fns &rest body)
   (declare (indent defun))
-  `(cl-letf ,(cl-loop for (fn def) in fns
+  `(cl-letf ,(cl-loop for (fn target) in fns
                       collect `((symbol-function ',fn)
-                                ,def))
+                                (symbol-function ,target)))
      ,@body))
 
 (cl-defun org-agenda-ng--test-lambda (&key all any none)
@@ -187,11 +187,11 @@
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
-  (org-agenda-ng--flet ((category (lambda (&rest args) (apply #'org-agenda-ng--category-p args)))
-                        (date (lambda (&rest args) (apply #'org-agenda-ng--date-p args)))
-                        (habit (lambda (&rest args) (apply #'org-agenda-ng--habit-p args)))
-                        (todo (lambda (&rest args) (apply #'org-agenda-ng--todo-p args)))
-                        (tags (lambda (&rest args) (apply #'org-agenda-ng--tags-p args))))
+  (org-agenda-ng--fmap ((category #'org-agenda-ng--category-p)
+                        (date #'org-agenda-ng--date-p)
+                        (habit #'org-agenda-ng--habit-p)
+                        (todo #'org-agenda-ng--todo-p)
+                        (tags #'org-agenda-ng--tags-p))
     (let* ((our-lambda (when (or all any none)
                          (org-agenda-ng--test-lambda :all all :any any :none none)))
            (pred (cond ((and our-lambda pred)
