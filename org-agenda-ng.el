@@ -287,28 +287,6 @@ Its property list should be the second item in the list, as returned by `org-ele
 
 (defun org-agenda-ng--add-scheduled-face (element)
   "Add faces to ELEMENT's title for its scheduled status."
-  (if-let ((scheduled-date (org-element-property :scheduled element)))
-      (let* ((today-day-number (org-today))
-             (scheduled-day-number (org-time-string-to-absolute
-                                    (org-element-timestamp-interpreter scheduled-date 'ignore)))
-             (todo-keyword (org-element-property :todo-keyword element))
-             (face (cond
-                    ((member todo-keyword org-done-keywords) 'org-agenda-done)
-                    ((= today-day-number scheduled-day-number) 'org-scheduled-today)
-                    ((> today-day-number scheduled-day-number) 'org-scheduled-previously)
-                    (t 'org-scheduled)))
-             (title (--> (org-element-property :raw-value element)
-                         (org-add-props it nil
-                           'face face)))
-             (properties (--> (second element)
-                              (plist-put it :title title))))
-        (list (car element)
-              properties))
-    ;; Not scheduled
-    element))
-
-(defun org-agenda-ng--add-scheduled-face (element)
-  "Add faces to ELEMENT's title for its scheduled status."
   ;; NOTE: Also adding prefix
   (if-let ((scheduled-date (org-element-property :scheduled element)))
       (let* ((show-all (or (eq org-agenda-repeating-timestamp-show-all t)
