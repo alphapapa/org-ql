@@ -183,6 +183,7 @@
                while (outline-next-heading)))))
 
 (cl-defun org-agenda-ng--filter-buffer (&key all any none pred)
+  ;; TODO: Remove all, any, and none, and just use the predicate lambda.
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
@@ -229,8 +230,12 @@ Its property list should be the second item in the list, as returned by `org-ele
          ;; the properties list that it makes it essentially
          ;; impossible to debug, because Emacs takes approximately
          ;; forever to show it in the minibuffer or with
-         ;; `describe-text-properties'.  Also, remove ":" from key
-         ;; symbols.
+         ;; `describe-text-properties'.  FIXME: Shouldn't be necessary
+         ;; anymore since we're not parsing the whole buffer.
+
+         ;; Also, remove ":" from key symbols.  FIXME: It would be
+         ;; better to avoid this somehow.  At least, we should use a
+         ;; function to convert plists to alists, if possible.
          (properties (cl-loop for (key val) on properties by #'cddr
                               for key = (intern (cl-subseq (symbol-name key) 1))
                               unless (member key '(parent))
@@ -268,6 +273,7 @@ Its property list should be the second item in the list, as returned by `org-ele
     (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
     ;; Add all the necessary properties and faces to the whole string
     (--> string
+         ;; FIXME: Use proper prefix
          (concat "  " it)
          (org-add-props it properties
            'todo-state todo-keyword
