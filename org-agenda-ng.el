@@ -92,7 +92,8 @@ NONE-PREDS."
                         (habit #'org-agenda-ng--habit-p)
                         (priority #'org-agenda-ng--priority-p)
                         (todo #'org-agenda-ng--todo-p)
-                        (tags #'org-agenda-ng--tags-p))
+                        (tags #'org-agenda-ng--tags-p)
+                        (org-back-to-heading #'outline-back-to-heading))
     (org-with-wide-buffer
      (goto-char (point-min))
      (when (org-before-first-heading-p)
