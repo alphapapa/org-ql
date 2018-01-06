@@ -53,6 +53,11 @@
                           :pred (lambda ()
                                   ,@pred-body)))
 
+;; TODO: Return different kinds of results for org-ql?  i.e. maybe it
+;; shouldn't always open an agenda-like view; maybe it should return a
+;; list of positions or propertized strings instead.
+(defalias 'org-ql 'org-agenda-ng)
+
 ;;;; Commands
 
 (cl-defun org-agenda-ng--agenda (&key files pred)
