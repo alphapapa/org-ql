@@ -319,13 +319,13 @@ like one returned by `date-to-day'."
                           (:scheduled (org-entry-get (point) "SCHEDULED"))
                           (:closed (org-entry-get (point) "CLOSED"))))
              (date-element (with-temp-buffer
-                           ;; FIXME: Hack: since we're using
-                           ;; (org-element-property :type date-element)
-                           ;; below, we need this date parsed into an
-                           ;; org-element element
-                           (insert timestamp)
-                           (goto-char 0)
-                           (org-element-timestamp-parser))))
+                             ;; FIXME: Hack: since we're using
+                             ;; (org-element-property :type date-element)
+                             ;; below, we need this date parsed into an
+                             ;; org-element element
+                             (insert timestamp)
+                             (goto-char 0)
+                             (org-element-timestamp-parser))))
     (pcase comparator
       ;; Not comparing, just checking if it has one
       ('nil t)
