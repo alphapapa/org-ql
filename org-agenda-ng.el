@@ -304,6 +304,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
       (otherwise (seq-intersection tags tags-at)))))
 
 (defun org-agenda-ng--date-p (type &optional comparator target-date)
+  ;; TODO: Make this a macro so we don't have to quote comparator and test it for every item.
   "Return non-nil if current heading has a date property of TYPE.
 TYPE should be a keyword symbol, like :scheduled or :deadline.
 
