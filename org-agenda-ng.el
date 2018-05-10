@@ -164,7 +164,10 @@ Its property list should be the second item in the list, as returned by `org-ele
          (habit-property (org-with-point-at (org-element-property :begin element)
                            (when (org-is-habit-p)
                              (org-habit-parse-todo))))
-         (string (s-join " " (list todo-keyword priority-string title tag-string))))
+         (due-string (pcase (org-element-property :relative-due-date element)
+                       ('nil "")
+                       (string (format " %s " (org-add-props string nil 'face 'underline)))))
+         (string (s-join " " (list todo-keyword priority-string title due-string tag-string))))
     (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
     ;; Add all the necessary properties and faces to the whole string
     (--> string
@@ -249,11 +252,18 @@ Its property list should be the second item in the list, as returned by `org-ele
     element))
 
 (defun org-agenda-ng--add-deadline-face (element)
-  "Add faces to ELEMENT's title for its deadline status."
+  "Add faces to ELEMENT's title for its deadline status.
+Also store relative due date as string in `:relative-due-date'
+property."
   (if-let ((deadline-date (org-element-property :deadline element)))
       (let* ((today-day-number (org-today))
              (deadline-day-number (org-time-string-to-absolute
                                    (org-element-timestamp-interpreter deadline-date 'ignore)))
+             (difference-days (- today-day-number deadline-day-number))
+             (relative-due-date (pcase difference-days
+                                  (0 "today")
+                                  (_ (org-add-props (format "%sd ago" difference-days) nil
+                                       'help-echo (org-element-property :raw-value deadline-date)))))
              (todo-keyword (org-element-property :todo-keyword element))
              (done-p (member todo-keyword org-done-keywords))
              (today-p (= today-day-number deadline-day-number))
@@ -266,7 +276,8 @@ Its property list should be the second item in the list, as returned by `org-ele
                          (org-add-props it nil
                            'face face)))
              (properties (--> (second element)
-                              (plist-put it :title title))))
+                              (plist-put it :title title)
+                              (plist-put it :relative-due-date relative-due-date))))
         (list (car element)
               properties))
     ;; No deadline
