@@ -29,4 +29,13 @@ Here are some other examples:
         (date :scheduled '<= (org-today))
         (and (todo "DONE" "CANCELLED")
              (date :closed '= (org-today)))))
+
+  (org-agenda-ng "~/org/main.org"
+    (or (habit)
+        (and (or (date :date '= (org-today))
+                 (date :deadline '<= (+ org-deadline-warning-days (org-today)))
+                 (date :scheduled '<= (org-today)))
+             (not (apply #'todo org-done-keywords-for-agenda)))
+        (and (todo "DONE" "CANCELLED")
+             (date :closed '= (org-today)))))
 #+END_SRC

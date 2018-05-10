@@ -50,8 +50,8 @@
 (cl-defmacro org-agenda-ng (files &rest pred-body)
   (declare (indent defun))
   `(org-agenda-ng--agenda :files ,files
-                          :pred (lambda ()
-                                  ,@pred-body)))
+                          :pred (byte-compile (lambda ()
+                                                ,@pred-body))))
 
 ;; TODO: Return different kinds of results for org-ql?  i.e. maybe it
 ;; shouldn't always open an agenda-like view; maybe it should return a

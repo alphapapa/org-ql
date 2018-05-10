@@ -6,15 +6,128 @@
 
 [2017-12-31 Sun 17:54]  I wonder if, instead of parsing the whole buffer with =org-element-parse-buffer=, we could simply work on a list of heading positions, e.g. a loop would search forward to the next heading position, then call whatever predicates it needed at the heading's position, using =save-excursion= around each function call.  The predicates would need to be updated to get their data from the buffer, instead of using =org-element-property=, but that wouldn't be hard.
 
-** Byte-compile lambdas
+** Use macros for =date=
+
+If I made the =date= selector a macro, I could avoid the need to quote the comparator.
+
+Also, maybe instead of having a single =date= selector, I should have =scheduled=, =deadline=, etc.
+
+** DONE Byte-compile lambdas
+CLOSED: [2018-05-09 Wed 17:30]
+:LOGBOOK:
+-  State "DONE"       from              [2018-05-09 Wed 17:30]
+:END:
 
 =elfeed-search--update-list= byte-compiles lambdas returned by =elfeed-search-compile-filter=.  Maybe I could do something like this too.
 
 If I can get this working, I should profile it to see what difference it makes.
 
-** Use macros for =date=
+*** Profiling
 
-If I made the =date= selector a macro, I could avoid the need to quote the comparator.
+Going to try byte-compiling the predicate function:
+
+#+BEGIN_SRC elisp
+  (elp-profile 10 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+                   (and (or (date :date '= (org-today))
+                            (date :deadline '<= (+ org-deadline-warning-days (org-today)))
+                            (date :scheduled '<= (org-today)))
+                        (not (apply #'todo org-done-keywords-for-agenda)))))
+#+END_SRC
+
+#+RESULTS:
+| Function                                  | Times called |   Total time | Average time |
+|-------------------------------------------+--------------+--------------+--------------|
+| org-agenda-ng--agenda                     |           10 | 0.8370581039 | 0.0837058104 |
+| org-agenda-finalize-entries               |           10 |  0.652886608 | 0.0652886608 |
+| org-super-agenda--filter-finalize-entries |           10 |  0.641794501 | 0.0641794501 |
+| org-super-agenda--group-items             |           10 |  0.636057006 | 0.0636057006 |
+| org-super-agenda--group-dispatch          |          130 |  0.631911849 | 0.0048608603 |
+| org-super-agenda--group-tag               |           50 |  0.592883869 | 0.0118576773 |
+| list                                      |         2720 | 0.5792795169 | 0.0002129704 |
+| mapcar                                    |          331 | 0.2333591920 | 0.0007050126 |
+| org-agenda-ng--filter-buffer              |           10 |   0.09247626 |  0.009247626 |
+| org-agenda-ng--format-element             |          150 | 0.0649320479 | 0.0004328803 |
+| org-entry-get                             |          860 | 0.0408285349 | 4.747...e-05 |
+| org-agenda-ng--date-p                     |          910 | 0.0385646249 | 4.237...e-05 |
+| org-element-headline-parser               |          150 | 0.0374417470 | 0.0002496116 |
+| org-is-habit-p                            |          270 | 0.0290107389 | 0.0001074471 |
+| org--property-local-values                |          270 | 0.0268615979 | 9.948...e-05 |
+| org-get-property-block                    |          270 | 0.0244613309 | 9.059...e-05 |
+| org-get-tags-at                           |          150 |  0.017875864 | 0.0001191724 |
+| org-super-agenda--group-habit             |           10 |  0.015910656 | 0.0015910655 |
+| mapc                                      |         2540 | 0.0158616290 | 6.244...e-06 |
+| org-agenda-ng--add-faces                  |          150 | 0.0143329670 | 9.555...e-05 |
+
+
+Now the same thing without byte-compiling:
+
+#+BEGIN_SRC elisp
+  (elp-profile 10 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+                   (and (or (date :date '= (org-today))
+                            (date :deadline '<= (+ org-deadline-warning-days (org-today)))
+                            (date :scheduled '<= (org-today)))
+                        (not (apply #'todo org-done-keywords-for-agenda)))))
+#+END_SRC
+
+#+RESULTS:
+| Function                                  | Times called |   Total time | Average time |
+|-------------------------------------------+--------------+--------------+--------------|
+| org-agenda-ng--agenda                     |           10 |  0.846645537 | 0.0846645537 |
+| org-agenda-finalize-entries               |           10 |  0.662896805 | 0.0662896805 |
+| sort                                      |           40 |  0.591123256 | 0.0147780814 |
+| org-entries-lessp                         |          400 | 0.5901201620 | 0.0014753004 |
+| mapcar                                    |          201 | 0.2318270599 | 0.0011533684 |
+| org-agenda-ng--filter-buffer              |           10 |  0.092519787 | 0.0092519787 |
+| org-super-agenda--filter-finalize-entries |           10 | 0.0664278040 | 0.0066427804 |
+| org-agenda-ng--format-element             |          150 |  0.064658994 | 0.0004310599 |
+| org-super-agenda--group-items             |           10 | 0.0602504089 | 0.0060250408 |
+| org-super-agenda--group-dispatch          |          130 | 0.0561904470 | 0.0004322342 |
+| org-entry-get                             |          860 | 0.0437458889 | 5.086...e-05 |
+| org-agenda-ng--date-p                     |          910 | 0.0382623409 | 4.204...e-05 |
+| org-element-headline-parser               |          150 | 0.0374662920 | 0.0002497752 |
+| org-is-habit-p                            |          270 | 0.0320861079 | 0.0001188374 |
+| org--property-local-values                |          270 | 0.0298690430 | 0.0001106260 |
+| org-get-property-block                    |          270 | 0.0274716649 | 0.0001017469 |
+| org-super-agenda--group-habit             |           10 |  0.019117901 | 0.0019117901 |
+| org-get-tags-at                           |          150 | 0.0178958930 | 0.0001193059 |
+| mapc                                      |         2470 | 0.0150361130 | 6.087...e-06 |
+| org-agenda-ng--add-faces                  |          150 | 0.0143092169 | 9.539...e-05 |
+
+Virtually indistinguishable.  Going to try moving the =byte-compile= call from the =org-agenda-ng= macro to other places...
+
+#+BEGIN_SRC elisp
+  (elp-profile 10 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+                   (and (or (date :date '= (org-today))
+                            (date :deadline '<= (+ org-deadline-warning-days (org-today)))
+                            (date :scheduled '<= (org-today)))
+                        (not (apply #'todo org-done-keywords-for-agenda)))))
+#+END_SRC
+
+#+RESULTS:
+| Function                                  | Times called |   Total time | Average time |
+|-------------------------------------------+--------------+--------------+--------------|
+| org-agenda-ng--agenda                     |           10 | 0.8476316779 | 0.0847631678 |
+| mapcar                                    |          331 | 0.8159452220 | 0.0024650913 |
+| org-agenda-ng--filter-buffer              |           10 |  0.674217912 | 0.0674217912 |
+| org-element-headline-parser               |          150 | 0.6171195889 | 0.0041141305 |
+| line-beginning-position                   |          620 | 0.5802579680 | 0.0009358999 |
+| org-agenda-finalize-entries               |           10 |  0.082065157 | 0.0082065157 |
+| org-super-agenda--filter-finalize-entries |           10 | 0.0708772279 | 0.0070877227 |
+| org-super-agenda--group-items             |           10 |  0.065523103 | 0.0065523103 |
+| org-agenda-ng--format-element             |          150 | 0.0652783740 | 0.0004351891 |
+| org-super-agenda--group-dispatch          |          130 | 0.0614253589 | 0.0004725027 |
+| org-entry-get                             |          860 | 0.0494023029 | 5.744...e-05 |
+| org-agenda-ng--date-p                     |          910 | 0.0388435519 | 4.268...e-05 |
+| org-is-habit-p                            |          270 | 0.0375687549 | 0.0001391435 |
+| org--property-local-values                |          270 | 0.0353892929 | 0.0001310714 |
+| org-get-property-block                    |          270 | 0.0329700440 | 0.0001221112 |
+| org-super-agenda--group-habit             |           10 |  0.024468601 | 0.0024468601 |
+| re-search-backward                        |         1500 | 0.0186344089 | 1.242...e-05 |
+| org-get-tags-at                           |          150 | 0.0180038809 | 0.0001200258 |
+| mapc                                      |         2540 | 0.0156518099 | 6.162...e-06 |
+| org-agenda-ng--add-faces                  |          150 | 0.0144141080 | 9.609...e-05 |
+
+Doesn't seem to make any difference.
 
 * Examples / testing
 
