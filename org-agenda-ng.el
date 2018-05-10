@@ -47,20 +47,32 @@
                                 (symbol-function ,target)))
      ,@body))
 
-(cl-defmacro org-agenda-ng (files &rest pred-body)
+(cl-defmacro org-agenda-ng (files pred-body)
+  "Display an agenda-like buffer of entries in FILES that match PRED-BODY."
   (declare (indent defun))
-  `(org-agenda-ng--agenda :files ,files
-                          :pred (byte-compile (lambda ()
-                                                ,@pred-body))))
+  `(org-agenda-ng--agenda ,files
+                          (byte-compile (lambda ()
+                                          ,pred-body))
+                          #'org-agenda-ng--format-element))
 
-;; TODO: Return different kinds of results for org-ql?  i.e. maybe it
-;; shouldn't always open an agenda-like view; maybe it should return a
-;; list of positions or propertized strings instead.
-(defalias 'org-ql 'org-agenda-ng)
+(cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) (list element))))
+  "Find entries in FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
+
+ACTION-FN should take a single argument, which will be the result
+of calling `org-element-headline-parser' at each matching entry."
+  (declare (indent defun))
+  `(org-ql--query ,files
+                  (byte-compile (lambda ()
+                                  ,pred-body))
+                  #',action-fn))
+
 
 ;;;; Commands
 
-(cl-defun org-agenda-ng--agenda (&key files pred)
+;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
+;; headline-parser when they don't need it.
+
+(cl-defun org-ql--query (files pred action-fn)
   (setq files (cl-typecase files
                 (null (list (buffer-file-name (current-buffer))))
                 (list files)
@@ -68,11 +80,14 @@
   (mapc 'find-file-noselect files)
   (let* ((org-use-tag-inheritance t)
          (org-scanner-tags nil)
-         (org-trust-scanner-tags t)
-         (entries (-flatten (--map (with-current-buffer (find-buffer-visiting it)
-                                     (mapcar #'org-agenda-ng--format-element
-                                             (org-agenda-ng--filter-buffer :pred pred)))
-                                   files)))
+         (org-trust-scanner-tags t))
+    (-flatten-n 1 (--map (with-current-buffer (find-buffer-visiting it)
+                           (mapcar action-fn
+                                   (org-agenda-ng--filter-buffer :pred pred)))
+                         files))))
+
+(cl-defun org-agenda-ng--agenda (files pred action-fn)
+  (let* ((entries (org-ql--query files pred action-fn))
          (result-string (org-agenda-finalize-entries entries 'agenda))
          (target-buffer (get-buffer-create "test-agenda-ng")))
     (with-current-buffer target-buffer

@@ -9,7 +9,7 @@ Here's an example of generating a kind of agenda view for today (note that the g
     (and (or (date :date '= (org-today))
              (date :deadline '<= (+ org-deadline-warning-days (org-today)))
              (date :scheduled '<= (org-today)))
-         (not (apply #'todo org-done-keywords-for-agenda))))
+         (not (done))))
 #+END_SRC
 
 [[screenshot.png]]
@@ -37,7 +37,7 @@ Here are some other examples:
         (and (or (date :date '= (org-today))
                  (date :deadline '<=)
                  (date :scheduled '<= (org-today)))
-             (not (apply #'todo org-done-keywords-for-agenda)))
+             (not (done)))
         (and (todo "DONE" "CANCELLED")
              (date :closed '= (org-today)))))
 
@@ -46,7 +46,7 @@ Here are some other examples:
         (and (or (date '= (org-today))
                  (deadline '<=)
                  (scheduled '<= (org-today)))
-             (not (apply #'todo org-done-keywords-for-agenda)))
+             (not (done)))
         (and (todo "DONE" "CANCELLED")
              (closed '= (org-today)))))
 #+END_SRC
@@ -59,17 +59,26 @@ Another way to look at it is like a "query language" for Org buffers.  For examp
   (org-ql org-agenda-files
     (and (todo "SOMEDAY")
          (tags "Emacs")
-         (priority >= "B")))
+         (priority >= "B"))) ;; => ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
 
   (org-ql "~/org/main.org"
     (and (or (tags "Emacs")
              (priority >= "B"))
-         (not (done))))
+         (not (done)))) ;; => (((headline (:raw-value "Now" :begin 3832 :end 3843 ...))) ...)
 
   (org-ql "~/org/main.org"
     (and (or (tags "Emacs")
              (priority >= "B"))
-         (done)))
+         (done))
+    :action-fn (lambda (element)
+                 (org-element-property :begin element)))  ;; => (44154 46469 56008 63965 100008 ...)
+
+  (mapcar (lambda (element)
+            (org-element-property :begin element))
+          (org-ql "~/org/main.org"
+            (and (or (tags "Emacs")
+                     (priority >= "B"))
+                 (done))))  ;; => (44154 46469 56008 63965 100008 ...)
 #+END_SRC
 
-Instead of opening an agenda-like buffer with matching entries, =org-ql= could take a function as an argument that would be called at each matching entry to return a result, and finally it would return a list of the results.  For example, you could return a list of positions within the buffer, or a list of headings, or headings with entry contents, etc.
+Instead of opening an agenda-like buffer with matching entries, =org-ql= can take a function as an argument that is called at each matching entry to return a result, and finally it returns a list of the results.  For example, you could return a list of positions within the buffer, or a list of headings, or headings with entry contents, etc.  By default, the matching element is returned, which is the result of calling =org-element-headline-parser= at that entry.
