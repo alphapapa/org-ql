@@ -50,11 +50,11 @@ Another way to look at it is like a "query language" for Org buffers.  For examp
          (tags "Emacs")
          (priority >= "B"))) ;; => ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
 
-  ;; Find non-done TODO items which are tagged "Emacs" and have priority "B" or higher, and return a
-  ;; list of heading positions:
+  ;; Find non-done items which contain the term "Emacs" and have priority "B" or higher, and
+  ;; return a list of heading positions:
   (org-ql org-agenda-files
     (and (not (done))
-         (tags "Emacs")
+         (regexp "Emacs")
          (priority >= "B"))
     :action-fn (lambda (element)
                  (org-element-property :begin element)))  ;; => (44154 46469 56008 63965 100008 ...)

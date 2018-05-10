@@ -128,6 +128,7 @@ NONE-PREDS."
                           (todo #'org-agenda-ng--todo-p)
                           (done #'org-agenda-ng--done-p)
                           (tags #'org-agenda-ng--tags-p)
+                          (regexp #'org-ql--regexp-p)
                           (org-back-to-heading #'outline-back-to-heading))
       (org-with-wide-buffer
        (goto-char (point-min))
@@ -464,3 +465,12 @@ comparator, PRIORITY should be a priority string."
 
 (defun org-agenda-ng--habit-p ()
   (org-is-habit-p))
+
+(defun org-ql--regexp-p (regexp)
+  "Return non-nil if current entry matches REGEXP."
+  (let ((end (or (save-excursion
+                   (outline-next-heading))
+                 (point-max))))
+    (save-excursion
+      (goto-char (line-beginning-position))
+      (re-search-forward regexp end t))))

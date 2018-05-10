@@ -176,6 +176,16 @@ Doesn't seem to make any difference.
          (done)))
 #+END_SRC
 
+** Regexp matching
+
+#+BEGIN_SRC elisp
+  (org-ql "~/src/emacs/org-super-agenda/test/test.org"
+    (regexp "over"))
+
+  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+    (regexp "over"))
+#+END_SRC
+
 ** Screenshot code
 
 #+BEGIN_SRC elisp
