@@ -17,27 +17,23 @@ Here's an example of generating a kind of agenda view for today (note that the g
 Here are some other examples:
 
 #+BEGIN_SRC elisp
+  ;; Show an agenda-like view of items in all agenda files with TODO and SOMEDAY keywords which are
+  ;; tagged "computer" or "Emacs" and in the category "main":
   (org-agenda-ng org-agenda-files
     (and (todo "TODO" "SOMEDAY")
          (tags "computer" "Emacs")
          (category "main")))
 
+  ;; Show an agenda-like view of all habits:
   (org-agenda-ng org-agenda-files
     (habit))
 
+  ;; Show an agenda-like view similar to a "traditional" Org agenda:
   (org-agenda-ng "~/org/main.org"
     (or (habit)
+        (date = today)
         (deadline <=)
         (scheduled <= today)
-        (and (todo "DONE" "CANCELLED")
-             (closed = today))))
-
-  (org-agenda-ng "~/org/main.org"
-    (or (habit)
-        (and (or (date = today)
-                 (deadline <=)
-                 (scheduled <= today))
-             (not (done)))
         (and (todo "DONE" "CANCELLED")
              (closed = today))))
 #+END_SRC
@@ -47,29 +43,29 @@ Here are some other examples:
 Another way to look at it is like a "query language" for Org buffers.  For example:
 
 #+BEGIN_SRC elisp
-  (org-ql org-agenda-files
+  ;; Return a list of Org entry elements which have the SOMEDAY keyword, are tagged "Emacs", and have
+  ;; priority B or higher:
+  (org-ql "~/org/main.org"
     (and (todo "SOMEDAY")
          (tags "Emacs")
          (priority >= "B"))) ;; => ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
 
-  (org-ql "~/org/main.org"
-    (and (or (tags "Emacs")
-             (priority >= "B"))
-         (not (done)))) ;; => (((headline (:raw-value "Now" :begin 3832 :end 3843 ...))) ...)
-
-  (org-ql "~/org/main.org"
-    (and (or (tags "Emacs")
-             (priority >= "B"))
-         (done))
+  ;; Find non-done TODO items which are tagged "Emacs" and have priority "B" or higher, and return a
+  ;; list of heading positions:
+  (org-ql org-agenda-files
+    (and (not (done))
+         (tags "Emacs")
+         (priority >= "B"))
     :action-fn (lambda (element)
                  (org-element-property :begin element)))  ;; => (44154 46469 56008 63965 100008 ...)
 
+  ;; Or you can use mapcar around it to get the same result (API is WIP):
   (mapcar (lambda (element)
             (org-element-property :begin element))
-          (org-ql "~/org/main.org"
-            (and (or (tags "Emacs")
-                     (priority >= "B"))
-                 (done))))  ;; => (44154 46469 56008 63965 100008 ...)
+          (org-ql org-agenda-files
+            (and (not (done))
+                 (tags "Emacs")
+                 (priority >= "B"))))  ;; => (44154 46469 56008 63965 100008 ...)
 #+END_SRC
 
 Instead of opening an agenda-like buffer with matching entries, =org-ql= can take a function as an argument that is called at each matching entry to return a result, and finally it returns a list of the results.  For example, you could return a list of positions within the buffer, or a list of headings, or headings with entry contents, etc.  By default, the matching element is returned, which is the result of calling =org-element-headline-parser= at that entry.
