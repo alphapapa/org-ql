@@ -6,9 +6,9 @@ Here's an example of generating a kind of agenda view for today (note that the g
 
 #+BEGIN_SRC elisp
   (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
-    (and (or (date '= today)
-             (deadline '<=)
-             (scheduled '<= today))
+    (and (or (date = today)
+             (deadline <=)
+             (scheduled <= today))
          (not (done))))
 #+END_SRC
 
@@ -27,36 +27,19 @@ Here are some other examples:
 
   (org-agenda-ng "~/org/main.org"
     (or (habit)
-        (deadline '<=)
-        (scheduled '<= today)
+        (deadline <=)
+        (scheduled <= today)
         (and (todo "DONE" "CANCELLED")
-             (closed '= today))))
+             (closed = today))))
 
   (org-agenda-ng "~/org/main.org"
     (or (habit)
-        (and (or (date '= today)
-                 (deadline '<=)
-                 (scheduled '<= today))
+        (and (or (date = today)
+                 (deadline <=)
+                 (scheduled <= today))
              (not (done)))
         (and (todo "DONE" "CANCELLED")
-             (closed '= today))))
-
-  (org-agenda-ng "~/org/main.org"
-    (or (habit)
-        (and (or (date '= today)
-                 (deadline '<=)
-                 (scheduled '<= today))
-             (not (done)))
-        (and (todo "DONE" "CANCELLED")
-             (closed '= today))))
-  (org-agenda-ng "~/org/main.org"
-    (or (habit)
-        (and (or (date '= today)
-                 (deadline '<=)
-                 (scheduled '<= today))
-             (not (done)))
-        (and (todo "DONE" "CANCELLED")
-             (closed '= today))))
+             (closed = today))))
 #+END_SRC
 
 ** org-ql

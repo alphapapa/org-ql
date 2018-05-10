@@ -47,12 +47,19 @@
                                 (symbol-function ,target)))
      ,@body))
 
+;; FIXME: DRY these two macros.
+
 (cl-defmacro org-agenda-ng (files pred-body)
   "Display an agenda-like buffer of entries in FILES that match PRED-BODY."
   (declare (indent defun))
   `(org-agenda-ng--agenda ,files
                           (byte-compile (lambda ()
-                                          ,pred-body))
+                                          (cl-symbol-macrolet ((= #'=)
+                                                               (< #'<)
+                                                               (> #'>)
+                                                               (<= #'<=)
+                                                               (>= #'>=))
+                                            ,pred-body)))
                           #'org-agenda-ng--format-element))
 
 (cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) (list element))))
@@ -63,7 +70,12 @@ of calling `org-element-headline-parser' at each matching entry."
   (declare (indent defun))
   `(org-ql--query ,files
                   (byte-compile (lambda ()
-                                  ,pred-body))
+                                  (cl-symbol-macrolet ((= #'=)
+                                                       (< #'<)
+                                                       (> #'>)
+                                                       (<= #'<=)
+                                                       (>= #'>=))
+                                    ,pred-body)))
                   #',action-fn))
 
 
