@@ -72,6 +72,8 @@ of calling `org-element-headline-parser' at each matching entry."
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
+(defvar org-ql--today nil)
+
 (cl-defun org-ql--query (files pred action-fn)
   (setq files (cl-typecase files
                 (null (list (buffer-file-name (current-buffer))))
@@ -80,7 +82,8 @@ of calling `org-element-headline-parser' at each matching entry."
   (mapc 'find-file-noselect files)
   (let* ((org-use-tag-inheritance t)
          (org-scanner-tags nil)
-         (org-trust-scanner-tags t))
+         (org-trust-scanner-tags t)
+         (org-ql--today (org-today)))
     (-flatten-n 1 (--map (with-current-buffer (find-buffer-visiting it)
                            (mapcar action-fn
                                    (org-agenda-ng--filter-buffer :pred pred)))
@@ -105,7 +108,7 @@ of calling `org-element-headline-parser' at each matching entry."
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
   ;; Cache `org-today' so we don't have to run it repeatedly.
-  (cl-flet ((org-today nil `(progn ,(org-today))))
+  (cl-letf ((today org-ql--today))
     (org-agenda-ng--fmap ((category #'org-agenda-ng--category-p)
                           (date #'org-agenda-ng--date-plain-p)
                           (deadline #'org-agenda-ng--deadline-p)
