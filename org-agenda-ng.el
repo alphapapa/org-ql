@@ -104,6 +104,16 @@ NONE-PREDS."
               collect (org-element-headline-parser (line-end-position))
               while (outline-next-heading)))))
 
+(defun org-agenda-ng--format-relative-date (difference)
+  "Return relative date string for DIFFERENCE.
+DIFFERENCE should be an integer number of days, positive for
+dates in the past, and negative for dates in the future."
+  (cond ((> difference 0)
+         (format "%sd ago" difference))
+        ((< difference 0)
+         (format "in %sd" (* -1 difference)))
+        (t "today")))
+
 ;;;; Faces/properties
 
 (defun org-agenda-ng--add-markers (element)
@@ -209,6 +219,11 @@ Its property list should be the second item in the list, as returned by `org-ele
               today-day-number)
              (scheduled-day-number (org-time-string-to-absolute
                                     (org-element-timestamp-interpreter scheduled-date 'ignore)))
+             (difference-days (- today-day-number scheduled-day-number))
+             (relative-due-date (pcase difference-days
+                                  (0 "today")
+                                  (_ (org-add-props (org-agenda-ng--format-relative-date difference-days) nil
+                                       'help-echo (org-element-property :raw-value scheduled-date)))))
              (repeat-day-number (cond (sexp-p (org-time-string-to-absolute scheduled-date))
                                       ((< today-day-number scheduled-day-number) scheduled-day-number)
                                       (t (org-time-string-to-absolute
@@ -233,7 +248,8 @@ Its property list should be the second item in the list, as returned by `org-ele
                          (org-add-props it nil
                            'face face)))
              (properties (--> (second element)
-                              (plist-put it :title title)))
+                              (plist-put it :title title)
+                              (plist-put it :relative-due-date relative-due-date)))
              (prefix (cl-destructuring-bind (first next) org-agenda-scheduled-leaders
                        (cond ((> scheduled-day-number today-day-number)
                               ;; Future
@@ -262,7 +278,7 @@ property."
              (difference-days (- today-day-number deadline-day-number))
              (relative-due-date (pcase difference-days
                                   (0 "today")
-                                  (_ (org-add-props (format "%sd ago" difference-days) nil
+                                  (_ (org-add-props (org-agenda-ng--format-relative-date difference-days) nil
                                        'help-echo (org-element-property :raw-value deadline-date)))))
              (todo-keyword (org-element-property :todo-keyword element))
              (done-p (member todo-keyword org-done-keywords))
@@ -348,10 +364,11 @@ like one returned by `date-to-day'."
       ;; Not comparing, just checking if it has one
       ('nil t)
       ;; Compare dates
-      ((and (pred functionp) (guard target-date))
+      ((pred functionp)
        (let ((target-day-number (cl-typecase target-date
                                   ;; Append time to target-date
                                   ;; because `date-to-day' requires it
+                                  (null (+ (org-get-wdays timestamp) (org-today)))
                                   (string (date-to-day (concat target-date " 00:00")))
                                   (integer target-date))))
          (pcase (org-element-property :type date-element)
