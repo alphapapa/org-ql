@@ -2,11 +2,21 @@
 
 * Ideas
 
-** Operate on list of heading positions
+** DONE Operate on list of heading positions
+CLOSED: [2018-05-10 Thu 15:02]
+:LOGBOOK:
+-  State "DONE"       from              [2018-05-10 Thu 15:02]
+:END:
 
 [2017-12-31 Sun 17:54]  I wonder if, instead of parsing the whole buffer with =org-element-parse-buffer=, we could simply work on a list of heading positions, e.g. a loop would search forward to the next heading position, then call whatever predicates it needed at the heading's position, using =save-excursion= around each function call.  The predicates would need to be updated to get their data from the buffer, instead of using =org-element-property=, but that wouldn't be hard.
 
-** Use macros for =date=
+[2018-05-10 Thu 15:01]  I already changed to using buffer-parsing predicates instead of =org-element-parse-buffer=.
+
+** DONE Use macros for =date=
+CLOSED: [2018-05-10 Thu 14:59]
+:LOGBOOK:
+-  State "DONE"       from              [2018-05-10 Thu 14:59]
+:END:
 
 If I made the =date= selector a macro, I could avoid the need to quote the comparator.
 
@@ -157,15 +167,24 @@ Doesn't seem to make any difference.
          (tags "Emacs")
          (priority >= "B")))
   (org-ql "~/org/main.org"
-    (or (tags "Emacs")
-        (priority >= "B")))
+    (and (or (tags "Emacs")
+             (priority >= "B"))
+         (not (done))))
+  (org-ql "~/org/main.org"
+    (and (or (tags "Emacs")
+             (priority >= "B"))
+         (done)))
 #+END_SRC
 
 * Profiling
 
+** Using =org-element-parse-buffer=
+
 This basically works, as a very basic kind of agenda view, but we can already see that it's much slower (at least, for single-day views) because =org-element-parse-buffer= is slow compared to the agenda code.
 
-** Macro
+[2018-05-10 Thu 15:03]  *Note:* This is the old, much slower code that used =org-element-parse-buffer=.
+
+*** Macro
 
 #+BEGIN_SRC elisp
   (defmacro elp-profile (times prefixes &rest body)
@@ -197,7 +216,7 @@ This basically works, as a very basic kind of agenda view, but we can already se
 
 [2018-05-09 Wed 17:31]  *Note*: I seem to have misplaced the =org-agenda-ng--test-agenda-today= function I used in these tests.
 
-** ng
+*** ng
 
 #+BEGIN_SRC elisp
   (elp-profile 1 (org-agenda-ng--test-agenda-today))
@@ -227,7 +246,7 @@ outline-back-to-heading                                       6897        0.3587
 line-beginning-position                                       11702       0.2887473860  2.467...e-05
 #+end_example
 
-** orig
+*** orig
 
 Make sure to kill any existing agenda buffers first.
 
@@ -430,7 +449,7 @@ org-agenda-use-sticky-p                                       1           4.73e-
 mapatoms                                                      1           0             0.0
 #+end_example
 
-** Profile org-element-map
+*** Profile org-element-map
 
 #+BEGIN_SRC elisp
   (elp-profile 1 (with-current-buffer (find-buffer-visiting "~/org/main.org")
@@ -460,9 +479,9 @@ outline-on-heading-p                                          3452        0.0101
 string-match                                                  4594        0.0064121759  1.395...e-06
 mapcar                                                        30          0.0041008740  0.0001366958
 #+end_example
-* Profiling position-based
+** Profiling position-based
 
-** Macro
+*** Macro
 
 #+BEGIN_SRC elisp
   (defmacro elp-profile (times &rest body)
@@ -488,7 +507,7 @@ mapcar                                                        30          0.0041
 #+END_SRC
 
 
-** orig
+*** orig
 
 Make sure to kill any existing agenda buffers first.
 
@@ -520,7 +539,7 @@ org-agenda-format-item                                        279         0.7552
 re-search-backward                                            16726       0.5694224969  3.404...e-05
 #+end_example
 
-** ng-funcall
+*** ng-funcall
 
 #+BEGIN_SRC elisp
   (elp-profile 5 (org-agenda-ng--test-agenda-today))
@@ -550,7 +569,7 @@ org-parse-time-string                                         300         0.0032
 org-agenda-ng--add-scheduled-face                             75          0.0031410580  4.188...e-05
 #+end_example
 
-** ng-flet
+*** ng-flet
 
 #+BEGIN_SRC elisp
   (elp-profile 5 (org-agenda-ng--test-agenda-today))
@@ -579,7 +598,7 @@ org-back-to-heading                                           725         0.0037
 org-agenda-ng--add-scheduled-face                             75          0.0031766149  4.235...e-05
 org-parse-time-string                                         300         0.0031740200  1.058...e-05
 #+end_example
-* Profiling =org-trust-scanner-tags=
+** Profiling =org-trust-scanner-tags=
 
 [2018-05-10 Thu 12:59]  Turned on =org-trust-scanner-tags=, going to try profiling again:
 
@@ -651,9 +670,9 @@ Now trying again without it:
 
 Wow, using =org-trust-scanner-tags= saves a /lot/ of time.
 
-* Profiling flet across all agenda files
+** Profiling flet across all agenda files
 
-** Without flet
+*** Without flet
 
 #+BEGIN_SRC elisp
   (elp-profile 5 (org-agenda-ng--agenda
@@ -690,7 +709,7 @@ org-time-string-to-absolute                                   3780        0.8277
 #+end_example
 
 
-** With flet
+*** With flet
 
 #+BEGIN_SRC elisp
   (elp-profile 5 (org-agenda-ng--agenda
@@ -726,11 +745,11 @@ org-parse-time-string                                         7560        1.7121
 org-element--get-time-properties                              1180        1.1814058020  0.0010011913
 #+end_example
 
-* Profiling flet on a single file
+** Profiling flet on a single file
 
 This shows that the difference between them, if any, is so small as to be irrelevant.  The convenience and clarity are a big win.
 
-** Without flet
+*** Without flet
 
 #+BEGIN_SRC elisp
   (elp-profile 5 (org-agenda-ng--agenda
@@ -767,7 +786,7 @@ org-super-agenda--filter-finalize-entries                     5           0.1324
 #+end_example
 
 
-** With flet
+*** With flet
 
 #+BEGIN_SRC elisp
   (elp-profile 5 (org-agenda-ng--agenda
@@ -803,9 +822,9 @@ org-agenda-finalize-entries                                   5           0.1607
 org-super-agenda--filter-finalize-entries                     5           0.1316961509  0.0263392301
 #+end_example
 
-* Profiling tags matching
+** Profiling tags matching
 
-** ng
+*** ng
 #+BEGIN_SRC elisp
   (elp-profile 1 nil
     (org-agenda-ng "~/org/main.org"
@@ -836,7 +855,7 @@ org-super-agenda--filter-finalize-entries                     5           0.1316
 | buffer-substring-no-properties |         6329 | 0.0308716979 | 4.877...e-06 |
 | line-end-position              |          903 | 0.0280484950 | 3.106...e-05 |
 
-** ng without inheritance
+*** ng without inheritance
 #+BEGIN_SRC elisp
   (elp-profile 1 nil
     (org-agenda-ng "~/org/main.org"
@@ -868,7 +887,7 @@ org-super-agenda--filter-finalize-entries                     5           0.1316
 | buffer-substring-no-properties |         6329 | 0.0285818689 | 4.516...e-06 |
 
 
-** original
+*** original
 
 #+BEGIN_SRC elisp
   (elp-profile 1 nil
@@ -899,3 +918,42 @@ org-super-agenda--filter-finalize-entries                     5           0.1316
 | sort                        |            2 |   0.02117069 |  0.010585345 |
 | org-activate-plain-links    |          132 | 0.0203558980 | 0.0001542113 |
 | org-activate-bracket-links  |           78 | 0.0198589680 | 0.0002546021 |
+
+** More profiling
+
+[2018-05-10 Thu 15:02]  I think these are decent improvements.
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 nil (org-agenda-ng "~/org/main.org"
+                        (or (habit)
+                            (and (or (date '= (org-today))
+                                     (deadline '<=)
+                                     (scheduled '<= (org-today)))
+                                 (not (apply #'todo org-done-keywords-for-agenda)))
+                            (and (todo "DONE" "CANCELLED")
+                                 (closed '= (org-today))))))
+#+END_SRC
+
+#+RESULTS:
+| Function                      | Times called |   Total time | Average time |
+|-------------------------------+--------------+--------------+--------------|
+| mapcar                        |          164 | 1.5004585290 | 0.0091491373 |
+| org-agenda-ng--agenda         |            1 |  1.348231247 |  1.348231247 |
+| org-agenda-ng--filter-buffer  |            1 | 1.1391189879 | 1.1391189879 |
+| org-agenda-ng--date-plain-p   |         1267 | 0.6198571040 | 0.0004892321 |
+| org-entry-get                 |         3983 | 0.2979337370 | 7.480...e-05 |
+| org-is-habit-p                |         1365 | 0.2049101109 | 0.0001501172 |
+| org--property-local-values    |         1365 | 0.1940614150 | 0.0001421695 |
+| org-agenda-ng--habit-p        |         1272 | 0.1911009179 | 0.0001502365 |
+| org-agenda-ng--format-element |           52 |  0.177965411 | 0.0034224117 |
+| org-get-property-block        |         1365 | 0.1760004519 | 0.0001289380 |
+| org-get-tags-at               |           52 | 0.1362824969 | 0.0026208172 |
+| org-agenda-ng--date-p         |         3880 | 0.1351176629 | 3.482...e-05 |
+| org-up-heading-safe           |          226 | 0.1276747609 | 0.0005649325 |
+| re-search-backward            |         2028 | 0.1144211070 | 5.642...e-05 |
+| org-entry-properties          |         2618 | 0.0848660999 | 3.241...e-05 |
+| org-agenda-ng--todo-p         |         1319 |  0.081952653 | 6.213...e-05 |
+| org-get-todo-state            |         1319 | 0.0796836810 | 6.041...e-05 |
+| re-search-forward             |         3754 | 0.0739803739 | 1.970...e-05 |
+| org-inlinetask-in-task-p      |         1365 | 0.0657829330 | 4.819...e-05 |
+| org-agenda-ng--scheduled-p    |         1247 | 0.0619497850 | 4.967...e-05 |

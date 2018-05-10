@@ -89,20 +89,26 @@
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS."
-  (org-agenda-ng--fmap ((category #'org-agenda-ng--category-p)
-                        (date #'org-agenda-ng--date-p)
-                        (habit #'org-agenda-ng--habit-p)
-                        (priority #'org-agenda-ng--priority-p)
-                        (todo #'org-agenda-ng--todo-p)
-                        (tags #'org-agenda-ng--tags-p)
-                        (org-back-to-heading #'outline-back-to-heading))
-    (org-with-wide-buffer
-     (goto-char (point-min))
-     (when (org-before-first-heading-p)
-       (outline-next-heading))
-     (cl-loop when (funcall pred)
-              collect (org-element-headline-parser (line-end-position))
-              while (outline-next-heading)))))
+  ;; Cache `org-today' so we don't have to run it repeatedly.
+  (cl-flet ((org-today nil `(progn ,(org-today))))
+    (org-agenda-ng--fmap ((category #'org-agenda-ng--category-p)
+                          (date #'org-agenda-ng--date-plain-p)
+                          (deadline #'org-agenda-ng--deadline-p)
+                          (scheduled #'org-agenda-ng--scheduled-p)
+                          (closed #'org-agenda-ng--closed-p)
+                          (habit #'org-agenda-ng--habit-p)
+                          (priority #'org-agenda-ng--priority-p)
+                          (todo #'org-agenda-ng--todo-p)
+                          (done #'org-agenda-ng--done-p)
+                          (tags #'org-agenda-ng--tags-p)
+                          (org-back-to-heading #'outline-back-to-heading))
+      (org-with-wide-buffer
+       (goto-char (point-min))
+       (when (org-before-first-heading-p)
+         (outline-next-heading))
+       (cl-loop when (funcall pred)
+                collect (org-element-headline-parser (line-end-position))
+                while (outline-next-heading))))))
 
 (defun org-agenda-ng--format-relative-date (difference)
   "Return relative date string for DIFFERENCE.
@@ -322,6 +328,9 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
       (symbol (member state (symbol-value keywords)))
       (otherwise (user-error "Invalid todo keywords: %s" keywords)))))
 
+(defsubst org-agenda-ng--done-p ()
+  (apply #'org-agenda-ng--todo-p org-done-keywords-for-agenda))
+
 (defun org-agenda-ng--tags-p (&rest tags)
   "Return non-nil if current heading has TAGS."
   ;; TODO: Try to use `org-make-tags-matcher' to improve performance.
@@ -379,6 +388,22 @@ like one returned by `date-to-day'."
                      target-day-number))
            (error "Unknown date-element type: %s" (org-element-property :type date-element)))))
       (otherwise (error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string" comparator target-date)))))
+
+(defsubst org-agenda-ng--date-plain-p (&optional comparator target-date)
+  (org-agenda-ng--date-p :date comparator target-date))
+(defsubst org-agenda-ng--deadline-p (&optional comparator target-date)
+  ;; FIXME: This is slightly confusing.  Using plain (deadline) does, and should, select entries
+  ;; that have any deadline.  But the common case of wanting to select entries whose deadline is
+  ;; within the warning days (either the global setting or that entry's setting) requires the user
+  ;; to specify the <= comparator, which is unintuitive.  Maybe it would be better to use that
+  ;; comparator by default, and use an 'any comparator to select entries with any deadline.  Of
+  ;; course, that would make the deadline selector different from the scheduled, closed, and date
+  ;; selectors, which would also be unintuitive.
+  (org-agenda-ng--date-p :deadline comparator target-date))
+(defsubst org-agenda-ng--scheduled-p (&optional comparator target-date)
+  (org-agenda-ng--date-p :scheduled comparator target-date))
+(defsubst org-agenda-ng--closed-p (&optional comparator target-date)
+  (org-agenda-ng--date-p :closed comparator target-date))
 
 (defmacro org-agenda-ng--priority-p (&optional comparator-or-priority priority)
   "Return non-nil if current heading has a certain priority.
