@@ -67,6 +67,8 @@
                 (string (list files))))
   (mapc 'find-file-noselect files)
   (let* ((org-use-tag-inheritance t)
+         (org-scanner-tags nil)
+         (org-trust-scanner-tags t)
          (entries (-flatten (--map (with-current-buffer (find-buffer-visiting it)
                                      (mapcar #'org-agenda-ng--format-element
                                              (org-agenda-ng--filter-buffer :pred pred)))
@@ -139,12 +141,12 @@ Its property list should be the second item in the list, as returned by `org-ele
                      ))
          (todo-keyword (-some--> (org-element-property :todo-keyword element)
                                  (org-agenda-ng--add-todo-face it)))
-         (tag-list (if org-agenda-use-tag-inheritance
+         ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
+         (tag-list (if org-use-tag-inheritance
                        (if-let ((marker (or (org-element-property :org-hd-marker element)
                                             (org-element-property :org-marker element)
                                             (org-element-property :begin element))))
-                           (org-with-point-at marker
-                             (org-get-tags-at))
+                           (org-get-tags-at marker (not org-use-tag-inheritance))
                          ;; No marker found
                          (warn "No marker found for item: %s" title)
                          (org-element-property :tags element))
@@ -298,7 +300,9 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   ;; TODO: Try to use `org-make-tags-matcher' to improve performance.
   (when-let ((tags-at (org-get-tags-at (point)
                                        ;; FIXME: Would be nice to not check this for every heading checked.
-                                       (not (member 'agenda org-agenda-use-tag-inheritance)))))
+                                       ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
+                                       ;; (not (member 'agenda org-agenda-use-tag-inheritance))
+                                       org-use-tag-inheritance)))
     (cl-typecase tags
       (null t)
       (otherwise (seq-intersection tags tags-at)))))

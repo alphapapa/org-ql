@@ -82,6 +82,8 @@ This basically works, as a very basic kind of agenda view, but we can already se
                             collect (s-split (rx (1+ space)) row 'omit-nulls)))))))
 #+END_SRC
 
+[2018-05-09 Wed 17:31]  *Note*: I seem to have misplaced the =org-agenda-ng--test-agenda-today= function I used in these tests.
+
 ** ng
 
 #+BEGIN_SRC elisp
@@ -464,6 +466,77 @@ org-back-to-heading                                           725         0.0037
 org-agenda-ng--add-scheduled-face                             75          0.0031766149  4.235...e-05
 org-parse-time-string                                         300         0.0031740200  1.058...e-05
 #+end_example
+* Profiling =org-trust-scanner-tags=
+
+[2018-05-10 Thu 12:59]  Turned on =org-trust-scanner-tags=, going to try profiling again:
+
+#+BEGIN_SRC elisp
+  ;; (elp-profile 1 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+  ;;                      (tags "world")))
+
+  (elp-profile 10 nil (org-agenda-ng org-agenda-files
+                       (tags "Emacs")))
+#+END_SRC
+
+#+RESULTS:
+| Function                                  | Times called |   Total time | Average time |
+|-------------------------------------------+--------------+--------------+--------------|
+| org-agenda-ng--agenda                     |           10 | 44.092598282 | 4.4092598282 |
+| mapcar                                    |          282 | 40.234516707 | 0.1426755911 |
+| org-agenda-ng--filter-buffer              |           80 | 26.895492471 | 0.3361936558 |
+| org-element-headline-parser               |         3980 | 10.387614362 | 0.0026099533 |
+| org-agenda-finalize-entries               |           10 |  9.194458252 | 0.9194458252 |
+| org-agenda-ng--tags-p                     |        70250 | 8.1897379849 | 0.0001165799 |
+| org-agenda-ng--format-element             |         3980 | 6.5944325679 | 0.0016568926 |
+| outline-next-heading                      |        70320 | 6.1190180490 | 8.701...e-05 |
+| re-search-forward                         |        97050 | 5.8706467829 | 6.049...e-05 |
+| org-get-tags-at                           |        74230 | 5.4078158059 | 7.285...e-05 |
+| org-super-agenda--filter-finalize-entries |           10 | 5.2320123400 | 0.5232012340 |
+| org-super-agenda--group-items             |           10 | 5.1260959210 | 0.5126095921 |
+| org-super-agenda--group-dispatch          |          130 |  5.119333624 | 0.0393794894 |
+| sort                                      |           20 | 3.8204368569 | 0.1910218428 |
+| org-element--parse-objects                |         6180 | 3.5386578929 | 0.0005725983 |
+| org-is-habit-p                            |         5970 | 3.2497755920 | 0.0005443510 |
+| org-entry-get                             |         5970 | 3.2347964049 | 0.0005418419 |
+| org--property-local-values                |         5970 | 3.1796357319 | 0.0005326023 |
+| org-get-property-block                    |         5970 | 3.0767919680 | 0.0005153755 |
+| org-entries-lessp                         |        20020 | 2.6563960079 | 0.0001326871 |
+
+Now trying again without it:
+
+#+BEGIN_SRC elisp
+  ;; (elp-profile 1 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+  ;;                      (tags "world")))
+
+  (elp-profile 10 nil (org-agenda-ng org-agenda-files
+                       (tags "Emacs")))
+#+END_SRC
+
+#+RESULTS:
+| Function                                  | Times called |   Total time | Average time |
+|-------------------------------------------+--------------+--------------+--------------|
+| mapcar                                    |         1791 | 57.096304538 | 0.0318795670 |
+| org-agenda-ng--agenda                     |           10 | 54.232133506 | 5.4232133505 |
+| org-agenda-ng--filter-buffer              |           80 | 30.065167040 | 0.3758145880 |
+| org-get-tags-at                           |        74230 | 13.840202495 | 0.0001864502 |
+| org-agenda-ng--format-element             |         3980 | 13.429297797 | 0.0033741954 |
+| org-element-headline-parser               |         3980 | 12.771776652 | 0.0032089891 |
+| org-agenda-finalize-entries               |           10 | 9.1439433990 | 0.9143943399 |
+| org-agenda-ng--tags-p                     |        70250 | 9.0249653730 | 0.0001284692 |
+| org-super-agenda--filter-finalize-entries |           10 |  7.300515859 | 0.7300515859 |
+| outline-next-heading                      |        70320 | 7.2384435649 | 0.0001029357 |
+| org-super-agenda--group-items             |           10 |  4.918585855 | 0.4918585855 |
+| org-super-agenda--group-dispatch          |          130 | 4.9125893509 | 0.0377891488 |
+| re-search-forward                         |       101020 | 4.6294823850 | 4.582...e-05 |
+| org-up-heading-safe                       |         7370 | 4.4629885620 | 0.0006055615 |
+| org-is-habit-p                            |         5960 | 4.2772351910 | 0.0007176569 |
+| org-entry-get                             |         5960 | 4.2595350800 | 0.0007146870 |
+| org-super-agenda--group-tag               |           50 | 3.8942044929 | 0.0778840898 |
+| re-search-backward                        |        26150 | 3.3660083490 | 0.0001287192 |
+| org--property-local-values                |         5960 | 3.1793476329 | 0.0005334475 |
+| org-get-property-block                    |         5960 | 3.0662425979 | 0.0005144702 |
+
+Wow, using =org-trust-scanner-tags= saves a /lot/ of time.
 
 * Profiling flet across all agenda files
 
