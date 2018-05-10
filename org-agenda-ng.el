@@ -7,28 +7,25 @@
 ;; written in a more functional way, to avoid making multiple passes
 ;; through each file when building a multi-day agenda.
 
-;; Unfortunately, however, it's more like a proof-of-nope, because
-;; it's significantly slower than the existing agenda code.  Profiling
-;; shows that =org-element-parse-buffer= is just not a fast function,
-;; so most of the time spent is in that function, parsing the whole
-;; buffer into a lisp tree.  The existing agenda code is not written
-;; in a functional style, and it makes multiple passes through each
-;; file when preparing a multi-day agenda view, but it avoids parsing
-;; the /entire/ buffer the way =org-element-parse-buffer= does.
-
-;; So I guess this approach won't work, unless someone can come up
-;; with a version of =org-element-parse-buffer= that's about 10x
-;; faster.
+;; It also functions as a kind of "query language" for Org buffers.
 
 ;;;; Principles
 
-;;;;; Work on elements
+;;;;; Try to imitate traditional Org agenda code's results and methods
 
-;; We want to work on elements as returned by =org-element-parse-buffer=.  We only convert to strings at the very end, when we send the list of those to =org-agenda-finalize-entries=.
+;; The traditional agenda code is complicated, but well-optimized.  We should imitate it where
+;; possible.  We should also attempt to return the same results as the traditional agenda code
+;; (ultimately, that is; but whether we reach that level of complexity depends on, e.g. performance
+;; achieved, whether it looks like a feasible alternative, etc).  At the least, we should return
+;; results in the same format, so they can be used by other code that uses agenda output
+;; (e.g. org-agenda-finalize-entries, org-agenda-finalize, org-super-agenda, etc).  Of course, this
+;; goal does not necessarily apply to the "query language"-like features, and ideally the
+;; agenda-like features should build upon those.
 
 ;;;;; Preserve the call to =org-agenda-finalize-entries=
 
-;; We want to preserve the final call to =org-agenda-finalize-entries= to preserve compatibility with other packages and functions.
+;; We want to preserve the final call to org-agenda-finalize-entries to preserve compatibility
+;; with other packages and functions.
 
 ;;; Code:
 
