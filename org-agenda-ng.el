@@ -253,10 +253,8 @@ Its property list should be the second item in the list, as returned by `org-ele
              (scheduled-day-number (org-time-string-to-absolute
                                     (org-element-timestamp-interpreter scheduled-date 'ignore)))
              (difference-days (- today-day-number scheduled-day-number))
-             (relative-due-date (pcase difference-days
-                                  (0 "today")
-                                  (_ (org-add-props (org-agenda-ng--format-relative-date difference-days) nil
-                                       'help-echo (org-element-property :raw-value scheduled-date)))))
+             (relative-due-date (org-add-props (org-agenda-ng--format-relative-date difference-days) nil
+                                  'help-echo (org-element-property :raw-value scheduled-date)))
              (repeat-day-number (cond (sexp-p (org-time-string-to-absolute scheduled-date))
                                       ((< today-day-number scheduled-day-number) scheduled-day-number)
                                       (t (org-time-string-to-absolute
@@ -309,10 +307,8 @@ property."
              (deadline-day-number (org-time-string-to-absolute
                                    (org-element-timestamp-interpreter deadline-date 'ignore)))
              (difference-days (- today-day-number deadline-day-number))
-             (relative-due-date (pcase difference-days
-                                  (0 "today")
-                                  (_ (org-add-props (org-agenda-ng--format-relative-date difference-days) nil
-                                       'help-echo (org-element-property :raw-value deadline-date)))))
+             (relative-due-date (org-add-props (org-agenda-ng--format-relative-date difference-days) nil
+                                  'help-echo (org-element-property :raw-value deadline-date)))
              (todo-keyword (org-element-property :todo-keyword element))
              (done-p (member todo-keyword org-done-keywords))
              (today-p (= today-day-number deadline-day-number))
@@ -371,9 +367,6 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
       (otherwise (seq-intersection tags tags-at)))))
 
 (defun org-agenda-ng--date-p (type &optional comparator target-date)
-  ;; TODO: Make this a macro so we don't have to quote comparator and test it for every item.
-
-  ;; TODO: Make separate date, scheduled, deadline macros.
   "Return non-nil if current heading has a date property of TYPE.
 TYPE should be a keyword symbol, like :scheduled or :deadline.
 
@@ -402,9 +395,9 @@ like one returned by `date-to-day'."
       ;; Compare dates
       ((pred functionp)
        (let ((target-day-number (cl-typecase target-date
+                                  (null (+ (org-get-wdays timestamp) (org-today)))
                                   ;; Append time to target-date
                                   ;; because `date-to-day' requires it
-                                  (null (+ (org-get-wdays timestamp) (org-today)))
                                   (string (date-to-day (concat target-date " 00:00")))
                                   (integer target-date))))
          (pcase (org-element-property :type date-element)

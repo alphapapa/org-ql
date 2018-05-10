@@ -176,6 +176,17 @@ Doesn't seem to make any difference.
          (done)))
 #+END_SRC
 
+** Screenshot code
+
+#+BEGIN_SRC elisp
+  (org-super-agenda--test-with-org-today-date "2017-07-08 00:00"
+    (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+      (and (or (date = today)
+               (deadline <=)
+               (scheduled <= today))
+           (not (done)))))
+#+END_SRC
+
 * Profiling
 
 ** Using =org-element-parse-buffer=
