@@ -128,6 +128,7 @@ NONE-PREDS."
                           (todo #'org-agenda-ng--todo-p)
                           (done #'org-agenda-ng--done-p)
                           (tags #'org-agenda-ng--tags-p)
+                          (property #'org-ql--property-p)
                           (regexp #'org-ql--regexp-p)
                           (org-back-to-heading #'outline-back-to-heading))
       (org-with-wide-buffer
@@ -474,3 +475,15 @@ comparator, PRIORITY should be a priority string."
     (save-excursion
       (goto-char (line-beginning-position))
       (re-search-forward regexp end t))))
+
+(defun org-ql--property-p (property &optional value)
+  "Return non-nil if current entry has PROPERTY, and optionally VALUE."
+  (pcase property
+    ('nil (user-error "Property matcher requires a PROPERTY argument."))
+    (_ (pcase value
+         ('nil
+          ;; Check that PROPERTY exists
+          (org-entry-get (point) property))
+         (_
+          ;; Check that PROPERTY has VALUE
+          (string-equal value (org-entry-get (point) property 'selective)))))))

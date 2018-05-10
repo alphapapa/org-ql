@@ -66,6 +66,13 @@ Another way to look at it is like a "query language" for Org buffers.  For examp
             (and (not (done))
                  (tags "Emacs")
                  (priority >= "B"))))  ;; => (44154 46469 56008 63965 100008 ...)
+
+  ;; If you kept a database of music in an Org file, you might run a query like this to find tracks
+  ;; composed by Chopin that do not have their key recorded in the database:
+  (org-ql "~/org/music.org"
+    (and (property "genre" "classical")
+         (property "composer" "Chopin")
+         (not (property "key"))))
 #+END_SRC
 
 Instead of opening an agenda-like buffer with matching entries, =org-ql= can take a function as an argument that is called at each matching entry to return a result, and finally it returns a list of the results.  For example, you could return a list of positions within the buffer, or a list of headings, or headings with entry contents, etc.  By default, the matching element is returned, which is the result of calling =org-element-headline-parser= at that entry.

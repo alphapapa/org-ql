@@ -186,6 +186,16 @@ Doesn't seem to make any difference.
     (regexp "over"))
 #+END_SRC
 
+** Property matching
+
+#+BEGIN_SRC elisp
+  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+    (property "agenda-group"))
+
+  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+    (property "agenda-group" "plans"))
+#+END_SRC
+
 ** Screenshot code
 
 #+BEGIN_SRC elisp
