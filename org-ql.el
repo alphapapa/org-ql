@@ -28,7 +28,7 @@ of calling `org-element-headline-parser' at each matching entry."
                                                        (<= #'<=)
                                                        (>= #'>=))
                                     ,pred-body)))
-                  #',action-fn))
+                  ,action-fn))
 
 (defmacro org-ql--fmap (fns &rest body)
   (declare (indent defun))
