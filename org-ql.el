@@ -174,7 +174,7 @@ like one returned by `date-to-day'."
 (defsubst org-ql--closed-p (&optional comparator target-date)
   (org-agenda-ng--date-p :closed comparator target-date))
 
-(defmacro org-ql--priority-p (&optional comparator-or-priority priority)
+(defun org-ql--priority-p (&optional comparator-or-priority priority)
   "Return non-nil if current heading has a certain priority.
 COMPARATOR-OR-PRIORITY should be either a comparator function,
 like `<=', or a priority string, like \"A\" (in which case (\` =)
@@ -197,19 +197,19 @@ comparator, PRIORITY should be a priority string."
                        (= '=)
                        (otherwise (user-error "Invalid comparator: %s" comparator))))
     (setq priority (* 1000 (- org-lowest-priority (string-to-char priority))))
-    `(when-let ((item-priority (save-excursion
-                                 (save-match-data
-                                   ;; FIXME: Is the save-match-data above necessary?
-                                   (when (and (looking-at org-heading-regexp)
-                                              (save-match-data
-                                                (string-match org-priority-regexp (match-string 0))))
-                                     ;; TODO: Items with no priority
-                                     ;; should not be the same as B
-                                     ;; priority.  That's not very
-                                     ;; useful IMO.  Better to do it
-                                     ;; like in org-super-agenda.
-                                     (org-get-priority (match-string 0)))))))
-       (funcall ',comparator ,priority item-priority))))
+    (when-let ((item-priority (save-excursion
+                                (save-match-data
+                                  ;; FIXME: Is the save-match-data above necessary?
+                                  (when (and (looking-at org-heading-regexp)
+                                             (save-match-data
+                                               (string-match org-priority-regexp (match-string 0))))
+                                    ;; TODO: Items with no priority
+                                    ;; should not be the same as B
+                                    ;; priority.  That's not very
+                                    ;; useful IMO.  Better to do it
+                                    ;; like in org-super-agenda.
+                                    (org-get-priority (match-string 0)))))))
+      (funcall comparator priority item-priority))))
 
 (defun org-ql--habit-p ()
   (org-is-habit-p))
