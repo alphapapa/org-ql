@@ -14,7 +14,7 @@
 
 ;;;; Macros
 
-(cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) (list element))) sort)
+(cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) element)) sort)
   "Find entries in FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
 
 ACTION-FN should take a single argument, which will be the result
@@ -269,15 +269,15 @@ PREDICATES is a list of one or more sorting methods, including:
   "Return non-nil if A's date of TYPE is earlier than B's.
 A and B are Org headline elements.  TYPE should be a symbol like
 `:deadline' or `:scheduled'"
-  (org-ql--org-timestamp-element< (org-element-property type (car a))
-                                  (org-element-property type (car b))))
+  (org-ql--org-timestamp-element< (org-element-property type a)
+                                  (org-element-property type b)))
 
 (defun org-ql--date< (a b)
   "Return non-nil if A's deadline or scheduled element property is earlier than B's.
 Deadline is considered before scheduled."
   (cl-flet ((ts (item)
-                (or (org-element-property :deadline (car item))
-                    (org-element-property :scheduled (car item)))))
+                (or (org-element-property :deadline item)
+                    (org-element-property :scheduled item))))
     (org-ql--org-timestamp-element< (ts a) (ts b))))
 
 (defun org-ql--org-timestamp-element< (a b)
@@ -297,7 +297,7 @@ A and B are Org timestamp elements."
   "Return non-nil if A's priority is higher than B's.
 A and B are Org headline elements."
   (cl-flet ((priority (item)
-                      (org-element-property :priority (car item))))
+                      (org-element-property :priority item)))
     ;; NOTE: Priorities are numbers in Org elements.  This might differ from the priority selector logic.
     (let ((a-priority (priority a))
           (b-priority (priority b)))
