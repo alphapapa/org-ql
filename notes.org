@@ -186,6 +186,10 @@ Doesn't seem to make any difference.
   (org-ql "~/src/emacs/org-super-agenda/test/test.org"
     (regexp "over")
     :sort (date))
+
+  (org-ql "~/src/emacs/org-super-agenda/test/test.org"
+    (todo)
+    :sort (todo))
 #+END_SRC
 
 ** Regexp matching

@@ -253,16 +253,34 @@ comparator, PRIORITY should be a priority string."
 PREDICATES is a list of one or more sorting methods, including:
 `deadline', `scheduled', and `priority'."
   ;; FIXME: Test `date' type.
-  (cl-flet ((sorter (symbol)
-                    (pcase symbol
-                      ((or 'deadline 'scheduled)
-                       (apply-partially #'org-ql--date-type< (intern (concat ":" (symbol-name symbol)))))
-                      ('date #'org-ql--date<)
-                      ('priority #'org-ql--priority<)
-                      ;; FIXME: Add more?
-                      (_ (user-error "Invalid sorting predicate: %s" symbol)))))
+  (cl-flet* ((sorter (symbol)
+                     (pcase symbol
+                       ((or 'deadline 'scheduled)
+                        (apply-partially #'org-ql--date-type< (intern (concat ":" (symbol-name symbol)))))
+                       ('date #'org-ql--date<)
+                       ('priority #'org-ql--priority<)
+                       ;; NOTE: 'todo is handled below
+                       ;; FIXME: Add more?
+                       (_ (user-error "Invalid sorting predicate: %s" symbol))))
+             (todo-keyword-pos (keyword)
+                               ;; MAYBE: Would it be faster to precompute these and do an alist lookup?
+                               (cl-position keyword org-todo-keywords-1 :test #'string=))
+             (sort-by-todo-keyword (items)
+                                   (let* ((grouped-items (--group-by (when-let (keyword (org-element-property :todo-keyword it))
+                                                                       (substring-no-properties keyword))
+                                                                     items))
+                                          (sorted-groups (--sort (let* ((it-pos (todo-keyword-pos (car it)))
+                                                                        (other-pos (todo-keyword-pos (car other))))
+                                                                   (cond ((and it-pos other-pos)
+                                                                          (< it-pos other-pos))
+                                                                         (it-pos t)
+                                                                         (other-pos nil)))
+                                                                 grouped-items)))
+                                     (-flatten-n 1 (-map #'cdr sorted-groups)))))
     (cl-loop for pred in (nreverse predicates)
-             do (setq items (-sort (sorter pred) items))
+             do (setq items (if (eq pred 'todo)
+                                (sort-by-todo-keyword items)
+                              (-sort (sorter pred) items)))
              finally return items)))
 
 (defun org-ql--date-type< (type a b)
