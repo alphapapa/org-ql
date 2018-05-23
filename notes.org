@@ -176,6 +176,18 @@ Doesn't seem to make any difference.
          (done)))
 #+END_SRC
 
+** Sorting
+
+#+BEGIN_SRC elisp
+  (org-ql "~/src/emacs/org-super-agenda/test/test.org"
+    (regexp "over")
+    :sort (priority deadline scheduled))
+
+  (org-ql "~/src/emacs/org-super-agenda/test/test.org"
+    (regexp "over")
+    :sort (date))
+#+END_SRC
+
 ** Regexp matching
 
 #+BEGIN_SRC elisp

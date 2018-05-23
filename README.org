@@ -76,3 +76,19 @@ Another way to look at it is like a "query language" for Org buffers.  For examp
 #+END_SRC
 
 Instead of opening an agenda-like buffer with matching entries, =org-ql= can take a function as an argument that is called at each matching entry to return a result, and finally it returns a list of the results.  For example, you could return a list of positions within the buffer, or a list of headings, or headings with entry contents, etc.  By default, the matching element is returned, which is the result of calling =org-element-headline-parser= at that entry.
+
+Results may also be sorted by a user-defined sorting function, or by some built-in sorters: =date=, =deadline=, =scheduled=, =priority= (which assume that the =action-fn= is the default, =org-element-headline-parser)=.  For example:
+
+#+BEGIN_SRC elisp
+  ;; Return TODO items sorted by deadline, then priority.  These built-in sorters assume that items
+  ;; are Org elements returned by `org-element-headline-parser' (the default action function).
+  (org-ql "~/org/main.org"
+    (todo)
+    :sort (deadline priority))
+
+  ;; Return TODO items sorted by user-defined sorting function.
+  (org-ql "~/org/main.org"
+    (todo)
+    :sort #'custom-sort-fn)
+#+END_SRC
+

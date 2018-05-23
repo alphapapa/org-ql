@@ -14,21 +14,30 @@
 
 ;;;; Macros
 
-(cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) (list element))))
+(cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) (list element))) sort)
   "Find entries in FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
 
 ACTION-FN should take a single argument, which will be the result
-of calling `org-element-headline-parser' at each matching entry."
+of calling `org-element-headline-parser' at each matching entry.
+
+SORT is a user defined sorting function, or an unquoted list of
+one or more sorting methods, including: `date', `deadline',
+`scheduled', and `priority'."
   (declare (indent defun))
-  `(org-ql--query ,files
-                  (byte-compile (lambda ()
-                                  (cl-symbol-macrolet ((= #'=)
-                                                       (< #'<)
-                                                       (> #'>)
-                                                       (<= #'<=)
-                                                       (>= #'>=))
-                                    ,pred-body)))
-                  ,action-fn))
+  `(let ((items (org-ql--query ,files
+                               (byte-compile (lambda ()
+                                               (cl-symbol-macrolet ((= #'=)
+                                                                    (< #'<)
+                                                                    (> #'>)
+                                                                    (<= #'<=)
+                                                                    (>= #'>=))
+                                                 ,pred-body)))
+                               ,action-fn)))
+     (cl-typecase ',sort
+       (list (org-ql--sort-by items ',sort))
+       (function (funcall ,sort items))
+       (null items)
+       (t (user-error "SORT must be a function or a list of methods (see documentation)")))))
 
 (defmacro org-ql--fmap (fns &rest body)
   (declare (indent defun))
@@ -235,4 +244,70 @@ comparator, PRIORITY should be a priority string."
           ;; Check that PROPERTY has VALUE
           (string-equal value (org-entry-get (point) property 'selective)))))))
 
+;;;;; Sorting
+
+;; FIXME: These appear to work properly, but it would be good to have tests for them.
+
+(defun org-ql--sort-by (items predicates)
+  "Return ITEMS sorted by PREDICATES.
+PREDICATES is a list of one or more sorting methods, including:
+`deadline', `scheduled', and `priority'."
+  ;; FIXME: Test `date' type.
+  (cl-flet ((sorter (symbol)
+                    (pcase symbol
+                      ((or 'deadline 'scheduled)
+                       (apply-partially #'org-ql--date-type< (intern (concat ":" (symbol-name symbol)))))
+                      ('date #'org-ql--date<)
+                      ('priority #'org-ql--priority<)
+                      ;; FIXME: Add more?
+                      (_ (user-error "Invalid sorting predicate: %s" symbol)))))
+    (cl-loop for pred in (nreverse predicates)
+             do (setq items (-sort (sorter pred) items))
+             finally return items)))
+
+(defun org-ql--date-type< (type a b)
+  "Return non-nil if A's date of TYPE is earlier than B's.
+A and B are Org headline elements.  TYPE should be a symbol like
+`:deadline' or `:scheduled'"
+  (org-ql--org-timestamp-element< (org-element-property type (car a))
+                                  (org-element-property type (car b))))
+
+(defun org-ql--date< (a b)
+  "Return non-nil if A's deadline or scheduled element property is earlier than B's.
+Deadline is considered before scheduled."
+  (cl-flet ((ts (item)
+                (or (org-element-property :deadline (car item))
+                    (org-element-property :scheduled (car item)))))
+    (org-ql--org-timestamp-element< (ts a) (ts b))))
+
+(defun org-ql--org-timestamp-element< (a b)
+  "Return non-nil if A's date element is earlier than B's.
+A and B are Org timestamp elements."
+  (cl-flet ((ts (ts)
+                (when ts
+                  (org-timestamp-format ts "%s"))))
+    (let* ((a-ts (ts a))
+           (b-ts (ts b)))
+      (cond ((and a-ts b-ts)
+             (string< a-ts b-ts))
+            (a-ts t)
+            (b-ts nil)))))
+
+(defun org-ql--priority< (a b)
+  "Return non-nil if A's priority is higher than B's.
+A and B are Org headline elements."
+  (cl-flet ((priority (item)
+                      (org-element-property :priority (car item))))
+    ;; NOTE: Priorities are numbers in Org elements.  This might differ from the priority selector logic.
+    (let ((a-priority (priority a))
+          (b-priority (priority b)))
+      (cond ((and a-priority b-priority)
+             (< a-priority b-priority))
+            (a-priority t)
+            (b-priority nil)))))
+
+;;;; Footer
+
 (provide 'org-ql)
+
+;;; org-ql.el ends here
