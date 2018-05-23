@@ -265,3 +265,9 @@ property."
 (defun org-agenda-ng--add-todo-face (keyword)
   (when-let ((face (org-get-todo-face keyword)))
     (org-add-props keyword nil 'face face)))
+
+;;;; Footer
+
+(provide 'org-agenda-ng)
+
+;;; org-agenda-ng.el ends here
