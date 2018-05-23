@@ -163,7 +163,7 @@ Its property list should be the second item in the list, as returned by `org-ele
 (defun org-agenda-ng--add-priority-face (string)
   "Return STRING with priority face added."
   (when (string-match "\\(\\[#\\(.\\)\\]\\)" string)
-    (let ((face (org-get-priority-face (string-to-char (match-string 2)))))
+    (let ((face (org-get-priority-face (string-to-char (match-string 2 string)))))
       (org-add-props string nil 'face face 'font-lock-fontified t))))
 
 (defun org-agenda-ng--add-scheduled-face (element)
