@@ -14,7 +14,7 @@
 
 ;;;; Macros
 
-(cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) element)) sort)
+(cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) element)) sort narrow)
   "Find entries in FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
 
 ACTION-FN should take a single argument, which will be the result
@@ -22,7 +22,10 @@ of calling `org-element-headline-parser' at each matching entry.
 
 SORT is a user defined sorting function, or an unquoted list of
 one or more sorting methods, including: `date', `deadline',
-`scheduled', and `priority'."
+`scheduled', and `priority'.
+
+If NARROW is non-nil, query will run without widening the
+buffer (the default is to widen and search the entire buffer)."
   (declare (indent defun))
   `(let ((items (org-ql--query ,files
                                (byte-compile (lambda ()
@@ -32,7 +35,8 @@ one or more sorting methods, including: `date', `deadline',
                                                                     (<= #'<=)
                                                                     (>= #'>=))
                                                  ,pred-body)))
-                               ,action-fn)))
+                               ,action-fn
+                               :narrow ,narrow)))
      (cl-typecase ',sort
        (list (org-ql--sort-by items ',sort))
        (function (funcall ,sort items))
@@ -48,7 +52,8 @@ one or more sorting methods, including: `date', `deadline',
 
 ;;;; Functions
 
-(cl-defun org-ql--query (files pred action-fn)
+(cl-defun org-ql--query (files pred action-fn &key narrow)
+  "FIXME: Add docstring."
   (setq files (cl-typecase files
                 (null (list (buffer-file-name (current-buffer))))
                 (list files)
@@ -60,13 +65,14 @@ one or more sorting methods, including: `date', `deadline',
          (org-ql--today (org-today)))
     (-flatten-n 1 (--map (with-current-buffer (find-buffer-visiting it)
                            (mapcar action-fn
-                                   (org-ql--filter-buffer :pred pred)))
+                                   (org-ql--filter-buffer :pred pred :narrow narrow)))
                          files))))
 
-(cl-defun org-ql--filter-buffer (&key pred)
+(cl-defun org-ql--filter-buffer (&key pred narrow)
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
-NONE-PREDS."
+NONE-PREDS.  If NARROW is non-nil, buffer will not be widened
+first."
   ;; Cache `org-today' so we don't have to run it repeatedly.
   (cl-letf ((today org-ql--today))
     (org-ql--fmap ((category #'org-ql--category-p)
@@ -82,13 +88,16 @@ NONE-PREDS."
                    (property #'org-ql--property-p)
                    (regexp #'org-ql--regexp-p)
                    (org-back-to-heading #'outline-back-to-heading))
-      (org-with-wide-buffer
-       (goto-char (point-min))
-       (when (org-before-first-heading-p)
-         (outline-next-heading))
-       (cl-loop when (funcall pred)
-                collect (org-element-headline-parser (line-end-position))
-                while (outline-next-heading))))))
+      (save-excursion
+        (save-restriction
+          (unless narrow
+            (widen))
+          (goto-char (point-min))
+          (when (org-before-first-heading-p)
+            (outline-next-heading))
+          (cl-loop when (funcall pred)
+                   collect (org-element-headline-parser (line-end-position))
+                   while (outline-next-heading)))))))
 
 ;;;;; Predicates
 
