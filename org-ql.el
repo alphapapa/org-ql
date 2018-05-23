@@ -14,8 +14,8 @@
 
 ;;;; Macros
 
-(cl-defmacro org-ql (files pred-body &key (action-fn (lambda (element) element)) sort narrow)
-  "Find entries in FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
+(cl-defmacro org-ql (buffers-or-files pred-body &key (action-fn (lambda (element) element)) sort narrow)
+  "Find entries in BUFFERS-OR-FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
 
 ACTION-FN should take a single argument, which will be the result
 of calling `org-element-headline-parser' at each matching entry.
@@ -27,7 +27,7 @@ one or more sorting methods, including: `date', `deadline',
 If NARROW is non-nil, query will run without widening the
 buffer (the default is to widen and search the entire buffer)."
   (declare (indent defun))
-  `(let ((items (org-ql--query ,files
+  `(let ((items (org-ql--query ,buffers-or-files
                                (byte-compile (lambda ()
                                                (cl-symbol-macrolet ((= #'=)
                                                                     (< #'<)
@@ -52,21 +52,25 @@ buffer (the default is to widen and search the entire buffer)."
 
 ;;;; Functions
 
-(cl-defun org-ql--query (files pred action-fn &key narrow)
+(cl-defun org-ql--query (buffers-or-files pred action-fn &key narrow)
   "FIXME: Add docstring."
-  (setq files (cl-typecase files
-                (null (list (buffer-file-name (current-buffer))))
-                (list files)
-                (string (list files))))
-  (mapc 'find-file-noselect files)
+  ;; MAYBE: Set :narrow t  for buffers and nil for files.
+  (setq buffers-or-files (cl-typecase buffers-or-files
+                           (null (list (current-buffer)))
+                           (buffer (list buffers-or-files))
+                           (list buffers-or-files)
+                           (string (list buffers-or-files))))
   (let* ((org-use-tag-inheritance t)
          (org-scanner-tags nil)
          (org-trust-scanner-tags t)
          (org-ql--today (org-today)))
-    (-flatten-n 1 (--map (with-current-buffer (find-buffer-visiting it)
+    (-flatten-n 1 (--map (with-current-buffer (cl-typecase it
+                                                (buffer it)
+                                                (string (or (find-buffer-visiting it)
+                                                            (find-file-noselect it))))
                            (mapcar action-fn
                                    (org-ql--filter-buffer :pred pred :narrow narrow)))
-                         files))))
+                         buffers-or-files))))
 
 (cl-defun org-ql--filter-buffer (&key pred narrow)
   "Return positions of matching headings in current buffer.
