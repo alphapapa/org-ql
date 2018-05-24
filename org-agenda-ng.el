@@ -86,10 +86,10 @@ dates in the past, and negative for dates in the future."
 (defun org-agenda-ng--add-markers (element)
   "Return ELEMENT with marker properties added."
   (let* ((marker (org-agenda-new-marker (org-element-property :begin element)))
-         (properties (--> (second element)
+         (properties (--> (cadr element)
                           (plist-put it :org-marker marker)
                           (plist-put it :org-hd-marker marker))))
-    (setf (second element) properties)
+    (setf (cadr element) properties)
     element))
 
 (defun org-agenda-ng--format-element (element)
@@ -97,7 +97,7 @@ dates in the past, and negative for dates in the future."
   ;; which is a lot.  We are a long way from that, but it's a start.
   "Return ELEMENT as a string with its text-properties set according to its property list.
 Its property list should be the second item in the list, as returned by `org-element-parse-buffer'."
-  (let* ((properties (second element))
+  (let* ((properties (cadr element))
          ;; Remove the :parent property, which so bloats the size of
          ;; the properties list that it makes it essentially
          ;; impossible to debug, because Emacs takes approximately
@@ -212,7 +212,7 @@ Its property list should be the second item in the list, as returned by `org-ele
              (title (--> (org-element-property :raw-value element)
                          (org-add-props it nil
                            'face face)))
-             (properties (--> (second element)
+             (properties (--> (cadr element)
                               (plist-put it :title title)
                               (plist-put it :relative-due-date relative-due-date)))
              (prefix (cl-destructuring-bind (first next) org-agenda-scheduled-leaders
@@ -254,7 +254,7 @@ property."
              (title (--> (org-element-property :raw-value element)
                          (org-add-props it nil
                            'face face)))
-             (properties (--> (second element)
+             (properties (--> (cadr element)
                               (plist-put it :title title)
                               (plist-put it :relative-due-date relative-due-date))))
         (list (car element)
