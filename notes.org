@@ -1,5 +1,32 @@
 
 
+* Tasks
+
+** TODO Move/rename repo to =org-ql=
+
+Since =org-sidebar= uses it, it probably makes more sense for =org-ql= to be the primary focus of the repo.  But it also uses =org-agenda-ng--format-element=, so =org-agenda-ng= probably should be part of that package, too.
+
+** TODO Document matchers/selectors/predicates
+
+And maybe pick a single name for them...
+
++  =deadline= :: Be sure to explain how it works with regard to the implied date and =today=.
++  =date=, =scheduled= :: No implied date, but supports =today=.
+
+** TODO Document sorters
+
+** TODO Add more sorters?
+
++  [ ] =category=
++  [ ] Any date :: e.g. it would search for timestamps (active/inactive?) anywhere in an entry
+
+** MAYBE Date predicate that searches entire entry
+
+Because the existing ones only search the special date property line.
+
+** TODO Document/figure out tag inheritance
+
+I think it should probably be enabled in most cases, to avoid missing results that users would expect to find, but it will reduce performance in some cases, so users should be able to turn it off when they don't need it.
 * Ideas
 
 ** DONE Operate on list of heading positions
