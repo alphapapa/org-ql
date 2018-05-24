@@ -67,7 +67,8 @@ buffer (the default is to widen and search the entire buffer)."
     (-flatten-n 1 (--map (with-current-buffer (cl-typecase it
                                                 (buffer it)
                                                 (string (or (find-buffer-visiting it)
-                                                            (find-file-noselect it))))
+                                                            (find-file-noselect it)
+                                                            (user-error "Can't open file: %s" it))))
                            (mapcar action-fn
                                    (org-ql--filter-buffer :pred pred :narrow narrow)))
                          buffers-or-files))))
