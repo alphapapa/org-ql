@@ -55,14 +55,14 @@ buffer (the default is to widen and search the entire buffer)."
 (cl-defun org-ql--query (buffers-or-files pred action-fn &key narrow)
   "FIXME: Add docstring."
   ;; MAYBE: Set :narrow t  for buffers and nil for files.
-  (setq buffers-or-files (cl-typecase buffers-or-files
-                           (null (list (current-buffer)))
-                           (buffer (list buffers-or-files))
-                           (list buffers-or-files)
-                           (string (list buffers-or-files))))
-  (let* ((org-use-tag-inheritance t)
-         (org-scanner-tags nil)
-         (org-trust-scanner-tags t)
+  (let* ((buffers-or-files (cl-typecase buffers-or-files
+                             (null (list (current-buffer)))
+                             (buffer (list buffers-or-files))
+                             (list buffers-or-files)
+                             (string (list buffers-or-files))))
+         ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
+         ;; (org-use-tag-inheritance t)
+         ;; (org-trust-scanner-tags t)
          (org-ql--today (org-today)))
     (-flatten-n 1 (--map (with-current-buffer (cl-typecase it
                                                 (buffer it)
@@ -127,13 +127,10 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   (apply #'org-ql--todo-p org-done-keywords-for-agenda))
 
 (defun org-ql--tags-p (&rest tags)
-  "Return non-nil if current heading has TAGS."
-  ;; TODO: Try to use `org-make-tags-matcher' to improve performance.
-  (when-let ((tags-at (org-get-tags-at (point)
-                                       ;; FIXME: Would be nice to not check this for every heading checked.
-                                       ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
-                                       ;; (not (member 'agenda org-agenda-use-tag-inheritance))
-                                       org-use-tag-inheritance)))
+  "Return non-nil if current heading has one or more of TAGS."
+  ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
+  ;; to run `org-get-tags-at' for every heading, especially with inheritance.
+  (when-let ((tags-at (org-get-tags-at (point) (not org-use-tag-inheritance))))
     (cl-typecase tags
       (null t)
       (otherwise (seq-intersection tags tags-at)))))
