@@ -179,7 +179,8 @@ like one returned by `date-to-day'."
                       (org-element-timestamp-interpreter date-element 'ignore))
                      target-day-number))
            (error "Unknown date-element type: %s" (org-element-property :type date-element)))))
-      (otherwise (error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string" comparator target-date)))))
+      (otherwise (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
+                             comparator target-date)))))
 
 (defsubst org-ql--date-plain-p (&optional comparator target-date)
   (org-agenda-ng--date-p :date comparator target-date))
