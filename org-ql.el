@@ -305,9 +305,9 @@ A and B are Org headline elements.  TYPE should be a symbol like
 (defun org-ql--date< (a b)
   "Return non-nil if A's deadline or scheduled element property is earlier than B's.
 Deadline is considered before scheduled."
-  (cl-flet ((ts (item)
-                (or (org-element-property :deadline item)
-                    (org-element-property :scheduled item))))
+  (cl-macrolet ((ts (item)
+                    `(or (org-element-property :deadline ,item)
+                         (org-element-property :scheduled ,item))))
     (org-ql--org-timestamp-element< (ts a) (ts b))))
 
 (defun org-ql--org-timestamp-element< (a b)
