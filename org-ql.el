@@ -138,7 +138,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
       (null t)
       (otherwise (seq-intersection tags tags-at)))))
 
-(defun org-agenda-ng--date-p (type &optional comparator target-date)
+(defun org-ql--date-p (type &optional comparator target-date)
   "Return non-nil if current heading has a date property of TYPE.
 TYPE should be a keyword symbol, like :scheduled or :deadline.
 
@@ -183,7 +183,7 @@ like one returned by `date-to-day'."
                              comparator target-date)))))
 
 (defsubst org-ql--date-plain-p (&optional comparator target-date)
-  (org-agenda-ng--date-p :date comparator target-date))
+  (org-ql--date-p :date comparator target-date))
 (defsubst org-ql--deadline-p (&optional comparator target-date)
   ;; FIXME: This is slightly confusing.  Using plain (deadline) does, and should, select entries
   ;; that have any deadline.  But the common case of wanting to select entries whose deadline is
@@ -192,11 +192,11 @@ like one returned by `date-to-day'."
   ;; comparator by default, and use an 'any comparator to select entries with any deadline.  Of
   ;; course, that would make the deadline selector different from the scheduled, closed, and date
   ;; selectors, which would also be unintuitive.
-  (org-agenda-ng--date-p :deadline comparator target-date))
+  (org-ql--date-p :deadline comparator target-date))
 (defsubst org-ql--scheduled-p (&optional comparator target-date)
-  (org-agenda-ng--date-p :scheduled comparator target-date))
+  (org-ql--date-p :scheduled comparator target-date))
 (defsubst org-ql--closed-p (&optional comparator target-date)
-  (org-agenda-ng--date-p :closed comparator target-date))
+  (org-ql--date-p :closed comparator target-date))
 
 (defun org-ql--priority-p (&optional comparator-or-priority priority)
   "Return non-nil if current heading has a certain priority.
