@@ -76,6 +76,23 @@ buffer (the default is to widen and search the entire buffer)."
                                    (org-ql--filter-buffer :pred pred :narrow narrow)))
                          buffers-or-files))))
 
+(defun org-ql--sanity-check-form (form)
+  "Signal an error if any of the forms in BODY do not have their preconditions met.
+Or, when possible, fix the problem."
+  (cl-flet ((check (symbol)
+                   (cl-case symbol
+                     ('done (unless org-done-keywords
+                              ;; NOTE: This check needs to be done from within the Org buffer being checked.
+                              (error "Variable `org-done-keywords' is nil.  Are you running this from an Org buffer?")))
+		     ('habit (unless (featurep 'org-habit)
+			       (require 'org-habit))))))
+    (cl-loop for elem in form
+	     if (consp elem)
+	     do (progn
+		  (check (car elem))
+		  (org-ql--sanity-check-form (cdr elem)))
+	     else do (check elem))))
+
 (cl-defun org-ql--filter-buffer (&key pred narrow)
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
