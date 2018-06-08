@@ -47,7 +47,7 @@ buffer (the default is to widen and search the entire buffer)."
        (t (user-error "SORT must be a function or a list of methods (see documentation)")))))
 
 (defmacro org-ql--fmap (fns &rest body)
-  (declare (indent defun))
+  (declare (indent defun) (debug (listp body)))
   `(cl-letf ,(cl-loop for (fn target) in fns
                       collect `((symbol-function ',fn)
                                 (symbol-function ,target)))
