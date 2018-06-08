@@ -269,6 +269,7 @@ comparator, PRIORITY should be a priority string."
 PREDICATES is a list of one or more sorting methods, including:
 `deadline', `scheduled', and `priority'."
   ;; FIXME: Test `date' type.
+  ;; MAYBE: Use macrolet instead of flet.
   (cl-flet* ((sorter (symbol)
                      (pcase symbol
                        ((or 'deadline 'scheduled)
