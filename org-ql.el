@@ -285,13 +285,11 @@ PREDICATES is a list of one or more sorting methods, including:
                                    (let* ((grouped-items (--group-by (when-let (keyword (org-element-property :todo-keyword it))
                                                                        (substring-no-properties keyword))
                                                                      items))
-                                          (sorted-groups (--sort (let* ((it-pos (todo-keyword-pos (car it)))
-                                                                        (other-pos (todo-keyword-pos (car other))))
-                                                                   (cond ((and it-pos other-pos)
-                                                                          (< it-pos other-pos))
-                                                                         (it-pos t)
-                                                                         (other-pos nil)))
-                                                                 grouped-items)))
+                                          (sorted-groups (cl-sort grouped-items #'<
+                                                                  :key (lambda (keyword)
+                                                                         (or (cl-position (car keyword) org-todo-keywords-1 :test #'string=)
+                                                                             ;; Put at end of list if not found
+                                                                             (1+ (length org-todo-keywords-1)))))))
                                      (-flatten-n 1 (-map #'cdr sorted-groups)))))
     (cl-loop for pred in (nreverse predicates)
              do (setq items (if (eq pred 'todo)
