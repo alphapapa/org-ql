@@ -128,7 +128,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
       (otherwise (user-error "Invalid todo keywords: %s" keywords)))))
 
 (defsubst org-ql--done-p ()
-  (apply #'org-ql--todo-p org-done-keywords-for-agenda))
+  (or (apply #'org-ql--todo-p org-done-keywords)))
 
 (defun org-ql--tags-p (&rest tags)
   "Return non-nil if current heading has one or more of TAGS."
