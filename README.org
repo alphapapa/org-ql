@@ -17,19 +17,19 @@ Here's an example of generating a kind of agenda view for today (note that the g
 Here are some other examples:
 
 #+BEGIN_SRC elisp
-  ;; Show an agenda-like view of items in all agenda files with TODO and SOMEDAY keywords which are
+  ;; Show an agenda-like view of items in "~/org/main.org" with TODO and SOMEDAY keywords which are
   ;; tagged "computer" or "Emacs" and in the category "main":
-  (org-agenda-ng org-agenda-files
+  (org-agenda-ng "~/org/main.org"
     (and (todo "TODO" "SOMEDAY")
          (tags "computer" "Emacs")
          (category "main")))
 
-  ;; Show an agenda-like view of all habits:
-  (org-agenda-ng org-agenda-files
+  ;; Show an agenda-like view of all habits in all agenda files:
+  (org-agenda-ng
     (habit))
 
   ;; Show an agenda-like view similar to a "traditional" Org agenda:
-  (org-agenda-ng "~/org/main.org"
+  (org-agenda-ng
     (or (habit)
         (date = today)
         (deadline <=)
@@ -37,6 +37,8 @@ Here are some other examples:
         (and (todo "DONE" "CANCELLED")
              (closed = today))))
 #+END_SRC
+
+More examples are available in [[examples.org]].
 
 ** org-ql
 

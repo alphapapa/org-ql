@@ -1,0 +1,20 @@
+
+
+* Examples
+
+** Showing TO-READ entries containing the word "lisp"
+
+This query would be difficult to write in a standard Org Agenda search, because it matches against a to-do keyword /and/ a plain-text search.  As described in the [[https://orgmode.org/worg/org-tutorials/advanced-searching.html#combining-metadata-and-full-text-queries][advanced searching tutorial]], it would require using ~org-search-view~ with a query with specific regular expression syntax, like this:
+
+#+BEGIN_EXAMPLE
+  +lisp +{^\*+\s-+TO-READ\s-}
+#+END_EXAMPLE
+
+But with =org-ql= or =org-agenda-ng=, you would write:
+
+#+BEGIN_SRC elisp
+  (org-agenda-ng
+    (and (regexp "lisp")
+         (todo "TO-READ")))
+#+END_SRC
+
