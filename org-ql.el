@@ -333,9 +333,9 @@ Deadline is considered before scheduled."
 (defun org-ql--org-timestamp-element< (a b)
   "Return non-nil if A's date element is earlier than B's.
 A and B are Org timestamp elements."
-  (cl-flet ((ts (ts)
-                (when ts
-                  (org-timestamp-format ts "%s"))))
+  (cl-macrolet ((ts (ts)
+                    `(when ,ts
+                       (org-timestamp-format ,ts "%s"))))
     (let* ((a-ts (ts a))
            (b-ts (ts b)))
       (cond ((and a-ts b-ts)
