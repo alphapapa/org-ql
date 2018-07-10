@@ -17,7 +17,7 @@
 
 ;;;; Macros
 
-(cl-defmacro org-ql (buffers-or-files pred-body &key (action-fn (lambda (element) element)) sort narrow)
+(cl-defmacro org-ql (buffers-or-files pred-body &key (action-fn '#'identity) sort narrow)
   "Find entries in BUFFERS-OR-FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
 
 ACTION-FN should take a single argument, which will be the result
@@ -30,21 +30,19 @@ one or more sorting methods, including: `date', `deadline',
 If NARROW is non-nil, query will run without widening the
 buffer (the default is to widen and search the entire buffer)."
   (declare (indent defun))
-  `(let ((items (org-ql--query ,buffers-or-files
-                               (byte-compile (lambda ()
-                                               (cl-symbol-macrolet ((= #'=)
-                                                                    (< #'<)
-                                                                    (> #'>)
-                                                                    (<= #'<=)
-                                                                    (>= #'>=))
-                                                 ,pred-body)))
-                               ,action-fn
-                               :narrow ,narrow)))
-     (cl-typecase ',sort
-       (list (org-ql--sort-by items ',sort))
-       (function (funcall ,sort items))
-       (null items)
-       (t (user-error "SORT must be a function or a list of methods (see documentation)")))))
+  `(org-ql--query ,buffers-or-files
+     (byte-compile (lambda ()
+                     (cl-symbol-macrolet ((= #'=)
+                                          (< #'<)
+                                          (> #'>)
+                                          (<= #'<=)
+                                          (>= #'>=))
+                       ,pred-body)))
+     :action-fn ,action-fn
+     :narrow ,narrow
+     :sort ,(pcase sort
+              (`(function ,_) sort)
+              (_ (list 'quote sort)))))
 
 (defmacro org-ql--fmap (fns &rest body)
   (declare (indent defun) (debug (listp body)))
@@ -55,9 +53,10 @@ buffer (the default is to widen and search the entire buffer)."
 
 ;;;; Functions
 
-(cl-defun org-ql--query (buffers-or-files pred action-fn &key narrow)
+(cl-defun org-ql--query (buffers-or-files pred &key (action-fn #'identity) narrow sort)
   "FIXME: Add docstring."
   ;; MAYBE: Set :narrow t  for buffers and nil for files.
+  (declare (indent defun))
   (let* ((buffers-or-files (cl-typecase buffers-or-files
                              (null (list (current-buffer)))
                              (buffer (list buffers-or-files))
@@ -66,15 +65,20 @@ buffer (the default is to widen and search the entire buffer)."
          ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
          ;; (org-use-tag-inheritance t)
          ;; (org-trust-scanner-tags t)
-         (org-ql--today (org-today)))
-    (-flatten-n 1 (--map (with-current-buffer (cl-typecase it
-                                                (buffer it)
-                                                (string (or (find-buffer-visiting it)
-                                                            (find-file-noselect it)
-                                                            (user-error "Can't open file: %s" it))))
-                           (mapcar action-fn
-                                   (org-ql--filter-buffer :pred pred :narrow narrow)))
-                         buffers-or-files))))
+         (org-ql--today (org-today))
+         (items (-flatten-n 1 (--map (with-current-buffer (cl-typecase it
+                                                            (buffer it)
+                                                            (string (or (find-buffer-visiting it)
+                                                                        (find-file-noselect it)
+                                                                        (user-error "Can't open file: %s" it))))
+                                       (mapcar action-fn
+                                               (org-ql--filter-buffer :pred pred :narrow narrow)))
+                                     buffers-or-files))))
+    (cl-typecase sort
+      (list (org-ql--sort-by items sort))
+      (function (funcall sort items))
+      (null items)
+      (t (user-error "SORT must be a function or a list of methods (see documentation)")))))
 
 (defun org-ql--sanity-check-form (form)
   "Signal an error if any of the forms in BODY do not have their preconditions met.
