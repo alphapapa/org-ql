@@ -1,4 +1,4 @@
-
+#+PROPERTY: LOGGING nil
 
 * Tasks
 
@@ -34,6 +34,22 @@ I think it should probably be enabled in most cases, to avoid missing results th
 If your function needs to retrieve the tags including inherited tags at the *current* entry, you can use the value of the variable ‘org-scanner-tags’ which will be much faster than getting the value with ‘org-get-tags-at’.  If your function gets properties with ‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’ to t around the call to ‘org-entry-properties’ to get the same speedup.  Note that if your function moves around to retrieve tags and properties at a *different* entry, you cannot use these techniques.
 #+END_QUOTE
 * Ideas
+
+** SOMEDAY Dual matching with regexp and predicates
+
+Searching and matching could be sped up by constructing a regexp that searches directly to the next possible match, and then matching with predicate functions.
+
+For example, a search like:
+
+#+BEGIN_SRC elisp
+  (org-ql (org-agenda-files)
+    (and (regexp "lisp")
+         (scheduled < today)))
+#+END_SRC
+
+Only entries that contain the word =lisp= can be matches, and searching each entry for that word is wasteful.  Instead, we could search the buffer for the next occurrence of =lisp=, then check the scheduled date for that entry.
+
+This would require processing the predicate to pull out matchers that can be done as buffer-wide regexps, e.g. =regexp=, =heading-regexp=, =todo=, and possibly =tags=.  Org has some regexp-building functions that might make this fairly easy, and then we could probably use ~rx~ to make an optimized version of the regexp.  It would also require some refactoring to the searching that would go directly to regexp matches when possible, rather than checking every entry with the predicate.
 
 ** DONE Operate on list of heading positions
 CLOSED: [2018-05-10 Thu 15:02]
