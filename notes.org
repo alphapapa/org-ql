@@ -27,6 +27,12 @@ Because the existing ones only search the special date property line.
 ** TODO Document/figure out tag inheritance
 
 I think it should probably be enabled in most cases, to avoid missing results that users would expect to find, but it will reduce performance in some cases, so users should be able to turn it off when they don't need it.
+
+[2018-06-12 Tue 14:32]  The docstring for ~org-map-entries~ says:
+
+#+BEGIN_QUOTE
+If your function needs to retrieve the tags including inherited tags at the *current* entry, you can use the value of the variable ‘org-scanner-tags’ which will be much faster than getting the value with ‘org-get-tags-at’.  If your function gets properties with ‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’ to t around the call to ‘org-entry-properties’ to get the same speedup.  Note that if your function moves around to retrieve tags and properties at a *different* entry, you cannot use these techniques.
+#+END_QUOTE
 * Ideas
 
 ** DONE Operate on list of heading positions
