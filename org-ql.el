@@ -58,7 +58,7 @@ buffer (the default is to widen and search the entire buffer)."
   (setq buffers-or-files (cl-typecase buffers-or-files
                            (null (list (current-buffer)))
                            (buffer (list buffers-or-files))
-                           (list buffers-or-files)
+                           (list (org-ql--expand-directories buffers-or-files))
                            (string (list buffers-or-files))))
   (let* ((org-use-tag-inheritance t)
          (org-scanner-tags nil)
@@ -71,6 +71,17 @@ buffer (the default is to widen and search the entire buffer)."
                            (mapcar action-fn
                                    (org-ql--filter-buffer :pred pred :narrow narrow)))
                          buffers-or-files))))
+
+(defun org-ql--expand-directories (buffers-or-files)
+  "If BUFFERS-OR-FILES contain directories, expand Org files in them."
+  (-flatten-n 1
+              (mapcar
+               (lambda (it)
+                 (if (and (stringp it)
+                          (file-directory-p it))
+                     (directory-files it t org-agenda-file-regexp)
+                   it))
+               buffers-or-files)))
 
 (cl-defun org-ql--filter-buffer (&key pred narrow)
   "Return positions of matching headings in current buffer.
