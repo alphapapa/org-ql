@@ -99,8 +99,8 @@ When nil, buffers are widened before being searched."
   (declare (indent defun))
   (let* ((entries (mapcar #'org-agenda-ng--format-element
                           (org-ql--query files
-                                         pred
-                                         :sort sort)))
+                            pred
+                            :sort sort)))
          (result-string (org-agenda-finalize-entries entries 'agenda))
          (target-buffer (get-buffer-create "test-agenda-ng")))
     (with-current-buffer target-buffer
