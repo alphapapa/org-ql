@@ -32,7 +32,8 @@ buffer (the default is to widen and search the entire buffer)."
   (declare (indent defun))
   `(org-ql--query ,buffers-or-files
      (byte-compile (lambda ()
-                     (cl-symbol-macrolet ((= #'=)
+                     (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
+                                          (= #'=)
                                           (< #'<)
                                           (> #'>)
                                           (<= #'<=)
@@ -103,31 +104,29 @@ Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS.  If NARROW is non-nil, buffer will not be widened
 first."
   ;; Cache `org-today' so we don't have to run it repeatedly.
-  (let (today)
-    (cl-letf ((today org-ql--today))
-      (org-ql--fmap ((category #'org-ql--category-p)
-                     (date #'org-ql--date-plain-p)
-                     (deadline #'org-ql--deadline-p)
-                     (scheduled #'org-ql--scheduled-p)
-                     (closed #'org-ql--closed-p)
-                     (habit #'org-ql--habit-p)
-                     (priority #'org-ql--priority-p)
-                     (todo #'org-ql--todo-p)
-                     (done #'org-ql--done-p)
-                     (tags #'org-ql--tags-p)
-                     (property #'org-ql--property-p)
-                     (regexp #'org-ql--regexp-p)
-                     (org-back-to-heading #'outline-back-to-heading))
-        (save-excursion
-          (save-restriction
-            (unless narrow
-              (widen))
-            (goto-char (point-min))
-            (when (org-before-first-heading-p)
-              (outline-next-heading))
-            (cl-loop when (funcall pred)
-                     collect (org-element-headline-parser (line-end-position))
-                     while (outline-next-heading))))))))
+  (org-ql--fmap ((category #'org-ql--category-p)
+                 (date #'org-ql--date-plain-p)
+                 (deadline #'org-ql--deadline-p)
+                 (scheduled #'org-ql--scheduled-p)
+                 (closed #'org-ql--closed-p)
+                 (habit #'org-ql--habit-p)
+                 (priority #'org-ql--priority-p)
+                 (todo #'org-ql--todo-p)
+                 (done #'org-ql--done-p)
+                 (tags #'org-ql--tags-p)
+                 (property #'org-ql--property-p)
+                 (regexp #'org-ql--regexp-p)
+                 (org-back-to-heading #'outline-back-to-heading))
+    (save-excursion
+      (save-restriction
+        (unless narrow
+          (widen))
+        (goto-char (point-min))
+        (when (org-before-first-heading-p)
+          (outline-next-heading))
+        (cl-loop when (funcall pred)
+                 collect (org-element-headline-parser (line-end-position))
+                 while (outline-next-heading))))))
 
 ;;;;; Predicates
 
