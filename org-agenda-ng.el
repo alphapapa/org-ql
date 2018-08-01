@@ -163,7 +163,9 @@ Its property list should be the second item in the list, as returned by `org-ele
                        (if-let ((marker (or (org-element-property :org-hd-marker element)
                                             (org-element-property :org-marker element)
                                             (org-element-property :begin element))))
-                           (org-get-tags-at marker (not org-use-tag-inheritance))
+                           (with-current-buffer (marker-buffer marker)
+                             ;; I wish `org-get-tags-at' used the correct buffer automatically.
+                             (org-get-tags-at marker (not org-use-tag-inheritance)))
                          ;; No marker found
                          (warn "No marker found for item: %s" title)
                          (org-element-property :tags element))
