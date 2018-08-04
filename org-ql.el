@@ -26,7 +26,7 @@ of calling `org-element-headline-parser' at each matching entry.
 
 SORT is a user defined sorting function, or an unquoted list of
 one or more sorting methods, including: `date', `deadline',
-`scheduled', and `priority'.
+`scheduled', `todo', and `priority'.
 
 If NARROW is non-nil, query will run without widening the
 buffer (the default is to widen and search the entire buffer).
