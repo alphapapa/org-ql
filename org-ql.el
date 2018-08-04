@@ -55,8 +55,14 @@ buffer."
      :action-fn ,action-fn
      :narrow ,narrow
      :sort ,(pcase sort
+              ;; Custom sort function
               (`(function ,_) sort)
-              (_ (list 'quote sort)))))
+              ((and sort (guard (cl-loop for elem in sort
+                                         always (memq elem '(date deadline scheduled todo priority)))))
+               ;; Default sorting functions
+               (list 'quote sort))
+              ;; Other expression to evaluate
+              (_ sort))))
 
 (defmacro org-ql--fmap (fns &rest body)
   (declare (indent defun) (debug (listp body)))
