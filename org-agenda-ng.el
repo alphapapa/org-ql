@@ -152,6 +152,11 @@ Its property list should be the second item in the list, as returned by `org-ele
                               for key = (intern (cl-subseq (symbol-name key) 1))
                               unless (member key '(parent))
                               append (list key val)))
+         ;; TODO: --add-faces is used to add the :relative-due-date property, but that fact is
+         ;; hidden by doing it through --add-faces (which calls --add-scheduled-face and
+         ;; --add-deadline-face), and doing it in this form that gets the title hides it even more.
+         ;; Adding the relative due date property should probably be done explicitly and separately
+         ;; (which would also make it easier to do it independently of faces, etc).
          (title (--> (org-agenda-ng--add-faces element)
                      (org-element-property :raw-value it)
                      (org-link-display-format it)
