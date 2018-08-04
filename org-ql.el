@@ -17,7 +17,8 @@
 
 ;;;; Macros
 
-(cl-defmacro org-ql (buffers-or-files pred-body &key (action-fn '#'identity) sort narrow)
+(cl-defmacro org-ql (buffers-or-files pred-body &key (action-fn '#'identity)
+                                      sort narrow markers)
   "Find entries in BUFFERS-OR-FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
 
 ACTION-FN should take a single argument, which will be the result
@@ -28,8 +29,20 @@ one or more sorting methods, including: `date', `deadline',
 `scheduled', and `priority'.
 
 If NARROW is non-nil, query will run without widening the
-buffer (the default is to widen and search the entire buffer)."
+buffer (the default is to widen and search the entire buffer).
+
+If MARKERS is non-nil, `org-agenda-ng--add-markers' is used to
+add markers to each item, pointing to the item in its source
+buffer."
   (declare (indent defun))
+  (when markers
+    (setq action-fn (pcase action-fn
+                      (`(function identity) '#'org-agenda-ng--add-markers)
+                      (_ (byte-compile `(lambda (item)
+                                          (--> item
+                                               ;; Add the markers before calling the action fn
+                                               org-agenda-ng--add-markers
+                                               ,action-fn)))))))
   `(org-ql--query ,buffers-or-files
      (byte-compile (lambda ()
                      (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
