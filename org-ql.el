@@ -190,8 +190,6 @@ function.
 Outline levels should be integers."
   ;; NOTE: It might be necessary to take into account `org-odd-levels'; see docstring for
   ;; `org-outline-level'.
-  ;; NOTE: `org-outline-level' accounts for inline tasks, which might be slower than the naive
-  ;; `org-current-level'.
   (when-let ((outline-level (org-outline-level)))
     (pcase level
       ;; Check for equality
