@@ -18,7 +18,7 @@
 ;;;; Macros
 
 (cl-defmacro org-ql (buffers-or-files pred-body &key (action-fn '#'identity)
-                                      sort narrow markers)
+                                      sort narrow markers match-next-fn)
   "Find entries in BUFFERS-OR-FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
 
 ACTION-FN should take a single argument, which will be the result
@@ -65,7 +65,8 @@ buffer."
                (list 'quote sort))
               (_
                ;; Other expression to evaluate
-               sort))))
+               sort))
+     :match-next-fn ,match-next-fn))
 
 (defmacro org-ql--fmap (fns &rest body)
   (declare (indent defun) (debug (listp body)))
@@ -76,7 +77,7 @@ buffer."
 
 ;;;; Functions
 
-(cl-defun org-ql--query (buffers-or-files pred &key (action-fn #'identity) narrow sort)
+(cl-defun org-ql--query (buffers-or-files pred &key (action-fn #'identity) narrow sort match-next-fn)
   "FIXME: Add docstring."
   ;; MAYBE: Set :narrow t  for buffers and nil for files.
   (declare (indent defun))
@@ -95,7 +96,8 @@ buffer."
                                                                         (find-file-noselect it)
                                                                         (user-error "Can't open file: %s" it))))
                                        (mapcar action-fn
-                                               (org-ql--filter-buffer :pred pred :narrow narrow)))
+                                               (org-ql--filter-buffer :pred pred :narrow narrow
+                                                                      :match-next-fn match-next-fn)))
                                      buffers-or-files))))
     (cl-typecase sort
       (list (org-ql--sort-by items sort))
@@ -120,7 +122,7 @@ Or, when possible, fix the problem."
 		  (org-ql--sanity-check-form (cdr elem)))
 	     else do (check elem))))
 
-(cl-defun org-ql--filter-buffer (&key pred narrow)
+(cl-defun org-ql--filter-buffer (&key pred narrow match-next-fn)
   "Return positions of matching headings in current buffer.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS.  If NARROW is non-nil, buffer will not be widened
@@ -140,16 +142,26 @@ first."
                  (regexp #'org-ql--regexp-p)
                  (level #'org-ql--level-p)
                  (org-back-to-heading #'outline-back-to-heading))
-    (save-excursion
-      (save-restriction
-        (unless narrow
-          (widen))
-        (goto-char (point-min))
-        (when (org-before-first-heading-p)
-          (outline-next-heading))
-        (cl-loop when (funcall pred)
-                 collect (org-element-headline-parser (line-end-position))
-                 while (outline-next-heading))))))
+    (let ((match-next-fn (or match-next-fn #'outline-next-heading)))
+      (save-excursion
+        (save-restriction
+          (unless narrow
+            (widen))
+          (goto-char (point-min))
+          (when (org-before-first-heading-p)
+            (outline-next-heading))
+          (cl-loop if (funcall pred)
+                   collect (org-element-headline-parser (line-end-position))
+                   and do (funcall match-next-fn)
+                   else do (outline-next-heading)
+                   until (eobp)))))))
+
+(defun org-ql--outline-next-heading-same-level ()
+  "FIXME"
+  (cl-loop with level = (org-outline-level)
+           while (outline-next-heading)
+           when (= level (org-outline-level))
+           return t))
 
 ;;;;; Predicates
 
