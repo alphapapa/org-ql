@@ -135,6 +135,7 @@ first."
                  (tags #'org-ql--tags-p)
                  (property #'org-ql--property-p)
                  (regexp #'org-ql--regexp-p)
+                 (level #'org-ql--level-p)
                  (org-back-to-heading #'outline-back-to-heading))
     (save-excursion
       (save-restriction
@@ -177,6 +178,26 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
     (cl-typecase tags
       (null t)
       (otherwise (seq-intersection tags tags-at)))))
+
+(defun org-ql--level-p (level-or-comparator &optional level)
+  "Return non-nil if current heading's outline level matches LEVEL with COMPARATOR.
+
+If LEVEL is nil, LEVEL-OR-COMPARATOR should be a level, which
+will be tested for equality to the heading's outline level.  If
+LEVEL is non-nil, LEVEL-OR-COMPARATOR should be a comparator
+function.
+
+Outline levels should be integers."
+  ;; NOTE: It might be necessary to take into account `org-odd-levels'; see docstring for
+  ;; `org-outline-level'.
+  ;; NOTE: `org-outline-level' accounts for inline tasks, which might be slower than the naive
+  ;; `org-current-level'.
+  (when-let ((outline-level (org-outline-level)))
+    (pcase level
+      ;; Check for equality
+      ((pred null) (= outline-level level-or-comparator))
+      ;; Check with comparator
+      (_ (funcall level-or-comparator outline-level level)))))
 
 (defun org-ql--date-p (type &optional comparator target-date)
   "Return non-nil if current heading has a date property of TYPE.
