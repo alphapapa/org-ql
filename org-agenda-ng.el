@@ -100,7 +100,8 @@ When nil, buffers are widened before being searched."
   (let* ((entries (mapcar #'org-agenda-ng--format-element
                           (org-ql--query files
                             pred
-                            :sort sort)))
+                            :sort sort
+                            :action-fn #'org-agenda-ng--add-markers)))
          (result-string (org-agenda-finalize-entries entries 'agenda))
          (target-buffer (get-buffer-create "test-agenda-ng")))
     (with-current-buffer target-buffer
