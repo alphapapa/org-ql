@@ -110,7 +110,7 @@ When nil, buffers are widened before being searched."
                             pred
                             :sort sort
                             :action-fn #'org-agenda-ng--add-markers)))
-         (result-string (org-agenda-finalize-entries entries 'agenda))
+         (result-string (s-join "\n" entries))
          (target-buffer (get-buffer-create "test-agenda-ng")))
     (with-current-buffer target-buffer
       (read-only-mode -1)
