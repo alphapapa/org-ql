@@ -44,14 +44,7 @@ buffer."
                                                org-agenda-ng--add-markers
                                                ,action-fn)))))))
   `(org-ql--query ,buffers-or-files
-     (byte-compile (lambda ()
-                     (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
-                                          (= #'=)
-                                          (< #'<)
-                                          (> #'>)
-                                          (<= #'<=)
-                                          (>= #'>=))
-                       ,pred-body)))
+     ',pred-body
      :action-fn ,action-fn
      :narrow ,narrow
      :sort ',sort))
@@ -65,27 +58,45 @@ buffer."
 
 ;;;; Functions
 
-(cl-defun org-ql--query (buffers-or-files pred &key (action-fn #'identity) narrow sort)
+(cl-defun org-ql--query (buffers-or-files pred-body &key (action-fn #'identity) narrow sort)
   "FIXME: Add docstring."
   ;; MAYBE: Set :narrow t  for buffers and nil for files.
   (declare (indent defun))
-  (let* ((buffers-or-files (cl-typecase buffers-or-files
-                             (null (list (current-buffer)))
-                             (buffer (list buffers-or-files))
-                             (list buffers-or-files)
-                             (string (list buffers-or-files))))
+  (let* ((sources (pcase buffers-or-files
+                    (`nil (list (current-buffer)))
+                    ((pred listp) buffers-or-files)
+                    (_                  ; Buffer or string
+                     (list buffers-or-files))))
+         (predicate (byte-compile `(lambda ()
+                                     (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
+                                                          (= #'=)
+                                                          (< #'<)
+                                                          (> #'>)
+                                                          (<= #'<=)
+                                                          (>= #'>=))
+                                       ,pred-body))))
          ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
          ;; (org-use-tag-inheritance t)
          ;; (org-trust-scanner-tags t)
          (org-ql--today (org-today))
-         (items (-flatten-n 1 (--map (with-current-buffer (cl-typecase it
-                                                            (buffer it)
-                                                            (string (or (find-buffer-visiting it)
-                                                                        (find-file-noselect it)
-                                                                        (user-error "Can't open file: %s" it))))
-                                       (mapcar action-fn
-                                               (org-ql--filter-buffer :pred pred :narrow narrow)))
-                                     buffers-or-files))))
+         (items (->> sources
+                     ;; List buffers
+                     (--map (cl-etypecase it
+                              (buffer it)
+                              (string (or (find-buffer-visiting it)
+                                          (when (file-readable-p it)
+                                            ;; It feels unintuitive that `find-file-noselect' returns
+                                            ;; a buffer if the filename doesn't exist.
+                                            (find-file-noselect it))
+                                          (user-error "Can't open file: %s" it)))))
+                     ;; Filter buffers (i.e. select items)
+                     (--map (with-current-buffer it
+                              ;; action-fn must be called inside the source buffer.
+                              (mapcar action-fn
+                                      (org-ql--select :predicate predicate :narrow narrow))))
+                     ;; Flatten items
+                     (-flatten-n 1))))
+    ;; Sort items
     (pcase sort
       (`nil items)
       (`(function ,_)
@@ -116,8 +127,9 @@ Or, when possible, fix the problem."
 		  (org-ql--sanity-check-form (cdr elem)))
 	     else do (check elem))))
 
-(cl-defun org-ql--filter-buffer (&key pred narrow)
-  "Return positions of matching headings in current buffer.
+(cl-defun org-ql--select (&key predicate narrow)
+  ;; FIXME: Docstring
+  "Return positions of entries in current buffer matching PREDICATE.
 Headings should return non-nil for any ANY-PREDS and nil for all
 NONE-PREDS.  If NARROW is non-nil, buffer will not be widened
 first."
@@ -143,7 +155,7 @@ first."
         (goto-char (point-min))
         (when (org-before-first-heading-p)
           (outline-next-heading))
-        (cl-loop when (funcall pred)
+        (cl-loop when (funcall predicate)
                  collect (org-element-headline-parser (line-end-position))
                  while (outline-next-heading))))))
 
