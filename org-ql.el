@@ -423,8 +423,8 @@ A and B are Org timestamp elements."
 (defun org-ql--priority< (a b)
   "Return non-nil if A's priority is higher than B's.
 A and B are Org headline elements."
-  (cl-flet ((priority (item)
-                      (org-element-property :priority item)))
+  (cl-macrolet ((priority (item)
+                          `(org-element-property :priority ,item)))
     ;; NOTE: Priorities are numbers in Org elements.  This might differ from the priority selector logic.
     (let ((a-priority (priority a))
           (b-priority (priority b)))
