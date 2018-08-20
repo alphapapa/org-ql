@@ -104,14 +104,17 @@ When nil, buffers are widened before being searched."
   ;; pass it to lower functions.
   (declare (indent defun))
   ;; I think it's reasonable to use `eval' here.
-  (let* ((entries (->> (eval `(org-ql ',files
+  (let* ((entries (--> (eval `(org-ql ',files
                                 ,pred
                                 :sort ,sort
                                 :markers t))
-                       (mapcar #'org-agenda-ng--format-element)
-                       (s-join "\n")))
+                       (mapcar #'org-agenda-ng--format-element it)
+                       (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
+                             (t it))
+                       (s-join "\n" it)))
          (target-buffer (get-buffer-create "test-agenda-ng"))
          (inhibit-read-only t))
+
     (with-current-buffer target-buffer
       (erase-buffer)
       (insert entries)
