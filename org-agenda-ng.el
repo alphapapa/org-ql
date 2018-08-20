@@ -37,6 +37,11 @@
 
 (require 'org-ql)
 
+;;;; Variables
+
+(defvar org-agenda-ng-buffer-name "*Org Agenda NG*"
+  "Name of default `org-agenda-ng' buffer.")
+
 ;;;; Macros
 
 ;; FIXME: DRY these two macros.
@@ -45,7 +50,7 @@
   "Display an agenda-like buffer of entries in FILES that match QUERY.
 
 FILES-OR-QUERY is a sexp that is evaluated to get the list of
-files to scan.
+buffers and files to scan.
 
 QUERY is an `org-ql' query.  The query may be passed as
 FILES-OR-QUERY and QUERY may be left nil, in which case the list
@@ -55,14 +60,18 @@ of files will automatically be set to the value of calling
 SORT is passed to `org-ql', which see..
 
 NARROW, when non-nil, means to respect narrowing in buffers.
-When nil, buffers are widened before being searched."
+When nil, buffers are widened before being searched.
+
+BUFFER, when non-nil, is a buffer or buffer name to display the
+agenda in, rather than the default."
   (declare (indent defun)
-           (advertised-calling-convention (files-or-query &optional query &key sort narrow) nil))
+           (advertised-calling-convention (files-or-query &optional query &key sort narrow buffer) nil))
   (cl-macrolet ((set-keyword-args (args)
                                   `(setq sort (plist-get ,args :sort)
-                                         narrow (plist-get ,args :narrow))))
+                                         narrow (plist-get ,args :narrow)
+                                         buffer (plist-get ,args :buffer))))
     (let ((files '(org-agenda-files))
-          pred sort narrow)
+          query sort narrow buffer)
       ;; Parse args manually (so we can leave FILES nil for a default argument).
       ;; TODO: DRY this and org-ql, I think.
       (pcase args
@@ -70,27 +79,28 @@ When nil, buffers are widened before being searched."
          ;; Files, query, and keyword args (FIXME: Can I combine this and the next one?  Does it
          ;; matter if rest is nil or starts with a keyword?)
          (setq files arg-files
-               pred arg-pred)
+               query arg-pred)
          (set-keyword-args rest))
         (`(,arg-pred . ,(and rest (guard (keywordp (car rest)))))
          ;; Query and keyword args, no files
-         (setq pred arg-pred)
+         (setq query arg-pred)
          (set-keyword-args rest))
         (`(,arg-pred)
          ;; Only query
-         (setq pred arg-pred)))
+         (setq query arg-pred)))
       ;; Call --agenda
       `(org-agenda-ng--agenda ,files
          ;; TODO: Probably better to just use eval on org-ql rather than reimplementing parts of it here.
-         ',pred
-         :sort ',sort))))
+         ',query
+         :sort ',sort
+         :buffer ,buffer))))
 
 ;;;; Functions
 
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
-(cl-defun org-agenda-ng--agenda (buffers-files query &key sort)
+(cl-defun org-agenda-ng--agenda (buffers-files query &key sort buffer)
   "FIXME: Docstring"
   (declare (indent defun))
   ;; I think it's reasonable to use `eval' here.
@@ -102,13 +112,22 @@ When nil, buffers are widened before being searched."
                        (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
                              (t it))
                        (s-join "\n" it)))
-         (target-buffer (get-buffer-create "test-agenda-ng"))
          (inhibit-read-only t))
-    (with-current-buffer target-buffer
+    (with-current-buffer (org-agenda-ng--buffer buffer)
       (erase-buffer)
       (insert entries)
       (pop-to-buffer (current-buffer))
-      (org-agenda-finalize))))
+      (org-agenda-finalize)
+      (goto-char (point-min)))))
+
+(defun org-agenda-ng--buffer (&optional name)
+  "Return Agenda NG buffer, creating it if necessary.
+If NAME is non-nil, return buffer by that name instead of using
+default buffer."
+  (with-current-buffer (get-buffer-create (or name org-agenda-ng-buffer-name))
+    (unless (eq major-mode 'org-agenda-mode)
+      (org-agenda-mode))
+    (current-buffer)))
 
 (defun org-agenda-ng--format-relative-date (difference)
   "Return relative date string for DIFFERENCE.
