@@ -52,7 +52,7 @@ buffer.  In this case, ACTION should return an Org element."
      :narrow ,narrow
      :sort ',sort))
 
-(defmacro org-ql--fmap (fns &rest body)
+(defmacro org-ql--flet (fns &rest body)
   (declare (indent defun) (debug (listp body)))
   `(cl-letf ,(cl-loop for (fn target) in fns
                       collect `((symbol-function ',fn)
@@ -127,7 +127,7 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
 (cl-defun org-ql--select (&key predicate action narrow)
   "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
 If NARROW is non-nil, buffer will not be widened."
-  (org-ql--fmap ((category #'org-ql--category-p)
+  (org-ql--flet ((category #'org-ql--category-p)
                  (date #'org-ql--date-plain-p)
                  (deadline #'org-ql--deadline-p)
                  (scheduled #'org-ql--scheduled-p)
