@@ -54,18 +54,7 @@ buffer."
                        ,pred-body)))
      :action-fn ,action-fn
      :narrow ,narrow
-     :sort ,(pcase sort
-              (`(function ,_)
-               ;; Custom sort function
-               sort)
-              ((guard (and sort
-                           (cl-loop for elem in sort
-                                    always (memq elem '(date deadline scheduled todo priority)))))
-               ;; Default sorting functions
-               (list 'quote sort))
-              (_
-               ;; Other expression to evaluate
-               sort))))
+     :sort ',sort))
 
 (defmacro org-ql--fmap (fns &rest body)
   (declare (indent defun) (debug (listp body)))
@@ -97,11 +86,18 @@ buffer."
                                        (mapcar action-fn
                                                (org-ql--filter-buffer :pred pred :narrow narrow)))
                                      buffers-or-files))))
-    (cl-typecase sort
-      (list (org-ql--sort-by items sort))
-      (function (funcall sort items))
-      (null items)
-      (t (user-error "SORT must be a function or a list of methods (see documentation)")))))
+    (pcase sort
+      (`nil items)
+      (`(function ,_)
+       ;; Custom sort function
+       (funcall sort items))
+      ((guard (and sort
+                   (setq sort (-list sort))
+                   (cl-loop for elem in sort
+                            always (memq elem '(date deadline scheduled todo priority)))))
+       ;; Default sorting functions
+       (org-ql--sort-by items sort))
+      (_ (user-error "SORT must be either a function, or one or a list of the defined sorting methods (see documentation)")))))
 
 (defun org-ql--sanity-check-form (form)
   "Signal an error if any of the forms in BODY do not have their preconditions met.
