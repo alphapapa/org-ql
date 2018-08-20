@@ -86,9 +86,7 @@ When nil, buffers are widened before being searched."
       ;; Call --agenda
       `(org-agenda-ng--agenda ,files
          ;; TODO: Probably better to just use eval on org-ql rather than reimplementing parts of it here.
-         (byte-compile (lambda ()
-                         (cl-symbol-macrolet ((= #'=) (< #'<) (> #'>) (<= #'<=) (>= #'>=))
-                           ,pred)))
+         ',pred
          :sort ',sort))))
 
 ;;;; Functions
@@ -96,7 +94,7 @@ When nil, buffers are widened before being searched."
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
-(cl-defun org-agenda-ng--agenda (files pred &key action-fn sort)
+(cl-defun org-agenda-ng--agenda (files pred &key sort)
   ;; `org-ql--query' uses `org-element-headline-parser' by default, which we then map
   ;; `org-agenda-ng--format-element' across to get formatted, propertized strings for the agenda.
   ;; NOTE: `org-element-headline-parser' should remain the low-level action function, because the
@@ -105,18 +103,18 @@ When nil, buffers are widened before being searched."
   ;; not find any data to sort on).  IOW we have to call `org-agenda-ng--format-element' here, not
   ;; pass it to lower functions.
   (declare (indent defun))
-  (let* ((entries (mapcar #'org-agenda-ng--format-element
-                          (org-ql--query files
-                            pred
-                            :sort sort
-                            :action-fn #'org-agenda-ng--add-markers)))
-         (result-string (s-join "\n" entries))
-         (target-buffer (get-buffer-create "test-agenda-ng")))
+  ;; I think it's reasonable to use `eval' here.
+  (let* ((entries (->> (eval `(org-ql ',files
+                                ,pred
+                                :sort ,sort
+                                :markers t))
+                       (mapcar #'org-agenda-ng--format-element)
+                       (s-join "\n")))
+         (target-buffer (get-buffer-create "test-agenda-ng"))
+         (inhibit-read-only t))
     (with-current-buffer target-buffer
-      (read-only-mode -1)
       (erase-buffer)
-      (insert result-string)
-      (read-only-mode 1)
+      (insert entries)
       (pop-to-buffer (current-buffer))
       (org-agenda-finalize))))
 

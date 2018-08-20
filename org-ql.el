@@ -43,7 +43,7 @@ buffer.  In this case, ACTION should return an Org element."
                         ;; headline element, which --add-markers works with.  On the other hand,
                         ;; maybe this should be on the agenda-ng side.
                         (->> ,action
-                             org-agenda-ng--add-markers)))
+                             org-ql--add-agenda-markers)))
                  ('nil `(lambda ()
                           ,action))))
   `(org-ql--query ,buffers-or-files
@@ -61,9 +61,24 @@ buffer.  In this case, ACTION should return an Org element."
 
 ;;;; Functions
 
-(cl-defun org-ql--query (buffers-or-files pred-body &key action narrow sort)
-  "FIXME: Add docstring."
-  ;; MAYBE: Set :narrow t  for buffers and nil for files.
+(cl-defun org-ql--query (buffers-or-files query &key action narrow sort)
+  "Return items matching QUERY in BUFFERS-OR-FILES.
+
+QUERY is an `org-ql' query sexp.
+
+ACTION is a function which is called on each matching entry, with
+point at the beginning of its heading.  For example,
+`org-element-headline-parser' may be used to parse an entry into
+an Org element (note that it must be called with a limit
+argument, so a lambda must be used to do so).  Also see
+`org-ql--add-agenda-markers', which may be used to add markers
+compatible with Org Agenda code.
+
+If NARROW is non-nil, buffers are not widened.
+
+SORT is either nil, in which case items are not sorted; or one or
+a list of defined `org-ql' sorting methods: `date', `deadline',
+`scheduled', `todo', and `priority'."
   (declare (indent defun))
   (let* ((sources (pcase buffers-or-files
                     (`nil (list (current-buffer)))
@@ -77,7 +92,7 @@ buffer.  In this case, ACTION should return an Org element."
                                                           (> #'>)
                                                           (<= #'<=)
                                                           (>= #'>=))
-                                       ,pred-body))))
+                                       ,query))))
          (action (byte-compile action))
          ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
          ;; (org-use-tag-inheritance t)
@@ -101,41 +116,17 @@ buffer.  In this case, ACTION should return an Org element."
     ;; Sort items
     (pcase sort
       (`nil items)
-      (`(function ,_)
-       ;; Custom sort function
-       (funcall sort items))
       ((guard (and sort
                    (setq sort (-list sort))
                    (cl-loop for elem in sort
                             always (memq elem '(date deadline scheduled todo priority)))))
        ;; Default sorting functions
        (org-ql--sort-by items sort))
-      (_ (user-error "SORT must be either a function, or one or a list of the defined sorting methods (see documentation)")))))
-
-(defun org-ql--sanity-check-form (form)
-  "Signal an error if any of the forms in BODY do not have their preconditions met.
-Or, when possible, fix the problem."
-  (cl-flet ((check (symbol)
-                   (cl-case symbol
-                     ('done (unless org-done-keywords
-                              ;; NOTE: This check needs to be done from within the Org buffer being checked.
-                              (error "Variable `org-done-keywords' is nil.  Are you running this from an Org buffer?")))
-		     ('habit (unless (featurep 'org-habit)
-			       (require 'org-habit))))))
-    (cl-loop for elem in form
-	     if (consp elem)
-	     do (progn
-		  (check (car elem))
-		  (org-ql--sanity-check-form (cdr elem)))
-	     else do (check elem))))
+      (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
 
 (cl-defun org-ql--select (&key predicate action narrow)
-  ;; FIXME: Docstring
-  "Return positions of entries in current buffer matching PREDICATE.
-Headings should return non-nil for any ANY-PREDS and nil for all
-NONE-PREDS. If NARROW is non-nil, buffer will not be widened
-first."
-  ;; Cache `org-today' so we don't have to run it repeatedly.
+  "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
+If NARROW is non-nil, buffer will not be widened."
   (org-ql--fmap ((category #'org-ql--category-p)
                  (date #'org-ql--date-plain-p)
                  (deadline #'org-ql--deadline-p)
@@ -160,6 +151,38 @@ first."
         (cl-loop when (funcall predicate)
                  collect (funcall action)
                  while (outline-next-heading))))))
+
+;;;;; Helpers
+
+(defun org-ql--add-agenda-markers (element)
+  "Return ELEMENT with Org Agenda marker text properties added.
+ELEMENT should be an Org element like that returned by
+`org-element-headline-parser'.  This function should be called
+from within ELEMENT's buffer.  It calls `org-agenda-new-marker',
+which see."
+  (let* ((marker (org-agenda-new-marker (org-element-property :begin element)))
+         (properties (--> (cadr element)
+                          (plist-put it :org-marker marker)
+                          (plist-put it :org-hd-marker marker))))
+    (setf (cadr element) properties)
+    element))
+
+(defun org-ql--sanity-check-form (form)
+  "Signal an error if any of the forms in BODY do not have their preconditions met.
+Or, when possible, fix the problem."
+  (cl-flet ((check (symbol)
+                   (cl-case symbol
+                     ('done (unless org-done-keywords
+                              ;; NOTE: This check needs to be done from within the Org buffer being checked.
+                              (error "Variable `org-done-keywords' is nil.  Are you running this from an Org buffer?")))
+		     ('habit (unless (featurep 'org-habit)
+			       (require 'org-habit))))))
+    (cl-loop for elem in form
+	     if (consp elem)
+	     do (progn
+		  (check (car elem))
+		  (org-ql--sanity-check-form (cdr elem)))
+	     else do (check elem))))
 
 ;;;;; Predicates
 
