@@ -17,12 +17,14 @@
 
 ;;;; Macros
 
-(cl-defmacro org-ql (buffers-or-files pred-body &key (action-fn '#'identity)
-                                      sort narrow markers)
+(cl-defmacro org-ql (buffers-or-files pred-body &key sort narrow markers
+                                      (action '(org-element-headline-parser (line-end-position))))
   "Find entries in BUFFERS-OR-FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
 
-ACTION-FN should take a single argument, which will be the result
-of calling `org-element-headline-parser' at each matching entry.
+ACTION is a sexp which will be evaluated at each matching entry
+with point at the beginning of its heading.  It is passed to
+`org-ql--query' as a lambda.  By default, `org-element-headline-parser'
+ is called to return an Org element.
 
 SORT is a user defined sorting function, or an unquoted list of
 one or more sorting methods, including: `date', `deadline',
@@ -33,19 +35,20 @@ buffer (the default is to widen and search the entire buffer).
 
 If MARKERS is non-nil, `org-agenda-ng--add-markers' is used to
 add markers to each item, pointing to the item in its source
-buffer."
+buffer.  In this case, ACTION should return an Org element."
   (declare (indent defun))
-  (when markers
-    (setq action-fn (pcase action-fn
-                      (`(function identity) '#'org-agenda-ng--add-markers)
-                      (_ (byte-compile `(lambda (item)
-                                          (--> item
-                                               ;; Add the markers before calling the action fn
-                                               org-agenda-ng--add-markers
-                                               ,action-fn)))))))
+  (setq action (cl-ecase markers
+                 ('t `(lambda ()
+                        ;; FIXME: Document that, when markers is t, `action' should return an Org
+                        ;; headline element, which --add-markers works with.  On the other hand,
+                        ;; maybe this should be on the agenda-ng side.
+                        (->> ,action
+                             org-agenda-ng--add-markers)))
+                 ('nil `(lambda ()
+                          ,action))))
   `(org-ql--query ,buffers-or-files
      ',pred-body
-     :action-fn ,action-fn
+     :action ,action
      :narrow ,narrow
      :sort ',sort))
 
@@ -58,7 +61,7 @@ buffer."
 
 ;;;; Functions
 
-(cl-defun org-ql--query (buffers-or-files pred-body &key (action-fn #'identity) narrow sort)
+(cl-defun org-ql--query (buffers-or-files pred-body &key action narrow sort)
   "FIXME: Add docstring."
   ;; MAYBE: Set :narrow t  for buffers and nil for files.
   (declare (indent defun))
@@ -75,6 +78,7 @@ buffer."
                                                           (<= #'<=)
                                                           (>= #'>=))
                                        ,pred-body))))
+         (action (byte-compile action))
          ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
          ;; (org-use-tag-inheritance t)
          ;; (org-trust-scanner-tags t)
@@ -91,9 +95,7 @@ buffer."
                                           (user-error "Can't open file: %s" it)))))
                      ;; Filter buffers (i.e. select items)
                      (--map (with-current-buffer it
-                              ;; action-fn must be called inside the source buffer.
-                              (mapcar action-fn
-                                      (org-ql--select :predicate predicate :narrow narrow))))
+                              (org-ql--select :predicate predicate :action action :narrow narrow)))
                      ;; Flatten items
                      (-flatten-n 1))))
     ;; Sort items
@@ -127,11 +129,11 @@ Or, when possible, fix the problem."
 		  (org-ql--sanity-check-form (cdr elem)))
 	     else do (check elem))))
 
-(cl-defun org-ql--select (&key predicate narrow)
+(cl-defun org-ql--select (&key predicate action narrow)
   ;; FIXME: Docstring
   "Return positions of entries in current buffer matching PREDICATE.
 Headings should return non-nil for any ANY-PREDS and nil for all
-NONE-PREDS.  If NARROW is non-nil, buffer will not be widened
+NONE-PREDS. If NARROW is non-nil, buffer will not be widened
 first."
   ;; Cache `org-today' so we don't have to run it repeatedly.
   (org-ql--fmap ((category #'org-ql--category-p)
@@ -156,7 +158,7 @@ first."
         (when (org-before-first-heading-p)
           (outline-next-heading))
         (cl-loop when (funcall predicate)
-                 collect (org-element-headline-parser (line-end-position))
+                 collect (funcall action)
                  while (outline-next-heading))))))
 
 ;;;;; Predicates
