@@ -85,6 +85,10 @@ agenda in, rather than the default."
          ;; Query and keyword args, no files
          (setq query arg-pred)
          (set-keyword-args rest))
+        (`(,arg-files ,arg-pred)
+         ;; Files and query, no keywords
+         (setq files arg-files
+               query arg-pred))
         (`(,arg-pred)
          ;; Only query
          (setq query arg-pred)))
