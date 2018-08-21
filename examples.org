@@ -15,3 +15,5 @@ This uses the example in the readme file, but maps across the elements returned 
   ;;=> (("Electric bill" "Thu 23 Aug 2018 12:00:00 AM CDT")
   ;;    ("Rent" "Sat 01 Sep 2018 08:00:00 PM CDT"))
 #+END_SRC
+
+This could also be put in a script, which could use desktop notifications to remind of bills coming due: [[examples/org-bills-due.el][org-bills-due.el]].
