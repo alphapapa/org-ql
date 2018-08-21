@@ -39,14 +39,14 @@
 
 ;;;; Variables
 
-(defvar org-agenda-ng-buffer-name "*Org Agenda NG*"
-  "Name of default `org-agenda-ng' buffer.")
+(defvar org-ql-agenda-buffer-name "*Org Agenda NG*"
+  "Name of default `org-ql-agenda' buffer.")
 
 ;;;; Macros
 
 ;; FIXME: DRY these two macros.
 
-(cl-defmacro org-agenda-ng (&rest args)
+(cl-defmacro org-ql-agenda (&rest args)
   "Display an agenda-like buffer of entries in FILES that match QUERY.
 
 FILES-OR-QUERY is a sexp that is evaluated to get the list of
@@ -89,7 +89,7 @@ agenda in, rather than the default."
          ;; Only query
          (setq query arg-pred)))
       ;; Call --agenda
-      `(org-agenda-ng--agenda ,files
+      `(org-ql-agenda--agenda ,files
          ;; TODO: Probably better to just use eval on org-ql rather than reimplementing parts of it here.
          ',query
          :sort ',sort
@@ -100,7 +100,7 @@ agenda in, rather than the default."
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
-(cl-defun org-agenda-ng--agenda (buffers-files query &key sort buffer)
+(cl-defun org-ql-agenda--agenda (buffers-files query &key sort buffer)
   "FIXME: Docstring"
   (declare (indent defun))
   ;; I think it's reasonable to use `eval' here.
@@ -108,28 +108,28 @@ agenda in, rather than the default."
                                 ,query
                                 :sort ,sort
                                 :markers t))
-                       (mapcar #'org-agenda-ng--format-element it)
+                       (mapcar #'org-ql-agenda--format-element it)
                        (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
                              (t it))
                        (s-join "\n" it)))
          (inhibit-read-only t))
-    (with-current-buffer (org-agenda-ng--buffer buffer)
+    (with-current-buffer (org-ql-agenda--buffer buffer)
       (erase-buffer)
       (insert entries)
       (pop-to-buffer (current-buffer))
       (org-agenda-finalize)
       (goto-char (point-min)))))
 
-(defun org-agenda-ng--buffer (&optional name)
+(defun org-ql-agenda--buffer (&optional name)
   "Return Agenda NG buffer, creating it if necessary.
 If NAME is non-nil, return buffer by that name instead of using
 default buffer."
-  (with-current-buffer (get-buffer-create (or name org-agenda-ng-buffer-name))
+  (with-current-buffer (get-buffer-create (or name org-ql-agenda-buffer-name))
     (unless (eq major-mode 'org-agenda-mode)
       (org-agenda-mode))
     (current-buffer)))
 
-(defun org-agenda-ng--format-relative-date (difference)
+(defun org-ql-agenda--format-relative-date (difference)
   "Return relative date string for DIFFERENCE.
 DIFFERENCE should be an integer number of days, positive for
 dates in the past, and negative for dates in the future."
@@ -141,7 +141,7 @@ dates in the past, and negative for dates in the future."
 
 ;;;; Faces/properties
 
-(defun org-agenda-ng--add-markers (element)
+(defun org-ql-agenda--add-markers (element)
   "Return ELEMENT with marker properties added."
   (let* ((marker (org-agenda-new-marker (org-element-property :begin element)))
          (properties (--> (cadr element)
@@ -150,7 +150,7 @@ dates in the past, and negative for dates in the future."
     (setf (cadr element) properties)
     element))
 
-(defun org-agenda-ng--format-element (element)
+(defun org-ql-agenda--format-element (element)
   ;; This essentially needs to do what `org-agenda-format-item' does,
   ;; which is a lot.  We are a long way from that, but it's a start.
   "Return ELEMENT as a string with its text-properties set according to its property list.
@@ -175,12 +175,12 @@ Its property list should be the second item in the list, as returned by `org-ele
          ;; --add-deadline-face), and doing it in this form that gets the title hides it even more.
          ;; Adding the relative due date property should probably be done explicitly and separately
          ;; (which would also make it easier to do it independently of faces, etc).
-         (title (--> (org-agenda-ng--add-faces element)
+         (title (--> (org-ql-agenda--add-faces element)
                      (org-element-property :raw-value it)
                      (org-link-display-format it)
                      ))
          (todo-keyword (-some--> (org-element-property :todo-keyword element)
-                                 (org-agenda-ng--add-todo-face it)))
+                                 (org-ql-agenda--add-todo-face it)))
          ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
          (tag-list (if org-use-tag-inheritance
                        (if-let ((marker (or (org-element-property :org-hd-marker element)
@@ -202,7 +202,7 @@ Its property list should be the second item in the list, as returned by `org-ele
          (priority-string (-some->> (org-element-property :priority element)
                                     (char-to-string)
                                     (format "[#%s]")
-                                    (org-agenda-ng--add-priority-face)))
+                                    (org-ql-agenda--add-priority-face)))
          (habit-property (org-with-point-at (org-element-property :begin element)
                            (when (org-is-habit-p)
                              (org-habit-parse-todo))))
@@ -220,18 +220,18 @@ Its property list should be the second item in the list, as returned by `org-ele
            'tags tag-list
            'org-habit-p habit-property))))
 
-(defun org-agenda-ng--add-faces (element)
+(defun org-ql-agenda--add-faces (element)
   (->> element
-       (org-agenda-ng--add-scheduled-face)
-       (org-agenda-ng--add-deadline-face)))
+       (org-ql-agenda--add-scheduled-face)
+       (org-ql-agenda--add-deadline-face)))
 
-(defun org-agenda-ng--add-priority-face (string)
+(defun org-ql-agenda--add-priority-face (string)
   "Return STRING with priority face added."
   (when (string-match "\\(\\[#\\(.\\)\\]\\)" string)
     (let ((face (org-get-priority-face (string-to-char (match-string 2 string)))))
       (org-add-props string nil 'face face 'font-lock-fontified t))))
 
-(defun org-agenda-ng--add-scheduled-face (element)
+(defun org-ql-agenda--add-scheduled-face (element)
   "Add faces to ELEMENT's title for its scheduled status."
   ;; NOTE: Also adding prefix
   (if-let ((scheduled-date (org-element-property :scheduled element)))
@@ -252,7 +252,7 @@ Its property list should be the second item in the list, as returned by `org-ele
              (scheduled-day-number (org-time-string-to-absolute
                                     (org-element-timestamp-interpreter scheduled-date 'ignore)))
              (difference-days (- today-day-number scheduled-day-number))
-             (relative-due-date (org-add-props (org-agenda-ng--format-relative-date difference-days) nil
+             (relative-due-date (org-add-props (org-ql-agenda--format-relative-date difference-days) nil
                                   'help-echo (org-element-property :raw-value scheduled-date)))
              (repeat-day-number (cond (sexp-p (org-time-string-to-absolute scheduled-date))
                                       ((< today-day-number scheduled-day-number) scheduled-day-number)
@@ -297,7 +297,7 @@ Its property list should be the second item in the list, as returned by `org-ele
     ;; Not scheduled
     element))
 
-(defun org-agenda-ng--add-deadline-face (element)
+(defun org-ql-agenda--add-deadline-face (element)
   "Add faces to ELEMENT's title for its deadline status.
 Also store relative due date as string in `:relative-due-date'
 property."
@@ -306,7 +306,7 @@ property."
              (deadline-day-number (org-time-string-to-absolute
                                    (org-element-timestamp-interpreter deadline-date 'ignore)))
              (difference-days (- today-day-number deadline-day-number))
-             (relative-due-date (org-add-props (org-agenda-ng--format-relative-date difference-days) nil
+             (relative-due-date (org-add-props (org-ql-agenda--format-relative-date difference-days) nil
                                   'help-echo (org-element-property :raw-value deadline-date)))
              (todo-keyword (org-element-property :todo-keyword element))
              (done-p (member todo-keyword org-done-keywords))
@@ -327,12 +327,12 @@ property."
     ;; No deadline
     element))
 
-(defun org-agenda-ng--add-todo-face (keyword)
+(defun org-ql-agenda--add-todo-face (keyword)
   (when-let ((face (org-get-todo-face keyword)))
     (org-add-props keyword nil 'face face)))
 
 ;;;; Footer
 
-(provide 'org-agenda-ng)
+(provide 'org-ql-agenda)
 
-;;; org-agenda-ng.el ends here
+;;; org-ql-agenda.el ends here

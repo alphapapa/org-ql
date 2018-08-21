@@ -1,73 +1,28 @@
-* org-agenda-ng / org-ql
+* org-ql
 
-This is rudimentary, experimental, proof-of-concept alternative code for generating Org agendas.  It doesn't support nearly as many features as =org-agenda.el= does, but it might be useful in some way.  It uses some existing code from =org-agenda.el= and tries to be compatible with parts of it, like =org-agenda-finalize-entries= and =org-agenda-finalize=.
-
-Here's an example of generating a kind of agenda view for today (note that the grouping is provided by [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], not this code:
+~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and perform actions on them, such as collecting their parsed representation with ~org-element~ (the default action).  Some examples:
 
 #+BEGIN_SRC elisp
-  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
-    (and (or (date = today)
-             (deadline <=)
-             (scheduled <= today))
-         (not (done))))
-#+END_SRC
-
-[[screenshot.png]]
-
-Here are some other examples:
-
-#+BEGIN_SRC elisp
-  ;; Show an agenda-like view of items in "~/org/main.org" with TODO and SOMEDAY keywords which are
-  ;; tagged "computer" or "Emacs" and in the category "main":
-  (org-agenda-ng "~/org/main.org"
-    (and (todo "TODO" "SOMEDAY")
-         (tags "computer" "Emacs")
-         (category "main")))
-
-  ;; Show an agenda-like view of all habits in all agenda files:
-  (org-agenda-ng
-    (habit))
-
-  ;; Show an agenda-like view similar to a "traditional" Org agenda:
-  (org-agenda-ng
-    (or (habit)
-        (date = today)
-        (deadline <=)
-        (scheduled <= today)
-        (and (todo "DONE" "CANCELLED")
-             (closed = today))))
-#+END_SRC
-
-More examples are available in [[examples.org]].
-
-** org-ql
-
-Another way to look at it is like a "query language" for Org buffers.  For example:
-
-#+BEGIN_SRC elisp
-  ;; Return a list of Org entry elements which have the SOMEDAY keyword, are tagged "Emacs", and have
-  ;; priority B or higher:
+  ;; Return a list of Org entry elements in the file "~/org/main.org" which have the SOMEDAY
+  ;; to-do keyword, are tagged "Emacs", and have priority B or higher.
   (org-ql "~/org/main.org"
     (and (todo "SOMEDAY")
          (tags "Emacs")
-         (priority >= "B"))) ;; => ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
+         (priority >= "B"))) ;=> ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
 
-  ;; Find non-done items which contain the term "Emacs" and have priority "B" or higher, and
-  ;; return a list of heading positions:
-  (org-ql org-agenda-files
+  ;; Return a list of bills coming due, searching all Org Agenda files, sorted by deadline.  Deadlines
+  ;; are compared with configured Org warning days, which is implied by the plain `<=' in the
+  ;; `deadline' matcher.
+  (org-ql (org-agenda-files)
     (and (not (done))
-         (regexp "Emacs")
-         (priority >= "B"))
-    :action-fn (lambda (element)
-                 (org-element-property :begin element)))  ;; => (44154 46469 56008 63965 100008 ...)
+         (tags "bills")
+         (deadline <=))
+    :sort deadline)
 
-  ;; Or you can use mapcar around it to get the same result (API is WIP):
-  (mapcar (lambda (element)
-            (org-element-property :begin element))
-          (org-ql org-agenda-files
-            (and (not (done))
-                 (tags "Emacs")
-                 (priority >= "B"))))  ;; => (44154 46469 56008 63965 100008 ...)
+  ;; Set the tag "Emacs" on every entry in the inbox file that mentions "Emacs".
+  (org-ql "~/org/inbox.org"
+    (regexp "Emacs")
+    :action (org-toggle-tag "Emacs" 'on))
 
   ;; If you kept a database of music in an Org file, you might run a query like this to find tracks
   ;; composed by Chopin that do not have their key recorded in the database:
@@ -77,20 +32,68 @@ Another way to look at it is like a "query language" for Org buffers.  For examp
          (not (property "key"))))
 #+END_SRC
 
-Instead of opening an agenda-like buffer with matching entries, =org-ql= can take a function as an argument that is called at each matching entry to return a result, and finally it returns a list of the results.  For example, you could return a list of positions within the buffer, or a list of headings, or headings with entry contents, etc.  By default, the matching element is returned, which is the result of calling =org-element-headline-parser= at that entry.
+** org-ql-agenda
 
-Results may also be sorted by a user-defined sorting function, or by some built-in sorters: =date=, =deadline=, =scheduled=, =priority= (which assume that the =action-fn= is the default, =org-element-headline-parser)=.  For example:
+Also included is ~org-ql-agenda~, which uses ~org-ql~ queries to select entries and present them in an Agenda-like view.  It's compatible with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], which provides grouping.  For example:
 
 #+BEGIN_SRC elisp
-  ;; Return TODO items sorted by deadline, then priority.  These built-in sorters assume that items
-  ;; are Org elements returned by `org-element-headline-parser' (the default action function).
-  (org-ql "~/org/main.org"
-    (todo)
-    :sort (deadline priority))
-
-  ;; Return TODO items sorted by user-defined sorting function.
-  (org-ql "~/org/main.org"
-    (todo)
-    :sort #'custom-sort-fn)
+  (org-ql-agenda "~/src/emacs/org-super-agenda/test/test.org"
+    (and (or (date = today)
+             (deadline <=)
+             (scheduled <= today))
+         (not (done))))
 #+END_SRC
 
+Which presents this buffer:
+
+[[screenshot.png]]
+
+*Note:* The view buffer is currently put in ~org-agenda-mode~, which means that /some/ Org Agenda commands work, such as jumping to entries and changing item priorities (without necessarily updating the view).  This feature is experimental and not guaranteed to work correctly with all commands.  (It works to the extent it does because the appropriate text properties are placed on each item, imitating an Agenda buffer.)
+
+Here are some other examples:
+
+#+BEGIN_SRC elisp
+  ;; Show an agenda-like view of items in "~/org/main.org" with TODO and SOMEDAY keywords which are
+  ;; tagged "computer" or "Emacs" and in the category "main":
+  (org-ql-agenda "~/org/main.org"
+    (and (todo "TODO" "SOMEDAY")
+         (tags "computer" "Emacs")
+         (category "main")))
+
+  ;; Show an agenda-like view of all habits in all agenda files:
+  (org-ql-agenda
+    (habit))
+
+  ;; Show an agenda-like view similar to a "traditional" Org agenda.
+  (org-ql-agenda
+    (or (habit)
+        (date = today)
+        (deadline <=)
+        (scheduled <= today)
+        (and (todo "DONE" "CANCELLED")
+             (closed = today))))
+#+END_SRC
+
+** Comparison with Org Agenda searches
+
+Of course, queries like these can already be written with Org Agenda searches, but the syntax can be complex.  For example, this query would be difficult to write in a standard Org Agenda search, because it matches against a to-do keyword /and/ a plain-text search.  As described in the [[https://orgmode.org/worg/org-tutorials/advanced-searching.html#combining-metadata-and-full-text-queries][advanced searching tutorial]], it would require using ~org-search-view~ with a query with specific regular expression syntax, like this:
+
+#+BEGIN_EXAMPLE
+  +lisp +{^\*+\s-+TO-READ\s-}
+#+END_EXAMPLE
+
+But with ~org-ql-agenda~, you would write:
+
+#+BEGIN_SRC elisp
+  (org-ql-agenda
+    (and (regexp "lisp")
+         (todo "TO-READ")))
+#+END_SRC
+
+** More examples
+
+More examples are available in [[examples.org]].
+
+** License
+
+GPLv3

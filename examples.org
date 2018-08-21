@@ -1,20 +1,17 @@
-
-
 * Examples
 
-** Showing TO-READ entries containing the word "lisp"
+** Listing bills coming due
 
-This query would be difficult to write in a standard Org Agenda search, because it matches against a to-do keyword /and/ a plain-text search.  As described in the [[https://orgmode.org/worg/org-tutorials/advanced-searching.html#combining-metadata-and-full-text-queries][advanced searching tutorial]], it would require using ~org-search-view~ with a query with specific regular expression syntax, like this:
-
-#+BEGIN_EXAMPLE
-  +lisp +{^\*+\s-+TO-READ\s-}
-#+END_EXAMPLE
-
-But with =org-ql= or =org-agenda-ng=, you would write:
+This uses the example in the readme file, but maps across the elements returned by ~org-ql~ to present a simple list of titles and deadlines.
 
 #+BEGIN_SRC elisp
-  (org-agenda-ng
-    (and (regexp "lisp")
-         (todo "TO-READ")))
+  (--map (list (org-element-property :raw-value it)
+               (org-timestamp-format (org-element-property :deadline it) "%c"))
+         (org-ql (org-agenda-files)
+           (and (not (done))
+                (tags "bills")
+                (deadline <=))
+           :sort deadline))
+  ;;=> (("Electric bill" "Thu 23 Aug 2018 12:00:00 AM CDT")
+  ;;    ("Rent" "Sat 01 Sep 2018 08:00:00 PM CDT"))
 #+END_SRC
-

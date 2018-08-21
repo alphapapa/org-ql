@@ -2,10 +2,6 @@
 
 * Tasks
 
-** TODO Move/rename repo to =org-ql=
-
-Since =org-sidebar= uses it, it probably makes more sense for =org-ql= to be the primary focus of the repo.  But it also uses =org-agenda-ng--format-element=, so =org-agenda-ng= probably should be part of that package, too.
-
 ** TODO Document matchers/selectors/predicates
 
 And maybe pick a single name for them...
