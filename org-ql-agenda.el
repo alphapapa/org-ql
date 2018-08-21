@@ -239,7 +239,8 @@ Its property list should be the second item in the list, as returned by `org-ele
   "Add faces to ELEMENT's title for its scheduled status."
   ;; NOTE: Also adding prefix
   (if-let ((scheduled-date (org-element-property :scheduled element)))
-      (let* ((show-all (or (eq org-agenda-repeating-timestamp-show-all t)
+      (let* ((todo-keyword (org-element-property :todo-keyword element))
+             (show-all (or (eq org-agenda-repeating-timestamp-show-all t)
                            (member todo-keyword org-agenda-repeating-timestamp-show-all)))
              (raw-value (org-element-property :raw-value scheduled-date))
              (sexp-p (string-prefix-p "%%" raw-value))
@@ -273,7 +274,6 @@ Its property list should be the second item in the list, as returned by `org-ele
                                           ;; that.
                                           (current-buffer)
                                           (org-element-property :begin element)))))
-             (todo-keyword (org-element-property :todo-keyword element))
              (face (cond ((member todo-keyword org-done-keywords) 'org-agenda-done)
                          ((= today-day-number scheduled-day-number) 'org-scheduled-today)
                          ((> today-day-number scheduled-day-number) 'org-scheduled-previously)
