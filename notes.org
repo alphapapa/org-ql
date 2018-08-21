@@ -11,6 +11,8 @@ And maybe pick a single name for them...
 
 ** TODO Document sorters
 
+Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
+
 ** TODO Add more sorters?
 
 +  [ ] =category=
