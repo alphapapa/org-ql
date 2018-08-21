@@ -94,6 +94,10 @@ But with ~org-ql-agenda~, you would write:
 
 More examples are available in [[examples.org]].
 
+** org-sidebar
+
+This package is used by [[https://github.com/alphapapa/org-sidebar][org-sidebar]], which presents a customizable agenda-like view in a sidebar window.
+
 ** License
 
 GPLv3
