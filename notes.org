@@ -2,6 +2,10 @@
 
 * Tasks
 
+** TODO Add ~org-ql-view~ command
+
+Should work like ~org-sidebar-ql~, but displays an ~org-ql-agenda~ view instead.
+
 ** TODO Document matchers/selectors/predicates
 
 And maybe pick a single name for them...
