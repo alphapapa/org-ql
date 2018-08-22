@@ -97,21 +97,23 @@ agenda in, rather than the default."
          ;; TODO: Probably better to just use eval on org-ql rather than reimplementing parts of it here.
          ',query
          :sort ',sort
-         :buffer ,buffer))))
+         :buffer ,buffer
+         :narrow ,narrow))))
 
 ;;;; Functions
 
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
-(cl-defun org-ql-agenda--agenda (buffers-files query &key sort buffer)
+(cl-defun org-ql-agenda--agenda (buffers-files query &key sort buffer narrow)
   "FIXME: Docstring"
   (declare (indent defun))
   ;; I think it's reasonable to use `eval' here.
   (let* ((entries (--> (eval `(org-ql ',buffers-files
                                 ,query
                                 :sort ,sort
-                                :markers t))
+                                :markers t
+                                :narrow ,narrow))
                        (mapcar #'org-ql-agenda--format-element it)
                        (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
                              (t it))
