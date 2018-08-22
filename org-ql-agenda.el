@@ -145,15 +145,6 @@ dates in the past, and negative for dates in the future."
 
 ;;;; Faces/properties
 
-(defun org-ql-agenda--add-markers (element)
-  "Return ELEMENT with marker properties added."
-  (let* ((marker (org-agenda-new-marker (org-element-property :begin element)))
-         (properties (--> (cadr element)
-                          (plist-put it :org-marker marker)
-                          (plist-put it :org-hd-marker marker))))
-    (setf (cadr element) properties)
-    element))
-
 (defun org-ql-agenda--format-element (element)
   ;; This essentially needs to do what `org-agenda-format-item' does,
   ;; which is a lot.  We are a long way from that, but it's a start.
