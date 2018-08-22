@@ -15,6 +15,13 @@
 
 (defvar org-ql--today nil)
 
+(defvar org-ql-cache (make-hash-table :weakness 'key)
+  ;; IIUC, setting weakness to `key' means that, when a buffer is closed, its entries will be
+  ;; removed from this table at the next GC.
+  "Query cache, keyed by buffer.  Each value is a list of the
+buffer's modified tick and another hash table, keyed by arguments
+passed to `org-ql--select-cached'.")
+
 ;;;; Macros
 
 (cl-defmacro org-ql (buffers-or-files pred-body &key sort narrow markers
@@ -110,7 +117,7 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
                                           (user-error "Can't open file: %s" it)))))
                      ;; Filter buffers (i.e. select items)
                      (--map (with-current-buffer it
-                              (org-ql--select :predicate predicate :action action :narrow narrow)))
+                              (org-ql--select-cached :predicate predicate :action action :narrow narrow)))
                      ;; Flatten items
                      (-flatten-n 1))))
     ;; Sort items
@@ -123,6 +130,32 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
        ;; Default sorting functions
        (org-ql--sort-by items sort))
       (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
+
+(define-hash-table-test 'org-ql-hash-test #'equal (lambda (args)
+                                                    (sxhash-equal (prin1-to-string args))))
+
+(defun org-ql--select-cached (&rest args)
+  "Return results for ARGS and current buffer using cache."
+  ;; MAYBE: Timeout cached queries.  Probably not necessarily since they will be removed when a
+  ;; buffer is closed, or when a query is run after modifying a buffer.
+  (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
+            (query-cache (cadr buffer-cache))
+            (modified-tick (car buffer-cache))
+            (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+            (cached-result (gethash args query-cache)))
+      (pcase cached-result
+        ('org-ql-nil nil)
+        (_ cached-result))
+    (let ((new-result (apply #'org-ql--select args)))
+      (cond ((or (not query-cache)
+                 (not buffer-unmodified-p))
+             (puthash (current-buffer)
+                      (list (buffer-modified-tick)
+                            (aprog1 (make-hash-table :test 'org-ql-hash-test)
+                              (puthash args (or new-result 'org-ql-nil) it)))
+                      org-ql-cache))
+            (t (puthash args (or new-result 'org-ql-nil) query-cache)))
+      new-result)))
 
 (cl-defun org-ql--select (&key predicate action narrow)
   "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
