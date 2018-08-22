@@ -162,9 +162,9 @@ Its property list should be the second item in the list, as returned by `org-ele
          ;; better to avoid this somehow.  At least, we should use a
          ;; function to convert plists to alists, if possible.
          (properties (cl-loop for (key val) on properties by #'cddr
-                              for key = (intern (cl-subseq (symbol-name key) 1))
-                              unless (member key '(parent))
-                              append (list key val)))
+                              for symbol = (intern (cl-subseq (symbol-name key) 1))
+                              unless (member symbol '(parent))
+                              append (list symbol val)))
          ;; TODO: --add-faces is used to add the :relative-due-date property, but that fact is
          ;; hidden by doing it through --add-faces (which calls --add-scheduled-face and
          ;; --add-deadline-face), and doing it in this form that gets the title hides it even more.
@@ -195,8 +195,7 @@ Its property list should be the second item in the list, as returned by `org-ele
                                (s-join ":" it)
                                (s-wrap it ":")
                                (org-add-props it nil 'face 'org-tag)))
-         (level (org-element-property :level element))
-         (category (org-element-property :category element))
+         ;;  (category (org-element-property :category element))
          (priority-string (-some->> (org-element-property :priority element)
                                     (char-to-string)
                                     (format "[#%s]")
@@ -234,40 +233,45 @@ Its property list should be the second item in the list, as returned by `org-ele
   ;; NOTE: Also adding prefix
   (if-let ((scheduled-date (org-element-property :scheduled element)))
       (let* ((todo-keyword (org-element-property :todo-keyword element))
-             (show-all (or (eq org-agenda-repeating-timestamp-show-all t)
-                           (member todo-keyword org-agenda-repeating-timestamp-show-all)))
-             (raw-value (org-element-property :raw-value scheduled-date))
-             (sexp-p (string-prefix-p "%%" raw-value))
              (today-day-number (org-today))
-             (current-day-number
-              ;; FIXME: This is supposed to be the, shall we say,
-              ;; pretend, or perspective, day number that this pass
-              ;; through the agenda is being made for.  We need to
-              ;; either set this in the calling function, set it here,
-              ;; or accomplish this in a different way.  See
-              ;; `org-agenda-get-scheduled' and where `date' is set in
-              ;; `org-agenda-list'.
-              today-day-number)
+             ;; (current-day-number
+             ;; NOTE: Not currently used, but if we ever implement a more "traditional" agenda that
+             ;; shows perspective of multiple days at once, we'll need this, so I'll leave it for now.
+             ;;  ;; FIXME: This is supposed to be the, shall we say,
+             ;;  ;; pretend, or perspective, day number that this pass
+             ;;  ;; through the agenda is being made for.  We need to
+             ;;  ;; either set this in the calling function, set it here,
+             ;;  ;; or accomplish this in a different way.  See
+             ;;  ;; `org-agenda-get-scheduled' and where `date' is set in
+             ;;  ;; `org-agenda-list'.
+             ;;  today-day-number)
              (scheduled-day-number (org-time-string-to-absolute
                                     (org-element-timestamp-interpreter scheduled-date 'ignore)))
              (difference-days (- today-day-number scheduled-day-number))
              (relative-due-date (org-add-props (org-ql-agenda--format-relative-date difference-days) nil
                                   'help-echo (org-element-property :raw-value scheduled-date)))
-             (repeat-day-number (cond (sexp-p (org-time-string-to-absolute scheduled-date))
-                                      ((< today-day-number scheduled-day-number) scheduled-day-number)
-                                      (t (org-time-string-to-absolute
-                                          raw-value
-                                          (if show-all
-                                              current-day-number
-                                            today-day-number)
-                                          'future
-                                          ;; FIXME: I don't like
-                                          ;; calling `current-buffer'
-                                          ;; here.  If the element has
-                                          ;; a marker, we should use
-                                          ;; that.
-                                          (current-buffer)
-                                          (org-element-property :begin element)))))
+             ;; FIXME: Unused for now:
+             ;; (show-all (or (eq org-agenda-repeating-timestamp-show-all t)
+             ;;               (member todo-keyword org-agenda-repeating-timestamp-show-all)))
+             ;; FIXME: Unused for now: (sexp-p (string-prefix-p "%%" raw-value))
+             ;; FIXME: Unused for now: (raw-value (org-element-property :raw-value scheduled-date))
+             ;; FIXME: I don't remember what `repeat-day-number' was for, but we aren't using it.
+             ;; But I'll leave it here for now.
+             ;; (repeat-day-number (cond (sexp-p (org-time-string-to-absolute scheduled-date))
+             ;;                          ((< today-day-number scheduled-day-number) scheduled-day-number)
+             ;;                          (t (org-time-string-to-absolute
+             ;;                              raw-value
+             ;;                              (if show-all
+             ;;                                  current-day-number
+             ;;                                today-day-number)
+             ;;                              'future
+             ;;                              ;; FIXME: I don't like
+             ;;                              ;; calling `current-buffer'
+             ;;                              ;; here.  If the element has
+             ;;                              ;; a marker, we should use
+             ;;                              ;; that.
+             ;;                              (current-buffer)
+             ;;                              (org-element-property :begin element)))))
              (face (cond ((member todo-keyword org-done-keywords) 'org-agenda-done)
                          ((= today-day-number scheduled-day-number) 'org-scheduled-today)
                          ((> today-day-number scheduled-day-number) 'org-scheduled-previously)
@@ -294,9 +298,9 @@ property."
              (difference-days (- today-day-number deadline-day-number))
              (relative-due-date (org-add-props (org-ql-agenda--format-relative-date difference-days) nil
                                   'help-echo (org-element-property :raw-value deadline-date)))
-             (todo-keyword (org-element-property :todo-keyword element))
-             (done-p (member todo-keyword org-done-keywords))
-             (today-p (= today-day-number deadline-day-number))
+             ;; FIXME: Unused for now: (todo-keyword (org-element-property :todo-keyword element))
+             ;; FIXME: Unused for now: (done-p (member todo-keyword org-done-keywords))
+             ;; FIXME: Unused for now: (today-p (= today-day-number deadline-day-number))
              (deadline-passed-fraction (--> (- deadline-day-number today-day-number)
                                             (float it)
                                             (/ it (max org-deadline-warning-days 1))
