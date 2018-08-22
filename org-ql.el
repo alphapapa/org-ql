@@ -172,6 +172,7 @@ If NARROW is non-nil, buffer will not be widened."
                  (tags #'org-ql--tags-p)
                  (property #'org-ql--property-p)
                  (regexp #'org-ql--regexp-p)
+                 (heading #'org-ql--heading-p)
                  (level #'org-ql--level-p)
                  (org-back-to-heading #'outline-back-to-heading))
     (save-excursion
@@ -377,6 +378,10 @@ comparator, PRIORITY should be a priority string."
     (save-excursion
       (goto-char (line-beginning-position))
       (re-search-forward regexp end t))))
+
+(defun org-ql--heading-p (regexp)
+  "Return non-nil if current entry's heading matches REGEXP."
+  (string-match regexp (org-get-heading 'no-tags 'no-todo)))
 
 (defun org-ql--property-p (property &optional value)
   "Return non-nil if current entry has PROPERTY, and optionally VALUE."
