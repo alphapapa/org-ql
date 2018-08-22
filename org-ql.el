@@ -52,7 +52,7 @@ buffer.  In this case, ACTION should return an Org element."
                        ;; headline element, which --add-markers works with.  On the other hand,
                        ;; maybe this should be on the agenda-ng side.
                        (->> ,action
-                            org-ql--add-agenda-markers)))))
+                            org-ql--add-markers)))))
   `(org-ql--query ,buffers-or-files
      ',pred-body
      :action ,action
@@ -78,7 +78,7 @@ point at the beginning of its heading.  For example,
 `org-element-headline-parser' may be used to parse an entry into
 an Org element (note that it must be called with a limit
 argument, so a lambda must be used to do so).  Also see
-`org-ql--add-agenda-markers', which may be used to add markers
+`org-ql--add-markers', which may be used to add markers
 compatible with Org Agenda code.
 
 If NARROW is non-nil, buffers are not widened.
@@ -187,13 +187,16 @@ If NARROW is non-nil, buffer will not be widened."
 
 ;;;;; Helpers
 
-(defun org-ql--add-agenda-markers (element)
-  "Return ELEMENT with Org Agenda marker text properties added.
+(defun org-ql--add-markers (element)
+  "Return ELEMENT with Org marker text properties added.
 ELEMENT should be an Org element like that returned by
 `org-element-headline-parser'.  This function should be called
-from within ELEMENT's buffer.  It calls `org-agenda-new-marker',
-which see."
-  (let* ((marker (org-agenda-new-marker (org-element-property :begin element)))
+from within ELEMENT's buffer."
+  ;; FIXME: `org-agenda-new-marker' works, until it doesn't, because...I don't know.  It sometimes
+  ;; raises errors or returns markers that don't point into a buffer.  `copy-marker' always works,
+  ;; of course, but maybe it will leave "dangling" markers, which could affect performance over
+  ;; time?  I don't know, but for now, it seems that we have to use `copy-marker'.
+  (let* ((marker (copy-marker (org-element-property :begin element)))
          (properties (--> (cadr element)
                           (plist-put it :org-marker marker)
                           (plist-put it :org-hd-marker marker))))
