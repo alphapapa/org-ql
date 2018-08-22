@@ -309,9 +309,9 @@ like one returned by `date-to-day'."
                      (org-time-string-to-absolute
                       (org-element-timestamp-interpreter date-element 'ignore))
                      target-day-number))
-           (error "Unknown date-element type: %s" (org-element-property :type date-element)))))
-      (otherwise (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
-                             comparator target-date)))))
+           (_ (error "Unknown date-element type: %s" (org-element-property :type date-element))))))
+      (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
+                     comparator target-date)))))
 
 (defsubst org-ql--date-plain-p (&optional comparator target-date)
   (org-ql--date-p :date comparator target-date))
