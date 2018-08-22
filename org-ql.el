@@ -37,15 +37,15 @@ If MARKERS is non-nil, `org-agenda-ng--add-markers' is used to
 add markers to each item, pointing to the item in its source
 buffer.  In this case, ACTION should return an Org element."
   (declare (indent defun))
-  (setq action (cl-ecase markers
-                 ('t `(lambda ()
-                        ;; FIXME: Document that, when markers is t, `action' should return an Org
-                        ;; headline element, which --add-markers works with.  On the other hand,
-                        ;; maybe this should be on the agenda-ng side.
-                        (->> ,action
-                             org-ql--add-agenda-markers)))
+  (setq action (pcase markers
                  ('nil `(lambda ()
-                          ,action))))
+                          ,action))
+                 (_ `(lambda ()
+                       ;; FIXME: Document that, when markers is t, `action' should return an Org
+                       ;; headline element, which --add-markers works with.  On the other hand,
+                       ;; maybe this should be on the agenda-ng side.
+                       (->> ,action
+                            org-ql--add-agenda-markers)))))
   `(org-ql--query ,buffers-or-files
      ',pred-body
      :action ,action

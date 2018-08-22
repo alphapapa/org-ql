@@ -187,9 +187,12 @@ Its property list should be the second item in the list, as returned by `org-ele
                                  (org-ql-agenda--add-todo-face it)))
          ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
          (tag-list (if org-use-tag-inheritance
+                       ;; FIXME: Note that tag inheritance cannot be used here unless markers are
+                       ;; added, otherwise we can't go to the item's buffer to look for inherited
+                       ;; tags.  (Or does `org-element-headline-parser' parse inherited tags too?  I
+                       ;; forget...)
                        (if-let ((marker (or (org-element-property :org-hd-marker element)
-                                            (org-element-property :org-marker element)
-                                            (org-element-property :begin element))))
+                                            (org-element-property :org-marker element))))
                            (with-current-buffer (marker-buffer marker)
                              ;; I wish `org-get-tags-at' used the correct buffer automatically.
                              (org-get-tags-at marker (not org-use-tag-inheritance)))
