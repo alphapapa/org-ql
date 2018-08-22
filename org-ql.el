@@ -117,6 +117,8 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
                                           (user-error "Can't open file: %s" it)))))
                      ;; Filter buffers (i.e. select items)
                      (--map (with-current-buffer it
+                              (unless (derived-mode-p 'org-mode)
+                                (user-error "Not an Org buffer: %s" (buffer-name)))
                               (org-ql--select-cached :predicate predicate :action action :narrow narrow)))
                      ;; Flatten items
                      (-flatten-n 1))))
