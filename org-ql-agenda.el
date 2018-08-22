@@ -283,19 +283,7 @@ Its property list should be the second item in the list, as returned by `org-ele
                            'face face)))
              (properties (--> (cadr element)
                               (plist-put it :title title)
-                              (plist-put it :relative-due-date relative-due-date)))
-             (prefix (cl-destructuring-bind (first next) org-agenda-scheduled-leaders
-                       (cond ((> scheduled-day-number today-day-number)
-                              ;; Future
-                              first)
-                             ((and (not show-all)
-                                   (= repeat today-day-number)))
-                             ((= today-day-number scheduled-day-number)
-                              ;; Today
-                              first)
-                             (t
-                              ;; Subsequent reminders.  Count from base schedule.
-                              (format next (1+ (- today-day-number scheduled-day-number))))))))
+                              (plist-put it :relative-due-date relative-due-date))))
         (list (car element)
               properties))
     ;; Not scheduled
