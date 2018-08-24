@@ -41,7 +41,22 @@ Also included is ~org-ql-agenda~, which uses ~org-ql~ queries to select entries 
     (and (or (date = today)
              (deadline <=)
              (scheduled <= today))
-         (not (done))))
+         (not (done)))
+    ;; The `org-super-agenda-groups' setting is used automatically when set, or it
+    ;; may be overriden by specifying it here:
+    :super-groups '((:name "Bills"
+                           :tag "bills")
+                    (:todo ("SOMEDAY" "TO-READ" "CHECK" "TO-WATCH" "WATCHING")
+                           :order 7)
+                    (:name "Personal"
+                           :habit t
+                           :tag "personal"
+                           :order 3)
+                    (:todo "WAITING"
+                           :order 6)
+                    (:priority "A" :order 1)
+                    (:priority "B" :order 2)
+                    (:priority "C" :order 2)))
 #+END_SRC
 
 Which presents this buffer:
