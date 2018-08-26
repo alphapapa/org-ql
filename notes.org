@@ -190,6 +190,15 @@ Virtually indistinguishable.  Going to try moving the =byte-compile= call from t
 
 Doesn't seem to make any difference.
 
+* References
+
+** [[https://m00natic.github.io/lisp/manual-jit.html][Uniform Structured Syntax, Metaprogramming and Run-time Compilation]]
+:PROPERTIES:
+:archive.is: http://archive.is/33R9M
+:END:
+
++ [[https://github.com/m00natic/cl-fdbq][GitHub - m00natic/cl-fdbq: SQL-like operations over fixed field DBs]]
+
 * Examples / testing
 
 #+BEGIN_SRC elisp
