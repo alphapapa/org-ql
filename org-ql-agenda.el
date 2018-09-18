@@ -293,6 +293,7 @@ Its property list should be the second item in the list, as returned by `org-ele
   "Add faces to ELEMENT's title for its deadline status.
 Also store relative due date as string in `:relative-due-date'
 property."
+  ;; FIXME: In my config, doesn't apply orange for approaching deadline the same way the Org Agenda does.
   (if-let ((deadline-date (org-element-property :deadline element)))
       (let* ((today-day-number (org-today))
              (deadline-day-number (org-time-string-to-absolute
