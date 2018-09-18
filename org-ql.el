@@ -132,13 +132,28 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
                     (_                  ; Buffer or string
                      (list buffers-or-files))))
          (predicate (byte-compile `(lambda ()
-                                     (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
-                                                          (= #'=)
-                                                          (< #'<)
-                                                          (> #'>)
-                                                          (<= #'<=)
-                                                          (>= #'>=))
-                                       ,query))))
+                                     ;; This is either really elegant or really ugly.  Well, also
+                                     ;; possibly somewhere in-between.  At the least, we should do
+                                     ;; this in a more flexible, abstracted way, but this will do
+                                     ;; for now.  Most importantly, it works!
+                                     (cl-macrolet ((clocked (&key from to on)
+                                                            (when on
+                                                              (setq from on
+                                                                    to on))
+                                                            (when from
+                                                              (setq from (org-ql--parse-time-string from)))
+                                                            (when to
+                                                              (setq to (org-ql--parse-time-string to 'end)))
+                                                            ;; NOTE: The macro must expand to the actual `org-ql--predicate-clocked'
+                                                            ;; function, not another `clocked'.
+                                                            `(org-ql--predicate-clocked :from ,from :to ,to)))
+                                       (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
+                                                            (= #'=)
+                                                            (< #'<)
+                                                            (> #'>)
+                                                            (<= #'<=)
+                                                            (>= #'>=))
+                                         ,query)))))
          (action (byte-compile action))
          ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
          ;; (org-use-tag-inheritance t)
@@ -261,7 +276,62 @@ Or, when possible, fix the problem."
 		  (org-ql--sanity-check-form (cdr elem)))
 	     else do (check elem))))
 
+(defun org-ql--parse-time-string (s &optional end)
+  "Return Unix timestamp by parsing timestamp string S.
+Calls `parse-time-string' and fills in nil second, minute, and
+hour values, then calls `float-time'.  When END is non-nil, sets
+empty time values to 23:59:59; otherwise, to 00:00:00."
+  ;; TODO: Also accept Unix timestamps.
+  (cl-macrolet ((fill-with (place value)
+                           `(unless (nth ,place parsed-time)
+                              (setf (nth ,place parsed-time) ,value))))
+    (let ((parsed-time (parse-time-string s)))
+      (pcase end
+        ('nil (fill-with 0 0)
+              (fill-with 1 0)
+              (fill-with 2 0))
+        (_ (fill-with 0 59)
+           (fill-with 1 59)
+           (fill-with 2 23)))
+      (float-time (apply #'encode-time parsed-time)))))
+
 ;;;;; Predicates
+
+(org-ql--defpredicate clocked (&key from to)
+  "Return non-nil if current entry was clocked in given period.
+If no arguments are specified, return non-nil if entry was
+clocked at any time.
+
+If FROM, return non-nil if entry was clocked on or after FROM.
+If TO, return non-nil if entry was clocked on or before TO.
+If ON, return non-nil if entry was clocked on date ON.
+
+FROM, TO, and ON should be strings parseable by
+`parse-time-string' but may omit the time value.
+
+Note: See macrolet in `org-ql-query' which pre-processes
+arguments to this function, parsing timestamp strings into Unix
+timestamps and accepting `:on' keyword."
+  ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
+  ;; for end users, for which the arguments are pre-processed by `org-ql-query'.
+  (declare (advertised-calling-convention (&key from to on)))
+  ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
+  (cl-macrolet ((next-timestamp ()
+                                `(when (re-search-forward org-clock-line-re end-pos t)
+                                   (org-element-property :value (org-element-context))))
+                (test-timestamps (pred-form)
+                                 `(cl-loop for next-ts = (next-timestamp)
+                                           while next-ts
+                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
+                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           thereis ,pred-form)))
+    (save-excursion
+      (let ((end-pos (org-entry-end-position)))
+        (cond ((not (or from to)) (next-timestamp))
+              ((and from to) (test-timestamps (and (<= beg to)
+                                                   (>= end from))))
+              (from (test-timestamps (<= from end)))
+              (to (test-timestamps (<= beg to))))))))
 
 (org-ql--defpredicate category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
