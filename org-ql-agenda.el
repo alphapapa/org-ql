@@ -30,6 +30,7 @@
 ;;; Code:
 
 (require 'org)
+(require 'org-habit)
 (require 'org-agenda)
 (require 'dash)
 (require 'cl-lib)
