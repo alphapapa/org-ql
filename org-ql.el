@@ -308,7 +308,7 @@ like one returned by `date-to-day'."
                                   (string (date-to-day (concat target-date " 00:00")))
                                   (integer target-date))))
          (pcase (org-element-property :type date-element)
-           ((or 'active 'inactive)
+           ((or 'active 'inactive 'active-range)
             (funcall comparator
                      (org-time-string-to-absolute
                       (org-element-timestamp-interpreter date-element 'ignore))
