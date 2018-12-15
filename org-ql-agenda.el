@@ -65,11 +65,12 @@ When nil, buffers are widened before being searched.
 BUFFER, when non-nil, is a buffer or buffer name to display the
 agenda in, rather than the default."
   (declare (indent defun)
-           (advertised-calling-convention (files-or-query &optional query &key sort narrow buffer) nil))
+           (advertised-calling-convention (files-or-query &optional query &key sort narrow buffer super-groups) nil))
   (cl-macrolet ((set-keyword-args (args)
                                   `(setq sort (plist-get ,args :sort)
                                          narrow (plist-get ,args :narrow)
-                                         buffer (plist-get ,args :buffer))))
+                                         buffer (plist-get ,args :buffer)
+                                         super-groups (plist-get ,args :super-groups))))
     (let ((files '(org-agenda-files))
           query sort narrow buffer)
       ;; Parse args manually (so we can leave FILES nil for a default argument).
@@ -98,18 +99,20 @@ agenda in, rather than the default."
          ',query
          :sort ',sort
          :buffer ,buffer
-         :narrow ,narrow))))
+         :narrow ,narrow
+         :super-groups ,super-groups))))
 
 ;;;; Functions
 
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
-(cl-defun org-ql-agenda--agenda (buffers-files query &key sort buffer narrow)
+(cl-defun org-ql-agenda--agenda (buffers-files query &key sort buffer narrow super-groups)
   "FIXME: Docstring"
   (declare (indent defun))
   ;; I think it's reasonable to use `eval' here.
-  (let* ((entries (--> (eval `(org-ql ',buffers-files
+  (let* ((org-super-agenda-groups super-groups)
+         (entries (--> (eval `(org-ql ',buffers-files
                                 ,query
                                 :sort ,sort
                                 :markers t
