@@ -110,6 +110,8 @@ agenda in, rather than the default."
 (cl-defun org-ql-agenda--agenda (buffers-files query &key sort buffer narrow super-groups)
   "FIXME: Docstring"
   (declare (indent defun))
+  (when (and super-groups (not org-super-agenda-mode))
+    (user-error "`org-super-agenda-mode' must be activated to use grouping"))
   ;; I think it's reasonable to use `eval' here.
   (let* ((org-super-agenda-groups super-groups)
          (entries (--> (eval `(org-ql ',buffers-files
