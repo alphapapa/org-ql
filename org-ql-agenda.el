@@ -63,7 +63,11 @@ NARROW, when non-nil, means to respect narrowing in buffers.
 When nil, buffers are widened before being searched.
 
 BUFFER, when non-nil, is a buffer or buffer name to display the
-agenda in, rather than the default."
+agenda in, rather than the default.
+
+SUPER-GROUPS is used to bind variable `org-super-agenda-groups',
+which see.  If t, the existing value of `org-super-agenda-groups'
+is used, rather than binding it locally."
   (declare (indent defun)
            (advertised-calling-convention (files-or-query &optional query &key sort narrow buffer super-groups) nil))
   (cl-macrolet ((set-keyword-args (args)
@@ -93,6 +97,8 @@ agenda in, rather than the default."
         (`(,arg-pred)
          ;; Only query
          (setq query arg-pred)))
+      (when (eq super-groups t)
+        (setq super-groups org-super-agenda-groups))
       ;; Call --agenda
       `(org-ql-agenda--agenda ,files
          ;; TODO: Probably better to just use eval on org-ql rather than reimplementing parts of it here.
@@ -100,7 +106,7 @@ agenda in, rather than the default."
          :sort ',sort
          :buffer ,buffer
          :narrow ,narrow
-         :super-groups ,super-groups))))
+         :super-groups ',super-groups))))
 
 ;;;; Functions
 
