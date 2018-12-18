@@ -72,7 +72,7 @@ agenda in, rather than the default."
                                          buffer (plist-get ,args :buffer)
                                          super-groups (plist-get ,args :super-groups))))
     (let ((files '(org-agenda-files))
-          query sort narrow buffer)
+          query sort narrow buffer super-groups)
       ;; Parse args manually (so we can leave FILES nil for a default argument).
       ;; TODO: DRY this and org-ql, I think.
       (pcase args
