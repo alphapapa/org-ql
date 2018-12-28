@@ -1,13 +1,15 @@
-;; -*- lexical-binding: t; -*-
+;;; org-ql-agenda.el --- Agenda-like view based on org-ql  -*- lexical-binding: t; -*-
 
+;; Author: Adam Porter <adam@alphapapa.net>
+;; Url: http://github.com/alphapapa/org-ql
+;; Version: 0.1-pre
+;; Package-Requires: ((emacs "25.1") (dash "2.13") (org "9.0"))
+;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
 
-;; This is just a proof-of-concept for how the agenda code might be
-;; written in a more functional way, to avoid making multiple passes
-;; through each file when building a multi-day agenda.
-
-;; It also functions as a kind of "query language" for Org buffers.
+;; This library displays buffers similar to Org Agenda buffers, based
+;; on `org-ql' queries.
 
 ;;;; Principles
 
@@ -29,13 +31,14 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'org)
 (require 'org-agenda)
-(require 'dash)
-(require 'cl-lib)
 (require 'seq)
 
 (require 'org-ql)
+
+(require 'dash)
 
 ;;;; Variables
 
