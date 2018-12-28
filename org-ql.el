@@ -1,5 +1,17 @@
-;; -*- lexical-binding: t; -*-
+;;; org-ql.el --- Query language for Org buffers  -*- lexical-binding: t; -*-
 
+;; Author: Adam Porter <adam@alphapapa.net>
+;; Url: http://github.com/alphapapa/org-ql
+;; Version: 0.1-pre
+;; Package-Requires: ((emacs "25.1") (dash "2.13") (org "9.0"))
+;; Keywords: hypermedia, outlines, Org, agenda
+
+;;; Commentary:
+
+;; `org-ql' is a lispy query language for Org files.  It allows you to
+;; find Org entries matching certain criteria and perform actions on
+;; them, such as collecting their parsed representation with
+;; `org-element' (the default action).
 
 ;;; Code:
 
