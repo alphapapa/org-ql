@@ -1,3 +1,5 @@
+
+
 * org-ql
 
 ~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and perform actions on them, such as collecting their parsed representation with ~org-element~ (the default action).  Some examples:
@@ -32,6 +34,12 @@
          (not (property "key"))))
 #+END_SRC
 
+** org-ql-search
+
+The command =org-ql-search= prompts for a query, a list of buffers or files, and how to group and sort results.  Without prefix, it searches the current buffer instead of prompting.  Then it presents the results in an agenda-like view.
+
+[[images/org-ql-search.gif]]
+
 ** org-ql-agenda
 
 Also included is ~org-ql-agenda~, which uses ~org-ql~ queries to select entries and present them in an Agenda-like view.  It's compatible with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], which provides grouping.  For example:
@@ -61,7 +69,7 @@ Also included is ~org-ql-agenda~, which uses ~org-ql~ queries to select entries 
 
 Which presents this buffer:
 
-[[screenshot.png]]
+[[images/screenshot.png]]
 
 *Note:* The view buffer is currently put in ~org-agenda-mode~, which means that /some/ Org Agenda commands work, such as jumping to entries and changing item priorities (without necessarily updating the view).  This feature is experimental and not guaranteed to work correctly with all commands.  (It works to the extent it does because the appropriate text properties are placed on each item, imitating an Agenda buffer.)
 

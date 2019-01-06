@@ -111,6 +111,61 @@ is used, rather than binding it locally."
          :narrow ,narrow
          :super-groups ',super-groups))))
 
+;;;; Commands
+
+;; TODO: This is called `org-ql-search' but it's in org-ql-agenda.el because
+;; it uses `org-ql-agenda--agenda'.  Maybe this could be better organized.
+
+;;;###autoload
+(defun org-ql-search (query &optional buffers-files narrow group sort)
+  "Read QUERY and search with `org-ql'.
+Interactively, prompt for these variables:
+
+BUFFERS-FILES: A list of buffers and/or files to search, or an
+expression which evaluates to such a list.
+
+GROUP: An `org-super-agenda' auto-grouping selector.  See
+variable `org-super-agenda-auto-selector-keywords'.
+
+NARROW: Don't widen buffers before searching.  Buffers are
+widened by default.  With prefix, leave narrowed.
+
+SORT: One or a list of `org-ql' sorting functions, like `date' or
+`priority'."
+  (interactive (progn
+                 (when (and current-prefix-arg
+                            (not (derived-mode-p 'org-mode)))
+                   (user-error "Not an Org buffer: %s" (buffer-name)))
+                 (list (read-minibuffer "Query: ")
+                       (--if-let (read-from-minibuffer "Buffers/Files (blank for current buffer): ")
+                           ;; TODO: Add glob matching?  Buffer mode matching?
+                           (pcase it
+                             ("" (current-buffer))
+                             ((rx bos "(") (-flatten (eval (read it))))
+                             (_ (s-split (rx (1+ space)) it)))
+                         (current-buffer))
+                       (eq current-prefix-arg '(4))
+                       (pcase (completing-read "Group by: "
+                                               (cons "Don't group"
+                                                     (cl-loop for type in org-super-agenda-auto-selector-keywords
+                                                              collect (substring (symbol-name type) 6))))
+                         ("Don't group" nil)
+                         (property (list (list (intern (concat ":auto-" property))))))
+                       (pcase (completing-read "Sort by: "
+                                               (list "Don't sort"
+                                                     "date"
+                                                     "deadline"
+                                                     "priority"
+                                                     "scheduled"
+                                                     "todo"))
+                         ("Don't sort" nil)
+                         (sort (intern sort))))))
+  (org-ql-agenda--agenda buffers-files
+    query
+    :narrow narrow
+    :sort sort
+    :super-groups group))
+
 ;;;; Functions
 
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
