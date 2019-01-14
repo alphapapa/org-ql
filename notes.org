@@ -2,42 +2,28 @@
 
 * Tasks
 
-** TODO Add ~org-ql-view~ command
+** TODO [#A] Tools for saving queries and accessing them
 
-Should work like ~org-sidebar-ql~, but displays an ~org-ql-agenda~ view instead.
+*** TODO Save query from ql-agenda buffer
 
-** TODO Document matchers/selectors/predicates
+*** TODO Access saved query from saved query list
 
-And maybe pick a single name for them...
+*** TODO Org link types
 
-+  =deadline= :: Be sure to explain how it works with regard to the implied date and =today=.
-+  =date=, =scheduled= :: No implied date, but supports =today=.
+This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
 
-** TODO Document sorters
+**** TODO For all parameters
 
-Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
+**** TODO For saved queries
 
-** TODO Add more sorters?
+*** TODO Bookmarks
 
-+  [ ] =category=
-+  [ ] Any date :: e.g. it would search for timestamps (active/inactive?) anywhere in an entry
+** UNDERWAY [#B] Dual matching with regexp and predicates
+:PROPERTIES:
+:ID:       39972bb5-fdd0-4754-93ba-c85796a67ccf
+:END:
 
-** MAYBE Date predicate that searches entire entry
-
-Because the existing ones only search the special date property line.
-
-** TODO Document/figure out tag inheritance
-
-I think it should probably be enabled in most cases, to avoid missing results that users would expect to find, but it will reduce performance in some cases, so users should be able to turn it off when they don't need it.
-
-[2018-06-12 Tue 14:32]  The docstring for ~org-map-entries~ says:
-
-#+BEGIN_QUOTE
-If your function needs to retrieve the tags including inherited tags at the *current* entry, you can use the value of the variable ‘org-scanner-tags’ which will be much faster than getting the value with ‘org-get-tags-at’.  If your function gets properties with ‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’ to t around the call to ‘org-entry-properties’ to get the same speedup.  Note that if your function moves around to retrieve tags and properties at a *different* entry, you cannot use these techniques.
-#+END_QUOTE
-* Ideas
-
-** SOMEDAY Dual matching with regexp and predicates
+/Note: This is underway in the =preamble-re= branch./
 
 Searching and matching could be sped up by constructing a regexp that searches directly to the next possible match, and then matching with predicate functions.
 
@@ -53,25 +39,37 @@ Only entries that contain the word =lisp= can be matches, and searching each ent
 
 This would require processing the predicate to pull out matchers that can be done as buffer-wide regexps, e.g. =regexp=, =heading-regexp=, =todo=, and possibly =tags=.  Org has some regexp-building functions that might make this fairly easy, and then we could probably use ~rx~ to make an optimized version of the regexp.  It would also require some refactoring to the searching that would go directly to regexp matches when possible, rather than checking every entry with the predicate.
 
-** DONE Operate on list of heading positions
-CLOSED: [2018-05-10 Thu 15:02]
-:LOGBOOK:
--  State "DONE"       from              [2018-05-10 Thu 15:02]
-:END:
+** TODO [#A] Publish to MELPA
 
-[2017-12-31 Sun 17:54]  I wonder if, instead of parsing the whole buffer with =org-element-parse-buffer=, we could simply work on a list of heading positions, e.g. a loop would search forward to the next heading position, then call whatever predicates it needed at the heading's position, using =save-excursion= around each function call.  The predicates would need to be updated to get their data from the buffer, instead of using =org-element-property=, but that wouldn't be hard.
+** TODO Add more sorters?
 
-[2018-05-10 Thu 15:01]  I already changed to using buffer-parsing predicates instead of =org-element-parse-buffer=.
++  [ ] =category=
++  [ ] Any date :: e.g. it would search for timestamps (active/inactive?) anywhere in an entry
 
-** DONE Use macros for =date=
-CLOSED: [2018-05-10 Thu 14:59]
-:LOGBOOK:
--  State "DONE"       from              [2018-05-10 Thu 14:59]
-:END:
+** TODO Document matchers/selectors/predicates
 
-If I made the =date= selector a macro, I could avoid the need to quote the comparator.
+And maybe pick a single name for them...
 
-Also, maybe instead of having a single =date= selector, I should have =scheduled=, =deadline=, etc.
++  =deadline= :: Be sure to explain how it works with regard to the implied date and =today=.
++  =date=, =scheduled= :: No implied date, but supports =today=.
+
+** TODO Document sorters
+
+Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
+
+** TODO Document/figure out tag inheritance
+
+I think it should probably be enabled in most cases, to avoid missing results that users would expect to find, but it will reduce performance in some cases, so users should be able to turn it off when they don't need it.
+
+[2018-06-12 Tue 14:32]  The docstring for ~org-map-entries~ says:
+
+#+BEGIN_QUOTE
+If your function needs to retrieve the tags including inherited tags at the *current* entry, you can use the value of the variable ‘org-scanner-tags’ which will be much faster than getting the value with ‘org-get-tags-at’.  If your function gets properties with ‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’ to t around the call to ‘org-entry-properties’ to get the same speedup.  Note that if your function moves around to retrieve tags and properties at a *different* entry, you cannot use these techniques.
+#+END_QUOTE
+
+** MAYBE Date predicate that searches entire entry
+
+Because the existing ones only search the special date property line.
 
 ** DONE Byte-compile lambdas
 CLOSED: [2018-05-09 Wed 17:30]
@@ -189,6 +187,26 @@ Virtually indistinguishable.  Going to try moving the =byte-compile= call from t
 | org-agenda-ng--add-faces                  |          150 | 0.0144141080 | 9.609...e-05 |
 
 Doesn't seem to make any difference.
+
+** DONE Operate on list of heading positions
+CLOSED: [2018-05-10 Thu 15:02]
+:LOGBOOK:
+-  State "DONE"       from              [2018-05-10 Thu 15:02]
+:END:
+
+[2017-12-31 Sun 17:54]  I wonder if, instead of parsing the whole buffer with =org-element-parse-buffer=, we could simply work on a list of heading positions, e.g. a loop would search forward to the next heading position, then call whatever predicates it needed at the heading's position, using =save-excursion= around each function call.  The predicates would need to be updated to get their data from the buffer, instead of using =org-element-property=, but that wouldn't be hard.
+
+[2018-05-10 Thu 15:01]  I already changed to using buffer-parsing predicates instead of =org-element-parse-buffer=.
+
+** DONE Use macros for =date=
+CLOSED: [2018-05-10 Thu 14:59]
+:LOGBOOK:
+-  State "DONE"       from              [2018-05-10 Thu 14:59]
+:END:
+
+If I made the =date= selector a macro, I could avoid the need to quote the comparator.
+
+Also, maybe instead of having a single =date= selector, I should have =scheduled=, =deadline=, etc.
 
 * References
 
@@ -586,6 +604,7 @@ outline-on-heading-p                                          3452        0.0101
 string-match                                                  4594        0.0064121759  1.395...e-06
 mapcar                                                        30          0.0041008740  0.0001366958
 #+end_example
+
 ** Profiling position-based
 
 *** Macro
@@ -705,6 +724,7 @@ org-back-to-heading                                           725         0.0037
 org-agenda-ng--add-scheduled-face                             75          0.0031766149  4.235...e-05
 org-parse-time-string                                         300         0.0031740200  1.058...e-05
 #+end_example
+
 ** Profiling =org-trust-scanner-tags=
 
 [2018-05-10 Thu 12:59]  Turned on =org-trust-scanner-tags=, going to try profiling again:
@@ -932,6 +952,7 @@ org-super-agenda--filter-finalize-entries                     5           0.1316
 ** Profiling tags matching
 
 *** ng
+
 #+BEGIN_SRC elisp
   (elp-profile 1 nil
     (org-agenda-ng "~/org/main.org"
@@ -963,6 +984,7 @@ org-super-agenda--filter-finalize-entries                     5           0.1316
 | line-end-position              |          903 | 0.0280484950 | 3.106...e-05 |
 
 *** ng without inheritance
+
 #+BEGIN_SRC elisp
   (elp-profile 1 nil
     (org-agenda-ng "~/org/main.org"
