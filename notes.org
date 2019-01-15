@@ -18,6 +18,8 @@ This would be useful for having a menu of saved queries as Org links, or even bo
 
 *** TODO Bookmarks
 
+** TODO [#A] Store query for refreshing ql-agenda buffer
+
 ** UNDERWAY [#B] Dual matching with regexp and predicates
 :PROPERTIES:
 :ID:       39972bb5-fdd0-4754-93ba-c85796a67ccf
