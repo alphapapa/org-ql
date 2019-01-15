@@ -133,6 +133,7 @@ searching. Interactively, with prefix, leave narrowed.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority'."
+  (declare (indent defun))
   (interactive (progn
                  (when (and current-prefix-arg
                             (not (derived-mode-p 'org-mode)))
