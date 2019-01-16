@@ -176,9 +176,10 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
   "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
 If NARROW is non-nil, buffer will not be widened."
   (org-ql--flet ((category #'org-ql--category-p)
-                 (date #'org-ql--date-plain-p)
+                 (planning #'org-ql--planning-p)
                  (deadline #'org-ql--deadline-p)
                  (scheduled #'org-ql--scheduled-p)
+                 (date #'org-ql--date-p)
                  (closed #'org-ql--closed-p)
                  (habit #'org-ql--habit-p)
                  (priority #'org-ql--priority-p)
@@ -285,66 +286,6 @@ Outline levels should be integers."
       ;; Check with comparator
       (_ (funcall level-or-comparator outline-level level)))))
 
-(defun org-ql--date-p (type &optional comparator target-date)
-  "Return non-nil if current heading has a date property of TYPE.
-TYPE should be a keyword symbol, like :scheduled or :deadline.
-
-With COMPARATOR and TARGET-DATE, return non-nil if entry's
-scheduled date compares with TARGET-DATE according to COMPARATOR.
-TARGET-DATE may be a string like \"2017-08-05\", or an integer
-like one returned by `date-to-day'."
-  (when-let (;; FIXME: Add :date selector, since I put it
-             ;; in the examples but forgot to actually
-             ;; make it.
-             (timestamp (org-entry-get (point) (pcase type
-                                                 (:deadline "DEADLINE")
-                                                 (:scheduled "SCHEDULED")
-                                                 (:closed "CLOSED"))))
-             (date-element (with-temp-buffer
-                             ;; FIXME: Hack: since we're using
-                             ;; (org-element-property :type date-element)
-                             ;; below, we need this date parsed into an
-                             ;; org-element element
-                             (insert timestamp)
-                             (goto-char 0)
-                             (org-element-timestamp-parser))))
-    (pcase comparator
-      ;; Not comparing, just checking if it has one
-      ('nil t)
-      ;; Compare dates
-      ((pred functionp)
-       (let ((target-day-number (cl-typecase target-date
-                                  (null (+ (org-get-wdays timestamp) (org-today)))
-                                  ;; Append time to target-date
-                                  ;; because `date-to-day' requires it
-                                  (string (date-to-day (concat target-date " 00:00")))
-                                  (integer target-date))))
-         (pcase (org-element-property :type date-element)
-           ((or 'active 'inactive)
-            (funcall comparator
-                     (org-time-string-to-absolute
-                      (org-element-timestamp-interpreter date-element 'ignore))
-                     target-day-number))
-           (_ (error "Unknown date-element type: %s" (org-element-property :type date-element))))))
-      (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
-                     comparator target-date)))))
-
-(defsubst org-ql--date-plain-p (&optional comparator target-date)
-  (org-ql--date-p :date comparator target-date))
-(defsubst org-ql--deadline-p (&optional comparator target-date)
-  ;; FIXME: This is slightly confusing.  Using plain (deadline) does, and should, select entries
-  ;; that have any deadline.  But the common case of wanting to select entries whose deadline is
-  ;; within the warning days (either the global setting or that entry's setting) requires the user
-  ;; to specify the <= comparator, which is unintuitive.  Maybe it would be better to use that
-  ;; comparator by default, and use an 'any comparator to select entries with any deadline.  Of
-  ;; course, that would make the deadline selector different from the scheduled, closed, and date
-  ;; selectors, which would also be unintuitive.
-  (org-ql--date-p :deadline comparator target-date))
-(defsubst org-ql--scheduled-p (&optional comparator target-date)
-  (org-ql--date-p :scheduled comparator target-date))
-(defsubst org-ql--closed-p (&optional comparator target-date)
-  (org-ql--date-p :closed comparator target-date))
-
 (defun org-ql--priority-p (&optional comparator-or-priority priority)
   "Return non-nil if current heading has a certain priority.
 COMPARATOR-OR-PRIORITY should be either a comparator function,
@@ -409,6 +350,123 @@ comparator, PRIORITY should be a priority string."
          (_
           ;; Check that PROPERTY has VALUE
           (string-equal value (org-entry-get (point) property 'selective)))))))
+
+;;;;; Date comparison
+
+(defun org-ql--date-type-p (type &optional comparator target-date)
+  "Return non-nil if current heading has a date property of TYPE.
+TYPE should be a keyword symbol, like :scheduled or :deadline.
+
+With COMPARATOR and TARGET-DATE, return non-nil if entry's
+scheduled date compares with TARGET-DATE according to COMPARATOR.
+TARGET-DATE may be a string like \"2017-08-05\", or an integer
+like one returned by `date-to-day'."
+  (when-let (;; FIXME: Add :date selector, since I put it
+             ;; in the examples but forgot to actually
+             ;; make it.
+             (timestamp (org-entry-get (point) (pcase type
+                                                 (:deadline "DEADLINE")
+                                                 (:scheduled "SCHEDULED")
+                                                 (:closed "CLOSED"))))
+             (date-element (with-temp-buffer
+                             ;; FIXME: Hack: since we're using
+                             ;; (org-element-property :type date-element)
+                             ;; below, we need this date parsed into an
+                             ;; org-element element
+                             (insert timestamp)
+                             (goto-char 0)
+                             (org-element-timestamp-parser))))
+    (pcase comparator
+      ;; Not comparing, just checking if it has one
+      ('nil t)
+      ;; Compare dates
+      ((pred functionp)
+       (let ((target-day-number (cl-typecase target-date
+                                  (null (+ (org-get-wdays timestamp) (org-today)))
+                                  ;; Append time to target-date
+                                  ;; because `date-to-day' requires it
+                                  (string (date-to-day (concat target-date " 00:00")))
+                                  (integer target-date))))
+         (pcase (org-element-property :type date-element)
+           ((or 'active 'inactive)
+            (funcall comparator
+                     (org-time-string-to-absolute
+                      (org-element-timestamp-interpreter date-element 'ignore))
+                     target-day-number))
+           (_ (error "Unknown date-element type: %s" (org-element-property :type date-element))))))
+      (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
+                     comparator target-date)))))
+
+(defsubst org-ql--planning-p (&optional comparator target-date)
+  ;; FIXME: I think :date selects either :deadline, :scheduled, or :closed, but I'm not sure.
+  (org-ql--date-type-p :date comparator target-date))
+
+(defsubst org-ql--deadline-p (&optional comparator target-date)
+  ;; FIXME: This is slightly confusing.  Using plain (deadline) does, and should, select entries
+  ;; that have any deadline.  But the common case of wanting to select entries whose deadline is
+  ;; within the warning days (either the global setting or that entry's setting) requires the user
+  ;; to specify the <= comparator, which is unintuitive.  Maybe it would be better to use that
+  ;; comparator by default, and use an 'any comparator to select entries with any deadline.  Of
+  ;; course, that would make the deadline selector different from the scheduled, closed, and date
+  ;; selectors, which would also be unintuitive.
+  (org-ql--date-type-p :deadline comparator target-date))
+
+(defsubst org-ql--scheduled-p (&optional comparator target-date)
+  (org-ql--date-type-p :scheduled comparator target-date))
+
+(defsubst org-ql--closed-p (&optional comparator target-date)
+  (org-ql--date-type-p :closed comparator target-date))
+
+(cl-defun org-ql--date-p (&optional comparator target-date (type 'active))
+  "Return non-nil if Org entry at point has date of TYPE that compares with TARGET-DATE using COMPARATOR.
+Checks all Org-formatted timestamp strings in entry.  TYPE may be
+`active', `inactive', or `all', to control whether active,
+inactive, or all timestamps are checked.  Ranges of each type are
+also checked."
+  ;; MAYBE: This duplicates some code in --date-p, maybe it could be refactored DRYer.
+  (let* ((entry-timestamps (save-excursion
+                             ;; NOTE: It's important to `save-excursion', otherwise the point will be moved, which will
+                             ;; likely cause the action function to fail.  We could wrap the call to the predicate in
+                             ;; `save-excursion', but that would do it even when not necessary, which would be slower.
+                             (cl-loop while (re-search-forward org-element--timestamp-regexp (org-entry-end-position) t)
+                                      collect (match-string 0)))))
+    (pcase comparator
+      ('nil (pcase type
+              ('all entry-timestamps)
+              ('active (cl-loop for timestamp in entry-timestamps
+                                thereis (string-prefix-p "<" timestamp)))
+              ('inactive (cl-loop for timestamp in entry-timestamps
+                                  thereis (string-prefix-p "[" timestamp)))
+              (_ (user-error "Invalid type for date selector.  May be `active', `inactive', or `all'"))))
+      ((pred functionp)
+       ;; TODO: Avoid computing target-day-number every time this is called.
+       ;; Probably need to make a lambda that has it already defined.
+       (let ((target-day-number (cl-typecase target-date
+                                  (null nil)  ; Calculated later.
+                                  ;; Append time to target-date because `date-to-day' requires it.
+                                  (string (date-to-day (concat target-date " 00:00")))
+                                  (integer target-date))))
+         (cl-loop for timestamp in entry-timestamps
+                  for date-element = (with-temp-buffer
+                                       ;; MAYBE: Replace with ts.el eventually.
+                                       ;; TODO: Parse the element in the re-search-forward loop.
+                                       (insert timestamp)
+                                       (goto-char 0)
+                                       (org-element-timestamp-parser))
+                  for this-target-day-number = (or target-day-number
+                                                   ;; FIXME: Not sure if it makes sense to check warning
+                                                   ;; days for non-planning timestamps, but we'll try it.
+                                                   (+ (org-get-wdays timestamp) (org-today)))
+                  thereis (when (or (eq 'all type)
+                                    (member (org-element-property :type date-element)
+                                            (pcase type
+                                              ('active '(active active-range))
+                                              ('inactive '(inactive inactive-range)))))
+                            (funcall comparator (org-time-string-to-absolute
+                                                 (org-element-timestamp-interpreter date-element 'ignore))
+                                     this-target-day-number)))))
+      (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
+                     comparator target-date)))))
 
 ;;;;; Sorting
 
