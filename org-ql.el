@@ -58,7 +58,7 @@ This list should not contain any duplicates.")
 
 ACTION is a sexp which will be evaluated at each matching entry
 with point at the beginning of its heading.  It is passed to
-`org-ql--query' as a lambda.  By default, `org-element-headline-parser'
+`org-ql-query' as a lambda.  By default, `org-element-headline-parser'
  is called to return an Org element.
 
 SORT is a user defined sorting function, or an unquoted list of
@@ -81,7 +81,7 @@ buffer.  In this case, ACTION should return an Org element."
                        ;; maybe this should be on the agenda-ng side.
                        (->> ,action
                             org-ql--add-markers)))))
-  `(org-ql--query ,buffers-or-files
+  `(org-ql-query ,buffers-or-files
      ',pred-body
      :action ,action
      :narrow ,narrow
@@ -98,7 +98,7 @@ buffer.  In this case, ACTION should return an Org element."
 
 ;;;; Functions
 
-(cl-defun org-ql--query (buffers-or-files query &key action narrow sort)
+(cl-defun org-ql-query (buffers-or-files query &key action narrow sort)
   "Return items matching QUERY in BUFFERS-OR-FILES.
 
 QUERY is an `org-ql' query sexp.
