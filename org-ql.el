@@ -28,11 +28,12 @@
 (defvar org-ql--today nil)
 
 (defvar org-ql-cache (make-hash-table :weakness 'key)
-  ;; IIUC, setting weakness to `key' means that, when a buffer is closed, its entries will be
-  ;; removed from this table at the next GC.
-  "Query cache, keyed by buffer.  Each value is a list of the
-buffer's modified tick and another hash table, keyed by arguments
-passed to `org-ql--select-cached'.")
+  ;; IIUC, setting weakness to `key' means that, when a buffer is closed,
+  ;; its entries will be removed from this table at the next GC.
+  "Query cache, keyed by buffer.
+Each value is a list of the buffer's modified tick and another
+hash table, keyed by arguments passed to
+`org-ql--select-cached'.")
 
 ;;;; Macros
 
@@ -72,6 +73,8 @@ buffer.  In this case, ACTION should return an Org element."
      :sort ',sort))
 
 (defmacro org-ql--flet (fns &rest body)
+  ;; FIXME: Docstring.
+  ;; MAYBE: Use `noflet'.
   (declare (indent defun) (debug (listp body)))
   `(cl-letf ,(cl-loop for (fn target) in fns
                       collect `((symbol-function ',fn)
