@@ -2,6 +2,8 @@
 
 * Tasks
 
+** TODO Update commentary
+
 ** TODO [#A] Tools for saving queries and accessing them
 
 *** TODO Save query from ql-agenda buffer
@@ -9,6 +11,9 @@
 *** TODO Access saved query from saved query list
 
 *** TODO Org link types
+:PROPERTIES:
+:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
+:END:
 
 This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
 
