@@ -1,8 +1,10 @@
+#+TITLE: org-ql
 
+~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and perform actions on them, such as collecting their parsed representation with ~org-element~ (the default action).
 
-* org-ql
+* Examples
 
-~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and perform actions on them, such as collecting their parsed representation with ~org-element~ (the default action).  Some examples:
+More examples are available in [[examples.org]].
 
 #+BEGIN_SRC elisp
   ;; Return a list of Org entry elements in the file "~/org/main.org" which have the SOMEDAY
@@ -34,7 +36,11 @@
          (not (property "key"))))
 #+END_SRC
 
-** org-ql-search
+* Usage
+
+** Commands
+
+*** org-ql-search
 
 The command =org-ql-search= prompts for a query, a list of buffers or files, and how to group and sort results.  Without prefix, it searches the current buffer instead of prompting.  Then it presents the results in an agenda-like view.
 
@@ -44,7 +50,7 @@ Here's an example of using it to generate an agenda-like view for certain files 
 
 [[images/org-ql-search-snippet.png]]
 
-** org-ql-agenda
+*** org-ql-agenda
 
 Also included is ~org-ql-agenda~, which uses ~org-ql~ queries to select entries and present them in an Agenda-like view.  It's compatible with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], which provides grouping.  For example:
 
@@ -101,6 +107,28 @@ Here are some other examples:
              (closed = today))))
 #+END_SRC
 
+** Predicates
+
+Arguments are listed next to predicate names, when applicable.
+
++  ~category (categories)~ :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
++  ~closed (&optional comparator target-date)~ :: Return non-nil if entry's closed date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~date (&optional comparator target-date)~ :: Return non-nil if Org entry at point has date of ~TYPE~ that compares with ~TARGET-DATE~ using ~COMPARATOR~.  Checks all Org-formatted timestamp strings in entry.  ~TYPE~ may be ~active~, ~inactive~, or ~all~, to control whether active, inactive, or all timestamps are checked.  Ranges of each type are also checked.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~deadline (&optional comparator target-date)~ :: Return non-nil if entry's deadline compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~done~ :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
++  ~habit~ :: Return non-nil if entry is a habit.
++  ~heading (regexp)~ :: Return non-nil if current entry's heading matches ~REGEXP~ (a regexp string).
++  ~level (level-or-comparator &optional level)~ :: Return non-nil if current heading's outline level matches ~LEVEL~ with ~COMPARATOR~.  If ~LEVEL~ is nil, ~LEVEL-OR-COMPARATOR~ should be an integer level, which will be tested for equality to the heading's outline level.  If ~LEVEL~ is non-nil, ~LEVEL-OR-COMPARATOR~ should be a comparator function (like ~<=~).
++  ~planning (&optional comparator target-date)~ :: Return non-nil if entry's planning date (deadline or scheduled) compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~priority (&optional comparator-or-priority priority)~ :: Return non-nil if current heading has a certain priority.  ~COMPARATOR-OR-PRIORITY~ should be either a comparator function, like ~<=~, or a priority string, like "A" (in which case (~=~ will be the comparator).  If ~COMPARATOR-OR-PRIORITY~ is a comparator, ~PRIORITY~ should be a priority string.
++  ~property (property &optional value)~ :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).
++  ~regexp (regexp)~ :: Return non-nil if current entry matches ~REGEXP~ (a regexp string).
++  ~scheduled (&optional comparator target-date)~ :: Return non-nil if entry's scheduled date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~tags (tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).
++  ~todo (keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).
+
+* Notes
+
 ** Comparison with Org Agenda searches
 
 Of course, queries like these can already be written with Org Agenda searches, but the syntax can be complex.  For example, this query would be difficult to write in a standard Org Agenda search, because it matches against a to-do keyword /and/ a plain-text search.  As described in the [[https://orgmode.org/worg/org-tutorials/advanced-searching.html#combining-metadata-and-full-text-queries][advanced searching tutorial]], it would require using ~org-search-view~ with a query with specific regular expression syntax, like this:
@@ -117,14 +145,60 @@ But with ~org-ql-agenda~, you would write:
          (todo "TO-READ")))
 #+END_SRC
 
-** More examples
-
-More examples are available in [[examples.org]].
-
 ** org-sidebar
 
 This package is used by [[https://github.com/alphapapa/org-sidebar][org-sidebar]], which presents a customizable agenda-like view in a sidebar window.
 
-** License
+* License
 
 GPLv3
+
+* Code                                                             :noexport:
+
+Code used to update this document.
+
+** Predicates
+
+Generates the predicate subtree.
+
+#+BEGIN_SRC elisp
+  (defun org-ql--readme-predicate-list ()
+    "Return an Org list string documenting predicates."
+    (concat "Arguments are listed next to predicate names, when applicable.\n\n"
+            (s-join "\n" (->> org-ql-predicates
+                              (--sort (string< (symbol-name (plist-get it :name))
+                                               (symbol-name (plist-get other :name))))
+                              (--map (-let* (((&plist :name name :docstring docstring :fn fn) it)
+                                             (args (->> (help-function-arglist fn)
+                                                        (--remove (or (eq it '&rest)
+                                                                      ;; Comparing the symbol itself doesn't work for some reason.
+                                                                      (string= (symbol-name it) "--cl-rest--"))))))
+                                       (if docstring
+                                           (progn
+                                             (setq docstring (s-replace "\n" "  " docstring))
+                                             (format "+  ~%s%s~ :: %s" name
+                                                     (if args
+                                                         (format " %s" args)
+                                                       "")
+                                                     (unpackaged/docstring-to-org docstring)))
+                                         (warn "No docstring for: %s" name)
+                                         nil)))
+                              -non-nil))))
+
+  (defun org-ql--readme-replace-node (outline-path string)
+    "Replace contents of node at OUTLINE-PATH with STRING."
+    (org-with-wide-buffer
+     (-let* ((subtree-marker (org-find-olp outline-path t))
+             ((_headline element) (progn
+                                    (goto-char subtree-marker)
+                                    (org-element-headline-parser (point-max))))
+             ((&plist :contents-begin beg :contents-end end) element))
+       (goto-char beg)
+       (delete-region (point) (1- end))
+       (insert string "\n"))))
+
+  (defun org-ql--readme-update-predicates ()
+    "Update predicate subtree in current document."
+    (interactive)
+    (org-ql--readme-replace-node '("Usage" "Predicates") (org-ql--readme-predicate-list)))
+#+END_SRC

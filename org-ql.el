@@ -35,7 +35,22 @@ Each value is a list of the buffer's modified tick and another
 hash table, keyed by arguments passed to
 `org-ql--select-cached'.")
 
+(defvar org-ql-predicates
+  (list (list :name 'org-back-to-heading :fn (symbol-function 'org-back-to-heading)))
+  "Plist of predicates, their corresponding functions, and their docstrings.
+This list should not contain any duplicates.")
+
 ;;;; Macros
+
+(cl-defmacro org-ql--defpredicate (name args docstring &rest body)
+  "FIXME: docstring"
+  (declare (debug (symbolp listp stringp body))
+           (indent defun))
+  (let ((fn-name (intern (concat "org-ql--predicate-" (symbol-name name))))
+        (pred-name (intern (symbol-name name))))
+    `(progn
+       (push (list :name ',pred-name :fn ',fn-name :docstring ,docstring) org-ql-predicates)
+       (cl-defun ,fn-name ,args ,docstring ,@body))))
 
 (cl-defmacro org-ql (buffers-or-files pred-body &key sort narrow markers
                                       (action '(org-element-headline-parser (line-end-position))))
@@ -178,32 +193,31 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
 (cl-defun org-ql--select (&key predicate action narrow)
   "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
 If NARROW is non-nil, buffer will not be widened."
-  (org-ql--flet ((category #'org-ql--category-p)
-                 (planning #'org-ql--planning-p)
-                 (deadline #'org-ql--deadline-p)
-                 (scheduled #'org-ql--scheduled-p)
-                 (date #'org-ql--date-p)
-                 (closed #'org-ql--closed-p)
-                 (habit #'org-ql--habit-p)
-                 (priority #'org-ql--priority-p)
-                 (todo #'org-ql--todo-p)
-                 (done #'org-ql--done-p)
-                 (tags #'org-ql--tags-p)
-                 (property #'org-ql--property-p)
-                 (regexp #'org-ql--regexp-p)
-                 (heading #'org-ql--heading-p)
-                 (level #'org-ql--level-p)
-                 (org-back-to-heading #'outline-back-to-heading))
-    (save-excursion
-      (save-restriction
-        (unless narrow
-          (widen))
-        (goto-char (point-min))
-        (when (org-before-first-heading-p)
-          (outline-next-heading))
-        (cl-loop when (funcall predicate)
-                 collect (funcall action)
-                 while (outline-next-heading))))))
+  ;; Since the mappings are done at runtime, macros like `flet' can't be used, so we do it manually.
+  (let (orig-fns)
+    (--each org-ql-predicates
+      ;; Save original function mappings.
+      (let ((name (plist-get it :name)))
+        (push (list :name name :fn (symbol-function name)) orig-fns)))
+    (unwind-protect
+        (progn
+          (--each org-ql-predicates
+            ;; Set predicate functions.
+            (fset (plist-get it :name) (plist-get it :fn)))
+          ;; Run query.
+          (save-excursion
+            (save-restriction
+              (unless narrow
+                (widen))
+              (goto-char (point-min))
+              (when (org-before-first-heading-p)
+                (outline-next-heading))
+              (cl-loop when (funcall predicate)
+                       collect (funcall action)
+                       while (outline-next-heading)))))
+      (--each orig-fns
+        ;; Restore original function mappings.
+        (fset (plist-get it :name) (plist-get it :fn))))))
 
 ;;;;; Helpers
 
@@ -242,16 +256,16 @@ Or, when possible, fix the problem."
 
 ;;;;; Predicates
 
-(defun org-ql--category-p (&rest categories)
-  "Return non-nil if current heading is in one or more of CATEGORIES."
+(org-ql--defpredicate category (&rest categories)
+  "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
   (when-let ((category (org-get-category (point))))
     (cl-typecase categories
       (null t)
       (otherwise (member category categories)))))
 
-(defun org-ql--todo-p (&rest keywords)
+(org-ql--defpredicate todo (&rest keywords)
   "Return non-nil if current heading is a TODO item.
-With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
+With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strings)."
   (when-let ((state (org-get-todo-state)))
     (cl-typecase keywords
       (null t)
@@ -259,11 +273,13 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
       (symbol (member state (symbol-value keywords)))
       (otherwise (user-error "Invalid todo keywords: %s" keywords)))))
 
-(defsubst org-ql--done-p ()
+(org-ql--defpredicate done ()
+  "Return non-nil if entry's TODO keyword is in `org-done-keywords'."
+  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   (or (apply #'org-ql--todo-p org-done-keywords)))
 
-(defun org-ql--tags-p (&rest tags)
-  "Return non-nil if current heading has one or more of TAGS."
+(org-ql--defpredicate tags (&rest tags)
+  "Return non-nil if current heading has one or more of TAGS (a list of strings)."
   ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
   ;; to run `org-get-tags-at' for every heading, especially with inheritance.
   (when-let ((tags-at (org-get-tags-at (point) (not org-use-tag-inheritance))))
@@ -271,15 +287,13 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
       (null t)
       (otherwise (seq-intersection tags tags-at)))))
 
-(defun org-ql--level-p (level-or-comparator &optional level)
+(org-ql--defpredicate level (level-or-comparator &optional level)
   "Return non-nil if current heading's outline level matches LEVEL with COMPARATOR.
 
-If LEVEL is nil, LEVEL-OR-COMPARATOR should be a level, which
-will be tested for equality to the heading's outline level.  If
-LEVEL is non-nil, LEVEL-OR-COMPARATOR should be a comparator
-function.
-
-Outline levels should be integers."
+If LEVEL is nil, LEVEL-OR-COMPARATOR should be an integer level,
+which will be tested for equality to the heading's outline level.
+If LEVEL is non-nil, LEVEL-OR-COMPARATOR should be a comparator
+function (like `<=')."
   ;; NOTE: It might be necessary to take into account `org-odd-levels'; see docstring for
   ;; `org-outline-level'.
   (when-let ((outline-level (org-outline-level)))
@@ -289,11 +303,11 @@ Outline levels should be integers."
       ;; Check with comparator
       (_ (funcall level-or-comparator outline-level level)))))
 
-(defun org-ql--priority-p (&optional comparator-or-priority priority)
+(org-ql--defpredicate priority (&optional comparator-or-priority priority)
   "Return non-nil if current heading has a certain priority.
 COMPARATOR-OR-PRIORITY should be either a comparator function,
-like `<=', or a priority string, like \"A\" (in which case (\` =)
-'will be the comparator).  If COMPARATOR-OR-PRIORITY is a
+like `<=', or a priority string, like \"A\" (in which case (`='
+will be the comparator).  If COMPARATOR-OR-PRIORITY is a
 comparator, PRIORITY should be a priority string."
   (let* (comparator)
     (cond ((null priority)
@@ -326,11 +340,12 @@ comparator, PRIORITY should be a priority string."
                                     (org-get-priority (match-string 0)))))))
       (funcall comparator priority item-priority))))
 
-(defun org-ql--habit-p ()
+(org-ql--defpredicate habit ()
+  "Return non-nil if entry is a habit."
   (org-is-habit-p))
 
-(defun org-ql--regexp-p (regexp)
-  "Return non-nil if current entry matches REGEXP."
+(org-ql--defpredicate regexp (regexp)
+  "Return non-nil if current entry matches REGEXP (a regexp string)."
   (let ((end (or (save-excursion
                    (outline-next-heading))
                  (point-max))))
@@ -338,12 +353,12 @@ comparator, PRIORITY should be a priority string."
       (goto-char (line-beginning-position))
       (re-search-forward regexp end t))))
 
-(defun org-ql--heading-p (regexp)
-  "Return non-nil if current entry's heading matches REGEXP."
+(org-ql--defpredicate heading (regexp)
+  "Return non-nil if current entry's heading matches REGEXP (a regexp string)."
   (string-match regexp (org-get-heading 'no-tags 'no-todo)))
 
-(defun org-ql--property-p (property &optional value)
-  "Return non-nil if current entry has PROPERTY, and optionally VALUE."
+(org-ql--defpredicate property (property &optional value)
+  "Return non-nil if current entry has PROPERTY (a string), and optionally VALUE (a string)."
   (pcase property
     ('nil (user-error "Property matcher requires a PROPERTY argument."))
     (_ (pcase value
@@ -386,8 +401,7 @@ like one returned by `date-to-day'."
       ((pred functionp)
        (let ((target-day-number (cl-typecase target-date
                                   (null (+ (org-get-wdays timestamp) (org-today)))
-                                  ;; Append time to target-date
-                                  ;; because `date-to-day' requires it
+                                  ;; Append time to target-date because `date-to-day' requires it.
                                   (string (date-to-day (concat target-date " 00:00")))
                                   (integer target-date))))
          (pcase (org-element-property :type date-element)
@@ -400,11 +414,19 @@ like one returned by `date-to-day'."
       (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
                      comparator target-date)))))
 
-(defsubst org-ql--planning-p (&optional comparator target-date)
+(org-ql--defpredicate planning (&optional comparator target-date)
+  "Return non-nil if entry's planning date (deadline or scheduled) compares with TARGET-DATE using COMPARATOR.
+TARGET-DATE should be a string parseable by `date-to-day'.
+COMPARATOR should be a function (like `<=')."
+  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   ;; FIXME: I think :date selects either :deadline, :scheduled, or :closed, but I'm not sure.
   (org-ql--date-type-p :date comparator target-date))
 
-(defsubst org-ql--deadline-p (&optional comparator target-date)
+(org-ql--defpredicate deadline (&optional comparator target-date)
+  "Return non-nil if entry's deadline compares with TARGET-DATE using COMPARATOR.
+TARGET-DATE should be a string parseable by `date-to-day'.
+COMPARATOR should be a function (like `<=')."
+  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   ;; FIXME: This is slightly confusing.  Using plain (deadline) does, and should, select entries
   ;; that have any deadline.  But the common case of wanting to select entries whose deadline is
   ;; within the warning days (either the global setting or that entry's setting) requires the user
@@ -414,18 +436,27 @@ like one returned by `date-to-day'."
   ;; selectors, which would also be unintuitive.
   (org-ql--date-type-p :deadline comparator target-date))
 
-(defsubst org-ql--scheduled-p (&optional comparator target-date)
+(org-ql--defpredicate scheduled (&optional comparator target-date)
+  "Return non-nil if entry's scheduled date compares with TARGET-DATE using COMPARATOR.
+TARGET-DATE should be a string parseable by `date-to-day'.
+COMPARATOR should be a function (like `<=')."
+  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   (org-ql--date-type-p :scheduled comparator target-date))
 
-(defsubst org-ql--closed-p (&optional comparator target-date)
+(org-ql--defpredicate closed (&optional comparator target-date)
+  "Return non-nil if entry's closed date compares with TARGET-DATE using COMPARATOR.
+TARGET-DATE should be a string parseable by `date-to-day'.
+COMPARATOR should be a function (like `<=')."
+  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   (org-ql--date-type-p :closed comparator target-date))
 
-(cl-defun org-ql--date-p (&optional comparator target-date (type 'active))
+(org-ql--defpredicate date (&optional comparator target-date (type 'active))
   "Return non-nil if Org entry at point has date of TYPE that compares with TARGET-DATE using COMPARATOR.
 Checks all Org-formatted timestamp strings in entry.  TYPE may be
 `active', `inactive', or `all', to control whether active,
 inactive, or all timestamps are checked.  Ranges of each type are
-also checked."
+also checked.  TARGET-DATE should be a string parseable by
+`date-to-day'.  COMPARATOR should be a function (like `<=')."
   ;; MAYBE: This duplicates some code in --date-p, maybe it could be refactored DRYer.
   (let* ((entry-timestamps (save-excursion
                              ;; NOTE: It's important to `save-excursion', otherwise the point will be moved, which will
