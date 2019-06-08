@@ -2,6 +2,18 @@
 
 ~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and perform actions on them, such as collecting their parsed representation with ~org-element~ (the default action).
 
+* Contents
+:PROPERTIES:
+:TOC:      this
+:END:
+  -  [[#examples][Examples]]
+  -  [[#usage][Usage]]
+    -  [[#commands][Commands]]
+    -  [[#queries][Queries]]
+      -  [[#predicates][Predicates]]
+    -  [[#functions--macros][Functions / Macros]]
+  -  [[#notes][Notes]]
+
 * Examples
 
 More examples are available in [[examples.org]].
@@ -35,10 +47,12 @@ More examples are available in [[examples.org]].
          (property "composer" "Chopin")
          (not (property "key"))))
 #+END_SRC
-
 * Usage
 
 ** Commands
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
 
 *** org-ql-search
 
@@ -134,6 +148,9 @@ Note that, for convenience, standard numeric comparator function symbols (~<~, ~
 +  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).
 
 ** Functions / Macros
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
 
 *** Macro: ~org-ql~
 
@@ -170,6 +187,9 @@ If ~NARROW~ is non-nil, buffers are not widened.
 ~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
 
 * Notes
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
 
 ** Comparison with Org Agenda searches
 
@@ -192,10 +212,18 @@ But with ~org-ql-agenda~, you would write:
 This package is used by [[https://github.com/alphapapa/org-sidebar][org-sidebar]], which presents a customizable agenda-like view in a sidebar window.
 
 * License
+:PROPERTIES:
+:TOC:      ignore
+:END:
 
 GPLv3
 
-* Code                                                             :noexport:
+* COMMENT Code                                                     :noexport:
+:PROPERTIES:
+:TOC:      ignore
+:END:
+
+# The COMMENT keyword prevents GitHub's renderer from showing this entry.
 
 Code used to update this document.
 
@@ -247,3 +275,10 @@ Generates the predicate subtree.
     (interactive)
     (org-ql--readme-replace-node '("Usage" "Queries" "Predicates") (org-ql--readme-predicate-list)))
 #+END_SRC
+
+** File-local variables
+
+# Local Variables:
+# eval: (require 'org-make-toc)
+# before-save-hook: org-make-toc
+# End:
