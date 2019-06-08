@@ -47,6 +47,7 @@ More examples are available in [[examples.org]].
          (property "composer" "Chopin")
          (not (property "key"))))
 #+END_SRC
+
 * Usage
 
 ** Commands
@@ -64,9 +65,58 @@ Here's an example of using it to generate an agenda-like view for certain files 
 
 [[images/org-ql-search-snippet.png]]
 
-*** org-ql-agenda
+** Queries
 
-Also included is ~org-ql-agenda~, which uses ~org-ql~ queries to select entries and present them in an Agenda-like view.  It's compatible with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], which provides grouping.  For example:
+A query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.
+
+*** Predicates
+
+Arguments are listed next to predicate names, when applicable.
+
+Note that, for convenience, standard numeric comparator function symbols (~<~, ~=~, etc.) do not need to be quoted when passed as an argument to these predicates.  See examples in documentation.
+
++  ~category (&optional categories)~ :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
++  ~closed (&optional comparator target-date)~ :: Return non-nil if entry's closed date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~date (&optional comparator target-date &optional)~ :: Return non-nil if Org entry at point has date of ~TYPE~ that compares with ~TARGET-DATE~ using ~COMPARATOR~.  Checks all Org-formatted timestamp strings in entry.  ~TYPE~ may be ~active~, ~inactive~, or ~all~, to control whether active, inactive, or all timestamps are checked.  Ranges of each type are also checked.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~deadline (&optional comparator target-date)~ :: Return non-nil if entry's deadline compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~done~ :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
++  ~habit~ :: Return non-nil if entry is a habit.
++  ~heading (regexp)~ :: Return non-nil if current entry's heading matches ~REGEXP~ (a regexp string).
++  ~level (level-or-comparator &optional level)~ :: Return non-nil if current heading's outline level matches ~LEVEL~ with ~COMPARATOR~.  If ~LEVEL~ is nil, ~LEVEL-OR-COMPARATOR~ should be an integer level, which will be tested for equality to the heading's outline level.  If ~LEVEL~ is non-nil, ~LEVEL-OR-COMPARATOR~ should be a comparator function (like ~<=~).
++  ~planning (&optional comparator target-date)~ :: Return non-nil if entry's planning date (deadline or scheduled) compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~priority (&optional comparator-or-priority priority)~ :: Return non-nil if current heading has a certain priority.  ~COMPARATOR-OR-PRIORITY~ should be either a comparator function, like ~<=~, or a priority string, like "A" (in which case (~=~ will be the comparator).  If ~COMPARATOR-OR-PRIORITY~ is a comparator, ~PRIORITY~ should be a priority string.
++  ~property (property &optional value)~ :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).
++  ~regexp (regexp)~ :: Return non-nil if current entry matches ~REGEXP~ (a regexp string).
++  ~scheduled (&optional comparator target-date)~ :: Return non-nil if entry's scheduled date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
++  ~tags (&optional tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).
++  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).
+
+** Functions / Macros
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
+
+*** Macro: ~org-ql~
+
+/Arguments:/ ~(buffers-or-files pred-body &key sort narrow markers action)~
+
+Find entries in ~BUFFERS-OR-FILES~ that match ~QUERY~, and return the results of running ~ACTION-FN~ on each matching entry.
+
+~BUFFERS-OR-FILES~ is a form which should evaluate to one (or a list of) file(s) or buffer(s).
+
+~QUERY~ is an ~org-ql~ query sexp, unquoted.
+
+~ACTION~ is a sexp which will be evaluated at each matching entry with point at the beginning of its heading.  It is passed to ~org-ql-query~ as a lambda.  By default, ~org-element-headline-parser~ is called to return an Org element.
+
+~SORT~ is a user defined sorting function, or an unquoted list of one or more sorting methods, including: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
+
+If ~NARROW~ is non-nil, query will run without widening the buffer (the default is to widen and search the entire buffer).
+
+If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to each item, pointing to the item in its source buffer.  In this case, ~ACTION~ should return an Org element.
+
+*** Macro: ~org-ql-agenda~
+
+This macro is like ~org-ql~, but it presents matching entries in an Agenda-like view.  It's compatible with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], which provides grouping.  For example:
 
 #+BEGIN_SRC elisp
   (org-ql-agenda "~/src/emacs/org-super-agenda/test/test.org"
@@ -121,55 +171,6 @@ Here are some other examples:
              (closed = today))))
 #+END_SRC
 
-** Queries
-
-A query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.
-
-*** Predicates
-
-Arguments are listed next to predicate names, when applicable.
-
-Note that, for convenience, standard numeric comparator function symbols (~<~, ~=~, etc.) do not need to be quoted when passed as an argument to these predicates.  See examples in documentation.
-
-+  ~category (&optional categories)~ :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
-+  ~closed (&optional comparator target-date)~ :: Return non-nil if entry's closed date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
-+  ~date (&optional comparator target-date &optional)~ :: Return non-nil if Org entry at point has date of ~TYPE~ that compares with ~TARGET-DATE~ using ~COMPARATOR~.  Checks all Org-formatted timestamp strings in entry.  ~TYPE~ may be ~active~, ~inactive~, or ~all~, to control whether active, inactive, or all timestamps are checked.  Ranges of each type are also checked.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
-+  ~deadline (&optional comparator target-date)~ :: Return non-nil if entry's deadline compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
-+  ~done~ :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
-+  ~habit~ :: Return non-nil if entry is a habit.
-+  ~heading (regexp)~ :: Return non-nil if current entry's heading matches ~REGEXP~ (a regexp string).
-+  ~level (level-or-comparator &optional level)~ :: Return non-nil if current heading's outline level matches ~LEVEL~ with ~COMPARATOR~.  If ~LEVEL~ is nil, ~LEVEL-OR-COMPARATOR~ should be an integer level, which will be tested for equality to the heading's outline level.  If ~LEVEL~ is non-nil, ~LEVEL-OR-COMPARATOR~ should be a comparator function (like ~<=~).
-+  ~planning (&optional comparator target-date)~ :: Return non-nil if entry's planning date (deadline or scheduled) compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
-+  ~priority (&optional comparator-or-priority priority)~ :: Return non-nil if current heading has a certain priority.  ~COMPARATOR-OR-PRIORITY~ should be either a comparator function, like ~<=~, or a priority string, like "A" (in which case (~=~ will be the comparator).  If ~COMPARATOR-OR-PRIORITY~ is a comparator, ~PRIORITY~ should be a priority string.
-+  ~property (property &optional value)~ :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).
-+  ~regexp (regexp)~ :: Return non-nil if current entry matches ~REGEXP~ (a regexp string).
-+  ~scheduled (&optional comparator target-date)~ :: Return non-nil if entry's scheduled date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
-+  ~tags (&optional tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).
-+  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).
-
-** Functions / Macros
-:PROPERTIES:
-:TOC:      ignore-children
-:END:
-
-*** Macro: ~org-ql~
-
-/Arguments:/ ~(buffers-or-files pred-body &key sort narrow markers action)~
-
-Find entries in ~BUFFERS-OR-FILES~ that match ~QUERY~, and return the results of running ~ACTION-FN~ on each matching entry.
-
-~BUFFERS-OR-FILES~ is a form which should evaluate to one (or a list of) file(s) or buffer(s).
-
-~QUERY~ is an ~org-ql~ query sexp, unquoted.
-
-~ACTION~ is a sexp which will be evaluated at each matching entry with point at the beginning of its heading.  It is passed to ~org-ql-query~ as a lambda.  By default, ~org-element-headline-parser~ is called to return an Org element.
-
-~SORT~ is a user defined sorting function, or an unquoted list of one or more sorting methods, including: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
-
-If ~NARROW~ is non-nil, query will run without widening the buffer (the default is to widen and search the entire buffer).
-
-If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to each item, pointing to the item in its source buffer.  In this case, ~ACTION~ should return an Org element.
-
 *** Function: ~org-ql-query~
 
 /Arguments:/ ~(buffers-or-files query &key action narrow sort)~
@@ -185,6 +186,7 @@ Return items matching ~QUERY~ in ~BUFFERS-OR-FILES~.
 If ~NARROW~ is non-nil, buffers are not widened.
 
 ~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
+
 
 * Notes
 :PROPERTIES:
