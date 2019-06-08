@@ -52,9 +52,14 @@ This list should not contain any duplicates.")
        (push (list :name ',pred-name :fn ',fn-name :docstring ,docstring) org-ql-predicates)
        (cl-defun ,fn-name ,args ,docstring ,@body))))
 
-(cl-defmacro org-ql (buffers-or-files pred-body &key sort narrow markers
+(cl-defmacro org-ql (buffers-or-files query &key sort narrow markers
                                       (action '(org-element-headline-parser (line-end-position))))
-  "Find entries in BUFFERS-OR-FILES that match PRED-BODY, and return the results of running ACTION-FN on each matching entry.
+  "Find entries in BUFFERS-OR-FILES that match QUERY, and return the results of running ACTION-FN on each matching entry.
+
+BUFFERS-OR-FILES is a form which should evaluate to one (or a
+list of) file(s) or buffer(s).
+
+QUERY is an `org-ql' query sexp, unquoted.
 
 ACTION is a sexp which will be evaluated at each matching entry
 with point at the beginning of its heading.  It is passed to
@@ -82,7 +87,7 @@ buffer.  In this case, ACTION should return an Org element."
                        (->> ,action
                             org-ql--add-markers)))))
   `(org-ql-query ,buffers-or-files
-     ',pred-body
+     ',query
      :action ,action
      :narrow ,narrow
      :sort ',sort))
@@ -101,7 +106,10 @@ buffer.  In this case, ACTION should return an Org element."
 (cl-defun org-ql-query (buffers-or-files query &key action narrow sort)
   "Return items matching QUERY in BUFFERS-OR-FILES.
 
-QUERY is an `org-ql' query sexp.
+BUFFERS-OR-FILES is a one (or a list of) file(s) or buffer(s).
+
+QUERY is an `org-ql' query sexp (quoted, since this is a
+function).
 
 ACTION is a function which is called on each matching entry, with
 point at the beginning of its heading.  For example,
