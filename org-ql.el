@@ -284,7 +284,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
 (org-ql--defpredicate done ()
   "Return non-nil if entry's TODO keyword is in `org-done-keywords'."
   ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
-  (or (apply #'org-ql--todo-p org-done-keywords)))
+  (or (apply #'org-ql--predicate-todo org-done-keywords)))
 
 (org-ql--defpredicate tags (&rest tags)
   "Return non-nil if current heading has one or more of TAGS (a list of strings)."
