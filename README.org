@@ -188,7 +188,7 @@ If ~NARROW~ is non-nil, buffers are not widened.
 
 **** Macro: ~org-ql~
 
-/Arguments:/ ~(buffers-or-files pred-body &key sort narrow markers action)~
+/Arguments:/ ~(buffers-or-files query &key sort narrow markers action)~
 
 Find entries in ~BUFFERS-OR-FILES~ that match ~QUERY~, and return the results of running ~ACTION-FN~ on each matching entry.
 
