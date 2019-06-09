@@ -314,7 +314,7 @@ arguments to this function, parsing timestamp strings into Unix
 timestamps and accepting `:on' keyword."
   ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
   ;; for end users, for which the arguments are pre-processed by `org-ql-query'.
-  (declare (advertised-calling-convention (&key from to on)))
+  (declare (advertised-calling-convention (&key from to on) nil))
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward org-clock-line-re end-pos t)
