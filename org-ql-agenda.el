@@ -35,10 +35,12 @@
 (require 'org)
 (require 'org-agenda)
 (require 'seq)
+(require 'rx)
 
 (require 'org-ql)
 
 (require 'dash)
+(require 's)
 
 ;;;; Variables
 
