@@ -51,7 +51,7 @@ This list should not contain any duplicates.")
   (let ((fn-name (intern (concat "org-ql--predicate-" (symbol-name name))))
         (pred-name (intern (symbol-name name))))
     `(progn
-       (push (list :name ',pred-name :fn ',fn-name :docstring ,docstring) org-ql-predicates)
+       (push (list :name ',pred-name :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates)
        (cl-defun ,fn-name ,args ,docstring ,@body))))
 
 (cl-defmacro org-ql (buffers-or-files query &key sort narrow markers
@@ -298,7 +298,7 @@ empty time values to 23:59:59; otherwise, to 00:00:00."
 
 ;;;;; Predicates
 
-(org-ql--defpredicate clocked (&key from to)
+(org-ql--defpredicate clocked (&key from to on)
   "Return non-nil if current entry was clocked in given period.
 If no arguments are specified, return non-nil if entry was
 clocked at any time.
@@ -315,7 +315,6 @@ arguments to this function, parsing timestamp strings into Unix
 timestamps and accepting `:on' keyword."
   ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
   ;; for end users, for which the arguments are pre-processed by `org-ql-query'.
-  (declare (advertised-calling-convention (&key from to on) nil))
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward org-clock-line-re end-pos t)
