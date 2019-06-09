@@ -1,10 +1,528 @@
+#+TODO: TODO TODAY NEXT STARTED IN-PROGRESS UNDERWAY WAITING SOMEDAY MAYBE CHECK | DONE CANCELED
 
+* Test data
 
-* Data
+Rather than using my personal agenda every time I want to take a screenshot, how about this.
 
-** Clocked
+Will try to open the agenda view as if it was [2017-07-05 Wed]
 
-*** Clocked from 2018-12-01 00:00 to 2018-12-10 23:59
-:LOGBOOK:
-CLOCK: [2018-12-01 Sat 00:00]--[2018-12-10 Mon 23:59] => 239:59
+** TODO [#A] Take over the universe                       :universe:ambition:
+DEADLINE: <2017-07-15 Sat -1m>
+:PROPERTIES:
+:agenda-group: plans
+:CATEGORY: ambition
 :END:
+
+*** TODO [#A] Take over the world                                     :world:
+    DEADLINE: <2017-07-07 Fri>
+
+ I'd like to be finished with this before the weekend...
+
+**** TODO [#A] Skype with president of Antarctica            :world:meetings:
+     SCHEDULED: <2017-07-04 Tue 21:00>
+
+  Not sure what his timezone is...
+
+*** TODO [#B] Take over Mars
+
+**** TODO Visit Mars                                    :space:travel:planet:
+     DEADLINE: <2017-09-20 Wed -3m>
+
+  Ah, the red planet...
+
+*** TODO [#C] Take over the moon
+
+**** WAITING Visit the moon                                    :space:travel:
+     DEADLINE: <2017-08-27 Sun -2m>
+  :LOGBOOK:
+  -  State "WAITING"    from              [2017-07-24 Mon 19:01]
+  :END:
+
+  Just waiting on that callback from NASA...
+
+*** TODO Practice leaping tall buildings in a single bound         :personal:
+    SCHEDULED: <2017-07-05 Wed +2d>
+    :PROPERTIES:
+    :STYLE:    habit
+    :END:
+
+*** TODO [#B] Renew membership in supervillain club
+    DEADLINE: <2017-07-10 Mon -1w>
+
+*** DONE [#B] Learn universal sign language
+CLOSED: [2017-07-05 Wed 03:02]
+:PROPERTIES:
+:ID:       729de245-75fa-43b4-845a-57af61109485
+:END:
+:LOGBOOK:
+-  CLOSING NOTE [2017-07-05 Wed 03:02] \\
+   All done!
+CLOCK: [2017-07-05 Wed 02:00]--[2017-07-05 Wed 03:02] =>  1:02
+:END:
+
+** TODO Order a pizza                                          :food:dinner:
+SCHEDULED: <2017-07-05 Wed 18:00>
+:PROPERTIES:
+:Effort:   5
+:END:
+
+** TODO [#C] Get haircut                                     :personal:@town:
+SCHEDULED: <2017-07-05 Wed>
+
+Should probably do this before I take over the world.  Want to look my best.  (Not that it will matter once I'm in charge.)
+
+** TODO [#B] Internet                                                :bills:
+DEADLINE: <2017-07-21 Fri -1m>
+
+** TODO [#A] Spaceship lease                               :bills:spaceship:
+DEADLINE: <2017-08-01 Tue -1m>
+:PROPERTIES:
+:agenda-group: bills
+:END:
+
+** TODO [#B] Fix flux capacitor               :spaceship:shopping:@computer:
+SCHEDULED: <2017-07-05 Wed>
+
+If I don't, the frobnicator will probably fall off halfway to Mars...
+
+Gotta buy one first, though.
+
+** Recurring
+:PROPERTIES:
+:agenda-group: recurring
+:END:
+
+*** CHECK /r/emacs                                            :website:Emacs:
+    DEADLINE: <2017-07-05 Wed +1w>
+
+*** TODO Shop for groceries                             :food:shopping:@town:
+    SCHEDULED: <2017-07-05 Wed +1w>
+    :PROPERTIES:
+    :Effort:   30
+    :END:
+
+*** Sunrise/sunset
+
+%%(org-super-agenda--test-diary-sunrise)
+%%(org-super-agenda--test-diary-sunset)
+
+** Ideas
+:PROPERTIES:
+:CATEGORY: ideas
+:END:
+
+*** SOMEDAY Rewrite Emacs in Common Lisp :Emacs:elisp:computers:software:programming:
+    SCHEDULED: <2017-07-05 Wed>
+    :LOGBOOK:
+    -  State "SOMEDAY"    from "MAYBE"      [2017-07-24 Mon 18:59]
+    -  State "MAYBE"      from              [2017-07-24 Mon 18:58]
+    :END:
+
+    I mean, since no one has ever tried doing it before...
+
+*** SOMEDAY Write a symphony                                        :music:
+:PROPERTIES:
+:agenda-group: plans
+:END:
+
+I don't know when I'll get to this, so it's undated.
+
+* Code
+
+#+BEGIN_SRC elisp
+(org-time-string-to-absolute (org-entry-get (point) "SCHEDULED"))
+#+END_SRC
+
+  #+BEGIN_SRC elisp :results none
+  ;; Setup code
+  (require 'org-super-agenda)
+  (org-super-agenda-mode 1)
+  (require 'org-habit)
+  (setq org-todo-keywords
+        '((sequence "TODO(t!)" "TODAY(a!)" "NEXT(n!)" "STARTED(s!)" "IN-PROGRESS(p!)" "UNDERWAY(u!)" "WAITING(w@)" "SOMEDAY(o!)" "MAYBE(m!)" "|" "DONE(d@)" "CANCELED(c@)")
+          (sequence "CHECK(k!)" "|" "DONE(d@)")
+          (sequence "TO-READ(r!)" "READING(R!)" "|" "HAVE-READ(d@)")
+          (sequence "TO-WATCH(!)" "WATCHING(!)" "SEEN(!)")))
+  (with-current-buffer "test.org" (revert-buffer))
+
+  (defmacro with-org-today-date (date &rest body)
+    "Run BODY with the `org-today' function set to return simply DATE.
+  DATE should be a date-time string (both date and time must be included)."
+    (declare (indent defun))
+    `(let ((day (date-to-day ,date))
+           (orig (symbol-function 'org-today)))
+       (unwind-protect
+           (progn
+             (fset 'org-today (lambda () day))
+             ,@body)
+         (fset 'org-today orig))))
+  #+END_SRC
+
+#+BEGIN_SRC elisp  :results none
+  (defun diary-sunrise ()
+    (let ((dss (diary-sunrise-sunset)))
+      (with-temp-buffer
+        (insert dss)
+        (goto-char (point-min))
+        (search-forward ",")
+        (buffer-substring (point-min) (match-beginning 0)))))
+
+  (defun diary-sunset ()
+    (let ((dss (diary-sunrise-sunset))
+          start end)
+      (with-temp-buffer
+        (insert dss)
+        (goto-char (point-min))
+        (search-forward ", ")
+        (setq start (match-end 0))
+        (search-forward " at")
+        (setq end (match-beginning 0))
+        (goto-char start)
+        (capitalize-word 1)
+        (buffer-substring start end))))
+#+END_SRC
+
+*Note:* Removing tests from here as they're added to =test.el=.
+
+  #+BEGIN_SRC elisp
+
+    (org-super-agenda--test-with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/emacs/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-super-agenda-groups
+             '((:name "Time grid items in all-uppercase with RosyBrown1 foreground"
+                      :time-grid t
+                      :transformer (--> it
+                                        (upcase it)
+                                        (propertize it 'face '(:foreground "RosyBrown1"))))
+               (:name "Priority >= C items underlined, on black background"
+                      :face (:background "black" :underline t)
+                      :not (:priority>= "C")
+                      :order 100))))
+        (org-agenda nil "a")))
+    (org-super-agenda--test-with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/emacs/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-super-agenda-groups
+             '((:name none
+                      :time-grid t)
+               (:name "Should be all-uppercase RosyBrown1 on black"
+                      :face (:background "black" :foreground "RosyBrown1")
+                      :transformer #'upcase
+                      :not (:priority>= "C")
+                      :order 100))))
+        (org-agenda nil "a")))
+
+    (with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-super-agenda-groups
+             '((:name none
+                      :time-grid t)
+               (:name none
+                      :not (:priority>= "C")
+                      :order 100))))
+        (org-agenda nil "a")))
+
+    (with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-super-agenda-groups
+             '((:name "Items with child TODOs"
+                      :children todo))))
+        (org-agenda nil "a")))
+
+    (with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-super-agenda-groups
+             '((:name "Items with child TODOs"
+                      :children "CHECK"))))
+        (org-agenda nil "a")))
+
+    (with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-agenda-custom-commands
+             '(("u" "Super view"
+                ((agenda "" ((org-super-agenda-groups
+                              '((:name "Today"
+                                       :time-grid t
+                                       :scheduled today
+                                       :deadline today)))))
+                 (todo "" ((org-super-agenda-groups
+                            '((:name "Projects"
+                                     :children t)
+                              (:discard (:anything t)))))))))))
+        (org-agenda nil "u")))
+
+    (with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-agenda-custom-commands
+             '(("u" "Super view"
+                ((agenda "" ((org-super-agenda-groups
+                              '((:name "Today"
+                                       :time-grid today)))))
+                 (todo "" ((org-super-agenda-groups
+                            '((:name "Projects"
+                                     :children t)
+                              (:discard (:anything t)))))))))))
+        (org-agenda nil "u")))
+
+    (with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-agenda-custom-commands
+             '(("u" "Super view"
+                ((agenda "" ((org-super-agenda-groups
+                              '((:name "Schedule"
+                                       :time-grid t
+                                       :date today)
+                                (:name "Due today"
+                                       :deadline today)
+                                (:name "Due soon"
+                                       :deadline t)))))
+                 (todo "" ((org-agenda-overriding-header "")
+                           (org-super-agenda-groups
+                            '((:name "Projects"
+                                     :children t)
+                              (:discard (:anything t)))))))))))
+        (org-agenda nil "u")))
+
+    (with-org-today-date "2017-07-05 00:00"
+      (let ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            (org-super-agenda-groups
+             '((:scheduled (before "2017-07-06")))))
+        (org-agenda nil "a")))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+
+  (with-org-today-date "2017-07-05 00:00"
+    (let ((org-super-agenda-groups
+           '((:todo "WAITING")))
+          (org-agenda-files (list "~/src/org-super-agenda/test/test.org")))
+      (org-todo-list)))
+
+  (with-org-today-date "2017-07-05 00:00"
+    (let ((org-super-agenda-groups
+           '((:todo "SOMEDAY")))
+          (org-agenda-files (list "~/src/org-super-agenda/test/test.org")))
+      (org-tags-view nil "Emacs")))
+
+  (with-org-today-date "2017-07-05 00:00"
+    (let ((org-super-agenda-groups
+           '((:todo "CHECK")))
+          (org-agenda-files (list "~/src/org-super-agenda/test/test.org")))
+;; org-search-view doesn't seem to set the todo-state property, so the matcher doesn't work
+      (org-search-view nil "Emacs")))
+
+  (with-org-today-date "2017-07-05 00:00"
+    (let ((org-super-agenda-groups
+           '((:regexp ("moon" "mars"))))
+          (org-agenda-files (list "~/src/org-super-agenda/test/test.org")))
+      (org-search-view nil "space")))
+
+  (with-org-today-date "2017-07-05 00:00"
+    (let ((org-super-agenda-groups
+           '((:todo "SOMEDAY")))
+          (org-agenda-files (list "~/src/org-super-agenda/test/test.org")))
+      (org-agenda-list nil nil 'day)))
+
+#+END_SRC
+
+** Agenda examining
+
+This helps a lot.
+
+#+BEGIN_SRC elisp
+  (defun data-debug-show-string-with-properties (s)
+    (with-current-buffer (get-buffer-create "argh")
+      (erase-buffer)
+      (print s (current-buffer))
+
+      ;; Convert string reader representations to plain lists that can be set
+      (cl-loop for (match replace) in '(("#(" "'(")
+                                        ("#<" "'(")
+                                        (">" ")"))
+               do (progn
+                    (goto-char (point-min))
+                    (while (search-forward match nil 'noerror)
+                      (replace-match replace 'fixedcase 'literal))))
+
+      ;; Surround content in a list which `argh' is set to, then eval
+      ;; the buffer to do it
+      (goto-char (point-min))
+      (insert "(setq argh (list '")
+      (delete-forward-char 2)
+      (goto-char (point-max))
+      (insert "))")
+
+      ;; Okay, sure, eval'ing the buffer is dangerous and bad and wrong.
+      ;; But this is the only way I can find to make this work.  (Maybe
+      ;; `text-properties-at' could be used to get actual lists...)
+      (eval-buffer)
+
+      (data-debug-show-stuff argh "argh")
+      ;;  (switch-to-buffer (current-buffer))
+      ))
+
+  (defun data-debug-show-current-line-with-properties ()
+    (interactive)
+    (data-debug-show-string-with-properties (buffer-substring (line-beginning-position) (line-end-position))))
+
+  (with-current-buffer "*Org Agenda*"
+    (data-debug-show-string-with-properties (seq-subseq (split-string (buffer-string) "\n")
+                                                        0 5)))
+#+END_SRC
+
+** Agenda censoring
+
+For sharing screenshots of the agenda without revealing private data.
+
+#+BEGIN_SRC elisp
+  (defun org-agenda-sharpie ()
+    "Censor the text of items in the agenda."
+    (interactive)
+    (let (regexp old-heading new-heading properties)
+      ;; Save face properties of line in agenda to reapply to changed text
+      (setq properties (text-properties-at (point)))
+
+      ;; Go to source buffer
+      (org-with-point-at (org-find-text-property-in-string 'org-marker
+                                                           (buffer-substring (line-beginning-position)
+                                                                             (line-end-position)))
+        ;; Save old heading text and ask for new text
+        (line-beginning-position)
+        (unless (org-at-heading-p)
+          ;; Not sure if necessary
+          (org-back-to-heading))
+        (setq old-heading (when (looking-at org-complex-heading-regexp)
+                            (match-string 4))))
+      (setq new-heading (read-from-minibuffer "Overwrite visible heading with: "))
+      (add-text-properties 0 (length new-heading) properties new-heading)
+      ;; Back to agenda buffer
+      (save-excursion
+        (when (and old-heading new-heading)
+          ;; Replace agenda text
+          (let ((inhibit-read-only t))
+            (goto-char (line-beginning-position))
+            (when (search-forward old-heading (line-end-position))
+              (replace-match new-heading 'fixedcase 'literal)))))))
+#+END_SRC
+
+** Auto grouping
+
+
+#+BEGIN_SRC elisp
+  (with-org-today-date "2017-07-05 00:00"
+    (let ((org-super-agenda-groups
+           '((:auto-group t)))
+          (org-agenda-files (list "~/src/org-super-agenda/test/test.org")))
+      (org-agenda-list nil nil 'day)))
+#+END_SRC
+
+** Auto categories
+
+#+BEGIN_SRC elisp
+  (let ((org-super-agenda-groups
+         '((:auto-category t))))
+    (org-agenda-list nil nil 'day))
+#+END_SRC
+
+** Date
+
+#+BEGIN_SRC elisp
+  (with-org-today-date "2017-07-05 00:00"
+    (-let* ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            ((sec minute hour day month year dow dst utcoff) (list 0 0 0 5 7 2017 3 t nil))
+            (last-day-of-month
+             ;; A hack that seems to work fine
+             (1+ (calendar-last-day-of-month month year)))
+            (target-date (format "%d-%02d-%02d" year month last-day-of-month))
+            (org-super-agenda-groups
+             `((:deadline (before ,target-date))
+               (:discard (:anything t)))))
+      (org-todo-list)))
+
+  (with-org-today-date "2017-07-05 00:00"
+    (-let* ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+            (org-agenda-span 'day)
+            ((sec minute hour day month year dow dst utcoff) (list 0 0 0 5 7 2017 3 t nil))
+            (last-day-of-month  (calendar-last-day-of-month month year))
+            (target-date (format "%d-%02d-%02d" year month last-day-of-month))
+            (org-super-agenda-groups
+             `((:deadline (before ,target-date))
+               (:discard (:anything t)))))
+      (org-todo-list)))
+#+END_SRC
+
+** Effort
+
+#+BEGIN_SRC elisp
+  (with-org-today-date "2017-07-05 00:00"
+    (let ((org-agenda-files (list "~/src/org-super-agenda/test/test.org"))
+          (org-super-agenda-groups
+           '((:effort< "0:06"))))
+      (org-agenda-list nil nil 'day)))
+#+END_SRC
+
+** Misc
+
+*** let-plist
+
+I don't need this right now, but it might come in handy here or elsewhere.
+
+#+BEGIN_SRC elisp
+  (defmacro osa/let-plist (keys plist &rest body)
+    "`cl-destructuring-bind' without the boilerplate for plists."
+    ;; See https://emacs.stackexchange.com/q/22542/3871
+
+    ;; I really don't understand why Emacs doesn't have this already.
+    ;; So many things come close to it: pcase, pcase-let, map-let,
+    ;; cl-destructuring-bind, -let...but none of them let you simply
+    ;; bind all the values of a plist to variables with the same name as
+    ;; their keys. You always have to type the name of the key twice.
+
+    ;; For example, compare these two forms:
+
+    ;; (-let (((&keys :from from :to to :date date :subject subject) email))
+    ;;   (list from to date subject))
+
+    ;; (osa/let-plist (:from :to :date :subject) email
+    ;;   (list from to date subject))
+
+    ;; Now, sure, sometimes you need to bind values to differently named
+    ;; variables. But when you don't, I know which one I prefer.
+    (declare (indent defun))
+    (setq keys (cl-loop for key in keys
+                        collect (intern (replace-regexp-in-string (rx bol ":") ""
+                                                                  (symbol-name key)))))
+    `(cl-destructuring-bind
+         (&key ,@keys &allow-other-keys)
+         ,plist
+       ,@body))
+#+END_SRC
+
+** Profiling
+
+#+BEGIN_SRC elisp :results none
+  (defmacro profile-it (times &rest body)
+    `(let (output)
+       (dolist (p '("org-super-agenda-" "map" "org-" "string-" "s-" "buffer-" "append" "delq" "map" "list" "car" "save-" "outline-" "delete-dups" "sort" "line-" "nth" "concat" "char-to-string" "rx-" "goto-" "when" "search-" "re-"))
+         (elp-instrument-package p))
+       (dotimes (x ,times)
+         ,@body)
+       (elp-results)
+       (elp-restore-all)
+       (point-min)
+       (forward-line 20)
+       (delete-region (point) (point-max))
+       (setq output (buffer-substring-no-properties (point-min) (point-max)))
+       (kill-buffer)
+       (delete-window)
+       output))
+#+END_SRC
