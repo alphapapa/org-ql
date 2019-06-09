@@ -50,6 +50,18 @@ More examples are available in [[examples.org]].
 
 * Usage
 
+The functionality provided may be grouped by:
+
++  Interactive commands :: ~org-ql-search~
++  Non-interactive functions and macros :: ~org-ql~ (macro), ~org-ql-query~ (function), and ~org-ql-agenda~ (macro)
+
+Alternatively, they may be grouped by:
+
++  Showing an agenda-like view :: ~org-ql-search~ (command), and ~org-ql-agenda~ (macro)
++  Returning a list of matches or acting on them :: ~org-ql~ (macro), and ~org-ql-query~ (function)
+
+Feedback on these APIs is welcome.  Eventually, after being tested and polished, they will be considered stable.
+
 ** Commands
 :PROPERTIES:
 :TOC:      ignore-children
@@ -96,25 +108,9 @@ Note that, for convenience, standard numeric comparator function symbols (~<~, ~
 :TOC:      ignore-children
 :END:
 
-*** Macro: ~org-ql~
+*** Agenda-like views
 
-/Arguments:/ ~(buffers-or-files pred-body &key sort narrow markers action)~
-
-Find entries in ~BUFFERS-OR-FILES~ that match ~QUERY~, and return the results of running ~ACTION-FN~ on each matching entry.
-
-~BUFFERS-OR-FILES~ is a form which should evaluate to one (or a list of) file(s) or buffer(s).
-
-~QUERY~ is an ~org-ql~ query sexp, unquoted.
-
-~ACTION~ is a sexp which will be evaluated at each matching entry with point at the beginning of its heading.  It is passed to ~org-ql-query~ as a lambda.  By default, ~org-element-headline-parser~ is called to return an Org element.
-
-~SORT~ is a user defined sorting function, or an unquoted list of one or more sorting methods, including: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
-
-If ~NARROW~ is non-nil, query will run without widening the buffer (the default is to widen and search the entire buffer).
-
-If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to each item, pointing to the item in its source buffer.  In this case, ~ACTION~ should return an Org element.
-
-*** Macro: ~org-ql-agenda~
+**** Macro: ~org-ql-agenda~
 
 This macro is like ~org-ql~, but it presents matching entries in an Agenda-like view.  It's compatible with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], which provides grouping.  For example:
 
@@ -171,7 +167,9 @@ Here are some other examples:
              (closed = today))))
 #+END_SRC
 
-*** Function: ~org-ql-query~
+*** Listing / acting-on results
+
+**** Function: ~org-ql-query~
 
 /Arguments:/ ~(buffers-or-files query &key action narrow sort)~
 
@@ -186,6 +184,24 @@ Return items matching ~QUERY~ in ~BUFFERS-OR-FILES~.
 If ~NARROW~ is non-nil, buffers are not widened.
 
 ~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
+
+**** Macro: ~org-ql~
+
+/Arguments:/ ~(buffers-or-files pred-body &key sort narrow markers action)~
+
+Find entries in ~BUFFERS-OR-FILES~ that match ~QUERY~, and return the results of running ~ACTION-FN~ on each matching entry.
+
+~BUFFERS-OR-FILES~ is a form which should evaluate to one (or a list of) file(s) or buffer(s).
+
+~QUERY~ is an ~org-ql~ query sexp, unquoted.
+
+~ACTION~ is a sexp which will be evaluated at each matching entry with point at the beginning of its heading.  It is passed to ~org-ql-query~ as a lambda.  By default, ~org-element-headline-parser~ is called to return an Org element.
+
+~SORT~ is a user defined sorting function, or an unquoted list of one or more sorting methods, including: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
+
+If ~NARROW~ is non-nil, query will run without widening the buffer (the default is to widen and search the entire buffer).
+
+If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to each item, pointing to the item in its source buffer.  In this case, ~ACTION~ should return an Org element.
 
 
 * Notes
