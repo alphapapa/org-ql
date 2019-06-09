@@ -253,7 +253,12 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
 (cl-defun org-ql--select (&key predicate action narrow)
   "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
 If NARROW is non-nil, buffer will not be widened."
-  ;; Since the mappings are done at runtime, macros like `flet' can't be used, so we do it manually.
+  ;; Since the mappings are stored in the variable `org-ql-predicates', macros like `flet'
+  ;; can't be used, so we do it manually (this is same as the equivalent `flet' expansion).
+  ;; Mappings are stored in the variable because it allows predicates to be defined with a
+  ;; macro, which allows documentation to be easily generated for them.
+
+  ;; MAYBE: Lift the `flet'-equivalent out of this function so it isn't done for each buffer.
   (let (orig-fns)
     (--each org-ql-predicates
       ;; Save original function mappings.
@@ -483,7 +488,9 @@ comparator, PRIORITY should be a priority string."
 
 ;;;;;; Timestamps
 
-;; TODO: DRY these ts predicates.
+;; TODO: Move active/inactive into (ts) predicate, allowing the first arg to be either inactive/active
+;; or the comparator.  Using numeric comparators is more powerful, concise, and language-independent
+;; than using from/to.  Alternatively, add :before/:after, but I think the comparators are better.
 
 (org-ql--defpredicate ts (&key from to on)
   "Return non-nil if current entry has a timestamp in given period.
@@ -739,6 +746,7 @@ COMPARATOR should be a function (like `<=')."
 ;;;;; Sorting
 
 ;; FIXME: These appear to work properly, but it would be good to have tests for them.
+;; MAYBE: Add timestamp sorter.  Could be slow in some cases, without clever caching of timestamps per-entry.
 
 (defun org-ql--sort-by (items predicates)
   "Return ITEMS sorted by PREDICATES.
