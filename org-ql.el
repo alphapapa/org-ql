@@ -19,6 +19,7 @@
 
 (require 'cl-lib)
 (require 'org)
+(require 'org-habit)
 (require 'seq)
 
 (require 'dash)
@@ -252,9 +253,7 @@ Or, when possible, fix the problem."
                    (cl-case symbol
                      ('done (unless org-done-keywords
                               ;; NOTE: This check needs to be done from within the Org buffer being checked.
-                              (error "Variable `org-done-keywords' is nil.  Are you running this from an Org buffer?")))
-		     ('habit (unless (featurep 'org-habit)
-			       (require 'org-habit))))))
+                              (error "Variable `org-done-keywords' is nil.  Are you running this from an Org buffer?"))))))
     (cl-loop for elem in form
 	     if (consp elem)
 	     do (progn
