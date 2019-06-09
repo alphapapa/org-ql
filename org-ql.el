@@ -310,9 +310,9 @@ If ON, return non-nil if entry was clocked on date ON.
 FROM, TO, and ON should be strings parseable by
 `parse-time-string' but may omit the time value.
 
-Note: See macrolet in `org-ql-query' which pre-processes
-arguments to this function, parsing timestamp strings into Unix
-timestamps and accepting `:on' keyword."
+Note: Clock entries are expected to be clocked out.  Currently
+clocked entries (i.e. with unclosed timestamp ranges) are
+ignored."
   ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
   ;; for end users, for which the arguments are pre-processed by `org-ql-query'.
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
