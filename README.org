@@ -73,7 +73,7 @@ A query is a lisp form which may contain arbitrary lisp forms, as well as certai
 
 Arguments are listed next to predicate names, when applicable.
 
-Note that, for convenience, standard numeric comparator function symbols (~<~, ~=~, etc.) do not need to be quoted when passed as an argument to these predicates.  See examples in documentation.
+Note that, for convenience, standard numeric comparator function symbols (~<~, ~=~, etc.) do not need to be quoted when passed as an argument to these predicates.  The resemblance to infix notation is coincidental.  See examples in documentation.
 
 +  ~category (&optional categories)~ :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
 +  ~closed (&optional comparator target-date)~ :: Return non-nil if entry's closed date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
@@ -234,12 +234,29 @@ Code used to update this document.
 Generates the predicate subtree.
 
 #+BEGIN_SRC elisp
+  (defun org-ql--readme-update-predicates ()
+    "Update predicate subtree in current document."
+    (interactive)
+    (org-ql--readme-replace-node '("Usage" "Queries" "Predicates") (org-ql--readme-predicate-list)))
+
+  (defun org-ql--readme-replace-node (outline-path string)
+    "Replace contents of node at OUTLINE-PATH with STRING."
+    (org-with-wide-buffer
+     (-let* ((subtree-marker (org-find-olp outline-path t))
+             ((_headline element) (progn
+                                    (goto-char subtree-marker)
+                                    (org-element-headline-parser (point-max))))
+             ((&plist :contents-begin beg :contents-end end) element))
+       (goto-char beg)
+       (delete-region (point) (1- end))
+       (insert string "\n"))))
+
   (defun org-ql--readme-predicate-list ()
     "Return an Org list string documenting predicates."
     (concat (unpackaged/docstring-to-org
              "Arguments are listed next to predicate names, when applicable.
 
-  Note that, for convenience, standard numeric comparator function symbols (`<', `=', etc.) do not need to be quoted when passed as an argument to these predicates.  See examples in documentation.\n\n")
+  Note that, for convenience, standard numeric comparator function symbols (`<', `=', etc.) do not need to be quoted when passed as an argument to these predicates.  The resemblance to infix notation is coincidental.  See examples in documentation.\n\n")
             (s-join "\n" (->> org-ql-predicates
                               (--sort (string< (symbol-name (plist-get it :name))
                                                (symbol-name (plist-get other :name))))
@@ -256,27 +273,15 @@ Generates the predicate subtree.
                                                          (format " %s" args)
                                                        "")
                                                      (unpackaged/docstring-to-org docstring)))
-                                         (warn "No docstring for: %s" name)
+                                         (when (s-prefix? "org-ql-" (symbol-name name))
+                                           (warn "No docstring for: %s" name))
                                          nil)))
                               -non-nil))))
-
-  (defun org-ql--readme-replace-node (outline-path string)
-    "Replace contents of node at OUTLINE-PATH with STRING."
-    (org-with-wide-buffer
-     (-let* ((subtree-marker (org-find-olp outline-path t))
-             ((_headline element) (progn
-                                    (goto-char subtree-marker)
-                                    (org-element-headline-parser (point-max))))
-             ((&plist :contents-begin beg :contents-end end) element))
-       (goto-char beg)
-       (delete-region (point) (1- end))
-       (insert string "\n"))))
-
-  (defun org-ql--readme-update-predicates ()
-    "Update predicate subtree in current document."
-    (interactive)
-    (org-ql--readme-replace-node '("Usage" "Queries" "Predicates") (org-ql--readme-predicate-list)))
 #+END_SRC
+
+*** TODO Use async
+
+If ~org-ql~ is loaded byte-compiled, the argument lists are not named properly (not sure why, as ~help-function-arglist~ is supposed to handle that).  We could run the function in another Emacs process with ~async~ to avoid this.
 
 ** File-local variables
 
