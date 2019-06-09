@@ -690,58 +690,58 @@ COMPARATOR should be a function (like `<=')."
   ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   (org-ql--date-type-p :closed comparator target-date))
 
-;; (org-ql--defpredicate date (&optional comparator target-date (type 'active))
-;;   "Return non-nil if Org entry at point has date of TYPE that compares with TARGET-DATE using COMPARATOR.
-;; Checks all Org-formatted timestamp strings in entry.  TYPE may be
-;; `active', `inactive', or `all', to control whether active,
-;; inactive, or all timestamps are checked.  Ranges of each type are
-;; also checked.  TARGET-DATE should be a string parseable by
-;; `date-to-day'.  COMPARATOR should be a function (like `<=')."
-;;   ;; NOTE: I think the `ts' predicate obsoletes this, but I'm leaving it commented for now.
-;;   ;; MAYBE: This duplicates some code in --date-p, maybe it could be refactored DRYer.
-;;   (let* ((entry-timestamps (save-excursion
-;;                              ;; NOTE: It's important to `save-excursion', otherwise the point will be moved, which will
-;;                              ;; likely cause the action function to fail.  We could wrap the call to the predicate in
-;;                              ;; `save-excursion', but that would do it even when not necessary, which would be slower.
-;;                              (cl-loop while (re-search-forward org-element--timestamp-regexp (org-entry-end-position) t)
-;;                                       collect (match-string 0)))))
-;;     (pcase comparator
-;;       ('nil (pcase type
-;;               ('all entry-timestamps)
-;;               ('active (cl-loop for timestamp in entry-timestamps
-;;                                 thereis (string-prefix-p "<" timestamp)))
-;;               ('inactive (cl-loop for timestamp in entry-timestamps
-;;                                   thereis (string-prefix-p "[" timestamp)))
-;;               (_ (user-error "Invalid type for date selector.  May be `active', `inactive', or `all'"))))
-;;       ((pred functionp)
-;;        ;; TODO: Avoid computing target-day-number every time this is called.
-;;        ;; Probably need to make a lambda that has it already defined.
-;;        (let ((target-day-number (cl-typecase target-date
-;;                                   (null nil)  ; Calculated later.
-;;                                   ;; Append time to target-date because `date-to-day' requires it.
-;;                                   (string (date-to-day (concat target-date " 00:00")))
-;;                                   (integer target-date))))
-;;          (cl-loop for timestamp in entry-timestamps
-;;                   for date-element = (with-temp-buffer
-;;                                        ;; MAYBE: Replace with ts.el eventually.
-;;                                        ;; TODO: Parse the element in the re-search-forward loop.
-;;                                        (insert timestamp)
-;;                                        (goto-char 0)
-;;                                        (org-element-timestamp-parser))
-;;                   for this-target-day-number = (or target-day-number
-;;                                                    ;; FIXME: Not sure if it makes sense to check warning
-;;                                                    ;; days for non-planning timestamps, but we'll try it.
-;;                                                    (+ (org-get-wdays timestamp) (org-today)))
-;;                   thereis (when (or (eq 'all type)
-;;                                     (member (org-element-property :type date-element)
-;;                                             (pcase type
-;;                                               ('active '(active active-range))
-;;                                               ('inactive '(inactive inactive-range)))))
-;;                             (funcall comparator (org-time-string-to-absolute
-;;                                                  (org-element-timestamp-interpreter date-element 'ignore))
-;;                                      this-target-day-number)))))
-;;       (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
-;;                      comparator target-date)))))
+(org-ql--defpredicate date (&optional comparator target-date (type 'active))
+  "Return non-nil if Org entry at point has date of TYPE that compares with TARGET-DATE using COMPARATOR.
+Checks all Org-formatted timestamp strings in entry.  TYPE may be
+`active', `inactive', or `all', to control whether active,
+inactive, or all timestamps are checked.  Ranges of each type are
+also checked.  TARGET-DATE should be a string parseable by
+`date-to-day'.  COMPARATOR should be a function (like `<=')."
+  ;; NOTE: I think the `ts' predicate obsoletes this, but I'm leaving it commented for now.
+  ;; MAYBE: This duplicates some code in --date-p, maybe it could be refactored DRYer.
+  (let* ((entry-timestamps (save-excursion
+                             ;; NOTE: It's important to `save-excursion', otherwise the point will be moved, which will
+                             ;; likely cause the action function to fail.  We could wrap the call to the predicate in
+                             ;; `save-excursion', but that would do it even when not necessary, which would be slower.
+                             (cl-loop while (re-search-forward org-element--timestamp-regexp (org-entry-end-position) t)
+                                      collect (match-string 0)))))
+    (pcase comparator
+      ('nil (pcase type
+              ('all entry-timestamps)
+              ('active (cl-loop for timestamp in entry-timestamps
+                                thereis (string-prefix-p "<" timestamp)))
+              ('inactive (cl-loop for timestamp in entry-timestamps
+                                  thereis (string-prefix-p "[" timestamp)))
+              (_ (user-error "Invalid type for date selector.  May be `active', `inactive', or `all'"))))
+      ((pred functionp)
+       ;; TODO: Avoid computing target-day-number every time this is called.
+       ;; Probably need to make a lambda that has it already defined.
+       (let ((target-day-number (cl-typecase target-date
+                                  (null nil)  ; Calculated later.
+                                  ;; Append time to target-date because `date-to-day' requires it.
+                                  (string (date-to-day (concat target-date " 00:00")))
+                                  (integer target-date))))
+         (cl-loop for timestamp in entry-timestamps
+                  for date-element = (with-temp-buffer
+                                       ;; MAYBE: Replace with ts.el eventually.
+                                       ;; TODO: Parse the element in the re-search-forward loop.
+                                       (insert timestamp)
+                                       (goto-char 0)
+                                       (org-element-timestamp-parser))
+                  for this-target-day-number = (or target-day-number
+                                                   ;; FIXME: Not sure if it makes sense to check warning
+                                                   ;; days for non-planning timestamps, but we'll try it.
+                                                   (+ (org-get-wdays timestamp) (org-today)))
+                  thereis (when (or (eq 'all type)
+                                    (member (org-element-property :type date-element)
+                                            (pcase type
+                                              ('active '(active active-range))
+                                              ('inactive '(inactive inactive-range)))))
+                            (funcall comparator (org-time-string-to-absolute
+                                                 (org-element-timestamp-interpreter date-element 'ignore))
+                                     this-target-day-number)))))
+      (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
+                     comparator target-date)))))
 
 ;;;;; Sorting
 
