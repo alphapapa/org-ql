@@ -252,7 +252,7 @@ Code used to update this document.
 
 Generates the predicate subtree.
 
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :results silent :exports code
   (defun org-ql--readme-update-predicates ()
     "Update predicate subtree in current document."
     (interactive)
