@@ -664,8 +664,10 @@ COMPARATOR should be a function (like `<=')."
 
 (org-ql--defpredicate deadline (&optional comparator target-date)
   "Return non-nil if entry's deadline compares with TARGET-DATE using COMPARATOR.
-TARGET-DATE should be a string parseable by `date-to-day'.
-COMPARATOR should be a function (like `<=')."
+TARGET-DATE should be a string parseable by `date-to-day'; or if
+omitted, it is determined automatically using
+`org-deadline-warning-days'. COMPARATOR should be a
+function (like `<=')."
   ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   ;; FIXME: This is slightly confusing.  Using plain (deadline) does, and should, select entries
   ;; that have any deadline.  But the common case of wanting to select entries whose deadline is
