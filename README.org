@@ -69,7 +69,23 @@ Feedback on these APIs is welcome.  Eventually, after being tested and polished,
 
 *** org-ql-search
 
-The command =org-ql-search= prompts for a query, a list of buffers or files, and how to group and sort results.  Without prefix, it searches the current buffer instead of prompting.  Then it presents the results in an agenda-like view.
+Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variables:
+
+~BUFFERS-FILES~: ~A~ list of buffers and/or files to search.  Interactively, may also be:
+
++ ~buffer~: search the current buffer 
++ ~all~: search all Org buffers 
++ ~agenda~: search buffers returned by the function ~org-agenda-files~ 
++ An expression which evaluates to a list of files/buffers 
++ A space-separated list of file or buffer names
+
+~GROUPS~: An ~org-super-agenda~ group set.  See variable ~org-super-agenda-groups~.
+
+~NARROW~: When non-nil, don't widen buffers before searching. Interactively, with prefix, leave narrowed.
+
+~SORT~: One or a list of ~org-ql~ sorting functions, like ~date~ or ~priority~.
+
+Press =g= to refresh the results buffer.
 
 [[images/org-ql-search.gif]]
 

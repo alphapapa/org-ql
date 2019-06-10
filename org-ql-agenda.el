@@ -47,6 +47,13 @@
 (defvar org-ql-agenda-buffer-name "*Org Agenda NG*"
   "Name of default `org-ql-agenda' buffer.")
 
+;; For refreshing results buffers.
+(defvar org-ql-buffers-files)
+(defvar org-ql-query)
+(defvar org-ql-sort)
+(defvar org-ql-narrow)
+(defvar org-ql-super-groups)
+
 ;;;; Macros
 
 ;; FIXME: DRY these two macros.
@@ -124,8 +131,13 @@ is used, rather than binding it locally."
 Interactively, prompt for these variables:
 
 BUFFERS-FILES: A list of buffers and/or files to search.
-Interactively, may also be an expression which evaluates to such
-a list.
+Interactively, may also be:
+
+- `buffer': search the current buffer
+- `all': search all Org buffers
+- `agenda': search buffers returned by the function `org-agenda-files'
+- An expression which evaluates to a list of files/buffers
+- A space-separated list of file or buffer names
 
 GROUPS: An `org-super-agenda' group set.  See variable
 `org-super-agenda-groups'.
@@ -136,39 +148,47 @@ searching. Interactively, with prefix, leave narrowed.
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority'."
   (declare (indent defun))
-  (interactive (progn
-                 (when (and current-prefix-arg
-                            (not (derived-mode-p 'org-mode)))
-                   (user-error "Not an Org buffer: %s" (buffer-name)))
-                 (list (--if-let (read-from-minibuffer "Buffers/Files (blank for current buffer): ")
-                           ;; TODO: Add glob matching?  Buffer mode matching?
-                           (pcase it
-                             ("" (current-buffer))
-                             ((rx bos "(") (-flatten (eval (read it))))
-                             (_ (s-split (rx (1+ space)) it)))
-                         (current-buffer))
-                       (read-minibuffer "Query: ")
-                       :narrow (eq current-prefix-arg '(4))
-                       :groups (pcase (completing-read "Group by: "
-                                                       (cons "Don't group"
-                                                             (cl-loop for type in org-super-agenda-auto-selector-keywords
-                                                                      collect (substring (symbol-name type) 6))))
-                                 ("Don't group" nil)
-                                 (property (list (list (intern (concat ":auto-" property))))))
-                       :sort (pcase (completing-read "Sort by: "
-                                                     (list "Don't sort"
-                                                           "date"
-                                                           "deadline"
-                                                           "priority"
-                                                           "scheduled"
-                                                           "todo"))
-                               ("Don't sort" nil)
-                               (sort (intern sort))))))
+  (interactive (list (pcase-exhaustive (completing-read "Buffers/Files:"
+                                                        (list 'buffer 'agenda 'all))
+                       ("agenda" (org-agenda-files))
+                       ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                                        (buffer-list)))
+                       ("buffer" (current-buffer))
+                       ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
+                       (else (s-split (rx (1+ space)) else)))
+                     (read-minibuffer "Query: ")
+                     :narrow (eq current-prefix-arg '(4))
+                     :groups (pcase (completing-read "Group by: "
+                                                     (cons "Don't group"
+                                                           (cl-loop for type in org-super-agenda-auto-selector-keywords
+                                                                    collect (substring (symbol-name type) 6))))
+                               ("Don't group" nil)
+                               (property (list (list (intern (concat ":auto-" property))))))
+                     :sort (pcase (completing-read "Sort by: "
+                                                   (list "Don't sort"
+                                                         "date"
+                                                         "deadline"
+                                                         "priority"
+                                                         "scheduled"
+                                                         "todo"))
+                             ("Don't sort" nil)
+                             (sort (intern sort)))))
   (org-ql-agenda--agenda buffers-files
     query
     :narrow narrow
     :sort sort
-    :super-groups groups))
+    :super-groups groups
+    :buffer "*Org QL Search*"))
+
+(defun org-ql-search-refresh ()
+  "Refresh current `org-ql-search' buffer."
+  (interactive)
+  (org-ql-agenda--agenda org-ql-buffers-files
+    org-ql-query
+    :sort org-ql-sort
+    :narrow org-ql-narrow
+    :super-groups org-ql-super-groups
+    :buffer (current-buffer)))
 
 ;;;; Functions
 
@@ -191,13 +211,53 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                        (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
                              (t it))
                        (s-join "\n" it)))
+         (buffer (cl-etypecase buffer
+                   (string (org-ql-agenda--buffer buffer))
+                   (null (org-ql-agenda--buffer buffer))
+                   (buffer buffer)))
          (inhibit-read-only t))
-    (with-current-buffer (org-ql-agenda--buffer buffer)
+    (with-current-buffer buffer
+      ;; Prepare buffer, saving data for refreshing.
+      (setq-local org-ql-buffers-files buffers-files)
+      (setq-local org-ql-query query)
+      (setq-local org-ql-sort sort)
+      (setq-local org-ql-narrow narrow)
+      (setq-local org-ql-super-groups super-groups)
+      ;; TODO: Derive a minor mode and set keymap there.
+      (local-set-key "g" #'org-ql-search-refresh)
+      (let* ((query-formatted (format "%S" query))
+             (query-formatted (propertize (org-ql-agenda--font-lock-string 'emacs-lisp-mode query-formatted)
+                                          'help-echo query-formatted))
+             (query-width (length query-formatted))
+             (available-width (- (window-width)
+                                 (length "In: ")
+                                 (length "Query: ")
+                                 query-width 4))
+             (buffers-files-formatted (format "%S" buffers-files))
+             (buffers-files-formatted (propertize (->> buffers-files-formatted
+                                                       (org-ql-agenda--font-lock-string 'emacs-lisp-mode)
+                                                       (s-truncate available-width))
+                                                  'help-echo buffers-files-formatted)))
+        (setq-local header-line-format (concat (propertize "Query: " 'face 'org-agenda-structure)
+                                               query-formatted "  "
+                                               (propertize "In: " 'face 'org-agenda-structure)
+                                               buffers-files-formatted)))
+      ;; Clear buffer, insert entries, etc.
       (erase-buffer)
       (insert entries)
       (pop-to-buffer (current-buffer))
       (org-agenda-finalize)
       (goto-char (point-min)))))
+
+(defun org-ql-agenda--font-lock-string (mode s)
+  "Return string S font-locked according to MODE."
+  ;; FIXME: Is this the proper way to do this?  It works, but I feel like there must be a built-in way...
+  (with-temp-buffer
+    (delay-mode-hooks
+      (insert s)
+      (funcall mode)
+      (font-lock-ensure)
+      (buffer-string))))
 
 (defun org-ql-agenda--buffer (&optional name)
   "Return Agenda NG buffer, creating it if necessary.
