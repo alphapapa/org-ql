@@ -27,6 +27,10 @@
 
 ;;;; Variables
 
+(if (fboundp 'org-timestamp--to-internal-time)
+    (defalias 'org-timestamp-to-time 'org-timestamp--to-internal-time)
+  nil)
+
 (defvar org-ql--today nil)
 
 (defvar org-ql-cache (make-hash-table :weakness 'key)
@@ -362,8 +366,8 @@ ignored."
                 (test-timestamps (pred-form)
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
-                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
-                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           for beg = (float-time (org-timestamp-to-time next-ts))
+                                           for end = (float-time (org-timestamp-to-time next-ts 'end))
                                            thereis ,pred-form)))
     (save-excursion
       (let ((end-pos (org-entry-end-position)))
@@ -518,8 +522,8 @@ FROM, TO, and ON should be strings parseable by
                 (test-timestamps (pred-form)
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
-                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
-                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           for beg = (float-time (org-timestamp-to-time next-ts))
+                                           for end = (float-time (org-timestamp-to-time next-ts 'end))
                                            thereis ,pred-form)))
     (save-excursion
       (let ((end-pos (org-entry-end-position)))
@@ -558,8 +562,8 @@ FROM, TO, and ON should be strings parseable by
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
                                            when (string-prefix-p "<" next-ts)
-                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
-                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           for beg = (float-time (org-timestamp-to-time next-ts))
+                                           for end = (float-time (org-timestamp-to-time next-ts 'end))
                                            thereis ,pred-form)))
     (save-excursion
       (let ((end-pos (org-entry-end-position)))
@@ -598,8 +602,8 @@ FROM, TO, and ON should be strings parseable by
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
                                            when (string-prefix-p "[" next-ts)
-                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
-                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           for beg = (float-time (org-timestamp-to-time next-ts))
+                                           for end = (float-time (org-timestamp-to-time next-ts 'end))
                                            thereis ,pred-form)))
     (save-excursion
       (let ((end-pos (org-entry-end-position)))
