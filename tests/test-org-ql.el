@@ -249,6 +249,12 @@
                   :action (org-ql-test-org-get-heading))
                 :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
 
+    (it "(done)"
+      (expect (org-ql test-buffer
+                (done)
+                :action (org-ql-test-org-get-heading))
+              :to-equal '("Learn universal sign language")))
+
     (describe "(ts)"
       (it "without arguments"
         (expect (org-ql test-buffer
