@@ -33,6 +33,7 @@
 
 (require 'cl-lib)
 (require 'org)
+(require 'org-element)
 (require 'org-agenda)
 (require 'seq)
 (require 'rx)
@@ -41,6 +42,13 @@
 
 (require 'dash)
 (require 's)
+
+;;;; Compatibility
+
+(defvar org-super-agenda-auto-selector-keywords)
+(defvar org-super-agenda-groups)
+(defvar org-super-agenda-mode)
+(declare-function org-super-agenda--group-items "org-super-agenda")
 
 ;;;; Variables
 
