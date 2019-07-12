@@ -236,6 +236,9 @@ If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to 
 *Changed*
 +  ~(regexp)~ selector accepts multiple regexps to test.
 
+*Compatibility*
++  Fixes for compatibility with Org 9.2.  (Thanks to [[https://github.com/ataias][Ataias Pereira Reis]] and [[https://github.com/dakra][Daniel Kraus]].)
+
 *Internal*
 +  Optimizations for some query selectors, e.g. =regexp= and =todo=.  These can provide a significant improvement for some queries.  See benchmarks in [[file:notes.org][notes.org]].
 

@@ -50,6 +50,9 @@
 (defvar org-super-agenda-mode)
 (declare-function org-super-agenda--group-items "org-super-agenda")
 
+(when (version< org-version "9.2")
+  (defalias 'org-get-tags 'org-get-tags-at))
+
 ;;;; Variables
 
 (defvar org-ql-agenda-buffer-name "*Org Agenda NG*"
@@ -328,8 +331,8 @@ Its property list should be the second item in the list, as returned by `org-ele
                        (if-let ((marker (or (org-element-property :org-hd-marker element)
                                             (org-element-property :org-marker element))))
                            (with-current-buffer (marker-buffer marker)
-                             ;; I wish `org-get-tags-at' used the correct buffer automatically.
-                             (org-get-tags-at marker (not org-use-tag-inheritance)))
+                             ;; I wish `org-get-tags' used the correct buffer automatically.
+                             (org-get-tags marker (not org-use-tag-inheritance)))
                          ;; No marker found
                          (warn "No marker found for item: %s" title)
                          (org-element-property :tags element))

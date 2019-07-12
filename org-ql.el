@@ -25,6 +25,12 @@
 
 (require 'dash)
 
+;;;; Compatibility
+
+(when (version< org-version "9.2")
+  (defalias 'org-get-tags 'org-get-tags-at)
+  (defalias 'org-timestamp-to-time 'org-timestamp--to-internal-time))
+
 ;;;; Variables
 
 (defvar org-ql--today nil)
@@ -457,8 +463,8 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
 (org-ql--defpredicate tags (&rest tags)
   "Return non-nil if current heading has one or more of TAGS (a list of strings)."
   ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
-  ;; to run `org-get-tags-at' for every heading, especially with inheritance.
-  (when-let ((tags-at (org-get-tags-at (point) (not org-use-tag-inheritance))))
+  ;; to run `org-get-tags' for every heading, especially with inheritance.
+  (when-let ((tags-at (org-get-tags (point) (not org-use-tag-inheritance))))
     (cl-typecase tags
       (null t)
       (otherwise (seq-intersection tags tags-at)))))
