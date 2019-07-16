@@ -255,6 +255,18 @@
                 :action (org-ql-test-org-get-heading))
               :to-equal '("Learn universal sign language")))
 
+    (describe "(regexp)"
+      (it "with 1 argument"
+        (expect (org-ql test-buffer
+                  (regexp "Take over")
+                  :sort todo
+                  :action (org-ql-test-org-get-heading)) :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+      (it "with 2 arguments"
+        (expect (org-ql test-buffer
+                  (regexp "Take over" "pizza")
+                  :sort todo
+                  :action (org-ql-test-org-get-heading)) :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut"))))
+
     (describe "(ts)"
       (it "without arguments"
         (expect (org-ql test-buffer

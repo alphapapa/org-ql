@@ -461,14 +461,16 @@ comparator, PRIORITY should be a priority string."
   "Return non-nil if entry is a habit."
   (org-is-habit-p))
 
-(org-ql--defpredicate regexp (regexp)
-  "Return non-nil if current entry matches REGEXP (a regexp string)."
+(org-ql--defpredicate regexp (&rest regexps)
+  "Return non-nil if current entry matches one of REGEXPS (regexp strings)."
   (let ((end (or (save-excursion
                    (outline-next-heading))
                  (point-max))))
     (save-excursion
       (goto-char (line-beginning-position))
-      (re-search-forward regexp end t))))
+      (cl-loop for regexp in regexps
+               thereis (save-excursion
+                         (re-search-forward regexp end t))))))
 
 (org-ql--defpredicate heading (regexp)
   "Return non-nil if current entry's heading matches REGEXP (a regexp string)."

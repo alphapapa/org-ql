@@ -233,7 +233,8 @@ If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to 
 
 ** 0.2-pre
 
-Nothing new yet.
+*Changed*
++  ~(regexp)~ selector accepts multiple regexps to test.
 
 ** 0.1
 
