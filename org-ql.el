@@ -67,7 +67,13 @@ This list should not contain any duplicates.")
 ;;;; Macros
 
 (cl-defmacro org-ql--defpredicate (name args docstring &rest body)
-  "FIXME: docstring"
+  "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
+ARGS is a `cl-defun'-style argument list.  DOCSTRING is the
+function's docstring.  BODY is the body of the predicate.
+
+Predicates will be called with point on the beginning of an Org
+heading and should return non-nil if the heading's entry is a
+match."
   (declare (debug (symbolp listp stringp def-body))
            (indent defun))
   (let ((fn-name (intern (concat "org-ql--predicate-" (symbol-name name))))
