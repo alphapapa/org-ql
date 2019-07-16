@@ -855,9 +855,6 @@ PREDICATES is a list of one or more sorting methods, including:
                        ;; NOTE: 'todo is handled below
                        ;; FIXME: Add more?
                        (_ (user-error "Invalid sorting predicate: %s" symbol))))
-             (todo-keyword-pos (keyword)
-                               ;; MAYBE: Would it be faster to precompute these and do an alist lookup?
-                               (cl-position keyword org-todo-keywords-1 :test #'string=))
              (sort-by-todo-keyword (items)
                                    (let* ((grouped-items (--group-by (when-let (keyword (org-element-property :todo-keyword it))
                                                                        (substring-no-properties keyword))
