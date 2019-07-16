@@ -393,7 +393,9 @@ empty time values to 23:59:59; otherwise, to 00:00:00."
 
 ;;;;; Predicates
 
-(org-ql--defpredicate clocked (&key from to on)
+(org-ql--defpredicate clocked (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
+  ;; pre-process that argument in a macro before this function is called.
   "Return non-nil if current entry was clocked in given period.
 If no arguments are specified, return non-nil if entry was
 clocked at any time.
@@ -417,11 +419,13 @@ ignored."
                 (test-timestamps (pred-form)
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
-                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
-                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           ;; Using `setf' instead of `for beg =` here prevents "unused lexical variable" warnings.
+                                           do (setf beg (float-time (org-timestamp--to-internal-time next-ts))
+                                                    end (float-time (org-timestamp--to-internal-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
-      (let ((end-pos (org-entry-end-position)))
+      (let ((end-pos (org-entry-end-position))
+            beg end)
         (cond ((not (or from to)) (next-timestamp))
               ((and from to) (test-timestamps (and (<= beg to)
                                                    (>= end from))))
@@ -545,11 +549,14 @@ comparator, PRIORITY should be a priority string."
 
 ;;;;;; Timestamps
 
-;; TODO: Move active/inactive into (ts) predicate, allowing the first arg to be either inactive/active
-;; or the comparator.  Using numeric comparators is more powerful, concise, and language-independent
-;; than using from/to.  Alternatively, add :before/:after, but I think the comparators are better.
+;; TODO: Move active/inactive into (ts) predicate, allowing the first arg to be either
+;; inactive/active or the comparator.  Using numeric comparators is more powerful, concise,
+;; and language-independent than using from/to.  Alternatively, add :before/:after, but I
+;; think the comparators are better.  Also consider using a macro to DRY these out.
 
-(org-ql--defpredicate ts (&key from to on)
+(org-ql--defpredicate ts (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
+  ;; pre-process that argument in a macro before this function is called.
   "Return non-nil if current entry has a timestamp in given period.
 If no arguments are specified, return non-nil if entry has any
 timestamp.
@@ -575,18 +582,21 @@ FROM, TO, and ON should be strings parseable by
                 (test-timestamps (pred-form)
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
-                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
-                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           do (setf beg (float-time (org-timestamp--to-internal-time next-ts))
+                                                    end (float-time (org-timestamp--to-internal-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
-      (let ((end-pos (org-entry-end-position)))
+      (let ((end-pos (org-entry-end-position))
+            beg end)
         (cond ((not (or from to)) (next-timestamp))
               ((and from to) (test-timestamps (and (<= beg to)
                                                    (>= end from))))
               (from (test-timestamps (<= from end)))
               (to (test-timestamps (<= beg to))))))))
 
-(org-ql--defpredicate ts-active (&key from to on)
+(org-ql--defpredicate ts-active (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
+  ;; pre-process that argument in a macro before this function is called.
   "Return non-nil if current entry has an active timestamp in given period.
 If no arguments are specified, return non-nil if entry has any
 active timestamp.
@@ -615,18 +625,21 @@ FROM, TO, and ON should be strings parseable by
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
                                            when (string-prefix-p "<" next-ts)
-                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
-                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           do (setf beg (float-time (org-timestamp--to-internal-time next-ts))
+                                                    end (float-time (org-timestamp--to-internal-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
-      (let ((end-pos (org-entry-end-position)))
+      (let ((end-pos (org-entry-end-position))
+            beg end)
         (cond ((not (or from to)) (next-timestamp))
               ((and from to) (test-timestamps (and (<= beg to)
                                                    (>= end from))))
               (from (test-timestamps (<= from end)))
               (to (test-timestamps (<= beg to))))))))
 
-(org-ql--defpredicate ts-inactive (&key from to on)
+(org-ql--defpredicate ts-inactive (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
+  ;; pre-process that argument in a macro before this function is called.
   "Return non-nil if current entry has an inactive timestamp in given period.
 If no arguments are specified, return non-nil if entry has any
 inactive timestamp.
@@ -655,11 +668,12 @@ FROM, TO, and ON should be strings parseable by
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
                                            when (string-prefix-p "[" next-ts)
-                                           for beg = (float-time (org-timestamp--to-internal-time next-ts))
-                                           for end = (float-time (org-timestamp--to-internal-time next-ts 'end))
+                                           do (setf beg (float-time (org-timestamp--to-internal-time next-ts))
+                                                    end (float-time (org-timestamp--to-internal-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
-      (let ((end-pos (org-entry-end-position)))
+      (let ((end-pos (org-entry-end-position))
+            beg end)
         (cond ((not (or from to)) (next-timestamp))
               ((and from to) (test-timestamps (and (<= beg to)
                                                    (>= end from))))
