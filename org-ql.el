@@ -51,6 +51,11 @@
 
 (defvar org-ql--today nil)
 
+(defvar org-ql-use-preamble t
+  ;; MAYBE: Naming things is hard.  There must be a better term than "preamble."
+  "Use query preambles to speed up searches.
+May be disabled for debugging, benchmarks, etc.")
+
 (defvar org-ql-cache (make-hash-table :weakness 'key)
   ;; IIUC, setting weakness to `key' means that, when a buffer is closed,
   ;; its entries will be removed from this table at the next GC.
@@ -246,11 +251,6 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
 
 (define-hash-table-test 'org-ql-hash-test #'equal (lambda (args)
                                                     (sxhash-equal (prin1-to-string args))))
-
-(defvar org-ql-use-preamble t
-  ;; FIXME: Move or delete this defvar.
-  "Use query preambles to speed up searches.
-May be disabled for debugging, benchmarks, etc.")
 
 (defun org-ql--query-preamble (query)
   "Return (QUERY PREAMBLE) for QUERY.
