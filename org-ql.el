@@ -355,7 +355,7 @@ from within ELEMENT's buffer."
     element))
 
 (defun org-ql--sanity-check-form (form)
-  "Signal an error if any of the forms in BODY do not have their preconditions met.
+  "Signal error if any forms in FORM do not have preconditions met.
 Or, when possible, fix the problem."
   (cl-flet ((check (symbol)
                    (cl-case symbol
@@ -535,7 +535,7 @@ comparator, PRIORITY should be a priority string."
 (org-ql--defpredicate property (property &optional value)
   "Return non-nil if current entry has PROPERTY (a string), and optionally VALUE (a string)."
   (pcase property
-    ('nil (user-error "Property matcher requires a PROPERTY argument."))
+    ('nil (user-error "Property matcher requires a PROPERTY argument"))
     (_ (pcase value
          ('nil
           ;; Check that PROPERTY exists
@@ -860,7 +860,7 @@ A and B are Org headline elements.  TYPE should be a symbol like
                                   (org-element-property type b)))
 
 (defun org-ql--date< (a b)
-  "Return non-nil if A's deadline or scheduled element property is earlier than B's.
+  "Return non-nil if A's deadline or scheduled property is earlier than B's.
 Deadline is considered before scheduled."
   (cl-macrolet ((ts (item)
                     `(or (org-element-property :deadline ,item)

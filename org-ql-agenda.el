@@ -294,7 +294,7 @@ dates in the past, and negative for dates in the future."
 (defun org-ql-agenda--format-element (element)
   ;; This essentially needs to do what `org-agenda-format-item' does,
   ;; which is a lot.  We are a long way from that, but it's a start.
-  "Return ELEMENT as a string with its text-properties set according to its property list.
+  "Return ELEMENT as a string with text-properties set by its property list.
 Its property list should be the second item in the list, as returned by `org-element-parse-buffer'."
   (let* ((properties (cadr element))
          ;; Remove the :parent property, which so bloats the size of
@@ -364,6 +364,7 @@ Its property list should be the second item in the list, as returned by `org-ele
            'org-habit-p habit-property))))
 
 (defun org-ql-agenda--add-faces (element)
+  "Return ELEMENT with deadline and scheduled faces added."
   (->> element
        (org-ql-agenda--add-scheduled-face)
        (org-ql-agenda--add-deadline-face)))
@@ -465,6 +466,7 @@ property."
     element))
 
 (defun org-ql-agenda--add-todo-face (keyword)
+  "Return KEYWORD with TODO face added."
   (when-let ((face (org-get-todo-face keyword)))
     (org-add-props keyword nil 'face face)))
 
