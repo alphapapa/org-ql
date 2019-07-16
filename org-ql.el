@@ -209,7 +209,7 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
                      (--map (with-current-buffer it
                               (unless (derived-mode-p 'org-mode)
                                 (user-error "Not an Org buffer: %s" (buffer-name)))
-                              (org-ql--select-cached :predicate predicate :action action :narrow narrow)))
+                              (org-ql--select-cached :query query :predicate predicate :action action :narrow narrow)))
                      ;; Flatten items
                      (-flatten-n 1))))
     ;; Sort items
@@ -230,27 +230,29 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
   "Return results for ARGS and current buffer using cache."
   ;; MAYBE: Timeout cached queries.  Probably not necessarily since they will be removed when a
   ;; buffer is closed, or when a query is run after modifying a buffer.
-  (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
-            (query-cache (cadr buffer-cache))
-            (modified-tick (car buffer-cache))
-            (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
-            (cached-result (gethash args query-cache)))
-      (pcase cached-result
-        ('org-ql-nil nil)
-        (_ cached-result))
-    (let ((new-result (apply #'org-ql--select args)))
-      (cond ((or (not query-cache)
-                 (not buffer-unmodified-p))
-             (puthash (current-buffer)
-                      (list (buffer-modified-tick)
-                            (let ((table (make-hash-table :test 'org-ql-hash-test)))
-                              (puthash args (or new-result 'org-ql-nil) table)
-                              table))
-                      org-ql-cache))
-            (t (puthash args (or new-result 'org-ql-nil) query-cache)))
-      new-result)))
+  (-let (((&plist :query query :action action :narrow narrow) args))
+    (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
+              (query-cache (cadr buffer-cache))
+              (modified-tick (car buffer-cache))
+              (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+              (cache-key (list query action narrow))
+              (cached-result (gethash cache-key query-cache)))
+        (pcase cached-result
+          ('org-ql-nil nil)
+          (_ cached-result))
+      (let ((new-result (apply #'org-ql--select args)))
+        (cond ((or (not query-cache)
+                   (not buffer-unmodified-p))
+               (puthash (current-buffer)
+                        (list (buffer-modified-tick)
+                              (let ((table (make-hash-table :test 'org-ql-hash-test)))
+                                (puthash args (or new-result 'org-ql-nil) table)
+                                table))
+                        org-ql-cache))
+              (t (puthash args (or new-result 'org-ql-nil) query-cache)))
+        new-result))))
 
-(cl-defun org-ql--select (&key predicate action narrow)
+(cl-defun org-ql--select (&key predicate action narrow &allow-other-keys)
   "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
 If NARROW is non-nil, buffer will not be widened."
   ;; Since the mappings are stored in the variable `org-ql-predicates', macros like `flet'
