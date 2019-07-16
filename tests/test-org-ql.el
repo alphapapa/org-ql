@@ -34,13 +34,26 @@
 (defun org-ql-test-insert-result ()
   "FIXME: docstring"
   (interactive)
-  (let* ((value (eval (elisp--preceding-sexp)))
-         (prefix (if (and value (listp value))
-                     "'"
-                   "")))
-    (insert " :to-equal "
-            prefix
-            (format "%S" value))))
+  (if-let* ((sexp (elisp--preceding-sexp))
+            (correct-sexp-p (eq (car sexp) 'org-ql))
+            (value (eval sexp))
+            (prefix (if (and value (listp value))
+                        "'"
+                      "")))
+      (insert " :to-equal "
+              prefix
+              (format "%S" value))
+    (user-error "Point must be after an `org-ql' form")))
+
+(defun org-ql-test-show-result ()
+  "Show `org-ql-agenda' for `org-ql' form."
+  (interactive)
+  (if-let* ((sexp (elisp--preceding-sexp))
+            (correct-sexp-p (eq (car sexp) 'org-ql)))
+      (progn
+        (setf (car sexp) 'org-ql-agenda)
+        (eval sexp))
+    (user-error "Point must be after an `org-ql' form")))
 
 ;;;; Tests
 
