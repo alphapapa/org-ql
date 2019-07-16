@@ -2,32 +2,27 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/org-ql
-;; Version: 0.1-pre
-;; Package-Requires: ((emacs "25.1") (dash "2.13") (org "9.0"))
-;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
 
-;; This library displays buffers similar to Org Agenda buffers, based
+;; This library is part of the package `org-ql'; it's not a standalone
+;; library.  It displays buffers similar to Org Agenda buffers, based
 ;; on `org-ql' queries.
 
-;;;; Principles
+;;; License:
 
-;;;;; Try to imitate traditional Org agenda code's results and methods
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; The traditional agenda code is complicated, but well-optimized.  We should imitate it where
-;; possible.  We should also attempt to return the same results as the traditional agenda code
-;; (ultimately, that is; but whether we reach that level of complexity depends on, e.g. performance
-;; achieved, whether it looks like a feasible alternative, etc).  At the least, we should return
-;; results in the same format, so they can be used by other code that uses agenda output
-;; (e.g. org-agenda-finalize-entries, org-agenda-finalize, org-super-agenda, etc).  Of course, this
-;; goal does not necessarily apply to the "query language"-like features, and ideally the
-;; agenda-like features should build upon those.
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
-;;;;; Preserve the call to =org-agenda-finalize-entries=
-
-;; We want to preserve the final call to org-agenda-finalize-entries to preserve compatibility
-;; with other packages and functions.
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
