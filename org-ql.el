@@ -100,15 +100,6 @@ buffer.  In this case, ACTION should return an Org element."
      :narrow ,narrow
      :sort ',sort))
 
-(defmacro org-ql--flet (fns &rest body)
-  ;; FIXME: Docstring.
-  ;; MAYBE: Use `noflet'.
-  (declare (indent defun) (debug (listp body)))
-  `(cl-letf ,(cl-loop for (fn target) in fns
-                      collect `((symbol-function ',fn)
-                                (symbol-function ,target)))
-     ,@body))
-
 ;;;; Functions
 
 (cl-defun org-ql-query (buffers-or-files query &key action narrow sort)
