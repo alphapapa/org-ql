@@ -129,6 +129,9 @@ buffer.  In this case, ACTION should return an Org element."
 
 ;;;; Functions
 
+(define-hash-table-test 'org-ql-hash-test #'equal (lambda (args)
+                                                    (sxhash-equal (prin1-to-string args))))
+
 (cl-defun org-ql-query (buffers-or-files query &key action narrow sort)
   "Return items matching QUERY in BUFFERS-OR-FILES.
 
@@ -248,9 +251,6 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
        ;; Default sorting functions
        (org-ql--sort-by items sort))
       (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
-
-(define-hash-table-test 'org-ql-hash-test #'equal (lambda (args)
-                                                    (sxhash-equal (prin1-to-string args))))
 
 (defun org-ql--query-preamble (query)
   "Return (QUERY PREAMBLE) for QUERY.
