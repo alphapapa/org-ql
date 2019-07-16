@@ -280,6 +280,25 @@
                   :sort todo
                   :action (org-ql-test-org-get-heading)) :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut"))))
 
+    (describe "(todo)"
+      (it "without arguments"
+        ;; FIXME: This returns an item that is done, which is incorrect.
+        (expect (org-ql test-buffer
+                  (todo)
+                  :sort todo
+                  :action (org-ql-test-org-get-heading)) :to-equal '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+      (it "with 1 argument"
+        ;; FIXME: Figure out why this takes >10x longer than the other (todo) tests, according to Buttercup.
+        (expect (org-ql test-buffer
+                  (todo "WAITING")
+                  :sort todo
+                  :action (org-ql-test-org-get-heading)) :to-equal '("Visit the moon")))
+      (it "with 2 arguments"
+        (expect (org-ql test-buffer
+                  (todo "WAITING" "SOMEDAY")
+                  :sort todo
+                  :action (org-ql-test-org-get-heading)) :to-equal '("Visit the moon" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
+
     (describe "(ts)"
       (it "without arguments"
         (expect (org-ql test-buffer
