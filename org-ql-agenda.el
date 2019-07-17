@@ -275,6 +275,7 @@ default buffer."
     (current-buffer)))
 
 (defun org-ql-agenda--format-relative-date (difference)
+  ;; MAYBE: Make this a `defsubst'.
   "Return relative date string for DIFFERENCE.
 DIFFERENCE should be an integer number of days, positive for
 dates in the past, and negative for dates in the future."
