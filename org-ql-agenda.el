@@ -50,7 +50,7 @@
 
 ;;;; Variables
 
-(defvar org-ql-agenda-buffer-name "*Org Agenda NG*"
+(defvar org-ql-agenda-buffer-name "*Org-QL-Agenda*"
   "Name of default `org-ql-agenda' buffer.")
 
 ;; For refreshing results buffers.
