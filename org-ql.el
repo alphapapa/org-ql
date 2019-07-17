@@ -108,7 +108,7 @@ one or more sorting methods, including: `date', `deadline',
 If NARROW is non-nil, query will run without widening the
 buffer (the default is to widen and search the entire buffer).
 
-If MARKERS is non-nil, `org-agenda-ng--add-markers' is used to
+If MARKERS is non-nil, `org-ql--add-markers' is used to
 add markers to each item, pointing to the item in its source
 buffer.  In this case, ACTION should return an Org element."
   (declare (indent defun))
