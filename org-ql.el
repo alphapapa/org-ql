@@ -1,7 +1,7 @@
 ;;; org-ql.el --- Query language for Org buffers  -*- lexical-binding: t; -*-
 
 ;; Author: Adam Porter <adam@alphapapa.net>
-;; Url: http://github.com/alphapapa/org-ql
+;; Url: https://github.com/alphapapa/org-ql
 ;; Version: 0.2-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (s "1.12.0"))
 ;; Keywords: hypermedia, outlines, Org, agenda
@@ -27,7 +27,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 

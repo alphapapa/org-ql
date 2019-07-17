@@ -1,7 +1,7 @@
 ;;; org-ql-agenda.el --- Agenda-like view based on org-ql  -*- lexical-binding: t; -*-
 
 ;; Author: Adam Porter <adam@alphapapa.net>
-;; Url: http://github.com/alphapapa/org-ql
+;; Url: https://github.com/alphapapa/org-ql
 
 ;;; Commentary:
 
@@ -22,7 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
