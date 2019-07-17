@@ -206,13 +206,14 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
   (declare (indent defun))
   (when (and super-groups (not org-super-agenda-mode))
     (user-error "`org-super-agenda-mode' must be activated to use grouping"))
-  ;; I think it's reasonable to use `eval' here.
   (let* ((org-super-agenda-groups super-groups)
-         (entries (--> (eval `(org-ql ',buffers-files
-                                ,query
-                                :sort ,sort
-                                :markers t
-                                :narrow ,narrow))
+         (entries (--> (org-ql-query buffers-files
+                         query
+                         :sort sort
+                         :narrow narrow
+                         :action (lambda ()
+                                   (->> (org-element-headline-parser (line-end-position))
+                                        org-ql--add-markers)))
                        (mapcar #'org-ql-agenda--format-element it)
                        (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
                              (t it))
