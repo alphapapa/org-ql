@@ -43,7 +43,7 @@
 (defvar org-super-agenda-auto-selector-keywords)
 (defvar org-super-agenda-groups)
 (defvar org-super-agenda-mode)
-(declare-function org-super-agenda--group-items "org-super-agenda")
+(declare-function org-super-agenda--group-items "ext:org-super-agenda")
 
 (when (version< org-version "9.2")
   (defalias 'org-get-tags 'org-get-tags-at))
