@@ -740,7 +740,8 @@ like one returned by `date-to-day'."
                      (org-time-string-to-absolute
                       (org-element-timestamp-interpreter date-element 'ignore))
                      target-day-number))
-           (_ (error "Unknown date-element type: %s" (org-element-property :type date-element))))))
+           (_ (error "Unknown date-element type \"%s\" in buffer %s at position %s"
+                     (org-element-property :type date-element) (current-buffer) (point))))))
       (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
                      comparator target-date)))))
 
