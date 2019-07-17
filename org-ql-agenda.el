@@ -314,8 +314,7 @@ Its property list should be the second item in the list, as returned by `org-ele
          ;; (which would also make it easier to do it independently of faces, etc).
          (title (--> (org-ql-agenda--add-faces element)
                      (org-element-property :raw-value it)
-                     (org-link-display-format it)
-                     ))
+                     (org-link-display-format it)))
          (todo-keyword (-some--> (org-element-property :todo-keyword element)
                                  (org-ql-agenda--add-todo-face it)))
          ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
