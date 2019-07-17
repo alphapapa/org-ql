@@ -44,8 +44,8 @@
 ;;;; Compatibility
 
 (when (version< org-version "9.2")
-  (defalias 'org-get-tags 'org-get-tags-at)
-  (defalias 'org-timestamp-to-time 'org-timestamp--to-internal-time))
+  (defalias 'org-get-tags #'org-get-tags-at)
+  (defalias 'org-timestamp-to-time #'org-timestamp--to-internal-time))
 
 ;;;; Variables
 

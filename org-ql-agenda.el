@@ -46,7 +46,7 @@
 (declare-function org-super-agenda--group-items "ext:org-super-agenda")
 
 (when (version< org-version "9.2")
-  (defalias 'org-get-tags 'org-get-tags-at))
+  (defalias 'org-get-tags #'org-get-tags-at))
 
 ;;;; Variables
 
