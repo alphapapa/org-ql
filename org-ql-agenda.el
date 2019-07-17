@@ -154,7 +154,7 @@ searching. Interactively, with prefix, leave narrowed.
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority'."
   (declare (indent defun))
-  (interactive (list (pcase-exhaustive (completing-read "Buffers/Files:"
+  (interactive (list (pcase-exhaustive (completing-read "Buffers/Files: "
                                                         (list 'buffer 'agenda 'all))
                        ("agenda" (org-agenda-files))
                        ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
