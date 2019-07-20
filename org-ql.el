@@ -443,8 +443,8 @@ ignored."
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
                                            ;; Using `setf' instead of `for beg =` here prevents "unused lexical variable" warnings.
-                                           do (setf beg (float-time (org-timestamp--to-internal-time next-ts))
-                                                    end (float-time (org-timestamp--to-internal-time next-ts 'end)))
+                                           do (setf beg (float-time (org-timestamp-to-time next-ts))
+                                                    end (float-time (org-timestamp-to-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
       (let ((end-pos (org-entry-end-position))
@@ -605,8 +605,8 @@ FROM, TO, and ON should be strings parseable by
                 (test-timestamps (pred-form)
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
-                                           do (setf beg (float-time (org-timestamp--to-internal-time next-ts))
-                                                    end (float-time (org-timestamp--to-internal-time next-ts 'end)))
+                                           do (setf beg (float-time (org-timestamp-to-time next-ts))
+                                                    end (float-time (org-timestamp-to-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
       (let ((end-pos (org-entry-end-position))
@@ -648,8 +648,8 @@ FROM, TO, and ON should be strings parseable by
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
                                            when (string-prefix-p "<" next-ts)
-                                           do (setf beg (float-time (org-timestamp--to-internal-time next-ts))
-                                                    end (float-time (org-timestamp--to-internal-time next-ts 'end)))
+                                           do (setf beg (float-time (org-timestamp-to-time next-ts))
+                                                    end (float-time (org-timestamp-to-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
       (let ((end-pos (org-entry-end-position))
@@ -691,8 +691,8 @@ FROM, TO, and ON should be strings parseable by
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
                                            when (string-prefix-p "[" next-ts)
-                                           do (setf beg (float-time (org-timestamp--to-internal-time next-ts))
-                                                    end (float-time (org-timestamp--to-internal-time next-ts 'end)))
+                                           do (setf beg (float-time (org-timestamp-to-time next-ts))
+                                                    end (float-time (org-timestamp-to-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
       (let ((end-pos (org-entry-end-position))
