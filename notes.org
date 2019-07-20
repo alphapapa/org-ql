@@ -410,6 +410,32 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 
 * Profiling
 
+** Preambles
+
+#+BEGIN_SRC elisp :results silent
+  (cl-defmacro org-ql-preamble-bench (&key query (file "tests/data.org") (times 10))
+    `(bench-multi-lets :times ,times :ensure-equal t
+       :lets (("preamble" ((org-ql-use-preamble t)))
+              ("no preamble" ((org-ql-use-preamble nil))))
+       :forms ((,(prin1-to-string query) (org-ql-query ,file
+                                           ',query
+                                           :action (lambda () (org-get-heading t t)))))))
+#+END_SRC
+
+*** =level=
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (level 1))
+#+END_SRC
+
+#+RESULTS:
+| Form                   | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|------------------------+--------------------+---------------+----------+------------------|
+| preamble: (level 1)    | 1.34               |      0.562950 |        0 |                0 |
+| no preamble: (level 1) | slowest            |      0.754050 |        0 |                0 |
+
 ** Using =org-element-parse-buffer=
 
 This basically works, as a very basic kind of agenda view, but we can already see that it's much slower (at least, for single-day views) because =org-element-parse-buffer= is slow compared to the agenda code.

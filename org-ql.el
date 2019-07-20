@@ -282,6 +282,10 @@ replace the clause with a preamble."
                                   (setq org-ql-preamble regexp)
                                   ;; Return nil
                                   nil))
+                               (`(level ,num)
+                                (let* ((regexp (rx-to-string `(seq bol (repeat ,num "*") " "))))
+                                  (setq org-ql-preamble regexp)
+                                  nil))
                                (`(and . ,rest)
                                 (let ((clauses (mapcar #'rec rest)))
                                   `(and ,@(-non-nil clauses))))
