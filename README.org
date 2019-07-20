@@ -1,5 +1,11 @@
 #+TITLE: org-ql
 
+#+BEGIN_HTML
+<a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
+#+END_HTML
+
+[[https://melpa.org/#/org-ql][file:https://melpa.org/packages/org-ql-badge.svg]] [[https://stable.melpa.org/#/org-ql][file:https://stable.melpa.org/packages/org-ql-badge.svg]]
+
 ~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and return a list of them or perform actions on them.  Commands are also provided which display a buffer with matching results, similar to an Org Agenda buffer.
 
 * Contents
