@@ -164,64 +164,7 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
                      (_                 ; Buffer or string
                       (list buffers-or-files))))
           ((query preamble-re) (org-ql--query-preamble query))
-          (predicate (byte-compile `(lambda ()
-                                      ;; This is either really elegant or really ugly.  Well, also
-                                      ;; possibly somewhere in-between.  At the least, we should do
-                                      ;; this in a more flexible, abstracted way, but this will do
-                                      ;; for now.  Most importantly, it works!
-                                      (let (from to on)
-                                        ;; TODO: DRY these macrolets.
-                                        (cl-macrolet ((clocked (&key from to on)
-                                                               (when on
-                                                                 (setq from on
-                                                                       to on))
-                                                               (when from
-                                                                 (setq from (org-ql--parse-time-string from)))
-                                                               (when to
-                                                                 (setq to (org-ql--parse-time-string to 'end)))
-                                                               ;; NOTE: The macro must expand to the actual `org-ql--predicate-clocked'
-                                                               ;; function, not another `clocked'.
-                                                               `(org-ql--predicate-clocked :from ,from :to ,to))
-                                                      (ts (&key from to on)
-                                                          (when on
-                                                            (setq from on
-                                                                  to on))
-                                                          (when from
-                                                            (setq from (org-ql--parse-time-string from)))
-                                                          (when to
-                                                            (setq to (org-ql--parse-time-string to 'end)))
-                                                          ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
-                                                          ;; function, not another `ts'.
-                                                          `(org-ql--predicate-ts :from ,from :to ,to))
-                                                      (ts-active (&key from to on)
-                                                                 (when on
-                                                                   (setq from on
-                                                                         to on))
-                                                                 (when from
-                                                                   (setq from (org-ql--parse-time-string from)))
-                                                                 (when to
-                                                                   (setq to (org-ql--parse-time-string to 'end)))
-                                                                 ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
-                                                                 ;; function, not another `ts'.
-                                                                 `(org-ql--predicate-ts-active :from ,from :to ,to))
-                                                      (ts-inactive (&key from to on)
-                                                                   (when on
-                                                                     (setq from on
-                                                                           to on))
-                                                                   (when from
-                                                                     (setq from (org-ql--parse-time-string from)))
-                                                                   (when to
-                                                                     (setq to (org-ql--parse-time-string to 'end)))
-                                                                   ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
-                                                                   ;; function, not another `ts'.
-                                                                   `(org-ql--predicate-ts-inactive :from ,from :to ,to)))
-                                          (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
-                                                               (= #'=)
-                                                               (< #'<)
-                                                               (> #'>)
-                                                               (<= #'<=)
-                                                               (>= #'>=))
-                                            ,query))))))
+          (predicate (org-ql--query-predicate query))
           ;; FIXME: Don't try to byte-compile already-compiled functions.
           (action (byte-compile action))
           ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
@@ -256,6 +199,67 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
        ;; Default sorting functions
        (org-ql--sort-by items sort))
       (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
+
+(defun org-ql--query-predicate (query)
+  "Return predicate function for QUERY."
+  (byte-compile `(lambda ()
+                   ;; This is either really elegant or really ugly.  Well, also
+                   ;; possibly somewhere in-between.  At the least, we should do
+                   ;; this in a more flexible, abstracted way, but this will do
+                   ;; for now.  Most importantly, it works!
+                   (let (from to on)
+                     ;; TODO: DRY these macrolets.
+                     (cl-macrolet ((clocked (&key from to on)
+                                            (when on
+                                              (setq from on
+                                                    to on))
+                                            (when from
+                                              (setq from (org-ql--parse-time-string from)))
+                                            (when to
+                                              (setq to (org-ql--parse-time-string to 'end)))
+                                            ;; NOTE: The macro must expand to the actual `org-ql--predicate-clocked'
+                                            ;; function, not another `clocked'.
+                                            `(org-ql--predicate-clocked :from ,from :to ,to))
+                                   (ts (&key from to on)
+                                       (when on
+                                         (setq from on
+                                               to on))
+                                       (when from
+                                         (setq from (org-ql--parse-time-string from)))
+                                       (when to
+                                         (setq to (org-ql--parse-time-string to 'end)))
+                                       ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
+                                       ;; function, not another `ts'.
+                                       `(org-ql--predicate-ts :from ,from :to ,to))
+                                   (ts-active (&key from to on)
+                                              (when on
+                                                (setq from on
+                                                      to on))
+                                              (when from
+                                                (setq from (org-ql--parse-time-string from)))
+                                              (when to
+                                                (setq to (org-ql--parse-time-string to 'end)))
+                                              ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
+                                              ;; function, not another `ts'.
+                                              `(org-ql--predicate-ts-active :from ,from :to ,to))
+                                   (ts-inactive (&key from to on)
+                                                (when on
+                                                  (setq from on
+                                                        to on))
+                                                (when from
+                                                  (setq from (org-ql--parse-time-string from)))
+                                                (when to
+                                                  (setq to (org-ql--parse-time-string to 'end)))
+                                                ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
+                                                ;; function, not another `ts'.
+                                                `(org-ql--predicate-ts-inactive :from ,from :to ,to)))
+                       (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
+                                            (= #'=)
+                                            (< #'<)
+                                            (> #'>)
+                                            (<= #'<=)
+                                            (>= #'>=))
+                         ,query))))))
 
 (defun org-ql--query-preamble (query)
   "Return (QUERY PREAMBLE) for QUERY.
