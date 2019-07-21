@@ -158,11 +158,18 @@ SORT is either nil, in which case items are not sorted; or one or
 a list of defined `org-ql' sorting methods: `date', `deadline',
 `scheduled', `todo', and `priority'."
   (declare (indent defun))
-  (-let* ((sources (pcase buffers-or-files
-                     (`nil (list (current-buffer)))
-                     ((pred listp) buffers-or-files)
-                     (_                 ; Buffer or string
-                      (list buffers-or-files))))
+  (-let* ((buffers (->> (cl-typecase buffers-or-files
+                          (null (list (current-buffer)))
+                          (list buffers-or-files)
+                          (otherwise (list buffers-or-files)))
+                        (--map (cl-etypecase it
+                                 (buffer it)
+                                 (string (or (find-buffer-visiting it)
+                                             (when (file-readable-p it)
+                                               ;; It feels unintuitive that `find-file-noselect' returns
+                                               ;; a buffer if the filename doesn't exist.
+                                               (find-file-noselect it))
+                                             (user-error "Can't open file: %s" it)))))))
           ((query preamble-re) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
           ;; FIXME: Don't try to byte-compile already-compiled functions.
@@ -171,23 +178,12 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
           ;; (org-use-tag-inheritance t)
           ;; (org-trust-scanner-tags t)
           (org-ql--today (org-today))
-          (items (->> sources
-                      ;; List buffers
-                      (--map (cl-etypecase it
-                               (buffer it)
-                               (string (or (find-buffer-visiting it)
-                                           (when (file-readable-p it)
-                                             ;; It feels unintuitive that `find-file-noselect' returns
-                                             ;; a buffer if the filename doesn't exist.
-                                             (find-file-noselect it))
-                                           (user-error "Can't open file: %s" it)))))
-                      ;; Filter buffers (i.e. select items)
+          (items (->> buffers
                       (--map (with-current-buffer it
                                (unless (derived-mode-p 'org-mode)
                                  (user-error "Not an Org buffer: %s" (buffer-name)))
                                (org-ql--select-cached :query query :preamble-re preamble-re
                                                       :predicate predicate :action action :narrow narrow)))
-                      ;; Flatten items
                       (-flatten-n 1))))
     ;; Sort items
     (pcase sort
