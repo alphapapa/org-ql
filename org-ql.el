@@ -222,6 +222,7 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
                                                                (<= #'<=)
                                                                (>= #'>=))
                                             ,query))))))
+          ;; FIXME: Don't try to byte-compile already-compiled functions.
           (action (byte-compile action))
           ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
           ;; (org-use-tag-inheritance t)
