@@ -95,6 +95,9 @@ match."
                                       (action '(org-element-headline-parser (line-end-position))))
   "Find entries in BUFFERS-OR-FILES that match QUERY, and return the results of running ACTION-FN on each matching entry.
 
+Unlike the corresponding function `org-ql-query', arguments to
+this macro should not be quoted.
+
 BUFFERS-OR-FILES is a form which should evaluate to one (or a
 list of) file(s) or buffer(s).
 
