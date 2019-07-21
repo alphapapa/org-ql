@@ -261,44 +261,44 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
 When QUERY has a clause with a corresponding preamble, and it's
 appropriate to use one (i.e. the clause is not in an `or'),
 replace the clause with a preamble."
-  (if org-ql-use-preamble
-      (let (org-ql-preamble)
-        (cl-labels ((rec (element)
-                         (or (when org-ql-preamble
-                               ;; Only one preamble is allowed
-                               element)
-                             (pcase element
-                               (`(or _) element)
-                               (`(regexp . ,regexps)
-                                (let* ((regexp (rx-to-string `(or ,@regexps))))
-                                  (setq org-ql-preamble regexp)
-                                  ;; Return nil
-                                  nil))
-                               (`(todo . ,(and todo-keywords (guard todo-keywords)))
-                                (let* ((regexps (--map (list 'regexp
-                                                             (format org-heading-keyword-regexp-format it))
-                                                       todo-keywords))
-                                       (regexp (rx-to-string `(or ,@regexps))))
-                                  (setq org-ql-preamble regexp)
-                                  ;; Return nil
-                                  nil))
-                               (`(level ,num)
-                                (let* ((regexp (rx-to-string `(seq bol (repeat ,num "*") " "))))
-                                  (setq org-ql-preamble regexp)
-                                  nil))
-                               (`(and . ,rest)
-                                (let ((clauses (mapcar #'rec rest)))
-                                  `(and ,@(-non-nil clauses))))
-                               (_ element)))))
-          (setq query (pcase (mapcar #'rec (list query))
-                        ((or `(nil)
-                             `((nil))
-                             `((and))
-                             `((or)))
-                         t)
-                        (query (-flatten-n 1 query))))
-          (list query org-ql-preamble)))
-    (list query nil)))
+  (pcase org-ql-use-preamble
+    ('nil (list query nil))
+    (_ (let (org-ql-preamble)
+         (cl-labels ((rec (element)
+                          (or (when org-ql-preamble
+                                ;; Only one preamble is allowed
+                                element)
+                              (pcase element
+                                (`(or _) element)
+                                (`(regexp . ,regexps)
+                                 (let* ((regexp (rx-to-string `(or ,@regexps))))
+                                   (setq org-ql-preamble regexp)
+                                   ;; Return nil
+                                   nil))
+                                (`(todo . ,(and todo-keywords (guard todo-keywords)))
+                                 (let* ((regexps (--map (list 'regexp
+                                                              (format org-heading-keyword-regexp-format it))
+                                                        todo-keywords))
+                                        (regexp (rx-to-string `(or ,@regexps))))
+                                   (setq org-ql-preamble regexp)
+                                   ;; Return nil
+                                   nil))
+                                (`(level ,num)
+                                 (let* ((regexp (rx-to-string `(seq bol (repeat ,num "*") " "))))
+                                   (setq org-ql-preamble regexp)
+                                   nil))
+                                (`(and . ,rest)
+                                 (let ((clauses (mapcar #'rec rest)))
+                                   `(and ,@(-non-nil clauses))))
+                                (_ element)))))
+           (setq query (pcase (mapcar #'rec (list query))
+                         ((or `(nil)
+                              `((nil))
+                              `((and))
+                              `((or)))
+                          t)
+                         (query (-flatten-n 1 query))))
+           (list query org-ql-preamble))))))
 
 (defun org-ql--select-cached (&rest args)
   "Return results for ARGS and current buffer using cache."
