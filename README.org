@@ -210,7 +210,7 @@ Return items matching ~QUERY~ in ~BUFFERS-OR-FILES~.
 
 If ~NARROW~ is non-nil, buffers are not widened.
 
-~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
+~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods (~date~, ~deadline~, ~scheduled~, ~todo~, or ~priority~); or a user-defined comparator function that accepts two items as arguments and returns nil or non-nil.
 
 **** Macro: ~org-ql~
 
@@ -243,6 +243,7 @@ If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to 
 
 *Changed*
 +  ~(regexp)~ selector accepts multiple regexps to test.
++  The ~:sort~ argument to ~org-ql~, ~org-ql-query~, etc. now also accepts a comparator function by which to sort items.
 
 *Fixed*
 +  Handle date ranges in date-based selectors.  (Thanks to [[https://github.com/codygman][Cody Goodman]], [[https://github.com/swflint][Samuel W. Flint]], and [[https://github.com/vikasrawal][Vikas Rawal]].)

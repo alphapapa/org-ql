@@ -108,9 +108,11 @@ with point at the beginning of its heading.  It is passed to
 `org-ql-query' as a lambda.  By default, `org-element-headline-parser'
  is called to return an Org element.
 
-SORT is a user defined sorting function, or an unquoted list of
-one or more sorting methods, including: `date', `deadline',
-`scheduled', `todo', and `priority'.
+SORT is either nil, in which case items are not sorted; or one or
+a list of predefined `org-ql' sorting methods (`date', `deadline',
+`scheduled', `todo', or `priority'; or a user-defined comparator
+function that accepts two items as arguments and returns nil or
+non-nil.
 
 If NARROW is non-nil, query will run without widening the
 buffer (the default is to widen and search the entire buffer).
@@ -158,8 +160,10 @@ compatible with Org Agenda code.
 If NARROW is non-nil, buffers are not widened.
 
 SORT is either nil, in which case items are not sorted; or one or
-a list of defined `org-ql' sorting methods: `date', `deadline',
-`scheduled', `todo', and `priority'."
+a list of defined `org-ql' sorting methods (`date', `deadline',
+`scheduled', `todo', or `priority'); or a user-defined comparator
+function that accepts two items as arguments and returns nil or
+non-nil."
   (declare (indent defun))
   (-let* ((buffers (->> (cl-typecase buffers-or-files
                           (null (list (current-buffer)))
@@ -197,6 +201,8 @@ a list of defined `org-ql' sorting methods: `date', `deadline',
                             always (memq elem '(date deadline scheduled todo priority)))))
        ;; Default sorting functions
        (org-ql--sort-by items sort))
+      ;; Sort by user-given comparator.
+      ((pred functionp) (sort items sort))
       (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
 
 (defun org-ql--query-predicate (query)
