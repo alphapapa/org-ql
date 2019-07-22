@@ -293,6 +293,7 @@ replace the clause with a preamble."
                                    (setq org-ql-preamble regexp)
                                    ;; Return nil
                                    nil))
+                                ;; FIXME: Need to handle e.g. (level <= 2)
                                 (`(level ,num)
                                  (let* ((regexp (rx-to-string `(seq bol (repeat ,num "*") " "))))
                                    (setq org-ql-preamble regexp)
