@@ -288,13 +288,11 @@ replace the clause with a preamble."
                                 (`(todo . ,(and todo-keywords (guard todo-keywords)))
                                  ;; FIXME: With case-folding, a query like (todo "WAITING")
                                  ;; can find a non-todo heading named "Waiting".
-                                 (let* ((regexps (--map (list 'regexp
-                                                              (format org-heading-keyword-regexp-format it))
-                                                        todo-keywords))
-                                        (regexp (rx-to-string `(or ,@regexps) t)))
-                                   (setq org-ql-preamble regexp)
-                                   ;; Return nil
-                                   nil))
+                                 (setq org-ql-preamble
+                                       (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol))
+                                                     t))
+                                 ;; Return nil
+                                 nil)
                                 (`(level ,comparator-or-num ,num)
                                  (let ((repeat (pcase comparator-or-num
                                                  ('< `(repeat 1 ,(1- num) "*"))
