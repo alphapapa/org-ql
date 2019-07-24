@@ -179,8 +179,13 @@ non-nil."
                                              (user-error "Can't open file: %s" it)))))))
           ((query preamble-re) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
-          ;; FIXME: Don't try to byte-compile already-compiled functions.
-          (action (byte-compile action))
+          (action (cl-etypecase action
+                    (symbol (unless (functionp action)
+                              (user-error "Action not a function: %s" action))
+                            action)
+                    (function (byte-compile action))
+                    (list (byte-compile `(lambda (&rest _ignore)
+                                           ,action)))))
           ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
           ;; (org-use-tag-inheritance t)
           ;; (org-trust-scanner-tags t)
