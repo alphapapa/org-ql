@@ -91,48 +91,13 @@ match."
        (push (list :name ',pred-name :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates)
        (cl-defun ,fn-name ,args ,docstring ,@body))))
 
-(cl-defmacro org-ql (buffers-or-files query &key sort narrow markers
-                                      (action '(org-element-headline-parser (line-end-position))))
-  "Find entries in BUFFERS-OR-FILES that match QUERY, and return the results of running ACTION-FN on each matching entry.
-
-Unlike the corresponding function `org-ql-query', arguments to
-this macro should not be quoted.
-
-BUFFERS-OR-FILES is a form which should evaluate to one (or a
-list of) file(s) or buffer(s).
-
-QUERY is an `org-ql' query sexp, unquoted.
-
-ACTION is a sexp which will be evaluated at each matching entry
-with point at the beginning of its heading.  It is passed to
-`org-ql-query' as a lambda.  By default, `org-element-headline-parser'
- is called to return an Org element.
-
-SORT is either nil, in which case items are not sorted; or one or
-a list of predefined `org-ql' sorting methods (`date', `deadline',
-`scheduled', `todo', or `priority'; or a user-defined comparator
-function that accepts two items as arguments and returns nil or
-non-nil.
-
-If NARROW is non-nil, query will run without widening the
-buffer (the default is to widen and search the entire buffer).
-
-If MARKERS is non-nil, `org-ql--add-markers' is used to
-add markers to each item, pointing to the item in its source
-buffer.  In this case, ACTION should return an Org element."
+(cl-defmacro org-ql (buffers-or-files query &key sort narrow action)
+  "Expands into a call to `org-ql-select' with the same arguments.
+For convenience, arguments should be unquoted."
   (declare (indent defun))
-  (setq action (pcase markers
-                 ('nil `(lambda ()
-                          ,action))
-                 (_ `(lambda ()
-                       ;; FIXME: Document that, when markers is t, `action' should return an Org
-                       ;; headline element, which --add-markers works with.  On the other hand,
-                       ;; maybe this should be on the agenda-ng side.
-                       (->> ,action
-                            org-ql--add-markers)))))
-  `(org-ql-query ,buffers-or-files
+  `(org-ql-select ,buffers-or-files
      ',query
-     :action ,action
+     :action ',action
      :narrow ,narrow
      :sort ',sort))
 
@@ -141,23 +106,31 @@ buffer.  In this case, ACTION should return an Org element."
 (define-hash-table-test 'org-ql-hash-test #'equal (lambda (args)
                                                     (sxhash-equal (prin1-to-string args))))
 
-(cl-defun org-ql-query (buffers-or-files query &key action narrow sort)
+(cl-defun org-ql-select (buffers-or-files query &key action narrow sort)
   "Return items matching QUERY in BUFFERS-OR-FILES.
 
-BUFFERS-OR-FILES is a one (or a list of) file(s) or buffer(s).
+BUFFERS-OR-FILES is a one or a list of files and/or buffers.
 
 QUERY is an `org-ql' query sexp (quoted, since this is a
 function).
 
-ACTION is a function which is called on each matching entry, with
-point at the beginning of its heading.  For example,
-`org-element-headline-parser' may be used to parse an entry into
-an Org element (note that it must be called with a limit
-argument, so a lambda must be used to do so).  Also see
-`org-ql--add-markers', which may be used to add markers
-compatible with Org Agenda code.
+ACTION is a function which is called on each matching entry with
+point at the beginning of its heading.  It may be:
 
-If NARROW is non-nil, buffers are not widened.
+- `element' or nil: Equivalent to `org-element-headline-parser'.
+
+- `element-with-markers': Equivalent to calling
+  `org-element-headline-parser', with markers added using
+  `org-ql--add-markers'.  Suitable for formatting with
+  `org-ql-agenda--format-element', allowing insertion into an Org
+  Agenda-like buffer.
+
+- A sexp, which will be byte-compiled into a lambda function.
+
+- A function symbol.
+
+If NARROW is non-nil, buffers are not widened (the default is to
+widen and search the entire buffer).
 
 SORT is either nil, in which case items are not sorted; or one or
 a list of defined `org-ql' sorting methods (`date', `deadline',
@@ -179,13 +152,23 @@ non-nil."
                                              (user-error "Can't open file: %s" it)))))))
           ((query preamble-re) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
-          (action (cl-etypecase action
-                    (symbol (unless (functionp action)
-                              (user-error "Action not a function: %s" action))
-                            action)
-                    (function (byte-compile action))
-                    (list (byte-compile `(lambda (&rest _ignore)
-                                           ,action)))))
+          (action (pcase action
+                    ;; NOTE: These two lambdas are backquoted to prevent "unused lexical
+                    ;; variable" warnings from byte-compilation, because they don't use
+                    ;; all of the variables from their enclosing scope.
+                    ('element-with-markers (byte-compile
+                                            `(lambda (&rest _ignore)
+                                               (org-ql--add-markers
+                                                (org-element-headline-parser (line-end-position))))))
+                    ((or 'nil 'element) (byte-compile
+                                         `(lambda (&rest _ignore)
+                                            (org-element-headline-parser (line-end-position)))))
+                    ((pred functionp) action)
+                    ((and (pred listp) (guard (functionp (car action))))
+                     (byte-compile
+                      `(lambda (&rest _ignore)
+                         ,action)))
+                    (_ (user-error "Invalid action form: %s" action))))
           ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
           ;; (org-use-tag-inheritance t)
           ;; (org-trust-scanner-tags t)
@@ -209,6 +192,34 @@ non-nil."
       ;; Sort by user-given comparator.
       ((pred functionp) (sort items sort))
       (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
+
+(cl-defun org-ql-query (&key (select 'element-with-markers) from where)
+  "Like `org-ql-select', but arguments are named more like a SQL query.
+
+SELECT corresponds to the `org-ql-select' argument ACTION.  It is
+the function called on matching headings, the results of which
+are returned by this function.  It may be:
+
+- `element' or nil: Equivalent to `org-element-headline-parser'.
+
+- `element-with-markers': Equivalent to
+  `org-element-headline-parser', with markers added using
+  `org-ql--add-markers'.  Suitable for formatting with
+  `org-ql-agenda--format-element', allowing insertion into an Org
+  Agenda-like buffer.
+
+- A sexp, which will be byte-compiled into a lambda function.
+
+- A function symbol.
+
+FROM corresponds to the `org-ql-select' argument BUFFERS-OR-FILES.
+It may be one or a list of file paths and/or buffers.
+
+WHERE corresponds to the `org-ql-select' argument QUERY.  It
+should be an `org-ql' query sexp."
+  (declare (indent defun))
+  (org-ql-select from where
+    :action select))
 
 (defun org-ql--query-predicate (query)
   "Return predicate function for QUERY."
@@ -460,7 +471,7 @@ Note: Clock entries are expected to be clocked out.  Currently
 clocked entries (i.e. with unclosed timestamp ranges) are
 ignored."
   ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
-  ;; for end users, for which the arguments are pre-processed by `org-ql-query'.
+  ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward org-clock-line-re end-pos t)
@@ -626,7 +637,7 @@ FROM, TO, and ON should be strings parseable by
 `parse-time-string' but may omit the time value."
   ;; TODO: DRY this with the clocked predicate.
   ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
-  ;; for end users, for which the arguments are pre-processed by `org-ql-query'.
+  ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward org-element--timestamp-regexp end-pos t)
@@ -668,7 +679,7 @@ FROM, TO, and ON should be strings parseable by
 `parse-time-string' but may omit the time value."
   ;; TODO: DRY this with the clocked predicate.
   ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
-  ;; for end users, for which the arguments are pre-processed by `org-ql-query'.
+  ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward org-element--timestamp-regexp end-pos t)
@@ -711,7 +722,7 @@ FROM, TO, and ON should be strings parseable by
 `parse-time-string' but may omit the time value."
   ;; TODO: DRY this with the clocked predicate.
   ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
-  ;; for end users, for which the arguments are pre-processed by `org-ql-query'.
+  ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward org-element--timestamp-regexp end-pos t)

@@ -207,7 +207,7 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
   (when (and super-groups (not org-super-agenda-mode))
     (user-error "`org-super-agenda-mode' must be activated to use grouping"))
   (let* ((org-super-agenda-groups super-groups)
-         (entries (--> (org-ql-query buffers-files
+         (entries (--> (org-ql-select buffers-files
                          query
                          :sort sort
                          :narrow narrow

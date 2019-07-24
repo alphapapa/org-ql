@@ -59,12 +59,12 @@ More examples are available in [[examples.org]].
 The functionality provided may be grouped by:
 
 +  Interactive commands :: ~org-ql-search~
-+  Non-interactive functions and macros :: ~org-ql~ (macro), ~org-ql-query~ (function), and ~org-ql-agenda~ (macro)
++  Non-interactive functions and macros :: ~org-ql~ (macro), ~org-ql-select~ (function), ~org-ql-query~ (function), and ~org-ql-agenda~ (macro)
 
 Alternatively, they may be grouped by:
 
 +  Showing an agenda-like view :: ~org-ql-search~ (command), and ~org-ql-agenda~ (macro)
-+  Returning a list of matches or acting on them :: ~org-ql~ (macro), and ~org-ql-query~ (function)
++  Returning a list of matches or acting on them :: ~org-ql~ (macro), ~org-ql-select~ (function), and ~org-ql-query~ (function)
 
 Feedback on these APIs is welcome.  Eventually, after being tested and polished, they will be considered stable.
 
@@ -198,41 +198,105 @@ Here are some other examples:
 
 *** Listing / acting-on results
 
-**** Function: ~org-ql-query~
+**** Function: ~org-ql-select~
 
 /Arguments:/ ~(buffers-or-files query &key action narrow sort)~
 
 Return items matching ~QUERY~ in ~BUFFERS-OR-FILES~.
 
-~BUFFERS-OR-FILES~ is a one (or a list of) file(s) or buffer(s).
+~BUFFERS-OR-FILES~ is a one or a list of files and/or buffers.
 
 ~QUERY~ is an ~org-ql~ query sexp (quoted, since this is a function).
 
-~ACTION~ is a function which is called on each matching entry, with point at the beginning of its heading.  For example, ~org-element-headline-parser~ may be used to parse an entry into an Org element (note that it must be called with a limit argument, so a lambda must be used to do so).  Also see ~org-ql--add-markers~, which may be used to add markers compatible with Org Agenda code.
+~ACTION~ is a function which is called on each matching entry with point at the beginning of its heading.  It may be:
 
-If ~NARROW~ is non-nil, buffers are not widened.
+  - ~element~ or nil: Equivalent to ~org-element-headline-parser~.
+
+  - ~element-with-markers~: Equivalent to calling ~org-element-headline-parser~, with markers added using ~org-ql--add-markers~.  Suitable for formatting with ~org-ql-agenda--format-element~, allowing insertion into an Org Agenda-like buffer.
+
+  - A sexp, which will be byte-compiled into a lambda function.
+
+  - A function symbol.
+
+If ~NARROW~ is non-nil, buffers are not widened (the default is to widen and search the entire buffer).
 
 ~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods (~date~, ~deadline~, ~scheduled~, ~todo~, or ~priority~); or a user-defined comparator function that accepts two items as arguments and returns nil or non-nil.
+
+Examples:
+
+#+BEGIN_SRC elisp
+  ;; Return list of to-do headings in inbox file with tags and to-do keywords:
+  (org-ql-select "~/org/inbox.org"
+    '(todo)
+    :action #'org-get-heading)
+  ;; => ("TODO Practice leaping tall buildings in a single bound  :personal:" ...)
+
+  ;; Without tags and to-do keywords:
+  (org-ql-select "~/org/inbox.org"
+    '(todo)
+    :action '(org-get-heading t t))
+  ;; => ("Practice leaping tall buildings in a single bound" ...)
+
+  ;; Return WAITING heading elements in agenda files:
+  (org-ql-select (org-agenda-files)
+    '(todo "WAITING")
+    :action 'element)
+  ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
+
+  ;; Since `element' is the default for ACTION, it may be omitted:
+  (org-ql-select (org-agenda-files)
+    '(todo "WAITING"))
+  ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
+#+END_SRC
+
+**** Function: ~org-ql-query~
+
+/Arguments:/ ~(&key (select 'element-with-markers) from where)~
+
+Like ~org-ql-select~, but arguments are named more like a ~SQL~ query.
+
+~SELECT~ corresponds to the ~org-ql-select~ argument ~ACTION~.
+
+~FROM~ corresponds to the ~org-ql-select~ argument ~BUFFERS-OR-FILES~.
+
+~WHERE~ corresponds to the ~org-ql-select~ argument ~QUERY~.
+
+Examples:
+
+#+BEGIN_SRC elisp
+  ;; Return list of to-do headings in inbox file with tags and to-do keywords:
+  (org-ql-query
+    :select #'org-get-heading
+    :from "~/org/inbox.org"
+    :where '(todo))
+  ;; => ("TODO Practice leaping tall buildings in a single bound  :personal:" ...)
+
+  ;; Without tags and to-do keywords:
+  (org-ql-query
+    :select '(org-get-heading t t)
+    :from "~/org/inbox.org"
+    :where '(todo))
+  ;; => ("Practice leaping tall buildings in a single bound" ...)
+
+  ;; Return WAITING heading elements in agenda files:
+  (org-ql-query
+    :select 'element
+    :from (org-agenda-files)
+    :where '(todo "WAITING"))
+  ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
+
+  ;; Since `element' is the default for SELECT, it may be omitted:
+  (org-ql-query
+    :from (org-agenda-files)
+    :where '(todo "WAITING"))
+  ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
+#+END_SRC
 
 **** Macro: ~org-ql~
 
 /Arguments:/ ~(buffers-or-files query &key sort narrow markers action)~
 
-Find entries in ~BUFFERS-OR-FILES~ that match ~QUERY~, and return the results of running ~ACTION-FN~ on each matching entry.
-
-Unlike the corresponding function ~org-ql-query~, arguments to this macro should not be quoted.
-
-~BUFFERS-OR-FILES~ is a form which should evaluate to one (or a list of) file(s) or buffer(s).
-
-~QUERY~ is an ~org-ql~ query sexp, unquoted.
-
-~ACTION~ is a sexp which will be evaluated at each matching entry with point at the beginning of its heading.  It is passed to ~org-ql-query~ as a lambda.  By default, ~org-element-headline-parser~ is called to return an Org element.
-
-~SORT~ is a user defined sorting function, or an unquoted list of one or more sorting methods, including: ~date~, ~deadline~, ~scheduled~, ~todo~, and ~priority~.
-
-If ~NARROW~ is non-nil, query will run without widening the buffer (the default is to widen and search the entire buffer).
-
-If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to each item, pointing to the item in its source buffer.  In this case, ~ACTION~ should return an Org element.
+Expands into a call to ~org-ql-select~ with the same arguments.  For convenience, arguments should be unquoted.
 
 * Changelog
 :PROPERTIES:
@@ -243,7 +307,12 @@ If ~MARKERS~ is non-nil, ~org-agenda-ng--add-markers~ is used to add markers to 
 
 ** 0.2-pre
 
+*Added*
++  Function ~org-ql-query~, like ~org-ql-select~ but with arguments named more like a SQL query.
+
 *Changed*
++  Function ~org-ql-query~ renamed to ~org-ql-select~.
++  Macro ~org-ql~ no longer accepts a ~:markers~ argument.  Instead, use argument ~:action element-with-markers~.  See function ~org-ql-select~, which ~org-ql~ calls.
 +  ~(regexp)~ selector accepts multiple regexps to test.
 +  The ~:sort~ argument to ~org-ql~, ~org-ql-query~, etc. now also accepts a comparator function by which to sort items.
 
