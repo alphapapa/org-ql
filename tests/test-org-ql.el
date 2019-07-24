@@ -35,15 +35,29 @@
   "FIXME: docstring"
   (interactive)
   (if-let* ((sexp (elisp--preceding-sexp))
-            (correct-sexp-p (eq (car sexp) 'org-ql))
-            (value (eval sexp))
-            (prefix (if (and value (listp value))
-                        "'"
-                      "")))
-      (insert " :to-equal "
-              prefix
-              (format "%S" value))
+            (correct-sexp-p (pcase (car sexp)
+                              ('org-ql 'org-ql)
+                              ('org-ql--query-preamble 'query-preamble)
+                              (_ nil)))
+            (result (pcase (car sexp)
+                      ('org-ql (org-ql-test--format-result--ql sexp))
+                      ('org-ql--query-preamble (org-ql-test--format-result--query-preamble sexp))
+                      (_ nil))))
+      (insert " :to-equal " result)
     (user-error "Point must be after an `org-ql' form")))
+
+(defun org-ql-test--format-result--ql (sexp)
+  (let* ((value (eval sexp))
+         (prefix (if (and value (listp value))
+                     "'"
+                   "")))
+    (format "%S" value)))
+
+(defun org-ql-test--format-result--query-preamble (sexp)
+  (-let* (((query preamble) (eval sexp))
+          (preamble (when preamble
+                      (xr preamble 'brief))))
+    (format "`(%S ,(rx %S))" query preamble)))
 
 (defun org-ql-test-show-result ()
   "Show `org-ql-agenda' for `org-ql' form."
