@@ -281,10 +281,9 @@ replace the clause with a preamble."
                               (pcase element
                                 (`(or _) element)
                                 (`(regexp . ,regexps)
-                                 (let* ((regexp (rx-to-string `(or ,@regexps) t)))
-                                   (setq org-ql-preamble regexp)
-                                   ;; Return nil
-                                   nil))
+                                 (setq org-ql-preamble (rx-to-string `(or ,@regexps) t))
+                                 ;; Return nil
+                                 nil)
                                 (`(todo . ,(and todo-keywords (guard todo-keywords)))
                                  ;; FIXME: With case-folding, a query like (todo "WAITING")
                                  ;; can find a non-todo heading named "Waiting".
@@ -303,9 +302,8 @@ replace the clause with a preamble."
                                    (setq org-ql-preamble (rx-to-string `(seq bol ,repeat " ") t))
                                    nil))
                                 (`(level ,num)
-                                 (let* ((regexp (rx-to-string `(seq bol (repeat ,num "*") " ") t)))
-                                   (setq org-ql-preamble regexp)
-                                   nil))
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (repeat ,num "*") " ") t))
+                                 nil)
                                 (`(and . ,rest)
                                  (let ((clauses (mapcar #'rec rest)))
                                    `(and ,@(-non-nil clauses))))
