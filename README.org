@@ -16,7 +16,6 @@
   -  [[#usage][Usage]]
     -  [[#commands][Commands]]
     -  [[#queries][Queries]]
-      -  [[#predicates][Predicates]]
     -  [[#functions--macros][Functions / Macros]]
   -  [[#changelog][Changelog]]
   -  [[#notes][Notes]]
@@ -105,6 +104,9 @@ Here's an example of using it to generate an agenda-like view for certain files 
 A query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.
 
 *** Predicates
+:PROPERTIES:
+:TOC:      ignore
+:END:
 
 Arguments are listed next to predicate names, where applicable.
 
