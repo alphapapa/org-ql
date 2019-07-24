@@ -107,7 +107,34 @@ Based on Buttercup macro `it'."
                           (cl-loop while (re-search-forward org-heading-regexp nil t)
                                    sum 1)))))
 
-  (describe "Predicates"
+  (describe "Query compiling"
+    ;; Okay, so it's not really "compiling," but it sounds fancy.  :)
+
+    ;; TODO: Other predicates.
+
+    (describe "(level)"
+      (it "with a number"
+        (expect (org-ql--query-preamble '(level 2))
+                :to-equal `(t ,(rx bol (repeat 2 "*") " "))))
+      (it "with two numbers"
+        (expect (org-ql--query-preamble '(level 2 4))
+                :to-equal `(t ,(rx bol (repeat 2 4 "*") " "))))
+      (it "<"
+        (expect (org-ql--query-preamble '(level < 3))
+                :to-equal `(t ,(rx bol (repeat 1 2 "*") " "))))
+      (it "<="
+        (expect (org-ql--query-preamble '(level <= 2))
+                :to-equal `(t ,(rx bol (repeat 1 2 "*") " "))))
+      (it ">"
+        (expect (org-ql--query-preamble '(level > 2))
+                :to-equal `(t ,(rx bol (>= 3 "*") " "))))
+      (it ">="
+        (expect (org-ql--query-preamble '(level >= 2))
+                :to-equal `(t ,(rx bol (>= 2 "*") " "))))))
+
+  (describe "Query results"
+
+    ;; TODO: Other predicates.
 
     (describe "(category)"
       (org-ql-it "without arguments"
@@ -364,10 +391,6 @@ Based on Buttercup macro `it'."
         (expect (org-ql test-buffer
                   (ts :on "2019-06-09")
                   :action (org-ql-test-org-get-heading))
-                :to-equal nil))
-      )
-
-    ;; TODO: Other predicates.
-    ))
+                :to-equal nil)))))
 
 ;;; org-ql.el ends here

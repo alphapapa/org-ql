@@ -281,7 +281,7 @@ replace the clause with a preamble."
                               (pcase element
                                 (`(or _) element)
                                 (`(regexp . ,regexps)
-                                 (let* ((regexp (rx-to-string `(or ,@regexps))))
+                                 (let* ((regexp (rx-to-string `(or ,@regexps) t)))
                                    (setq org-ql-preamble regexp)
                                    ;; Return nil
                                    nil))
@@ -289,13 +289,21 @@ replace the clause with a preamble."
                                  (let* ((regexps (--map (list 'regexp
                                                               (format org-heading-keyword-regexp-format it))
                                                         todo-keywords))
-                                        (regexp (rx-to-string `(or ,@regexps))))
+                                        (regexp (rx-to-string `(or ,@regexps) t)))
                                    (setq org-ql-preamble regexp)
                                    ;; Return nil
                                    nil))
-                                ;; FIXME: Need to handle e.g. (level <= 2)
+                                (`(level ,comparator-or-num ,num)
+                                 (let ((repeat (pcase comparator-or-num
+                                                 ('< `(repeat 1 ,(1- num) "*"))
+                                                 ('<= `(repeat 1 ,num "*"))
+                                                 ('> `(>= ,(1+ num) "*"))
+                                                 ('>= `(>= ,num "*"))
+                                                 ((pred integerp) `(repeat ,comparator-or-num ,num "*")))))
+                                   (setq org-ql-preamble (rx-to-string `(seq bol ,repeat " ") t))
+                                   nil))
                                 (`(level ,num)
-                                 (let* ((regexp (rx-to-string `(seq bol (repeat ,num "*") " "))))
+                                 (let* ((regexp (rx-to-string `(seq bol (repeat ,num "*") " ") t)))
                                    (setq org-ql-preamble regexp)
                                    nil))
                                 (`(and . ,rest)
@@ -502,20 +510,25 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
       (otherwise (seq-intersection tags tags-at)))))
 
 (org-ql--defpred level (level-or-comparator &optional level)
-  "Return non-nil if current heading's outline level matches LEVEL with COMPARATOR.
+  "Return non-nil if current heading's outline level matches arguments.
+The following forms are accepted:
 
-If LEVEL is nil, LEVEL-OR-COMPARATOR should be an integer level,
-which will be tested for equality to the heading's outline level.
-If LEVEL is non-nil, LEVEL-OR-COMPARATOR should be a comparator
-function (like `<=')."
+  (level NUMBER): Matches if heading level is NUMBER.
+  (level NUMBER NUMBER): Matches if heading level is equal to or between NUMBERs.
+  (level COMPARATOR NUMBER): Matches if heading level compares to NUMBER with COMPARATOR.
+
+COMPARATOR may be `<', `<=', `>', or `>='."
   ;; NOTE: It might be necessary to take into account `org-odd-levels'; see docstring for
   ;; `org-outline-level'.
   (when-let ((outline-level (org-outline-level)))
-    (pcase level
-      ;; Check for equality
-      ((pred null) (= outline-level level-or-comparator))
-      ;; Check with comparator
-      (_ (funcall level-or-comparator outline-level level)))))
+    (pcase level-or-comparator
+      ((pred numberp) (pcase level
+                        ('nil ;; Equality
+                         (= outline-level level-or-comparator))
+                        ((pred numberp) ;; Between two levels
+                         (>= level-or-comparator outline-level level))))
+      ((pred symbolp) ;; Compare with function
+       (funcall level-or-comparator outline-level level)))))
 
 (org-ql--defpred priority (&optional comparator-or-priority priority)
   "Return non-nil if current heading has a certain priority.
