@@ -69,6 +69,24 @@
         (eval sexp))
     (user-error "Point must be after an `org-ql' form")))
 
+;;;; Macros
+
+(defmacro org-ql-it (description &rest body)
+  "Expand to two specs, one of which tests with preambles and the other without.
+Based on Buttercup macro `it'."
+  (declare (indent 1) (debug (&define sexp def-body)))
+  (if body
+      `(progn
+         (buttercup-it ,(concat description " (preamble)   ")
+                       (lambda ()
+                         (let ((org-ql-use-preamble t))
+                           ,@body)))
+         (buttercup-it ,(concat description " (no preamble)")
+                       (lambda ()
+                         (let ((org-ql-use-preamble nil))
+                           ,@body))))
+    `(buttercup-xit ,description)))
+
 ;;;; Tests
 
 (describe "org-ql"
@@ -92,24 +110,24 @@
   (describe "Predicates"
 
     (describe "(category)"
-      (it "without arguments"
+      (org-ql-it "without arguments"
         (expect (length (org-ql test-buffer
                           (category)
                           :action (org-ql-test-org-get-heading)))
                 :to-equal num-headings))
-      (it "with a category"
+      (org-ql-it "with a category"
         (expect (org-ql test-buffer
                   (category "ambition")
                   :action (org-ql-test-org-get-heading))
                 :to-equal '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
 
     (describe "(clocked)"
-      (it "without arguments"
+      (org-ql-it "without arguments"
         (expect (org-ql test-buffer
                   (clocked)
                   :action (org-ql-test-org-get-heading))
                 :to-equal '("Learn universal sign language")))
-      (it ":from a timestamp"
+      (org-ql-it ":from a timestamp"
         (expect (org-ql test-buffer
                   (clocked :from "2017-07-05")
                   :action (org-ql-test-org-get-heading))
@@ -118,7 +136,7 @@
                   (clocked :from "2017-07-06")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it ":to a timestamp"
+      (org-ql-it ":to a timestamp"
         (expect (org-ql test-buffer
                   (clocked :to "2017-07-05")
                   :action (org-ql-test-org-get-heading))
@@ -127,7 +145,7 @@
                   (clocked :to "2017-07-04")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it ":on a date"
+      (org-ql-it ":on a date"
         (expect (org-ql test-buffer
                   (clocked :on "2017-07-05")
                   :action (org-ql-test-org-get-heading))
@@ -136,7 +154,7 @@
                   (clocked :on "2018-12-02")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it "within a range (:from and :to)"
+      (org-ql-it "within a range (:from and :to)"
         (expect (org-ql test-buffer
                   (clocked :from "2017-07-04" :to "2018-12-11")
                   :action (org-ql-test-org-get-heading))
@@ -151,12 +169,12 @@
                 :to-equal nil)))
 
     (describe "(closed)"
-      (it "without arguments"
+      (org-ql-it "without arguments"
         (expect (org-ql test-buffer
                   (closed)
                   :action (org-ql-test-org-get-heading))
                 :to-equal '("Learn universal sign language")))
-      (it "="
+      (org-ql-it "="
         (expect (org-ql test-buffer
                   (closed = "2017-07-05")
                   :action (org-ql-test-org-get-heading))
@@ -165,7 +183,7 @@
                   (closed = "2019-06-09")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it "<"
+      (org-ql-it "<"
         ;; TODO: Figure out why these tests take about 8 times longer than the other comparators in the (closed) tests.
         (expect (org-ql test-buffer
                   (closed < "2019-06-10")
@@ -175,7 +193,7 @@
                   (closed < "2017-06-10")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it ">"
+      (org-ql-it ">"
         (expect (org-ql test-buffer
                   (closed > "2017-07-04")
                   :action (org-ql-test-org-get-heading))
@@ -184,7 +202,7 @@
                   (closed > "2019-07-05")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it ">="
+      (org-ql-it ">="
         (expect (org-ql test-buffer
                   (closed >= "2017-07-04")
                   :action (org-ql-test-org-get-heading))
@@ -197,7 +215,7 @@
                   (closed >= "2017-07-06")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it "<="
+      (org-ql-it "<="
         (expect (org-ql test-buffer
                   (closed <= "2017-07-04")
                   :action (org-ql-test-org-get-heading))
@@ -212,12 +230,12 @@
                 :to-equal '("Learn universal sign language"))))
 
     (describe "(deadline)"
-      (it "without arguments"
+      (org-ql-it "without arguments"
         (expect (org-ql test-buffer
                   (deadline)
                   :action (org-ql-test-org-get-heading))
                 :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs")))
-      (it "="
+      (org-ql-it "="
         (expect (org-ql test-buffer
                   (deadline = "2017-07-05")
                   :action (org-ql-test-org-get-heading))
@@ -226,7 +244,7 @@
                   (deadline = "2019-06-09")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it "<"
+      (org-ql-it "<"
         (expect (org-ql test-buffer
                   (deadline < "2019-06-10")
                   :action (org-ql-test-org-get-heading))
@@ -235,7 +253,7 @@
                   (deadline < "2017-06-10")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it ">"
+      (org-ql-it ">"
         ;; TODO: Figure out why these tests take much longer than e.g. the (deadline <) tests.
         (expect (org-ql test-buffer
                   (deadline > "2017-07-04 00:00")
@@ -245,7 +263,7 @@
                   (deadline > "2019-07-05")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it ">="
+      (org-ql-it ">="
         (expect (org-ql test-buffer
                   (deadline >= "2017-07-04")
                   :action (org-ql-test-org-get-heading))
@@ -262,7 +280,7 @@
                   (deadline >= "2018-07-06")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it "<="
+      (org-ql-it "<="
         (expect (org-ql test-buffer
                   (deadline <= "2017-07-04")
                   :action (org-ql-test-org-get-heading))
@@ -276,7 +294,7 @@
                   :action (org-ql-test-org-get-heading))
                 :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
 
-    (it "(done)"
+    (org-ql-it "(done)"
       (expect (org-ql test-buffer
                 (done)
                 :action (org-ql-test-org-get-heading))
@@ -329,7 +347,7 @@
                   (ts :from "2019-06-08")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil))
-      (it ":to a timestamp"
+      (org-ql-it ":to a timestamp"
         (expect (org-ql test-buffer
                   (ts :to "2019-06-10")
                   :action (org-ql-test-org-get-heading))
@@ -338,7 +356,7 @@
                   (ts :to "2017-07-04")
                   :action (org-ql-test-org-get-heading))
                 :to-equal '("Skype with president of Antarctica")))
-      (it ":on a timestamp"
+      (org-ql-it ":on a timestamp"
         (expect (org-ql test-buffer
                   (ts :on "2017-07-05")
                   :action (org-ql-test-org-get-heading))
