@@ -130,8 +130,7 @@ Based on Buttercup macro `it'."
                                           (or "string1" "string2")))
             :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2")))))
 
-  (describe "Query compiling"
-    ;; Okay, so it's not really "compiling," but it sounds fancy.  :)
+  (describe "Query optimizing"
 
     ;; TODO: Other predicates.
 
