@@ -150,6 +150,7 @@ non-nil."
                                                ;; a buffer if the filename doesn't exist.
                                                (find-file-noselect it))
                                              (user-error "Can't open file: %s" it)))))))
+          (query (org-ql--pre-process-query query))
           ((query preamble-re) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
           (action (pcase action
@@ -220,6 +221,23 @@ should be an `org-ql' query sexp."
   (declare (indent defun))
   (org-ql-select from where
     :action select))
+
+(defun org-ql--pre-process-query (query)
+  "Return QUERY having been pre-processed.
+Replaces bare strings with (regexp) selectors."
+  ;; This is unsophisticated, but it works.
+  (cl-labels ((rec (element)
+                   (pcase element
+                     (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
+                     (`(and . ,clauses) `(and ,@(mapcar #'rec clauses)))
+                     (`(when ,condition . ,clauses) `(when ,(rec condition)
+                                                       ,@(mapcar #'rec clauses)))
+                     (`(unless ,condition . ,clauses) `(unless ,(rec condition)
+                                                         ,@(mapcar #'rec clauses)))
+                     ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
+                     ((pred stringp) `(regexp ,element))
+                     (_ element))))
+    (rec query)))
 
 (defun org-ql--query-predicate (query)
   "Return predicate function for QUERY."

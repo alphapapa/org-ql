@@ -38,10 +38,12 @@
             (correct-sexp-p (pcase (car sexp)
                               ('org-ql 'org-ql)
                               ('org-ql--query-preamble 'query-preamble)
+                              ('org-ql--pre-process-query t)
                               (_ nil)))
             (result (pcase (car sexp)
                       ('org-ql (org-ql-test--format-result--ql sexp))
                       ('org-ql--query-preamble (org-ql-test--format-result--query-preamble sexp))
+                      ('org-ql--pre-process-query (format "'%S" (eval sexp)))
                       (_ nil))))
       (insert " :to-equal " result)
     (user-error "Point must be after an `org-ql' form")))
@@ -106,6 +108,27 @@ Based on Buttercup macro `it'."
                           (goto-char (point-min))
                           (cl-loop while (re-search-forward org-heading-regexp nil t)
                                    sum 1)))))
+
+  (it "Query pre-processing"
+    (expect (org-ql--pre-process-query '(and "string1" "string2"))
+            :to-equal '(and (regexp "string1") (regexp "string2")))
+    (expect (org-ql--pre-process-query '(or "string1" "string2"))
+            :to-equal '(or (regexp "string1") (regexp "string2")))
+    (expect (org-ql--pre-process-query '(and (todo "TODO")
+                                             (or "string1" "string2")))
+            :to-equal '(and (todo "TODO") (or (regexp "string1") (regexp "string2"))))
+    (expect (org-ql--pre-process-query '(when (todo "TODO")
+                                          (or "string1" "string2")))
+            :to-equal '(when (todo "TODO") (or (regexp "string1") (regexp "string2"))))
+    (expect (org-ql--pre-process-query '(when "string-cond1"
+                                          (or "string1" "string2")))
+            :to-equal '(when (regexp "string-cond1") (or (regexp "string1") (regexp "string2"))))
+    (expect (org-ql--pre-process-query '(when (and "string-cond1" "string-cond2")
+                                          (or "string1" "string2")))
+            :to-equal '(when (and (regexp "string-cond1") (regexp "string-cond2")) (or (regexp "string1") (regexp "string2"))))
+    (expect (org-ql--pre-process-query '(unless (and "stringcondition1" "stringcond2")
+                                          (or "string1" "string2")))
+            :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2")))))
 
   (describe "Query compiling"
     ;; Okay, so it's not really "compiling," but it sounds fancy.  :)
@@ -337,7 +360,20 @@ Based on Buttercup macro `it'."
         (expect (org-ql test-buffer
                   (regexp "Take over" "pizza")
                   :sort todo
-                  :action (org-ql-test-org-get-heading)) :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut"))))
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut")))
+      (org-ql-it "with a plain string"
+        (expect (org-ql test-buffer
+                  "Take over"
+                  :sort todo
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+      (org-ql-it "with two plain strings"
+        (expect (org-ql test-buffer
+                  (or "Take over" "pizza")
+                  :sort todo
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut"))))
 
     (describe "(todo)"
       (it "without arguments"
