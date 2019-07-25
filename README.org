@@ -312,12 +312,12 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 *Added*
 +  Function ~org-ql-query~, like ~org-ql-select~ but with arguments named more like a SQL query.
 +  Bare strings like ~"string"~ can be used in queries, which are converted to ~(regexp "string")~ automatically.
++  Selector ~(regexp)~ accepts multiple regexps to test.
++  Macro ~org-ql~ and functions ~org-ql-query~ and ~org-ql-select~ now also accept a comparator function in their ~:sort~ argument.
 
 *Changed*
-+  Function ~org-ql-query~ renamed to ~org-ql-select~.
++  Function ~org-ql-query~ renamed to ~org-ql-select~.  ~org-ql-query~ now refers to a new function.
 +  Macro ~org-ql~ no longer accepts a ~:markers~ argument.  Instead, use argument ~:action element-with-markers~.  See function ~org-ql-select~, which ~org-ql~ calls.
-+  ~(regexp)~ selector accepts multiple regexps to test.
-+  The ~:sort~ argument to ~org-ql~, ~org-ql-query~, etc. now also accepts a comparator function by which to sort items.
 
 *Fixed*
 +  Handle date ranges in date-based selectors.  (Thanks to [[https://github.com/codygman][Cody Goodman]], [[https://github.com/swflint][Samuel W. Flint]], and [[https://github.com/vikasrawal][Vikas Rawal]].)
