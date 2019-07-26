@@ -178,6 +178,10 @@ If your function needs to retrieve the tags including inherited tags at the *cur
 
 Because the existing ones only search the special date property line.
 
+** MAYBE Fancier searching for inherited tags
+
+When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
+
 ** DONE Byte-compile lambdas
 CLOSED: [2018-05-09 Wed 17:30]
 :LOGBOOK:
