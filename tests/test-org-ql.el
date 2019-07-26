@@ -382,7 +382,8 @@ Based on Buttercup macro `it'."
                   :sort todo
                   :action (org-ql-test-org-get-heading)) :to-equal '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony")))
       (org-ql-it "with 1 argument"
-        ;; FIXME: Figure out why this takes >10x longer than the other (todo) tests, according to Buttercup.
+        ;; FIXME: Figure out why this takes >10x longer than the other (todo)
+        ;; tests, according to Buttercup.  Might just be GC, though.
         (expect (org-ql test-buffer
                   (todo "WAITING")
                   :sort todo
@@ -456,5 +457,9 @@ Based on Buttercup macro `it'."
                   (ts :on "2019-06-09")
                   :action (org-ql-test-org-get-heading))
                 :to-equal nil)))))
+
+;; Local Variables:
+;; truncate-lines: t
+;; End:
 
 ;;; org-ql.el ends here
