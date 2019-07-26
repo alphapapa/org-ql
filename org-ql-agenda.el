@@ -230,31 +230,35 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
       (setq-local org-ql-sort sort)
       (setq-local org-ql-narrow narrow)
       (setq-local org-ql-super-groups super-groups)
+      (setq-local header-line-format (org-ql-agenda--header-line-format buffers-files query))
       ;; TODO: Derive a minor mode and set keymap there.
       (local-set-key "g" #'org-ql-search-refresh)
-      (let* ((query-formatted (format "%S" query))
-             (query-formatted (propertize (org-ql-agenda--font-lock-string 'emacs-lisp-mode query-formatted)
-                                          'help-echo query-formatted))
-             (query-width (length query-formatted))
-             (available-width (- (window-width)
-                                 (length "In: ")
-                                 (length "Query: ")
-                                 query-width 4))
-             (buffers-files-formatted (format "%S" buffers-files))
-             (buffers-files-formatted (propertize (->> buffers-files-formatted
-                                                       (org-ql-agenda--font-lock-string 'emacs-lisp-mode)
-                                                       (s-truncate available-width))
-                                                  'help-echo buffers-files-formatted)))
-        (setq-local header-line-format (concat (propertize "Query: " 'face 'org-agenda-structure)
-                                               query-formatted "  "
-                                               (propertize "In: " 'face 'org-agenda-structure)
-                                               buffers-files-formatted)))
       ;; Clear buffer, insert entries, etc.
       (erase-buffer)
       (insert entries)
       (pop-to-buffer (current-buffer))
       (org-agenda-finalize)
       (goto-char (point-min)))))
+
+(defun org-ql-agenda--header-line-format (buffers-files query)
+  "Return header-line-format for BUFFERS-FILES and QUERY."
+  (let* ((query-formatted (format "%S" query))
+         (query-formatted (propertize (org-ql-agenda--font-lock-string 'emacs-lisp-mode query-formatted)
+                                      'help-echo query-formatted))
+         (query-width (length query-formatted))
+         (available-width (- (window-width)
+                             (length "In: ")
+                             (length "Query: ")
+                             query-width 4))
+         (buffers-files-formatted (format "%S" buffers-files))
+         (buffers-files-formatted (propertize (->> buffers-files-formatted
+                                                   (org-ql-agenda--font-lock-string 'emacs-lisp-mode)
+                                                   (s-truncate available-width))
+                                              'help-echo buffers-files-formatted)))
+    (concat (propertize "Query: " 'face 'org-agenda-structure)
+            query-formatted "  "
+            (propertize "In: " 'face 'org-agenda-structure)
+            buffers-files-formatted)))
 
 (defun org-ql-agenda--font-lock-string (mode s)
   "Return string S font-locked according to MODE."
