@@ -417,9 +417,9 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
     `(bench-multi-lets :times ,times :ensure-equal t
        :lets (("preamble" ((org-ql-use-preamble t)))
               ("no preamble" ((org-ql-use-preamble nil))))
-       :forms ((,(prin1-to-string query) (org-ql-query ,file
+       :forms ((,(prin1-to-string query) (org-ql-select ,file
                                            ',query
-                                           :action (lambda () (org-get-heading t t)))))))
+                                           :action '(org-get-heading t t))))))
 #+END_SRC
 
 *** =level=
