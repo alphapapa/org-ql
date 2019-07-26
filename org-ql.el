@@ -316,15 +316,17 @@ replace the clause with a preamble."
                                 (`(or _) element)
                                 (`(regexp . ,regexps)
                                  (setq org-ql-preamble (rx-to-string `(or ,@regexps) t))
-                                 ;; Return nil
+                                 ;; Return nil, because we don't need to test the predicate.
                                  nil)
                                 (`(todo . ,(and todo-keywords (guard todo-keywords)))
-                                 ;; FIXME: With case-folding, a query like (todo "WAITING")
-                                 ;; can find a non-todo heading named "Waiting".
+                                 ;; FIXME: With case-folding, a query like (todo "WAITING") can find a non-todo
+                                 ;; heading named "Waiting".  For correctness, we could test the predicate
+                                 ;; anyway, but that would negate some of the speed, and in most cases it
+                                 ;; probably won't matter, so I'm leaving it this way for now.
                                  (setq org-ql-preamble
                                        (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol))
                                                      t))
-                                 ;; Return nil
+                                 ;; Return nil, don't test the predicate.
                                  nil)
                                 (`(level ,comparator-or-num ,num)
                                  (let ((repeat (pcase comparator-or-num
@@ -334,6 +336,7 @@ replace the clause with a preamble."
                                                  ('>= `(>= ,num "*"))
                                                  ((pred integerp) `(repeat ,comparator-or-num ,num "*")))))
                                    (setq org-ql-preamble (rx-to-string `(seq bol ,repeat " ") t))
+                                   ;; Return nil, because we don't need to test the predicate.
                                    nil))
                                 (`(level ,num)
                                  (setq org-ql-preamble (rx-to-string `(seq bol (repeat ,num "*") " ") t))
