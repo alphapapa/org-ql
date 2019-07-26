@@ -393,6 +393,35 @@ Based on Buttercup macro `it'."
                   :sort todo
                   :action (org-ql-test-org-get-heading)) :to-equal '("Visit the moon" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
 
+    (describe "(tags)"
+      (org-ql-it "without arguments"
+        (expect (org-ql test-buffer
+                  (tags)
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
+        (expect (org-ql test-buffer
+                  (not (tags))
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Test data" "Recurring" "Sunrise/sunset" "Ideas" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+      (org-ql-it "with a tag"
+        (expect (org-ql test-buffer
+                  (tags "Emacs")
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("/r/emacs" "Rewrite Emacs in Common Lisp"))
+        (expect (org-ql test-buffer
+                  (not (tags "Emacs"))
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+      (org-ql-it "with 2 tags"
+        (expect (org-ql test-buffer
+                  (tags "Emacs" "space")
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Visit Mars" "Visit the moon" "/r/emacs" "Rewrite Emacs in Common Lisp"))
+        (expect (org-ql test-buffer
+                  (not (tags "Emacs" "space"))
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling"))))
+
     (describe "(ts)"
       (org-ql-it "without arguments"
         (expect (org-ql test-buffer

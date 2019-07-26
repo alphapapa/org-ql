@@ -436,6 +436,36 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 | preamble: (level 1)    | 1.34               |      0.562950 |        0 |                0 |
 | no preamble: (level 1) | slowest            |      0.754050 |        0 |                0 |
 
+*** =tags=
+
+If tag inheritance is enabled, we have to check tags on every heading.  When it's disabled, we can search directly to headings with the given tags.
+
+#+BEGIN_SRC elisp
+  (let ((org-use-tag-inheritance t))
+    (org-ql-preamble-bench :times 1
+                           :file "~/org/inbox.org"
+                           :query (tags "Emacs")))
+#+END_SRC
+
+#+RESULTS:
+| Form                        | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-----------------------------+--------------------+---------------+----------+------------------|
+| no preamble: (tags "Emacs") | 1.01               |      1.899647 |        0 |                0 |
+| preamble: (tags "Emacs")    | slowest            |      1.921799 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (let ((org-use-tag-inheritance nil))
+    (org-ql-preamble-bench :times 1
+                           :file "~/org/inbox.org"
+                           :query (tags "Emacs")))
+#+END_SRC
+
+#+RESULTS:
+| Form                        | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-----------------------------+--------------------+---------------+----------+------------------|
+| preamble: (tags "Emacs")    | 2.08               |      0.274555 |        0 |                0 |
+| no preamble: (tags "Emacs") | slowest            |      0.570116 |        0 |                0 |
+
 ** Using =org-element-parse-buffer=
 
 This basically works, as a very basic kind of agenda view, but we can already see that it's much slower (at least, for single-day views) because =org-element-parse-buffer= is slow compared to the agenda code.

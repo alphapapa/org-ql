@@ -338,6 +338,14 @@ replace the clause with a preamble."
                                 (`(level ,num)
                                  (setq org-ql-preamble (rx-to-string `(seq bol (repeat ,num "*") " ") t))
                                  nil)
+                                ((and `(tags . ,tags) (guard (not org-use-tag-inheritance)))
+                                 ;; When tag inheritance is disabled, we only consider direct tags,
+                                 ;; so we can search directly to headings containing one of the tags.
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ space) (1+ not-newline)
+                                                                           ":" (or ,@tags) ":")
+                                                                     t))
+                                 ;; Return nil, because we don't need to test the predicate.
+                                 nil)
                                 (`(and . ,rest)
                                  (let ((clauses (mapcar #'rec rest)))
                                    `(and ,@(-non-nil clauses))))
