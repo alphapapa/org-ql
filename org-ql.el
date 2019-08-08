@@ -165,7 +165,9 @@ non-nil."
                                          `(lambda (&rest _ignore)
                                             (org-element-headline-parser (line-end-position)))))
                     ((pred functionp) action)
-                    ((and (pred listp) (guard (functionp (car action))))
+                    ((and (pred listp) (guard (or (special-form-p (car action))
+                                                  (macrop (car action))
+                                                  (functionp (car action)))))
                      (byte-compile
                       `(lambda (&rest _ignore)
                          ,action)))
