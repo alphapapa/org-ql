@@ -201,23 +201,25 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
-(cl-defun org-ql-agenda--agenda (buffers-files query &key sort buffer narrow super-groups)
+(cl-defun org-ql-agenda--agenda (buffers-files query &key entries sort buffer narrow super-groups)
   "FIXME: Docstring"
   (declare (indent defun))
   (when (and super-groups (not org-super-agenda-mode))
     (user-error "`org-super-agenda-mode' must be activated to use grouping"))
   (let* ((org-super-agenda-groups super-groups)
-         (entries (--> (org-ql-select buffers-files
-                         query
-                         :sort sort
-                         :narrow narrow
-                         :action (lambda ()
-                                   (->> (org-element-headline-parser (line-end-position))
-                                        org-ql--add-markers)))
-                       (mapcar #'org-ql-agenda--format-element it)
-                       (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
-                             (t it))
-                       (s-join "\n" it)))
+         (entries (or entries
+                      (--> (org-ql-select buffers-files
+                             query
+                             :sort sort
+                             :narrow narrow
+                             :action (lambda ()
+                                       (->> (org-element-headline-parser (line-end-position))
+                                            org-ql--add-markers))))))
+         (string (--> entries
+                      (mapcar #'org-ql-agenda--format-element it)
+                      (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
+                            (t it))
+                      (s-join "\n" it)))
          (buffer (cl-etypecase buffer
                    (string (org-ql-agenda--buffer buffer))
                    (null (org-ql-agenda--buffer buffer))
@@ -236,7 +238,7 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
       (setq-local header-line-format (org-ql-agenda--header-line-format buffers-files query))
       ;; Clear buffer, insert entries, etc.
       (erase-buffer)
-      (insert entries)
+      (insert string)
       (pop-to-buffer (current-buffer))
       (org-agenda-finalize)
       (goto-char (point-min)))))
