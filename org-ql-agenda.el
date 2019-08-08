@@ -352,7 +352,7 @@ Its property list should be the second item in the list, as returned by `org-ele
          (due-string (pcase (org-element-property :relative-due-date element)
                        ('nil "")
                        (string (format " %s " (org-add-props string nil 'face 'underline)))))
-         (string (s-join " " (list todo-keyword priority-string title due-string tag-string))))
+         (string (s-join " " (-non-nil (list todo-keyword priority-string title due-string tag-string)))))
     (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
     ;; Add all the necessary properties and faces to the whole string
     (--> string
