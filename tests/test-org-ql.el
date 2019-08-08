@@ -25,6 +25,8 @@
 
 ;;;; Requirements
 
+(require 'buttercup)
+
 (require 'org-ql)
 
 ;;;; Variables
