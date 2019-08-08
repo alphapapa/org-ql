@@ -459,7 +459,16 @@ Based on Buttercup macro `it'."
         (expect (org-ql test-buffer
                   (ts :on "2019-06-09")
                   :action (org-ql-test-org-get-heading))
-                :to-equal nil)))))
+                :to-equal nil)))
+
+    (describe "Compound queries"
+
+      (org-ql-it "Tags and to-do"
+        (expect (org-ql test-buffer
+                  (and (todo "SOMEDAY")
+                       (tags "Emacs"))
+                  :action (org-ql-test-org-get-heading))
+                :to-equal '("Rewrite Emacs in Common Lisp"))))))
 
 ;; Local Variables:
 ;; truncate-lines: t
