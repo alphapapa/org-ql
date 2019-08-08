@@ -91,6 +91,16 @@ Based on Buttercup macro `it'."
                            ,@body))))
     `(buttercup-xit ,description)))
 
+(defmacro org-ql-expect (ql-args results)
+  "Expand to `expect' test form that expects QL-ARGS to equal RESULTS.
+RESULTS should be a list of strings as returned by
+`org-ql-test-org-get-heading'."
+  (declare (indent defun))
+  `(expect (org-ql test-buffer
+             ,@ql-args
+             :action (org-ql-test-org-get-heading))
+           :to-equal ,results))
+
 ;;;; Tests
 
 (describe "org-ql"
@@ -162,313 +172,229 @@ Based on Buttercup macro `it'."
     ;; TODO: Other predicates.
 
     (describe "(category)"
+
       (org-ql-it "without arguments"
         (expect (length (org-ql test-buffer
-                          (category)
-                          :action (org-ql-test-org-get-heading)))
+                          (category)))
                 :to-equal num-headings))
+
       (org-ql-it "with a category"
-        (expect (org-ql test-buffer
-                  (category "ambition")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
+        (org-ql-expect ((category "ambition"))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
 
     (describe "(clocked)"
+
       (org-ql-it "without arguments"
-        (expect (org-ql test-buffer
-                  (clocked)
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language")))
+        (org-ql-expect ((clocked))
+          '("Learn universal sign language")))
+
       (org-ql-it ":from a timestamp"
-        (expect (org-ql test-buffer
-                  (clocked :from "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (clocked :from "2017-07-06")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((clocked :from "2017-07-05"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((clocked :from "2017-07-06"))
+          nil))
+
       (org-ql-it ":to a timestamp"
-        (expect (org-ql test-buffer
-                  (clocked :to "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (clocked :to "2017-07-04")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((clocked :to "2017-07-05"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((clocked :to "2017-07-04"))
+          nil))
+
       (org-ql-it ":on a date"
-        (expect (org-ql test-buffer
-                  (clocked :on "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (clocked :on "2018-12-02")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((clocked :on "2017-07-05"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((clocked :on "2018-12-02"))
+          nil))
+
       (org-ql-it "within a range (:from and :to)"
-        (expect (org-ql test-buffer
-                  (clocked :from "2017-07-04" :to "2018-12-11")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (clocked :from "2017-07-06" :to "2018-12-11")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil)
-        (expect (org-ql test-buffer
-                  (clocked :from "2017-07-01" :to "2017-07-04")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil)))
+        (org-ql-expect ((clocked :from "2017-07-04" :to "2018-12-11"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((clocked :from "2017-07-06" :to "2018-12-11"))
+          nil)
+        (org-ql-expect ((clocked :from "2017-07-01" :to "2017-07-04"))
+          nil)))
 
     (describe "(closed)"
+
       (org-ql-it "without arguments"
-        (expect (org-ql test-buffer
-                  (closed)
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language")))
+        (org-ql-expect ((closed))
+          '("Learn universal sign language")))
+
       (org-ql-it "="
-        (expect (org-ql test-buffer
-                  (closed = "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (closed = "2019-06-09")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((closed = "2017-07-05"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((closed = "2019-06-09"))
+          nil))
+
       (org-ql-it "<"
         ;; TODO: Figure out why these tests take about 8 times longer than the other comparators in the (closed) tests.
-        (expect (org-ql test-buffer
-                  (closed < "2019-06-10")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (closed < "2017-06-10")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((closed < "2019-06-10"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((closed < "2017-06-10"))
+          nil))
+
       (org-ql-it ">"
-        (expect (org-ql test-buffer
-                  (closed > "2017-07-04")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (closed > "2019-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((closed > "2017-07-04"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((closed > "2019-07-05"))
+          nil))
+
       (org-ql-it ">="
-        (expect (org-ql test-buffer
-                  (closed >= "2017-07-04")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (closed >= "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (closed >= "2017-07-06")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((closed >= "2017-07-04"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((closed >= "2017-07-05"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((closed >= "2017-07-06"))
+          nil))
+
       (org-ql-it "<="
-        (expect (org-ql test-buffer
-                  (closed <= "2017-07-04")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil)
-        (expect (org-ql test-buffer
-                  (closed <= "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))
-        (expect (org-ql test-buffer
-                  (closed <= "2017-07-06")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Learn universal sign language"))))
+        (org-ql-expect ((closed <= "2017-07-04"))
+          nil)
+        (org-ql-expect ((closed <= "2017-07-05"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((closed <= "2017-07-06"))
+          '("Learn universal sign language"))))
 
     (describe "(deadline)"
+
       (org-ql-it "without arguments"
-        (expect (org-ql test-buffer
-                  (deadline)
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs")))
+        (org-ql-expect ((deadline))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs")))
+
       (org-ql-it "="
-        (expect (org-ql test-buffer
-                  (deadline = "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("/r/emacs"))
-        (expect (org-ql test-buffer
-                  (deadline = "2019-06-09")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((deadline = "2017-07-05"))
+          '("/r/emacs"))
+        (org-ql-expect ((deadline = "2019-06-09"))
+          nil))
+
       (org-ql-it "<"
-        (expect (org-ql test-buffer
-                  (deadline < "2019-06-10")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (expect (org-ql test-buffer
-                  (deadline < "2017-06-10")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((deadline < "2019-06-10"))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
+        (org-ql-expect ((deadline < "2017-06-10"))
+          nil))
+
       (org-ql-it ">"
         ;; TODO: Figure out why these tests take much longer than e.g. the (deadline <) tests.
-        (expect (org-ql test-buffer
-                  (deadline > "2017-07-04 00:00")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (expect (org-ql test-buffer
-                  (deadline > "2019-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((deadline > "2017-07-04 00:00"))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
+        (org-ql-expect ((deadline > "2019-07-05"))
+          nil))
+
       (org-ql-it ">="
-        (expect (org-ql test-buffer
-                  (deadline >= "2017-07-04")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (expect (org-ql test-buffer
-                  (deadline >= "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (expect (org-ql test-buffer
-                  (deadline >= "2017-07-06")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
-        (expect (org-ql test-buffer
-                  (deadline >= "2018-07-06")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((deadline >= "2017-07-04"))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
+        (org-ql-expect ((deadline >= "2017-07-05"))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
+        (org-ql-expect ((deadline >= "2017-07-06"))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
+        (org-ql-expect ((deadline >= "2018-07-06"))
+          nil))
+
       (org-ql-it "<="
-        (expect (org-ql test-buffer
-                  (deadline <= "2017-07-04")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil)
-        (expect (org-ql test-buffer
-                  (deadline <= "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("/r/emacs"))
-        (expect (org-ql test-buffer
-                  (deadline <= "2018-07-06")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
+        (org-ql-expect ((deadline <= "2017-07-04"))
+          nil)
+        (org-ql-expect ((deadline <= "2017-07-05"))
+          '("/r/emacs"))
+        (org-ql-expect ((deadline <= "2018-07-06"))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
 
     (org-ql-it "(done)"
-      (expect (org-ql test-buffer
-                (done)
-                :action (org-ql-test-org-get-heading))
-              :to-equal '("Learn universal sign language")))
+      (org-ql-expect ((done))
+        '("Learn universal sign language")))
 
     (describe "(regexp)"
+
       (org-ql-it "with 1 argument"
-        (expect (org-ql test-buffer
-                  (regexp "Take over")
-                  :sort todo
-                  :action (org-ql-test-org-get-heading)) :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+        (org-ql-expect ((regexp "Take over")
+                        :sort todo)
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+
       (org-ql-it "with 2 arguments"
-        (expect (org-ql test-buffer
-                  (regexp "Take over" "pizza")
-                  :sort todo
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut")))
+        (org-ql-expect ((regexp "Take over" "pizza")
+                        :sort todo)
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut")))
+
       (org-ql-it "with a plain string"
-        (expect (org-ql test-buffer
-                  "Take over"
-                  :sort todo
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+        (org-ql-expect ("Take over"
+                        :sort todo)
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+
       (org-ql-it "with two plain strings"
-        (expect (org-ql test-buffer
-                  (or "Take over" "pizza")
-                  :sort todo
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut"))))
+        (org-ql-expect ((or "Take over" "pizza")
+                        :sort todo)
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut"))))
 
     (describe "(todo)"
+
       (org-ql-it "without arguments"
         ;; FIXME: This returns an item that is done, which is incorrect.
-        (expect (org-ql test-buffer
-                  (todo)
-                  :sort todo
-                  :action (org-ql-test-org-get-heading)) :to-equal '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+        (org-ql-expect ((todo)
+                        :sort todo)
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+
       (org-ql-it "with 1 argument"
         ;; FIXME: Figure out why this takes >10x longer than the other (todo)
         ;; tests, according to Buttercup.  Might just be GC, though.
-        (expect (org-ql test-buffer
-                  (todo "WAITING")
-                  :sort todo
-                  :action (org-ql-test-org-get-heading)) :to-equal '("Visit the moon")))
+        (org-ql-expect ((todo "WAITING")
+                        :sort todo)
+          '("Visit the moon")))
+
       (org-ql-it "with 2 arguments"
-        (expect (org-ql test-buffer
-                  (todo "WAITING" "SOMEDAY")
-                  :sort todo
-                  :action (org-ql-test-org-get-heading)) :to-equal '("Visit the moon" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
+        (org-ql-expect ((todo "WAITING" "SOMEDAY")
+                        :sort todo)
+          '("Visit the moon" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
 
     (describe "(tags)"
+
       (org-ql-it "without arguments"
-        (expect (org-ql test-buffer
-                  (tags)
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
-        (expect (org-ql test-buffer
-                  (not (tags))
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Test data" "Recurring" "Sunrise/sunset" "Ideas" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+        (org-ql-expect ((tags))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
+        (org-ql-expect ((not (tags)))
+          '("Test data" "Recurring" "Sunrise/sunset" "Ideas" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+
       (org-ql-it "with a tag"
-        (expect (org-ql test-buffer
-                  (tags "Emacs")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("/r/emacs" "Rewrite Emacs in Common Lisp"))
-        (expect (org-ql test-buffer
-                  (not (tags "Emacs"))
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+        (org-ql-expect ((tags "Emacs"))
+          '("/r/emacs" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((not (tags "Emacs")))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+
       (org-ql-it "with 2 tags"
-        (expect (org-ql test-buffer
-                  (tags "Emacs" "space")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Visit Mars" "Visit the moon" "/r/emacs" "Rewrite Emacs in Common Lisp"))
-        (expect (org-ql test-buffer
-                  (not (tags "Emacs" "space"))
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling"))))
+        (org-ql-expect ((tags "Emacs" "space"))
+          '("Visit Mars" "Visit the moon" "/r/emacs" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((not (tags "Emacs" "space")))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling"))))
 
     (describe "(ts)"
+
       (org-ql-it "without arguments"
-        (expect (org-ql test-buffer
-                  (ts)
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+        (org-ql-expect ((ts))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+
       (org-ql-it ":from a timestamp"
         ;; TODO: Figure out why these take longer than the other (ts) tests.
-        (expect (org-ql test-buffer
-                  (ts :from "2017-01-01")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (expect (org-ql test-buffer
-                  (ts :from "2019-06-08")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil))
+        (org-ql-expect ((ts :from "2017-01-01"))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((ts :from "2019-06-08"))
+          nil))
+
       (org-ql-it ":to a timestamp"
-        (expect (org-ql test-buffer
-                  (ts :to "2019-06-10")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (expect (org-ql test-buffer
-                  (ts :to "2017-07-04")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Skype with president of Antarctica")))
+        (org-ql-expect ((ts :to "2019-06-10"))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((ts :to "2017-07-04"))
+          '("Skype with president of Antarctica")))
+
       (org-ql-it ":on a timestamp"
-        (expect (org-ql test-buffer
-                  (ts :on "2017-07-05")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Test data" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (expect (org-ql test-buffer
-                  (ts :on "2019-06-09")
-                  :action (org-ql-test-org-get-heading))
-                :to-equal nil)))
+        (org-ql-expect ((ts :on "2017-07-05"))
+          '("Test data" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((ts :on "2019-06-09"))
+          nil)))
 
     (describe "Compound queries"
 
       (org-ql-it "Tags and to-do"
-        (expect (org-ql test-buffer
-                  (and (todo "SOMEDAY")
-                       (tags "Emacs"))
-                  :action (org-ql-test-org-get-heading))
-                :to-equal '("Rewrite Emacs in Common Lisp"))))))
+        (org-ql-expect ((and (todo "SOMEDAY")
+                             (tags "Emacs")))
+          '("Rewrite Emacs in Common Lisp"))))))
 
 ;; Local Variables:
 ;; truncate-lines: t
