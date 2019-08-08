@@ -97,12 +97,13 @@ Based on Buttercup macro `it'."
 
   (before-all
 
-    (defun org-ql-test-org-get-heading ()
-      ;; For Org 9.0.5.
-      (substring-no-properties (org-get-heading t t)))
-    (defun org-ql-test-org-get-heading ()
-      ;; For Org 9.1.9.
-      (substring-no-properties (org-get-heading t t t t)))
+    (if (version< (org-version) "9.1")
+        (defun org-ql-test-org-get-heading ()
+          ;; For Org 9.0.5.
+          (substring-no-properties (org-get-heading t t)))
+      (defun org-ql-test-org-get-heading ()
+        ;; For Org 9.1.9.
+        (substring-no-properties (org-get-heading t t t t))))
 
     (setq test-buffer (find-file-noselect (concat default-directory "tests/data.org"))
           num-headings (with-current-buffer test-buffer
