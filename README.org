@@ -52,6 +52,15 @@ More examples are available in [[examples.org]].
     (and (property "genre" "classical")
          (property "composer" "Chopin")
          (not (property "key"))))
+
+  ;; Define a custom Org Agenda command which inserts an `org-ql-block'
+  ;; block before the regular agenda:
+  (setq org-agenda-custom-commands
+        '(("ces" "Custom: Agenda and Emacs SOMEDAY [#A] items"
+           ((org-ql-block '(and (todo "SOMEDAY")
+                                (tags "Emacs")
+                                (priority "A")))
+            (agenda)))))
 #+END_SRC
 
 * Usage
