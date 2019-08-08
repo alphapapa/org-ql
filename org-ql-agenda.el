@@ -241,6 +241,33 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
       (org-agenda-finalize)
       (goto-char (point-min)))))
 
+(defun org-ql-agenda-block (query)
+  "Insert items for QUERY into current buffer.
+QUERY should be an `org-ql' query form.  Like other agenda block
+commands, it searches files returned by function
+`org-agenda-files'.  Intended to be used as a user-defined
+function in `org-agenda-custom-commands'.  QUERY corresponds to
+the `match' item in the custom command form."
+  (when-let* ((from (org-agenda-files nil 'ifmode))
+              (items (org-ql-select from
+                       query :action 'element-with-markers)))
+    ;; Not sure if calling the prepare function is necessary, but let's follow the pattern.
+    (org-agenda-prepare)
+    ;; FIXME: `org-agenda--insert-overriding-header' is from an Org version newer than
+    ;; I'm using.  Should probably declare it as a minimum Org version after upgrading.
+    ;;  (org-agenda--insert-overriding-header (org-ql-agenda--header-line-format from query))
+    (insert (org-add-props (org-ql-agenda--header-line-format from query)
+		nil 'face 'org-agenda-structure) "\n")
+    ;; Calling `org-agenda-finalize' should be unnecessary, because in a "series" agenda,
+    ;; `org-agenda-multi' is bound non-nil, in which case `org-agenda-finalize' does nothing.
+    ;; But we do call `org-agenda-finalize-entries', which allows `org-super-agenda' to work.
+    (->> items
+         (-map #'org-ql-agenda--format-element)
+         org-agenda-finalize-entries
+         insert)))
+
+(defalias 'org-ql-block 'org-ql-agenda-block)
+
 (defun org-ql-agenda--header-line-format (buffers-files query)
   "Return header-line-format for BUFFERS-FILES and QUERY."
   (let* ((query-formatted (format "%S" query))
