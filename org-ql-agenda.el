@@ -222,8 +222,11 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                    (string (org-ql-agenda--buffer buffer))
                    (null (org-ql-agenda--buffer buffer))
                    (buffer buffer)))
+         (map (copy-keymap org-agenda-mode-map))
          (inhibit-read-only t))
+    (define-key map "g" #'org-ql-search-refresh)
     (with-current-buffer buffer
+      (use-local-map map)
       ;; Prepare buffer, saving data for refreshing.
       (setq-local org-ql-buffers-files buffers-files)
       (setq-local org-ql-query query)
@@ -231,8 +234,6 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
       (setq-local org-ql-narrow narrow)
       (setq-local org-ql-super-groups super-groups)
       (setq-local header-line-format (org-ql-agenda--header-line-format buffers-files query))
-      ;; TODO: Derive a minor mode and set keymap there.
-      (local-set-key "g" #'org-ql-search-refresh)
       ;; Clear buffer, insert entries, etc.
       (erase-buffer)
       (insert entries)
