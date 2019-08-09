@@ -348,6 +348,10 @@ replace the clause with a preamble."
                                                      t))
                                  ;; Return nil, don't test the predicate.
                                  nil)
+                                (`(habit)
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":STYLE:" (1+ space)
+                                                                           "habit" (0+ space) eol)))
+                                 nil)
                                 (`(level ,comparator-or-num ,num)
                                  (let ((repeat (pcase comparator-or-num
                                                  ('< `(repeat 1 ,(1- num) "*"))
