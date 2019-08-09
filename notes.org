@@ -430,6 +430,32 @@ Not sure if clearing the cache is necessary here, because it seemed to make near
                                            :action '(org-get-heading t t))))))
 #+END_SRC
 
+*** =closed=
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (closed))
+#+END_SRC
+
+#+RESULTS:
+| Form                  | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-----------------------+--------------------+---------------+----------+------------------|
+| preamble: (closed)    | 4.80               |      0.086553 |        0 |                0 |
+| no preamble: (closed) | slowest            |      0.415165 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (closed <= "2019-01-01"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                  | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (closed <= "2019-01-01")    | 4.21               |      0.105782 |        0 |                0 |
+| no preamble: (closed <= "2019-01-01") | slowest            |      0.445374 |        0 |                0 |
+
 *** =deadline=
 
 #+BEGIN_SRC elisp

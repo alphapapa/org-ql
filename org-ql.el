@@ -316,6 +316,15 @@ replace the clause with a preamble."
                                 element)
                               (pcase element
                                 (`(or _) element)
+                                (`(closed . ,_)
+                                 (setq org-ql-preamble
+                                       (rx-to-string `(seq bol (0+ (any "	 ")) "CLOSED" ":" (1+ space) (1+ not-newline)) t))
+                                 ;; Return element, because the predicate still needs testing.
+                                 element)
+                                (`(closed)
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ (any "	 ")) "CLOSED" ":") t))
+                                 ;; Return element, because the predicate still needs testing.
+                                 element)
                                 (`(deadline . ,_)
                                  (setq org-ql-preamble
                                        (rx-to-string `(seq bol (0+ (any "	 ")) "DEADLINE" ":" (1+ space) (1+ not-newline)) t))
