@@ -39,15 +39,21 @@
   (if-let* ((sexp (elisp--preceding-sexp))
             (correct-sexp-p (pcase (car sexp)
                               ('org-ql 'org-ql)
+                              ('org-ql-expect t)
                               ('org-ql--query-preamble 'query-preamble)
                               ('org-ql--pre-process-query t)
                               (_ nil)))
-            (result (pcase (car sexp)
-                      ('org-ql (org-ql-test--format-result--ql sexp))
-                      ('org-ql--query-preamble (org-ql-test--format-result--query-preamble sexp))
-                      ('org-ql--pre-process-query (format "'%S" (eval sexp)))
+            (result (pcase sexp
+                      (`(org-ql-expect ,args) (org-ql-test--format-result--ql `(org-ql test-buffer
+                                                                                 ,@args
+                                                                                 :action (org-ql-test-org-get-heading))))
+                      (`(org-ql . _) (org-ql-test--format-result--ql sexp))
+                      (`(org-ql--query-preamble  . _) (org-ql-test--format-result--query-preamble sexp))
+                      (`(org-ql--pre-process-query . _) (format "'%S" (eval sexp)))
                       (_ nil))))
-      (insert " :to-equal " result)
+      (progn
+        (backward-char 1)
+        (insert "\n'" result))
     (user-error "Point must be after an `org-ql' form")))
 
 (defun org-ql-test--format-result--ql (sexp)
@@ -67,10 +73,13 @@
   "Show `org-ql-agenda' for `org-ql' form."
   (interactive)
   (if-let* ((sexp (elisp--preceding-sexp))
-            (correct-sexp-p (eq (car sexp) 'org-ql)))
-      (progn
-        (setf (car sexp) 'org-ql-agenda)
-        (eval sexp))
+            (sexp (pcase sexp
+                    (`(org-ql . ,_) (setf (car sexp) 'org-ql-agenda))
+                    (`(org-ql-expect ,ql-args . ,_) (setf sexp `(org-ql-agenda test-buffer
+                                                                  ,@ql-args)))
+                    (_ nil))))
+
+      (eval sexp)
     (user-error "Point must be after an `org-ql' form")))
 
 ;;;; Macros
