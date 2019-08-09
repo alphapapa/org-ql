@@ -375,6 +375,15 @@ replace the clause with a preamble."
                                 ;;  (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":" (1+ (not (or space ":"))) ":"
                                 ;;                                            (1+ space) (minimal-match (1+ not-newline)) eol)))
                                 ;;  element)
+                                (`(scheduled . ,_)
+                                 (setq org-ql-preamble
+                                       (rx-to-string `(seq bol (0+ (any "	 ")) "SCHEDULED" ":" (1+ space) (1+ not-newline)) t))
+                                 ;; Return element, because the predicate still needs testing.
+                                 element)
+                                (`(scheduled)
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ (any "	 ")) "SCHEDULED" ":") t))
+                                 ;; Return element, because the predicate still needs testing.
+                                 element)
                                 ((and `(tags . ,tags) (guard (not org-use-tag-inheritance)))
                                  ;; When tag inheritance is disabled, we only consider direct tags,
                                  ;; so we can search directly to headings containing one of the tags.

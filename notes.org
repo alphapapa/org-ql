@@ -508,6 +508,32 @@ Not sure if clearing the cache is necessary here, because it seemed to make near
 | preamble: (property "agenda-group" "plans")    | 72.54              |      0.016862 |        0 |                0 |
 | no preamble: (property "agenda-group" "plans") | slowest            |      1.223197 |        0 |                0 |
 
+*** =scheduled=
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (scheduled))
+#+END_SRC
+
+#+RESULTS:
+| Form                     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------+--------------------+---------------+----------+------------------|
+| preamble: (scheduled)    | 4.45               |      0.100968 |        0 |                0 |
+| no preamble: (scheduled) | slowest            |      0.449321 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (scheduled <= "2019-01-01"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|------------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (scheduled <= "2019-01-01")    | 4.13               |      0.111067 |        0 |                0 |
+| no preamble: (scheduled <= "2019-01-01") | slowest            |      0.458726 |        0 |                0 |
+
 *** =tags=
 
 If tag inheritance is enabled, we have to check tags on every heading.  When it's disabled, we can search directly to headings with the given tags.
