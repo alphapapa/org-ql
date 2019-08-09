@@ -311,6 +311,10 @@ RESULTS should be a list of strings as returned by
       (org-ql-expect ((done))
         '("Learn universal sign language")))
 
+    (org-ql-it "(habit)"
+      (org-ql-expect ((habit))
+        '("Practice leaping tall buildings in a single bound")))
+
     (describe "(property)"
 
       ;; MAYBE: Add support for (property) without arguments.
