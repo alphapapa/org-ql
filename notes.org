@@ -416,11 +416,15 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 
 ** Preambles
 
+Not sure if clearing the cache is necessary here, because it seemed to make nearly no difference in the results, but I don't know why.
+
 #+BEGIN_SRC elisp :results silent
   (cl-defmacro org-ql-preamble-bench (&key query (file "tests/data.org") (times 10))
     `(bench-multi-lets :times ,times :ensure-equal t
-       :lets (("preamble" ((org-ql-use-preamble t)))
-              ("no preamble" ((org-ql-use-preamble nil))))
+       :lets (("preamble" ((org-ql-use-preamble t)
+                           (org-ql-cache (ht))))
+              ("no preamble" ((org-ql-use-preamble nil)
+                              (org-ql-cache (ht)))))
        :forms ((,(prin1-to-string query) (org-ql-select ,file
                                            ',query
                                            :action '(org-get-heading t t))))))
@@ -439,6 +443,44 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 |------------------------+--------------------+---------------+----------+------------------|
 | preamble: (level 1)    | 1.34               |      0.562950 |        0 |                0 |
 | no preamble: (level 1) | slowest            |      0.754050 |        0 |                0 |
+
+*** =property=
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (property "agenda-group"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                   | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (property "agenda-group")    | 70.44              |      0.016571 |        0 |                0 |
+| no preamble: (property "agenda-group") | slowest            |      1.167203 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (property "ID"))
+#+END_SRC
+
+#+RESULTS:
+| Form                         | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (property "ID")    | 3.51               |      0.369830 |        0 |                0 |
+| no preamble: (property "ID") | slowest            |      1.299684 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (property "agenda-group" "plans"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                           | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|------------------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (property "agenda-group" "plans")    | 72.54              |      0.016862 |        0 |                0 |
+| no preamble: (property "agenda-group" "plans") | slowest            |      1.223197 |        0 |                0 |
 
 *** =tags=
 

@@ -343,6 +343,29 @@ replace the clause with a preamble."
                                 (`(level ,num)
                                  (setq org-ql-preamble (rx-to-string `(seq bol (repeat ,num "*") " ") t))
                                  nil)
+                                (`(property ,property ,value)
+                                 ;; We do NOT return nil, because the predicate still needs to be tested,
+                                 ;; because the regexp could match a string not inside a property drawer.
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":" ,property ":"
+                                                                           (1+ space) ,value (0+ space) eol)))
+                                 element)
+                                (`(property ,property)
+                                 ;; We do NOT return nil, because the predicate still needs to be tested,
+                                 ;; because the regexp could match a string not inside a property drawer.
+                                 ;; NOTE: The preamble only matches if there appears to be a value.
+                                 ;; A line like ":ID: " without any other text does not match.
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":" ,property ":" (1+ space)
+                                                                           (minimal-match (1+ not-newline)) eol)))
+                                 element)
+                                ;; MAYBE: Support (property) without args.
+                                ;; (`(property)
+                                ;;  ;; We do NOT return nil, because the predicate still needs to be tested,
+                                ;;  ;; because the regexp could match a string not inside a property drawer.
+                                ;;  ;; NOTE: The preamble only matches if there appears to be a value.
+                                ;;  ;; A line like ":ID: " without any other text does not match.
+                                ;;  (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":" (1+ (not (or space ":"))) ":"
+                                ;;                                            (1+ space) (minimal-match (1+ not-newline)) eol)))
+                                ;;  element)
                                 ((and `(tags . ,tags) (guard (not org-use-tag-inheritance)))
                                  ;; When tag inheritance is disabled, we only consider direct tags,
                                  ;; so we can search directly to headings containing one of the tags.
