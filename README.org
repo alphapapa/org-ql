@@ -25,36 +25,48 @@
 More examples are available in [[examples.org]].
 
 #+BEGIN_SRC elisp
-  ;; Return a list of Org entry elements in the file "~/org/main.org" which have the SOMEDAY
-  ;; to-do keyword, are tagged "Emacs", and have priority B or higher.
+  ;; Return a list of Org entry elements in the file "~/org/main.org"
+  ;; which have the SOMEDAY to-do keyword, are tagged "Emacs", and have
+  ;; priority B or higher.
   (org-ql "~/org/main.org"
     (and (todo "SOMEDAY")
          (tags "Emacs")
-         (priority >= "B"))) ;=> ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
+         (priority >= "B")))
+  ;;=> ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
 
-  ;; Return a list of bills coming due, searching all Org Agenda files, sorted by deadline.  Deadlines
-  ;; are compared with configured Org warning days, which is implied by the plain `<=' in the
-  ;; `deadline' matcher.
-  (org-ql (org-agenda-files)
-    (and (not (done))
-         (tags "bills")
-         (deadline <=))
-    :sort deadline)
+  ;; Set the tag "Emacs" on every entry in the inbox file that mentions
+  ;; "Emacs".  `org-ql-select' works like `org-ql' but is a function
+  ;; rather than a macro.  The bare-string query "Emacs" is equivalent
+  ;; to (regexp "Emacs").
+  (org-ql-select "~/org/inbox.org"
+    "Emacs"
+    :action '(org-toggle-tag "Emacs" 'on))
 
-  ;; Set the tag "Emacs" on every entry in the inbox file that mentions "Emacs".
-  (org-ql "~/org/inbox.org"
-    (regexp "Emacs")
-    :action (org-toggle-tag "Emacs" 'on))
+  ;; Return a list of bills coming due, searching all Org Agenda files,
+  ;; sorted by deadline.  Deadlines are compared with
+  ;; `org-deadline-warning-days', which is implied by the plain `<=' in
+  ;; the `deadline' predicate.  `org-ql-query' works like `org-ql-select'
+  ;; but offers arguments named like SQL queries.
+  (org-ql-query
+    :select #'org-get-heading
+    :from (org-agenda-files)
+    :where '(and (not (done))
+                 (tags "bills")
+                 (deadline <=))
+    :order-by 'deadline)
+  ;;=> ("TODO Electric bill" "TODO Water bill")
 
-  ;; If you kept a database of music in an Org file, you might run a query like this to find tracks
-  ;; composed by Chopin that do not have their key recorded in the database:
-  (org-ql "~/org/music.org"
-    (and (property "genre" "classical")
-         (property "composer" "Chopin")
-         (not (property "key"))))
+  ;; If you kept a database of music in an Org file, you could run a
+  ;; query like this to find tracks composed by Chopin that do not have
+  ;; their key recorded in the database.  `org-ql-search' works like
+  ;; `org-ql-select' and displays results in an agenda-like buffer:
+  (org-ql-search "~/org/music.org"
+    '(and (property "genre" "classical")
+          (property "composer" "Chopin")
+          (not (property "key"))))
 
-  ;; Define a custom Org Agenda command which inserts an `org-ql-block'
-  ;; block before the regular agenda:
+  ;; Integrate `org-ql' into a custom Org Agenda command which inserts
+  ;; an `org-ql' block before the regular agenda:
   (setq org-agenda-custom-commands
         '(("ces" "Custom: Agenda and Emacs SOMEDAY [#A] items"
            ((org-ql-block '(and (todo "SOMEDAY")
