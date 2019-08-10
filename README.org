@@ -302,16 +302,11 @@ Examples:
 
 Like ~org-ql-select~, but arguments are named more like a ~SQL~ query.
 
-~SELECT~ corresponds to the ~org-ql-select~ argument ~ACTION~.
-
-~FROM~ corresponds to the ~org-ql-select~ argument ~BUFFERS-OR-FILES~.
-
-~WHERE~ corresponds to the ~org-ql-select~ argument ~QUERY~.
-
-~ORDER-BY~ corresponds to the ~org-ql-select~ argument ~SORT~, which
-see.
-
-~NARROW~ corresponds to the ~org-ql-select~ argument ~NARROW~.
++  ~SELECT~ corresponds to the ~org-ql-select~ argument ~ACTION~.
++  ~FROM~ corresponds to the ~org-ql-select~ argument ~BUFFERS-OR-FILES~.
++  ~WHERE~ corresponds to the ~org-ql-select~ argument ~QUERY~.
++  ~ORDER-BY~ corresponds to the ~org-ql-select~ argument ~SORT~, which see.
++  ~NARROW~ corresponds to the ~org-ql-select~ argument ~NARROW~.
 
 Examples:
 
