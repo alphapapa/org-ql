@@ -286,7 +286,7 @@ Examples:
 
 **** Function: ~org-ql-query~
 
-/Arguments:/ ~(&key (select 'element-with-markers) from where)~
+/Arguments:/ ~(&key (select 'element-with-markers) from where order-by narrow)~
 
 Like ~org-ql-select~, but arguments are named more like a ~SQL~ query.
 
@@ -295,6 +295,11 @@ Like ~org-ql-select~, but arguments are named more like a ~SQL~ query.
 ~FROM~ corresponds to the ~org-ql-select~ argument ~BUFFERS-OR-FILES~.
 
 ~WHERE~ corresponds to the ~org-ql-select~ argument ~QUERY~.
+
+~ORDER-BY~ corresponds to the ~org-ql-select~ argument ~SORT~, which
+see.
+
+~NARROW~ corresponds to the ~org-ql-select~ argument ~NARROW~.
 
 Examples:
 

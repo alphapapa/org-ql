@@ -196,7 +196,7 @@ non-nil."
       ((pred functionp) (sort items sort))
       (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
 
-(cl-defun org-ql-query (&key (select 'element-with-markers) from where)
+(cl-defun org-ql-query (&key (select 'element-with-markers) from where narrow order-by)
   "Like `org-ql-select', but arguments are named more like a SQL query.
 
 SELECT corresponds to the `org-ql-select' argument ACTION.  It is
@@ -219,10 +219,17 @@ FROM corresponds to the `org-ql-select' argument BUFFERS-OR-FILES.
 It may be one or a list of file paths and/or buffers.
 
 WHERE corresponds to the `org-ql-select' argument QUERY.  It
-should be an `org-ql' query sexp."
+should be an `org-ql' query sexp.
+
+ORDER-BY corresponds to the `org-ql-select' argument SORT, which
+see.
+
+NARROW corresponds to the `org-ql-select' argument NARROW."
   (declare (indent defun))
   (org-ql-select from where
-    :action select))
+    :action select
+    :narrow narrow
+    :sort sort))
 
 (defun org-ql--pre-process-query (query)
   "Return QUERY having been pre-processed.
