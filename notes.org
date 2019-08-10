@@ -4,6 +4,49 @@
 
 ** TODO Update commentary
 
+** TODO ~org-agenda-skip-function~
+
+As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
+
+#+BEGIN_SRC elisp
+  ;;; lima-0ac22.el --- -*- lexical-binding: t; -*-
+
+  (defun org-ql-skip-function (query)
+    "Return a function for `org-agenda-skip-function' for QUERY.
+  Compared to using QUERY in `org-ql', this effectively turns QUERY
+  into (not QUERY)."
+    (let* ((predicate (org-ql--query-predicate '(regexp "ryo-modal"))))
+      (lambda ()
+        ;; This duplicates the functionality of `org-ql--select'.
+        (let (orig-fns)
+          (--each org-ql-predicates
+            ;; Save original function mappings.
+            (let ((name (plist-get it :name)))
+              (push (list :name name :fn (symbol-function name)) orig-fns)))
+          (unwind-protect
+              (progn
+                (--each org-ql-predicates
+                  ;; Set predicate functions.
+                  (fset (plist-get it :name) (plist-get it :fn)))
+                ;; Run query.
+                ;; FIXME: "If this function returns nil, the current match should not be skipped.
+                ;; Otherwise, the function must return a position from where the search
+                ;; should be continued."
+                (funcall predicate))
+            (--each orig-fns
+              ;; Restore original function mappings.
+              (fset (plist-get it :name) (plist-get it :fn))))))))
+
+  (let ((org-agenda-custom-commands
+         '(("z" "Z"
+            ((tags-todo "PRIORITY=\"A\"+Emacs/!SOMEDAY"))
+            ((org-agenda-skip-function (org-ql-skip-function '(regexp "ryo-modal")))))
+           ((org-agenda-files ("~/org/inbox.org"))))))
+    (org-agenda nil "z"))
+#+END_SRC
+
+I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
+
 ** TODO [#B] Implied string literal regexp selector
 
 As mentioned [[https://www.reddit.com/r/emacs/comments/c8e0zp/my_gnu_hyperbole_vision_quest_odyssey_two/esmtqow/][here]]:
