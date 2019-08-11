@@ -147,11 +147,20 @@ EOF
 # ** Emacs
 
 function run_emacs {
-    debug "run_emacs: emacs -Q --batch -L \"$load_path\" --load=$package_initialize_file $@"
+    debug "run_emacs: emacs -Q --batch --load=$package_initialize_file -L \"$load_path\" $@"
+    if [[ $debug_load_path ]]
+    then
+        debug $(emacs -Q --batch \
+                      --load=$package_initialize_file \
+                      -L "$load_path" \
+                      --eval "(message \"LOAD-PATH: %s\" load-path)" \
+                      2>&1)
+    fi
 
     output_file=$(mktemp)
-    emacs -Q --batch -L "$load_path" \
+    emacs -Q --batch  \
           --load=$package_initialize_file \
+          -L "$load_path" \
           "$@" \
         &>$output_file
 
@@ -239,11 +248,11 @@ function cleanup {
 function echo_color {
     # This allows bold, italic, etc. without needing a function for
     # each variation.
+    local color_code="COLOR_$1"
+    shift
+
     if [[ $color ]]
     then
-        local color_code="COLOR_$1"
-        shift
-
         echo -e "${!color_code}${@}${COLOR_off}"
     else
         echo "$@"
@@ -321,6 +330,8 @@ Options:
   -d, --debug    Print debug info.
   -h, --help     I need somebody!
   -v, --verbose  Increase verbosity, up to -vv.
+
+  --debug-load-path  Print load-path.
 
   -f FILE, --file FILE  Check FILE in addition to discovered files.
 
@@ -462,7 +473,7 @@ COLOR_white='\e[0;37m'
 
 # * Args
 
-args=$(getopt -n "$0" -o dhvf:C -l debug,help,verbose,file:,no-color,no-compile -- "$@") || { usage; exit 1; }
+args=$(getopt -n "$0" -o dhvf:C -l debug,debug-load-path,help,verbose,file:,no-color,no-compile -- "$@") || { usage; exit 1; }
 eval set -- "$args"
 
 while true
@@ -471,6 +482,9 @@ do
         -d|--debug)
             debug=true
             verbose=2
+            ;;
+        --debug-load-path)
+            debug_load_path=true
             ;;
         -h|--help)
             usage
