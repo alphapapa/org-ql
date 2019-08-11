@@ -131,6 +131,25 @@ RESULTS should be a list of strings as returned by
                           (cl-loop while (re-search-forward org-heading-regexp nil t)
                                    sum 1)))))
 
+  (describe "Query functions/macros"
+
+    (it "org-ql"
+      (expect (length (org-ql test-buffer
+                        (category)
+                        :sort deadline))
+              :to-equal num-headings))
+    (it "org-ql-select"
+      (expect (length (org-ql-select test-buffer
+                        '(category)
+                        :sort 'deadline))
+              :to-equal num-headings))
+    (it "org-ql-query"
+      (expect (length (org-ql-query :select 'element
+                                    :from test-buffer
+                                    :where '(category)
+                                    :order-by 'date))
+              :to-equal num-headings)))
+
   (it "Query pre-processing"
     (expect (org-ql--pre-process-query '(and "string1" "string2"))
             :to-equal '(and (regexp "string1") (regexp "string2")))
