@@ -229,7 +229,7 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
   (org-ql-select from where
     :action select
     :narrow narrow
-    :sort sort))
+    :sort order-by))
 
 (defun org-ql--pre-process-query (query)
   "Return QUERY having been pre-processed.
