@@ -647,6 +647,157 @@ If tag inheritance is enabled, we have to check tags on every heading.  When it'
 | preamble: (tags "Emacs")    | 2.08               |      0.274555 |        0 |                0 |
 | no preamble: (tags "Emacs") | slowest            |      0.570116 |        0 |                0 |
 
+*** ~ts~
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts))
+#+END_SRC
+
+#+RESULTS:
+| Form              | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------------+--------------------+---------------+----------+------------------|
+| preamble: (ts)    | 1.13               |      0.475646 |        0 |                0 |
+| no preamble: (ts) | slowest            |      0.535950 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts :from "2019-01-01"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                 | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------------------+--------------------+---------------+----------+------------------|
+| no preamble: (ts :from "2019-01-01") | 1.11               |      0.537445 |        0 |                0 |
+| preamble: (ts :from "2019-01-01")    | slowest            |      0.594534 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts :from "2017-01-01"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                 | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------------------+--------------------+---------------+----------+------------------|
+| no preamble: (ts :from "2017-01-01") | 1.13               |      0.526891 |        0 |                0 |
+| preamble: (ts :from "2017-01-01")    | slowest            |      0.594360 |        0 |                0 |
+
+Not sure why that one is slower with preamble.
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 10
+                         :query (ts :from "2017-01-01"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                 | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------------------+--------------------+---------------+----------+------------------|
+| no preamble: (ts :from "2017-01-01") | 1.04               |      0.025688 |        0 |                0 |
+| preamble: (ts :from "2017-01-01")    | slowest            |      0.026642 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts :to "2010-01-01"))
+#+END_SRC
+
+#+RESULTS:
+| Form                               | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|------------------------------------+--------------------+---------------+----------+------------------|
+| no preamble: (ts :to "2010-01-01") | 1.10               |      0.538603 |        0 |                0 |
+| preamble: (ts :to "2010-01-01")    | slowest            |      0.593466 |        0 |                0 |
+
+*** ~ts-active~
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts-a))
+#+END_SRC
+
+#+RESULTS:
+| Form                | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------------------+--------------------+---------------+----------+------------------|
+| preamble: (ts-a)    | 4.77               |      0.071489 |        0 |                0 |
+| no preamble: (ts-a) | slowest            |      0.340896 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts-a :from "2017-07-06"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                   | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (ts-a :from "2017-07-06")    | 1.78               |      0.188369 |        0 |                0 |
+| no preamble: (ts-a :from "2017-07-06") | slowest            |      0.335975 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts-a :to "2017-07-06"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                 | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (ts-a :to "2017-07-06")    | 4.64               |      0.075307 |        0 |                0 |
+| no preamble: (ts-a :to "2017-07-06") | slowest            |      0.349445 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts-a :on "2017-07-06"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                 | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (ts-a :on "2017-07-06")    | 4.33               |      0.076075 |        0 |                0 |
+| no preamble: (ts-a :on "2017-07-06") | slowest            |      0.329106 |        0 |                0 |
+
+*** ~ts-inactive~
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts-i))
+#+END_SRC
+
+#+RESULTS:
+| Form                | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------------------+--------------------+---------------+----------+------------------|
+| preamble: (ts-i)    | 1.21               |      0.459152 |        0 |                0 |
+| no preamble: (ts-i) | slowest            |      0.555632 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts-i :from "2019-07-06"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                   | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------------------------------------+--------------------+---------------+----------+------------------|
+| no preamble: (ts-i :from "2019-07-06") | 1.09               |      0.531976 |        0 |                0 |
+| preamble: (ts-i :from "2019-07-06")    | slowest            |      0.579745 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :times 1
+                         :file "~/org/inbox.org"
+                         :query (ts-i :to "2019-07-06"))
+#+END_SRC
+
+#+RESULTS:
+| Form                                 | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------------------+--------------------+---------------+----------+------------------|
+| no preamble: (ts-i :to "2019-07-06") | 1.34               |      0.553428 |        0 |                0 |
+| preamble: (ts-i :to "2019-07-06")    | slowest            |      0.743881 |        0 |                0 |
+
 ** with/without ts.el
 
 [2019-08-11 Sun 15:39]  These results seem to show a minor performance improvement by using ~ts~, and the code is simpler.

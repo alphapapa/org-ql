@@ -403,6 +403,15 @@ replace the clause with a preamble."
                                                                      t))
                                  ;; Return nil, because we don't need to test the predicate.
                                  nil)
+                                (`(ts . ,rest)
+                                 (setq org-ql-preamble (pcase (plist-get rest :type)
+                                                         ((or 'nil 'both) org-tsr-regexp-both)
+                                                         ('active org-tsr-regexp)
+                                                         ('inactive org-ql-tsr-regexp-inactive)))
+                                 ;; Predicate needs testing only when args are present.
+                                 (-let (((&keys :from :to :on) rest))
+                                   (when (or from to on)
+                                     element)))
                                 (`(and . ,rest)
                                  (let ((clauses (mapcar #'rec rest)))
                                    `(and ,@(-non-nil clauses))))
