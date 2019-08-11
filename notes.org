@@ -647,6 +647,128 @@ If tag inheritance is enabled, we have to check tags on every heading.  When it'
 | preamble: (tags "Emacs")    | 2.08               |      0.274555 |        0 |                0 |
 | no preamble: (tags "Emacs") | slowest            |      0.570116 |        0 |                0 |
 
+** with/without ts.el
+
+[2019-08-11 Sun 15:39]  These results seem to show a minor performance improvement by using ~ts~, and the code is simpler.
+
+#+BEGIN_SRC elisp
+  ;; (require 'ts)
+
+  (org-ql--defpred ts-ts (&key from to _on)
+    ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
+    ;; pre-process that argument in a macro before this function is called.
+    "Return non-nil if current entry has a timestamp in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be strings parseable by
+  `parse-time-string' but may omit the time value."
+    ;; TODO: DRY this with the clocked predicate.
+    ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
+    ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
+    ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
+    (cl-macrolet ((next-timestamp ()
+                                  `(when (re-search-forward org-element--timestamp-regexp end-pos t)
+                                     (ts-parse-org (match-string 0))))
+                  (test-timestamps (pred-form)
+                                   `(cl-loop for next-ts = (next-timestamp)
+                                             while next-ts
+                                             thereis ,pred-form)))
+      (save-excursion
+        (let ((end-pos (org-entry-end-position)))
+          (cond ((not (or from to)) (re-search-forward org-element--timestamp-regexp end-pos t))
+                ((and from to) (test-timestamps (and (ts<= from next-ts)
+                                                     (ts<= next-ts to))))
+                (from (test-timestamps (ts<= from next-ts)))
+                (to (test-timestamps (ts<= next-ts to))))))))
+
+#+END_SRC
+
+*** Without timestamp argument
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("old ts" (org-ql "~/org/inbox.org"
+                        (ts)))
+            ("ts.el ts" (org-ql "~/org/inbox.org"
+                          (ts-ts)))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.14               |      2.251801 |        0 |                0 |
+| old ts   | slowest            |      2.560280 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 20 :ensure-equal t
+    :forms (("old ts" (org-ql "~/src/emacs/org-ql/tests/data.org"
+                        (ts)))
+            ("ts.el ts" (org-ql "~/src/emacs/org-ql/tests/data.org"
+                          (ts-ts)))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.05               |      0.103714 |        0 |                0 |
+| old ts   | slowest            |      0.108663 |        0 |                0 |
+
+*** :from
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("old ts" (org-ql "~/org/inbox.org"
+                        (ts :from "2017-01-01")))
+            ("ts.el ts" (org-ql "~/org/inbox.org"
+                          (ts-ts :from "2017-01-01")))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.32               |      1.299966 |        0 |                0 |
+| old ts   | slowest            |      1.713027 |        0 |                0 |
+
+*** :to
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("old ts" (org-ql "~/org/inbox.org"
+                        (ts :to "2019-01-01")))
+            ("ts.el ts" (org-ql "~/org/inbox.org"
+                          (ts-ts :to "2019-01-01")))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.01               |      1.300084 |        0 |                0 |
+| old ts   | slowest            |      1.312208 |        0 |                0 |
+
+*** :on
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("old ts" (org-ql "~/org/inbox.org"
+                        (ts :on "2019-05-14")))
+            ("ts.el ts" (org-ql "~/org/inbox.org"
+                          (ts-ts :on "2019-05-14")))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.17               |      0.557281 |        0 |                0 |
+| old ts   | slowest            |      0.652149 |        0 |                0 |
+
 ** Using =org-element-parse-buffer=
 
 This basically works, as a very basic kind of agenda view, but we can already see that it's much slower (at least, for single-day views) because =org-element-parse-buffer= is slow compared to the agenda code.

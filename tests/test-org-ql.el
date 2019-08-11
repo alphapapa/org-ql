@@ -169,7 +169,16 @@ RESULTS should be a list of strings as returned by
             :to-equal '(when (and (regexp "string-cond1") (regexp "string-cond2")) (or (regexp "string1") (regexp "string2"))))
     (expect (org-ql--pre-process-query '(unless (and "stringcondition1" "stringcond2")
                                           (or "string1" "string2")))
-            :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2")))))
+            :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2"))))
+
+    (expect (org-ql--pre-process-query '(or (ts-active :on "2019-01-01")
+                                            (ts-a :on "2019-01-01")
+                                            (ts-inactive :on "2019-01-01")
+                                            (ts-i :on "2019-01-01")))
+            :to-equal '(or (ts :type active :on "2019-01-01")
+                           (ts :type active :on "2019-01-01")
+                           (ts :type inactive :on "2019-01-01")
+                           (ts :type inactive :on "2019-01-01"))))
 
   (describe "Query optimizing"
 
@@ -412,28 +421,93 @@ RESULTS should be a list of strings as returned by
 
     (describe "(ts)"
 
-      (org-ql-it "without arguments"
-        (org-ql-expect ((ts))
-          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+      (describe "active"
 
-      (org-ql-it ":from a timestamp"
-        ;; TODO: Figure out why these take longer than the other (ts) tests.
-        (org-ql-expect ((ts :from "2017-01-01"))
-          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((ts :from "2019-06-08"))
-          nil))
+        (org-ql-it "without arguments"
+          (org-ql-expect ((ts :type active))
+            '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
 
-      (org-ql-it ":to a timestamp"
-        (org-ql-expect ((ts :to "2019-06-10"))
-          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((ts :to "2017-07-04"))
-          '("Skype with president of Antarctica")))
+        (org-ql-it ":from a timestamp"
+          ;; TODO: Figure out why these take longer than the other (ts) tests.
+          (org-ql-expect ((ts :from "2017-07-08" :type active))
+            '("Take over the universe" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
+          (org-ql-expect ((ts :from "2019-06-08" :type active))
+            nil))
 
-      (org-ql-it ":on a timestamp"
-        (org-ql-expect ((ts :on "2017-07-05"))
-          '("Test data" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((ts :on "2019-06-09"))
-          nil)))
+        (org-ql-it ":to a timestamp"
+          (org-ql-expect ((ts :to "2019-06-10" :type active))
+            '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :to "2017-07-04" :type active))
+            '("Skype with president of Antarctica")))
+
+        (org-ql-it ":on a timestamp"
+          (org-ql-expect ((ts :on "2017-07-05" :type active))
+            '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :on "2019-06-09" :type active))
+            nil)))
+
+      (describe "inactive"
+
+        (org-ql-it "without arguments"
+          (org-ql-expect ((ts :type inactive))
+            '("Test data" "Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp")))
+
+        (org-ql-it ":from a timestamp"
+          (org-ql-expect ((ts :from "2017-07-06" :type inactive))
+            '("Visit the moon" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :from "2019-06-08" :type inactive))
+            nil))
+
+        (org-ql-it ":to a timestamp"
+          (org-ql-expect ((ts :to "2019-06-10" :type inactive))
+            '("Test data" "Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :to "2017-07-04" :type inactive))
+            'nil))
+
+        (org-ql-it ":on a timestamp"
+          (org-ql-expect ((ts :on "2017-07-05" :type inactive))
+            '("Test data" "Learn universal sign language"))
+          (org-ql-expect ((ts :on "2019-06-09" :type inactive))
+            nil)))
+
+      (describe "both"
+
+        (org-ql-it "without arguments"
+          (org-ql-expect ((ts))
+            '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :type both))
+            '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+
+        (org-ql-it ":from a timestamp"
+          ;; TODO: Figure out why these take longer than the other (ts) tests.
+          (org-ql-expect ((ts :from "2017-07-05"))
+            '("Test data" "Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :from "2017-07-05" :type both))
+            '("Test data" "Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :from "2019-06-08"))
+            nil)
+          (org-ql-expect ((ts :from "2019-06-08" :type both))
+            nil))
+
+        (org-ql-it ":to a timestamp"
+          (org-ql-expect ((ts :to "2017-07-06"))
+            '("Test data" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :to "2017-07-06" :type both))
+            '("Test data" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :to "2017-07-04"))
+            '("Skype with president of Antarctica"))
+          (org-ql-expect ((ts :to "2017-07-04" :type both))
+            '("Skype with president of Antarctica")))
+
+        (org-ql-it ":on a timestamp"
+          (org-ql-expect ((ts :on "2017-07-05"))
+            '("Test data" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :on "2017-07-05" :type both))
+            '("Test data" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((ts :on "2019-06-09"))
+            nil)
+          (org-ql-expect ((ts :on "2019-06-09" :type both))
+            nil))))
 
     (describe "Compound queries"
 

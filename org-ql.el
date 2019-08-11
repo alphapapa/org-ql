@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 ;; Version: 0.2-pre
-;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (s "1.12.0"))
+;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (s "1.12.0") (ts "0.2"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -40,6 +40,7 @@
 (require 'subr-x)
 
 (require 'dash)
+(require 'ts)
 
 ;;;; Compatibility
 
@@ -52,6 +53,12 @@
     (org-get-tags pos local)))
 
 ;;;; Variables
+
+(defconst org-ql-tsr-regexp-inactive
+  (concat org-ts-regexp-inactive "\\(--?-?"
+	  org-ts-regexp-inactive "\\)?")
+  ;; MAYBE: Propose this for org.el.
+  "Regular expression matching an inactive timestamp or timestamp range.")
 
 (defvar org-ql--today nil)
 
@@ -232,7 +239,8 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
 
 (defun org-ql--pre-process-query (query)
   "Return QUERY having been pre-processed.
-Replaces bare strings with (regexp) selectors."
+Replaces bare strings with (regexp) selectors, and appropriate
+`ts'-related selectors."
   ;; This is unsophisticated, but it works.
   (cl-labels ((rec (element)
                    (pcase element
@@ -244,6 +252,8 @@ Replaces bare strings with (regexp) selectors."
                                                          ,@(mapcar #'rec clauses)))
                      ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
                      ((pred stringp) `(regexp ,element))
+                     (`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
+                     (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest))
                      (_ element))))
     (rec query)))
 
@@ -267,39 +277,21 @@ Replaces bare strings with (regexp) selectors."
                                             ;; NOTE: The macro must expand to the actual `org-ql--predicate-clocked'
                                             ;; function, not another `clocked'.
                                             `(org-ql--predicate-clocked :from ,from :to ,to))
-                                   (ts (&key from to on)
+                                   (ts (&key from to on (type 'both))
                                        (when on
                                          (setq from on
                                                to on))
                                        (when from
-                                         (setq from (org-ql--parse-time-string from)))
+                                         (setq from (ts-parse-fill 'begin from)))
                                        (when to
-                                         (setq to (org-ql--parse-time-string to 'end)))
+                                         (setq to (ts-parse-fill 'end to)))
                                        ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
                                        ;; function, not another `ts'.
-                                       `(org-ql--predicate-ts :from ,from :to ,to))
-                                   (ts-active (&key from to on)
-                                              (when on
-                                                (setq from on
-                                                      to on))
-                                              (when from
-                                                (setq from (org-ql--parse-time-string from)))
-                                              (when to
-                                                (setq to (org-ql--parse-time-string to 'end)))
-                                              ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
-                                              ;; function, not another `ts'.
-                                              `(org-ql--predicate-ts-active :from ,from :to ,to))
-                                   (ts-inactive (&key from to on)
-                                                (when on
-                                                  (setq from on
-                                                        to on))
-                                                (when from
-                                                  (setq from (org-ql--parse-time-string from)))
-                                                (when to
-                                                  (setq to (org-ql--parse-time-string to 'end)))
-                                                ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
-                                                ;; function, not another `ts'.
-                                                `(org-ql--predicate-ts-inactive :from ,from :to ,to)))
+                                       `(org-ql--predicate-ts :from ,from :to ,to
+                                                              :regexp ,(pcase type
+                                                                         ('both org-tsr-regexp-both)
+                                                                         ('active org-tsr-regexp)
+                                                                         ('inactive org-ql-tsr-regexp-inactive)))))
                        (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
                                             (= #'=)
                                             (< #'<)
@@ -710,9 +702,11 @@ comparator, PRIORITY should be a priority string."
 ;; and language-independent than using from/to.  Alternatively, add :before/:after, but I
 ;; think the comparators are better.  Also consider using a macro to DRY these out.
 
-(org-ql--defpred ts (&key from to _on)
-  ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
-  ;; pre-process that argument in a macro before this function is called.
+(org-ql--defpred ts (&key from to _on regexp)
+  ;; The underscore before `on' prevents "unused lexical variable" warnings,
+  ;; because we pre-process that argument in a macro before this function is
+  ;; called.  The `regexp' argument is also provided by the macro and is not
+  ;; to be given by the user, so it is omitted from the docstring.
   "Return non-nil if current entry has a timestamp in given period.
 If no arguments are specified, return non-nil if entry has any
 timestamp.
@@ -725,116 +719,28 @@ If TO, return non-nil if entry has a timestamp on or before TO.
 If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be strings parseable by
-`parse-time-string' but may omit the time value."
+`parse-time-string' but may omit the time value.
+
+TYPE may be `active' to match active timestamps, `inactive' to
+match inactive ones, or `both' / nil to match both types."
   ;; TODO: DRY this with the clocked predicate.
   ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
   ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
-                                `(when (re-search-forward org-element--timestamp-regexp end-pos t)
-                                   (save-excursion
-                                     (goto-char (match-beginning 0))
-                                     (org-element-timestamp-parser))))
+                                `(when (re-search-forward regexp end-pos t)
+                                   (ts-parse-org (match-string 0))))
                 (test-timestamps (pred-form)
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
-                                           do (setf beg (float-time (org-timestamp-to-time next-ts))
-                                                    end (float-time (org-timestamp-to-time next-ts 'end)))
                                            thereis ,pred-form)))
     (save-excursion
-      (let ((end-pos (org-entry-end-position))
-            beg end)
-        (cond ((not (or from to)) (next-timestamp))
-              ((and from to) (test-timestamps (and (<= beg to)
-                                                   (>= end from))))
-              (from (test-timestamps (<= from end)))
-              (to (test-timestamps (<= beg to))))))))
-
-(org-ql--defpred ts-active (&key from to _on)
-  ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
-  ;; pre-process that argument in a macro before this function is called.
-  "Return non-nil if current entry has an active timestamp in given period.
-If no arguments are specified, return non-nil if entry has any
-active timestamp.
-
-If FROM, return non-nil if entry has an active timestamp on or
-after FROM.
-
-If TO, return non-nil if entry has an active timestamp on or
-before TO.
-
-If ON, return non-nil if entry has an active timestamp on date
-ON.
-
-FROM, TO, and ON should be strings parseable by
-`parse-time-string' but may omit the time value."
-  ;; TODO: DRY this with the clocked predicate.
-  ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
-  ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
-  ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
-  (cl-macrolet ((next-timestamp ()
-                                `(when (re-search-forward org-element--timestamp-regexp end-pos t)
-                                   (save-excursion
-                                     (goto-char (match-beginning 0))
-                                     (org-element-timestamp-parser))))
-                (test-timestamps (pred-form)
-                                 `(cl-loop for next-ts = (next-timestamp)
-                                           while next-ts
-                                           when (string-prefix-p "<" next-ts)
-                                           do (setf beg (float-time (org-timestamp-to-time next-ts))
-                                                    end (float-time (org-timestamp-to-time next-ts 'end)))
-                                           thereis ,pred-form)))
-    (save-excursion
-      (let ((end-pos (org-entry-end-position))
-            beg end)
-        (cond ((not (or from to)) (next-timestamp))
-              ((and from to) (test-timestamps (and (<= beg to)
-                                                   (>= end from))))
-              (from (test-timestamps (<= from end)))
-              (to (test-timestamps (<= beg to))))))))
-
-(org-ql--defpred ts-inactive (&key from to _on)
-  ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
-  ;; pre-process that argument in a macro before this function is called.
-  "Return non-nil if current entry has an inactive timestamp in given period.
-If no arguments are specified, return non-nil if entry has any
-inactive timestamp.
-
-If FROM, return non-nil if entry has an inactive timestamp on or
-after FROM.
-
-If TO, return non-nil if entry has an inactive timestamp on or
-before TO.
-
-If ON, return non-nil if entry has an inactive timestamp on date
-ON.
-
-FROM, TO, and ON should be strings parseable by
-`parse-time-string' but may omit the time value."
-  ;; TODO: DRY this with the clocked predicate.
-  ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
-  ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
-  ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
-  (cl-macrolet ((next-timestamp ()
-                                `(when (re-search-forward org-element--timestamp-regexp end-pos t)
-                                   (save-excursion
-                                     (goto-char (match-beginning 0))
-                                     (org-element-timestamp-parser))))
-                (test-timestamps (pred-form)
-                                 `(cl-loop for next-ts = (next-timestamp)
-                                           while next-ts
-                                           when (string-prefix-p "[" next-ts)
-                                           do (setf beg (float-time (org-timestamp-to-time next-ts))
-                                                    end (float-time (org-timestamp-to-time next-ts 'end)))
-                                           thereis ,pred-form)))
-    (save-excursion
-      (let ((end-pos (org-entry-end-position))
-            beg end)
-        (cond ((not (or from to)) (next-timestamp))
-              ((and from to) (test-timestamps (and (<= beg to)
-                                                   (>= end from))))
-              (from (test-timestamps (<= from end)))
-              (to (test-timestamps (<= beg to))))))))
+      (let ((end-pos (org-entry-end-position)))
+        (cond ((not (or from to)) (re-search-forward regexp end-pos t))
+              ((and from to) (test-timestamps (and (ts<= from next-ts)
+                                                   (ts<= next-ts to))))
+              (from (test-timestamps (ts<= from next-ts)))
+              (to (test-timestamps (ts<= next-ts to))))))))
 
 ;;;;; Date comparison
 

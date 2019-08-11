@@ -151,9 +151,11 @@ Arguments are listed next to predicate names, where applicable.
 +  ~scheduled (&optional comparator target-date)~ :: Return non-nil if entry's scheduled date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
 +  ~tags (&optional tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).
 +  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).
-+  ~ts (&key from to on)~ :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.  If ~FROM~, return non-nil if entry has a timestamp on or after ~FROM~.  If ~TO~, return non-nil if entry has a timestamp on or before ~TO~.  If ~ON~, return non-nil if entry has a timestamp on date ~ON~.  ~FROM~, ~TO~, and ~ON~ should be strings parseable by ~parse-time-string~ but may omit the time value.
-+  ~ts-active (&key from to on)~ :: Return non-nil if current entry has an active timestamp in given period.  If no arguments are specified, return non-nil if entry has any active timestamp.  If ~FROM~, return non-nil if entry has an active timestamp on or after ~FROM~.  If ~TO~, return non-nil if entry has an active timestamp on or before ~TO~.  If ~ON~, return non-nil if entry has an active timestamp on date ~ON~.  ~FROM~, ~TO~, and ~ON~ should be strings parseable by ~parse-time-string~ but may omit the time value.
-+  ~ts-inactive (&key from to on)~ :: Return non-nil if current entry has an inactive timestamp in given period.  If no arguments are specified, return non-nil if entry has any inactive timestamp.  If ~FROM~, return non-nil if entry has an inactive timestamp on or after ~FROM~.  If ~TO~, return non-nil if entry has an inactive timestamp on or before ~TO~.  If ~ON~, return non-nil if entry has an inactive timestamp on date ~ON~.  ~FROM~, ~TO~, and ~ON~ should be strings parseable by ~parse-time-string~ but may omit the time value.
++  ~ts (&key from to on type)~ :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.  If ~FROM~, return non-nil if entry has a timestamp on or after ~FROM~.  If ~TO~, return non-nil if entry has a timestamp on or before ~TO~.  If ~ON~, return non-nil if entry has a timestamp on date ~ON~.  ~FROM~, ~TO~, and ~ON~ should be strings parseable by ~parse-time-string~ but may omit the time value.  ~TYPE~ may be ~active~ to match active timestamps, ~inactive~ to match inactive ones, or ~both~ / nil to match both types.
++  ~ts-active~ :: Like ~ts~ called with ~:type active~.
++  ~ts-a~ :: Like ~ts~ called with ~:type active~.
++  ~ts-inactive~ :: Like ~ts~ called with ~:type inactive~.
++  ~ts-i~ :: Like ~ts~ called with ~:type inactive~.
 
 ** Functions / Macros
 :PROPERTIES:
@@ -361,6 +363,8 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Macro ~org-ql~ and functions ~org-ql-query~ and ~org-ql-select~ now also accept a comparator function in their ~:sort~ argument.
 +  Function ~org-ql-block~, which works as an Org Agenda series/composite/block command, usable in custom agenda commands defined in variable ~org-agenda-custom-commands~.  (Inspired by [[https://github.com/pestctrl/emacs-config/blob/84c557982a860e86d6f67976a82ea776a7bd2c7a/config-org-new.org#my-own-agenda-renderer][Benson Chu's config]].)
 +  Function ~org-ql-agenda--agenda~ optionally takes a list of entries as an argument.
++  Selectors ~ts-a~ and ~ts-i~, aliases for ~ts-active~ and ~ts-inactive~.
++  Selector ~ts~ now accepts a ~:type~ argument.
 
 *Changed*
 +  Function ~org-ql-query~ renamed to ~org-ql-select~.  ~org-ql-query~ now refers to a new function.
@@ -375,6 +379,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 *Internal*
 +  Optimizations for some query selectors, e.g. =regexp= and =todo=.  These can provide a significant improvement for some queries.  See benchmarks in [[file:notes.org][notes.org]].
++  Library [[https://github.com/alphapapa/ts.el][ts]] is now used for parsing and comparing timestamps.
 
 ** 0.1
 
