@@ -1,5 +1,34 @@
 * Examples
 
+** Show entries with timestamps in the last N days
+
+#+BEGIN_SRC elisp
+  (cl-defun org-ql-agenda-last-days (days &optional (type 'ts))
+    "Show entries from previous DAYS days with timestamps of TYPE.
+   TYPE may be `ts', `ts-active', `ts-inactive', `clocked',
+   `closed', `deadline', `planning', or `scheduled'."
+    (interactive (list (read-number "Days: ")
+                       (->> '(ts ts-active ts-inactive clocked closed deadline planning scheduled)
+                            (completing-read "Timestamp type: ")
+                            intern)))
+    (let ((from (->> (ts-now)
+                     (ts-adjust 'day (* -1 days))
+                     (ts-apply :hour 0 :minute 0 :second 0)
+                     ;; Formatting isn't required, but it looks better in the header than a struct.
+                     ts-format)))
+      (org-ql-search (org-agenda-files)
+        `(,type :from ,from :to ,(ts-now)))))
+
+  ;; Show entries with any timestamp from last 7 days:
+  (org-ql-agenda-last-days 7)
+
+  ;; Show entries clocked in last 7 days:
+  (org-ql-agenda-last-days 30 'clocked)
+
+  ;; Show entries closed in last 7 days:
+  (org-ql-agenda-last-days 30 'closed)
+#+END_SRC
+
 ** Listing bills coming due
 
 This uses the example in the readme file, but maps across the elements returned by ~org-ql~ to present a simple list of titles and deadlines.
