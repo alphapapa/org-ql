@@ -429,6 +429,8 @@ replace the clause with a preamble."
   "Return results for ARGS and current buffer using cache."
   ;; MAYBE: Timeout cached queries.  Probably not necessarily since they will be removed when a
   ;; buffer is closed, or when a query is run after modifying a buffer.
+  ;; FIXME: Narrowed queries should conflict in the cache, because the region is not
+  ;; stored.  We should either not cache narrow queries, or store the region with it.
   (-let (((&plist :query query :action action :narrow narrow) args))
     (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
               (query-cache (cadr buffer-cache))
