@@ -13,6 +13,7 @@
 :TOC:      this
 :END:
   -  [[#examples][Examples]]
+  -  [[#installation][Installation]]
   -  [[#usage][Usage]]
     -  [[#commands][Commands]]
     -  [[#queries][Queries]]
@@ -80,6 +81,29 @@ More examples are available in [[examples.org]].
     (and (todo)
          (children)
          (not (children (todo)))))
+#+END_SRC
+
+* Installation
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
+
+The package may be installed directly from [[https://melpa.org/#/org-ql][MELPA]] or with other tools like [[https://framagit.org/steckerhalter/quelpa][Quelpa]].
+
+After installation. you can use commands like ~org-ql-search~ immediately.
+
+To use the functions and macros in your own Elisp code, load the libraries ~org-ql~ and/or ~org-ql-agenda~ with e.g. ~(require 'org-ql)~.
+
+** Quelpa
+
+Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
+
+1.  Install [[https://framagit.org/steckerhalter/quelpa-use-package#installation][quelpa-use-package]] (which can be installed directly from MELPA).
+2.  Add this form to your init file:
+
+#+BEGIN_SRC elisp
+  (use-package org-ql
+    :quelpa (org-ql :fetcher github :repo "alphapapa/org-ql"))
 #+END_SRC
 
 * Usage
