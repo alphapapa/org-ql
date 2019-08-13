@@ -48,6 +48,12 @@
 (when (version< org-version "9.2")
   (defalias 'org-get-tags #'org-get-tags-at))
 
+;;;; Faces
+
+(defface org-ql-agenda-due-date
+  '((t (:slant italic :weight bold)))
+  "Face for due dates in `org-ql-agenda' views.")
+
 ;;;; Variables
 
 (defvar org-ql-agenda-buffer-name "*Org-QL-Agenda*"
@@ -385,7 +391,7 @@ return an empty string."
                                (org-habit-parse-todo))))
            (due-string (pcase (org-element-property :relative-due-date element)
                          ('nil "")
-                         (string (format " %s " (org-add-props string nil 'face 'underline)))))
+                         (string (format " %s " (org-add-props string nil 'face 'org-ql-agenda-due-date)))))
            (string (s-join " " (-non-nil (list todo-keyword priority-string title due-string tag-string)))))
       (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
       ;; Add all the necessary properties and faces to the whole string
