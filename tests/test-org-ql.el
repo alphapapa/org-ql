@@ -280,39 +280,26 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((closed))
           '("Learn universal sign language")))
 
-      (org-ql-it "="
-        (org-ql-expect ((closed = "2017-07-05"))
+      (org-ql-it ":on"
+        (org-ql-expect ((closed :on "2017-07-05"))
           '("Learn universal sign language"))
-        (org-ql-expect ((closed = "2019-06-09"))
+        (org-ql-expect ((closed :on "2019-06-09"))
           nil))
 
-      (org-ql-it "<"
-        ;; TODO: Figure out why these tests take about 8 times longer than the other comparators in the (closed) tests.
-        (org-ql-expect ((closed < "2019-06-10"))
+      (org-ql-it ":from"
+        (org-ql-expect ((closed :from "2017-07-04"))
           '("Learn universal sign language"))
-        (org-ql-expect ((closed < "2017-06-10"))
+        (org-ql-expect ((closed :from "2017-07-05"))
+          '("Learn universal sign language"))
+        (org-ql-expect ((closed :from "2017-07-06"))
           nil))
 
-      (org-ql-it ">"
-        (org-ql-expect ((closed > "2017-07-04"))
-          '("Learn universal sign language"))
-        (org-ql-expect ((closed > "2019-07-05"))
-          nil))
-
-      (org-ql-it ">="
-        (org-ql-expect ((closed >= "2017-07-04"))
-          '("Learn universal sign language"))
-        (org-ql-expect ((closed >= "2017-07-05"))
-          '("Learn universal sign language"))
-        (org-ql-expect ((closed >= "2017-07-06"))
-          nil))
-
-      (org-ql-it "<="
-        (org-ql-expect ((closed <= "2017-07-04"))
+      (org-ql-it ":to"
+        (org-ql-expect ((closed :to "2017-07-04"))
           nil)
-        (org-ql-expect ((closed <= "2017-07-05"))
+        (org-ql-expect ((closed :to "2017-07-05"))
           '("Learn universal sign language"))
-        (org-ql-expect ((closed <= "2017-07-06"))
+        (org-ql-expect ((closed :to "2017-07-06"))
           '("Learn universal sign language"))))
 
     (describe "(deadline)"
@@ -321,41 +308,28 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((deadline))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs")))
 
-      (org-ql-it "="
-        (org-ql-expect ((deadline = "2017-07-05"))
+      (org-ql-it ":on"
+        (org-ql-expect ((deadline :on "2017-07-05"))
           '("/r/emacs"))
-        (org-ql-expect ((deadline = "2019-06-09"))
+        (org-ql-expect ((deadline :on "2019-06-09"))
           nil))
 
-      (org-ql-it "<"
-        (org-ql-expect ((deadline < "2019-06-10"))
+      (org-ql-it ":from"
+        (org-ql-expect ((deadline :from "2017-07-04"))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (org-ql-expect ((deadline < "2017-06-10"))
-          nil))
-
-      (org-ql-it ">"
-        ;; TODO: Figure out why these tests take much longer than e.g. the (deadline <) tests.
-        (org-ql-expect ((deadline > "2017-07-04 00:00"))
+        (org-ql-expect ((deadline :from "2017-07-05"))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (org-ql-expect ((deadline > "2019-07-05"))
-          nil))
-
-      (org-ql-it ">="
-        (org-ql-expect ((deadline >= "2017-07-04"))
-          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (org-ql-expect ((deadline >= "2017-07-05"))
-          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (org-ql-expect ((deadline >= "2017-07-06"))
+        (org-ql-expect ((deadline :from "2017-07-06"))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
-        (org-ql-expect ((deadline >= "2018-07-06"))
+        (org-ql-expect ((deadline :from "2018-07-06"))
           nil))
 
-      (org-ql-it "<="
-        (org-ql-expect ((deadline <= "2017-07-04"))
+      (org-ql-it ":to"
+        (org-ql-expect ((deadline :to "2017-07-04"))
           nil)
-        (org-ql-expect ((deadline <= "2017-07-05"))
+        (org-ql-expect ((deadline :to "2017-07-05"))
           '("/r/emacs"))
-        (org-ql-expect ((deadline <= "2018-07-06"))
+        (org-ql-expect ((deadline :to "2018-07-06"))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
 
     (org-ql-it "(done)"
@@ -365,6 +339,34 @@ RESULTS should be a list of strings as returned by
     (org-ql-it "(habit)"
       (org-ql-expect ((habit))
         '("Practice leaping tall buildings in a single bound")))
+
+    (describe "(planning)"
+
+      (org-ql-it "without arguments"
+        (org-ql-expect ((planning))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+
+      (org-ql-it ":on"
+        (org-ql-expect ((planning :on "2017-07-05"))
+          '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((planning :on "2019-06-09"))
+          nil))
+
+      (org-ql-it ":from"
+        (org-ql-expect ((planning :from "2017-07-04"))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((planning :from "2017-07-05"))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((planning :from "2017-07-06"))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease")))
+
+      (org-ql-it ":to"
+        (org-ql-expect ((planning :to "2017-07-04"))
+          '("Skype with president of Antarctica"))
+        (org-ql-expect ((planning :to "2017-07-05"))
+          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((planning :to "2018-07-06"))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
     (describe "(property)"
 
@@ -401,6 +403,34 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((or "Take over" "pizza")
                         :sort todo)
           '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut"))))
+
+    (describe "(scheduled)"
+
+      (org-ql-it "without arguments"
+        (org-ql-expect ((scheduled))
+          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+
+      (org-ql-it ":on"
+        (org-ql-expect ((scheduled :on "2017-07-05"))
+          '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((scheduled :on "2019-06-09"))
+          nil))
+
+      (org-ql-it ":from"
+        (org-ql-expect ((scheduled :from "2017-07-04"))
+          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((scheduled :from "2017-07-05"))
+          '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((scheduled :from "2017-07-06"))
+          nil))
+
+      (org-ql-it ":to"
+        (org-ql-expect ((scheduled :to "2017-07-04"))
+          '("Skype with president of Antarctica"))
+        (org-ql-expect ((scheduled :to "2017-07-05"))
+          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((scheduled :to "2018-07-06"))
+          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
     (describe "(todo)"
 

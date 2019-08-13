@@ -52,13 +52,28 @@
   (defun org-ql--get-tags (&optional pos local)
     (org-get-tags pos local)))
 
-;;;; Variables
+;;;; Constants
+
+;; Note the use of the `rx' `blank' keyword, which matches "horizontal" whitespace.
 
 (defconst org-ql-tsr-regexp-inactive
   (concat org-ts-regexp-inactive "\\(--?-?"
 	  org-ts-regexp-inactive "\\)?")
   ;; MAYBE: Propose this for org.el.
   "Regular expression matching an inactive timestamp or timestamp range.")
+
+(defconst org-ql-clock-regexp
+  (rx bol (0+ blank) "CLOCK:" (group (1+ not-newline)))
+  "Regular expression matching Org \"CLOCK:\" lines.
+Like `org-clock-line-re', but matches the timestamp range in a
+match group.")
+
+(defconst org-ql-planning-regexp
+  (rx bol (0+ blank) (or "CLOSED" "DEADLINE" "SCHEDULED") ":" (1+ blank) (group (1+ not-newline)))
+  "Regular expression matching Org \"planning\" lines.
+That is, \"CLOSED:\", \"DEADLINE:\", or \"SCHEDULED:\".")
+
+;;;; Variables
 
 (defvar org-ql--today nil)
 
@@ -275,17 +290,84 @@ Replaces bare strings with (regexp) selectors, and appropriate
                    ;; for now.  Most importantly, it works!
                    (let (from to on)
                      ;; TODO: DRY these macrolets.
+                     ;; MAYBE: Instead of defining clocked, closed, etc. as predicates,
+                     ;; rewrite them to call --predicate-ts directly here.  Only drawback,
+                     ;; I think, is that it would make documentation less automated.
                      (cl-macrolet ((clocked (&key from to on)
                                             (when on
                                               (setq from on
                                                     to on))
                                             (when from
-                                              (setq from (org-ql--parse-time-string from)))
+                                              (setq from (cl-typecase from
+                                                           (string (ts-parse-fill 'begin from))
+                                                           (ts from))))
                                             (when to
-                                              (setq to (org-ql--parse-time-string to 'end)))
+                                              (setq to (cl-typecase to
+                                                         (string (ts-parse-fill 'end to))
+                                                         (ts to))))
                                             ;; NOTE: The macro must expand to the actual `org-ql--predicate-clocked'
                                             ;; function, not another `clocked'.
                                             `(org-ql--predicate-clocked :from ,from :to ,to))
+                                   (closed (&key from to on)
+                                           (when on
+                                             (setq from on
+                                                   to on))
+                                           (when from
+                                             (setq from (cl-typecase from
+                                                          (string (ts-parse-fill 'begin from))
+                                                          (ts from))))
+                                           (when to
+                                             (setq to (cl-typecase to
+                                                        (string (ts-parse-fill 'end to))
+                                                        (ts to))))
+                                           ;; NOTE: The macro must expand to the actual `org-ql--predicate-closed'
+                                           ;; function, not another `closed'.
+                                           `(org-ql--predicate-closed :from ,from :to ,to))
+                                   (deadline (&key from to on)
+                                             (when on
+                                               (setq from on
+                                                     to on))
+                                             (when from
+                                               (setq from (cl-typecase from
+                                                            (string (ts-parse-fill 'begin from))
+                                                            (ts from))))
+                                             (when to
+                                               (setq to (cl-typecase to
+                                                          (string (ts-parse-fill 'end to))
+                                                          (ts to))))
+                                             ;; NOTE: The macro must expand to the actual `org-ql--predicate-deadline'
+                                             ;; function, not another `deadline'.
+                                             `(org-ql--predicate-deadline :from ,from :to ,to))
+                                   (planning (&key from to on)
+                                             (when on
+                                               (setq from on
+                                                     to on))
+                                             (when from
+                                               (setq from (cl-typecase from
+                                                            (string (ts-parse-fill 'begin from))
+                                                            (ts from))))
+                                             (when to
+                                               (setq to (cl-typecase to
+                                                          (string (ts-parse-fill 'end to))
+                                                          (ts to))))
+                                             ;; NOTE: The macro must expand to the actual `org-ql--predicate-planning'
+                                             ;; function, not another `planning'.
+                                             `(org-ql--predicate-planning :from ,from :to ,to))
+                                   (scheduled (&key from to on)
+                                              (when on
+                                                (setq from on
+                                                      to on))
+                                              (when from
+                                                (setq from (cl-typecase from
+                                                             (string (ts-parse-fill 'begin from))
+                                                             (ts from))))
+                                              (when to
+                                                (setq to (cl-typecase to
+                                                           (string (ts-parse-fill 'end to))
+                                                           (ts to))))
+                                              ;; NOTE: The macro must expand to the actual `org-ql--predicate-scheduled'
+                                              ;; function, not another `scheduled'.
+                                              `(org-ql--predicate-scheduled :from ,from :to ,to))
                                    (ts (&key from to on (type 'both))
                                        (when on
                                          (setq from on
@@ -327,22 +409,15 @@ replace the clause with a preamble."
                                 element)
                               (pcase element
                                 (`(or _) element)
-                                (`(closed . ,_)
-                                 (setq org-ql-preamble
-                                       (rx-to-string `(seq bol (0+ (any "	 ")) "CLOSED" ":" (1+ space) (1+ not-newline)) t))
-                                 ;; Return element, because the predicate still needs testing.
+                                (`(clocked . ,_)
+                                 (setq org-ql-preamble org-ql-clock-regexp)
                                  element)
-                                (`(closed)
-                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ (any "	 ")) "CLOSED" ":") t))
+                                (`(closed . ,_)
+                                 (setq org-ql-preamble org-closed-time-regexp)
                                  ;; Return element, because the predicate still needs testing.
                                  element)
                                 (`(deadline . ,_)
-                                 (setq org-ql-preamble
-                                       (rx-to-string `(seq bol (0+ (any "	 ")) "DEADLINE" ":" (1+ space) (1+ not-newline)) t))
-                                 ;; Return element, because the predicate still needs testing.
-                                 element)
-                                (`(deadline)
-                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ (any "	 ")) "DEADLINE" ":") t))
+                                 (setq org-ql-preamble org-deadline-time-regexp)
                                  ;; Return element, because the predicate still needs testing.
                                  element)
                                 (`(regexp . ,regexps)
@@ -360,6 +435,7 @@ replace the clause with a preamble."
                                  ;; Return nil, don't test the predicate.
                                  nil)
                                 (`(habit)
+                                 ;; TODO: Move regexp to const.
                                  (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":STYLE:" (1+ space)
                                                                            "habit" (0+ space) eol)))
                                  nil)
@@ -376,6 +452,10 @@ replace the clause with a preamble."
                                 (`(level ,num)
                                  (setq org-ql-preamble (rx-to-string `(seq bol (repeat ,num "*") " ") t))
                                  nil)
+                                (`(planning . ,_)
+                                 (setq org-ql-preamble org-ql-planning-regexp)
+                                 ;; Return element, because the predicate still needs testing.
+                                 element)
                                 (`(property ,property ,value)
                                  ;; We do NOT return nil, because the predicate still needs to be tested,
                                  ;; because the regexp could match a string not inside a property drawer.
@@ -400,12 +480,7 @@ replace the clause with a preamble."
                                 ;;                                            (1+ space) (minimal-match (1+ not-newline)) eol)))
                                 ;;  element)
                                 (`(scheduled . ,_)
-                                 (setq org-ql-preamble
-                                       (rx-to-string `(seq bol (0+ (any "	 ")) "SCHEDULED" ":" (1+ space) (1+ not-newline)) t))
-                                 ;; Return element, because the predicate still needs testing.
-                                 element)
-                                (`(scheduled)
-                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ (any "	 ")) "SCHEDULED" ":") t))
+                                 (setq org-ql-preamble org-scheduled-time-regexp)
                                  ;; Return element, because the predicate still needs testing.
                                  element)
                                 ;; TODO: Add selector for tags without inheritance.
@@ -595,45 +670,6 @@ empty time values to 23:59:59; otherwise, to 00:00:00."
         (org-ql-select (current-buffer)
           query :narrow t :action (lambda () t))))))
 
-(org-ql--defpred clocked (&key from to _on)
-  ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
-  ;; pre-process that argument in a macro before this function is called.
-  "Return non-nil if current entry was clocked in given period.
-If no arguments are specified, return non-nil if entry was
-clocked at any time.
-
-If FROM, return non-nil if entry was clocked on or after FROM.
-If TO, return non-nil if entry was clocked on or before TO.
-If ON, return non-nil if entry was clocked on date ON.
-
-FROM, TO, and ON should be strings parseable by
-`parse-time-string' but may omit the time value.
-
-Note: Clock entries are expected to be clocked out.  Currently
-clocked entries (i.e. with unclosed timestamp ranges) are
-ignored."
-  ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
-  ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
-  ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
-  (cl-macrolet ((next-timestamp ()
-                                `(when (re-search-forward org-clock-line-re end-pos t)
-                                   (org-element-property :value (org-element-context))))
-                (test-timestamps (pred-form)
-                                 `(cl-loop for next-ts = (next-timestamp)
-                                           while next-ts
-                                           ;; Using `setf' instead of `for beg =` here prevents "unused lexical variable" warnings.
-                                           do (setf beg (float-time (org-timestamp-to-time next-ts))
-                                                    end (float-time (org-timestamp-to-time next-ts 'end)))
-                                           thereis ,pred-form)))
-    (save-excursion
-      (let ((end-pos (org-entry-end-position))
-            beg end)
-        (cond ((not (or from to)) (next-timestamp))
-              ((and from to) (test-timestamps (and (<= beg to)
-                                                   (>= end from))))
-              (from (test-timestamps (<= from end)))
-              (to (test-timestamps (<= beg to))))))))
-
 (org-ql--defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
   (when-let ((category (org-get-category (point))))
@@ -756,8 +792,102 @@ comparator, PRIORITY should be a priority string."
 
 ;;;;;; Timestamps
 
+(org-ql--defpred clocked (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable"
+  ;; warnings, because we pre-process that argument in a macro before
+  ;; this function is called.
+  "Return non-nil if current entry was clocked in given period.
+If no arguments are specified, return non-nil if entry has any
+timestamp.
 
-(org-ql--defpred ts (&key from to _on regexp)
+If FROM, return non-nil if entry has a timestamp on or after
+FROM.
+
+If TO, return non-nil if entry has a timestamp on or before TO.
+
+If ON, return non-nil if entry has a timestamp on date ON.
+
+FROM, TO, and ON should be either `ts' structs, or strings
+parseable by `parse-time-string' which may omit the time value."
+  (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
+
+(org-ql--defpred closed (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable"
+  ;; warnings, because we pre-process that argument in a macro before
+  ;; this function is called.
+  "Return non-nil if current entry was closed in given period.
+If no arguments are specified, return non-nil if entry has any
+timestamp.
+
+If FROM, return non-nil if entry has a timestamp on or after
+FROM.
+
+If TO, return non-nil if entry has a timestamp on or before TO.
+
+If ON, return non-nil if entry has a timestamp on date ON.
+
+FROM, TO, and ON should be either `ts' structs, or strings
+parseable by `parse-time-string' which may omit the time value."
+  (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1))
+
+(org-ql--defpred deadline (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable"
+  ;; warnings, because we pre-process that argument in a macro before
+  ;; this function is called.
+  "Return non-nil if current entry has deadline in given period.
+If no arguments are specified, return non-nil if entry has any
+timestamp.
+
+If FROM, return non-nil if entry has a timestamp on or after
+FROM.
+
+If TO, return non-nil if entry has a timestamp on or before TO.
+
+If ON, return non-nil if entry has a timestamp on date ON.
+
+FROM, TO, and ON should be either `ts' structs, or strings
+parseable by `parse-time-string' which may omit the time value."
+  (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1))
+
+(org-ql--defpred planning (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable"
+  ;; warnings, because we pre-process that argument in a macro before
+  ;; this function is called.
+  "Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).
+If no arguments are specified, return non-nil if entry has any
+timestamp.
+
+If FROM, return non-nil if entry has a timestamp on or after
+FROM.
+
+If TO, return non-nil if entry has a timestamp on or before TO.
+
+If ON, return non-nil if entry has a timestamp on date ON.
+
+FROM, TO, and ON should be either `ts' structs, or strings
+parseable by `parse-time-string' which may omit the time value."
+  (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1))
+
+(org-ql--defpred scheduled (&key from to _on)
+  ;; The underscore before `on' prevents "unused lexical variable"
+  ;; warnings, because we pre-process that argument in a macro before
+  ;; this function is called.
+  "Return non-nil if current entry is scheduled in given period.
+If no arguments are specified, return non-nil if entry has any
+timestamp.
+
+If FROM, return non-nil if entry has a timestamp on or after
+FROM.
+
+If TO, return non-nil if entry has a timestamp on or before TO.
+
+If ON, return non-nil if entry has a timestamp on date ON.
+
+FROM, TO, and ON should be either `ts' structs, or strings
+parseable by `parse-time-string' which may omit the time value."
+  (org-ql--predicate-ts :from from :to to :regexp org-scheduled-time-regexp :match-group 1))
+
+(org-ql--defpred ts (&key from to _on regexp (match-group 0))
   ;; The underscore before `on' prevents "unused lexical variable" warnings,
   ;; because we pre-process that argument in a macro before this function is
   ;; called.  The `regexp' argument is also provided by the macro and is not
@@ -784,7 +914,7 @@ match inactive ones, or `both' / nil to match both types."
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward regexp end-pos t)
-                                   (ts-parse-org (match-string 0))))
+                                   (ts-parse-org (match-string match-group))))
                 (test-timestamps (pred-form)
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
@@ -796,143 +926,6 @@ match inactive ones, or `both' / nil to match both types."
                                                    (ts<= next-ts to))))
               (from (test-timestamps (ts<= from next-ts)))
               (to (test-timestamps (ts<= next-ts to))))))))
-
-;;;;; Date comparison
-
-(defun org-ql--date-type-p (type &optional comparator target-date)
-  "Return non-nil if current heading has a date property of TYPE.
-TYPE should be a keyword symbol, like :scheduled or :deadline.
-
-With COMPARATOR and TARGET-DATE, return non-nil if entry's
-scheduled date compares with TARGET-DATE according to COMPARATOR.
-TARGET-DATE may be a string like \"2017-08-05\", or an integer
-like one returned by `date-to-day'."
-  (when-let (;; FIXME: Add :date selector, since I put it
-             ;; in the examples but forgot to actually
-             ;; make it.
-             (timestamp (org-entry-get (point) (pcase type
-                                                 (:deadline "DEADLINE")
-                                                 (:scheduled "SCHEDULED")
-                                                 (:closed "CLOSED"))))
-             (date-element (with-temp-buffer
-                             ;; FIXME: Hack: since we're using
-                             ;; (org-element-property :type date-element)
-                             ;; below, we need this date parsed into an
-                             ;; org-element element
-                             (insert timestamp)
-                             (goto-char 0)
-                             (org-element-timestamp-parser))))
-    (pcase comparator
-      ;; Not comparing, just checking if it has one
-      ('nil t)
-      ;; Compare dates
-      ((pred functionp)
-       (let ((target-day-number (cl-typecase target-date
-                                  (null (+ (org-get-wdays timestamp) (org-today)))
-                                  ;; Append time to target-date because `date-to-day' requires it.
-                                  (string (date-to-day (concat target-date " 00:00")))
-                                  (integer target-date))))
-         (pcase (org-element-property :type date-element)
-           ((or 'active 'inactive 'active-range 'inactive-range)
-            (funcall comparator
-                     (org-time-string-to-absolute
-                      (org-element-timestamp-interpreter date-element 'ignore))
-                     target-day-number))
-           (_ (error "Unknown date-element type \"%s\" in buffer %s at position %s"
-                     (org-element-property :type date-element) (current-buffer) (point))))))
-      (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
-                     comparator target-date)))))
-
-(org-ql--defpred planning (&optional comparator target-date)
-  "Return non-nil if entry's planning date (deadline or scheduled) compares with TARGET-DATE using COMPARATOR.
-TARGET-DATE should be a string parseable by `date-to-day'.
-COMPARATOR should be a function (like `<=')."
-  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
-  ;; FIXME: I think :date selects either :deadline, :scheduled, or :closed, but I'm not sure.
-  (org-ql--date-type-p :date comparator target-date))
-
-(org-ql--defpred deadline (&optional comparator target-date)
-  "Return non-nil if entry's deadline compares with TARGET-DATE using COMPARATOR.
-TARGET-DATE should be a string parseable by `date-to-day'; or if
-omitted, it is determined automatically using
-`org-deadline-warning-days'. COMPARATOR should be a
-function (like `<=')."
-  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
-  ;; FIXME: This is slightly confusing.  Using plain (deadline) does, and should, select entries
-  ;; that have any deadline.  But the common case of wanting to select entries whose deadline is
-  ;; within the warning days (either the global setting or that entry's setting) requires the user
-  ;; to specify the <= comparator, which is unintuitive.  Maybe it would be better to use that
-  ;; comparator by default, and use an 'any comparator to select entries with any deadline.  Of
-  ;; course, that would make the deadline selector different from the scheduled, closed, and date
-  ;; selectors, which would also be unintuitive.
-  (org-ql--date-type-p :deadline comparator target-date))
-
-(org-ql--defpred scheduled (&optional comparator target-date)
-  "Return non-nil if entry's scheduled date compares with TARGET-DATE using COMPARATOR.
-TARGET-DATE should be a string parseable by `date-to-day'.
-COMPARATOR should be a function (like `<=')."
-  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
-  (org-ql--date-type-p :scheduled comparator target-date))
-
-(org-ql--defpred closed (&optional comparator target-date)
-  "Return non-nil if entry's closed date compares with TARGET-DATE using COMPARATOR.
-TARGET-DATE should be a string parseable by `date-to-day'.
-COMPARATOR should be a function (like `<=')."
-  ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
-  (org-ql--date-type-p :closed comparator target-date))
-
-(org-ql--defpred date (&optional comparator target-date (type 'active))
-  "Return non-nil if Org entry at point has date of TYPE that compares with TARGET-DATE using COMPARATOR.
-Checks all Org-formatted timestamp strings in entry.  TYPE may be
-`active', `inactive', or `all', to control whether active,
-inactive, or all timestamps are checked.  Ranges of each type are
-also checked.  TARGET-DATE should be a string parseable by
-`date-to-day'.  COMPARATOR should be a function (like `<=')."
-  ;; TODO: Deprecate this with a warning, suggest using (ts) instead, and remove (date) from examples.
-  ;; MAYBE: This duplicates some code in --date-p, maybe it could be refactored DRYer.
-  (let* ((entry-timestamps (save-excursion
-                             ;; NOTE: It's important to `save-excursion', otherwise the point will be moved, which will
-                             ;; likely cause the action function to fail.  We could wrap the call to the predicate in
-                             ;; `save-excursion', but that would do it even when not necessary, which would be slower.
-                             (cl-loop while (re-search-forward org-element--timestamp-regexp (org-entry-end-position) t)
-                                      collect (match-string 0)))))
-    (pcase comparator
-      ('nil (pcase type
-              ('all entry-timestamps)
-              ('active (cl-loop for timestamp in entry-timestamps
-                                thereis (string-prefix-p "<" timestamp)))
-              ('inactive (cl-loop for timestamp in entry-timestamps
-                                  thereis (string-prefix-p "[" timestamp)))
-              (_ (user-error "Invalid type for date selector.  May be `active', `inactive', or `all'"))))
-      ((pred functionp)
-       ;; TODO: Avoid computing target-day-number every time this is called.
-       ;; Probably need to make a lambda that has it already defined.
-       (let ((target-day-number (cl-typecase target-date
-                                  (null nil)  ; Calculated later.
-                                  ;; Append time to target-date because `date-to-day' requires it.
-                                  (string (date-to-day (concat target-date " 00:00")))
-                                  (integer target-date))))
-         (cl-loop for timestamp in entry-timestamps
-                  for date-element = (with-temp-buffer
-                                       ;; MAYBE: Replace with ts.el eventually.
-                                       ;; TODO: Parse the element in the re-search-forward loop.
-                                       (insert timestamp)
-                                       (goto-char 0)
-                                       (org-element-timestamp-parser))
-                  for this-target-day-number = (or target-day-number
-                                                   ;; FIXME: Not sure if it makes sense to check warning
-                                                   ;; days for non-planning timestamps, but we'll try it.
-                                                   (+ (org-get-wdays timestamp) (org-today)))
-                  thereis (when (or (eq 'all type)
-                                    (member (org-element-property :type date-element)
-                                            (pcase type
-                                              ('active '(active active-range))
-                                              ('inactive '(inactive inactive-range)))))
-                            (funcall comparator (org-time-string-to-absolute
-                                                 (org-element-timestamp-interpreter date-element 'ignore))
-                                     this-target-day-number)))))
-      (_ (user-error "COMPARATOR (%s) must be a function, and DATE (%s) must be a string or day-number integer"
-                     comparator target-date)))))
 
 ;;;;; Sorting
 
