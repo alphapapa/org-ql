@@ -487,15 +487,23 @@ If NARROW is non-nil, buffer will not be widened."
               (goto-char (point-min))
               (when (org-before-first-heading-p)
                 (outline-next-heading))
-              ;; `cl-loop' makes this double-while much clearer than the expanded form.
-              (cond (preamble-re (cl-loop while (re-search-forward preamble-re nil t)
-                                          do (outline-back-to-heading 'invisible-ok)
-                                          when (funcall predicate)
-                                          collect (funcall action)
-                                          do (outline-next-heading)))
-                    (t (cl-loop when (funcall predicate)
-                                collect (funcall action)
-                                while (outline-next-heading)))))))
+              (if (not (org-at-heading-p))
+                  (progn
+                    ;; No headings in buffer: return nil.
+                    (unless (string-prefix-p " " (buffer-name))
+                      ;; Not a special, hidden buffer: show message, because if a user accidentally
+                      ;; searches a buffer without headings, he might be confused.
+                      (message "org-ql: No headings in buffer: %s" (current-buffer)))
+                    nil)
+                ;; `cl-loop' makes this double-while much clearer than the expanded form.
+                (cond (preamble-re (cl-loop while (re-search-forward preamble-re nil t)
+                                            do (outline-back-to-heading 'invisible-ok)
+                                            when (funcall predicate)
+                                            collect (funcall action)
+                                            do (outline-next-heading)))
+                      (t (cl-loop when (funcall predicate)
+                                  collect (funcall action)
+                                  while (outline-next-heading))))))))
       (--each orig-fns
         ;; Restore original function mappings.
         (fset (plist-get it :name) (plist-get it :fn))))))
