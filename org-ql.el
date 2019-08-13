@@ -246,6 +246,7 @@ Replaces bare strings with (regexp) selectors, and appropriate
                    (pcase element
                      (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
                      (`(and . ,clauses) `(and ,@(mapcar #'rec clauses)))
+                     (`(not . ,clauses) `(not ,@(mapcar #'rec clauses)))
                      (`(when ,condition . ,clauses) `(when ,(rec condition)
                                                        ,@(mapcar #'rec clauses)))
                      (`(unless ,condition . ,clauses) `(unless ,(rec condition)
