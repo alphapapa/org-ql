@@ -395,6 +395,7 @@ replace the clause with a preamble."
                                  (setq org-ql-preamble (rx-to-string `(seq bol (0+ (any "	 ")) "SCHEDULED" ":") t))
                                  ;; Return element, because the predicate still needs testing.
                                  element)
+                                ;; TODO: Add selector for tags without inheritance.
                                 ((and `(tags . ,tags) (guard (not org-use-tag-inheritance)))
                                  ;; When tag inheritance is disabled, we only consider direct tags,
                                  ;; so we can search directly to headings containing one of the tags.
