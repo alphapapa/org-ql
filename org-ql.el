@@ -600,7 +600,7 @@ ignored."
 With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strings)."
   (when-let ((state (org-get-todo-state)))
     (cl-typecase keywords
-      (null t)
+      (null (not (member state org-done-keywords)))
       (list (member state keywords))
       (symbol (member state (symbol-value keywords)))
       (otherwise (user-error "Invalid todo keywords: %s" keywords)))))

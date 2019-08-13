@@ -150,7 +150,7 @@ Arguments are listed next to predicate names, where applicable.
 +  ~regexp (regexp)~ :: Return non-nil if current entry matches ~REGEXP~ (a regexp string).
 +  ~scheduled (&optional comparator target-date)~ :: Return non-nil if entry's scheduled date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
 +  ~tags (&optional tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).
-+  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).
++  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
 +  ~ts (&key from to on type)~ :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.  If ~FROM~, return non-nil if entry has a timestamp on or after ~FROM~.  If ~TO~, return non-nil if entry has a timestamp on or before ~TO~.  If ~ON~, return non-nil if entry has a timestamp on date ~ON~.  ~FROM~, ~TO~, and ~ON~ should be strings parseable by ~parse-time-string~ but may omit the time value.  ~TYPE~ may be ~active~ to match active timestamps, ~inactive~ to match inactive ones, or ~both~ / nil to match both types.
 +  ~ts-active~ :: Like ~ts~ called with ~:type active~.
 +  ~ts-a~ :: Like ~ts~ called with ~:type active~.
@@ -370,6 +370,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 *Changed*
 +  Function ~org-ql-query~ renamed to ~org-ql-select~.  ~org-ql-query~ now refers to a new function.
 +  Macro ~org-ql~ no longer accepts a ~:markers~ argument.  Instead, use argument ~:action element-with-markers~.  See function ~org-ql-select~, which ~org-ql~ calls.
++  Selector ~(todo)~ no longer matches "done" keywords when used without arguments (i.e. the ones in variable ~org-done-keywords~).
 
 *Fixed*
 +  Handle date ranges in date-based selectors.  (Thanks to [[https://github.com/codygman][Cody Goodman]], [[https://github.com/swflint][Samuel W. Flint]], and [[https://github.com/vikasrawal][Vikas Rawal]].)
