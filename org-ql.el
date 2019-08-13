@@ -234,6 +234,7 @@ ORDER-BY corresponds to the `org-ql-select' argument SORT, which
 see.
 
 NARROW corresponds to the `org-ql-select' argument NARROW."
+  (declare (indent 0))
   (org-ql-select from where
     :action select
     :narrow narrow
