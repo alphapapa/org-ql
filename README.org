@@ -73,6 +73,13 @@ More examples are available in [[examples.org]].
                                 (tags "Emacs")
                                 (priority "A")))
             (agenda)))))
+
+  ;; Show a "stuck projects" view: tasks that are not done and have only
+  ;; non-task children.
+  (org-ql-agenda (org-agenda-files)
+    (and (todo)
+         (children)
+         (not (children (todo)))))
 #+END_SRC
 
 * Usage
@@ -136,10 +143,12 @@ A query is a lisp form which may contain arbitrary lisp forms, as well as certai
 Arguments are listed next to predicate names, where applicable.
 
 +  ~category (&optional categories)~ :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
++  ~children (&optional query)~ :: Return non-nil if current heading has direct child headings.  If ~QUERY~, test it against child headings.  This selector may be nested, e.g. to match grandchild headings.
 +  ~clocked (&key from to on)~ :: Return non-nil if current entry was clocked in given period.  If no arguments are specified, return non-nil if entry was clocked at any time.  If ~FROM~, return non-nil if entry was clocked on or after ~FROM~.  If ~TO~, return non-nil if entry was clocked on or before ~TO~.  If ~ON~, return non-nil if entry was clocked on date ~ON~.  ~FROM~, ~TO~, and ~ON~ should be strings parseable by ~parse-time-string~ but may omit the time value.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
 +  ~closed (&optional comparator target-date)~ :: Return non-nil if entry's closed date compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
 +  ~date (&optional comparator target-date type)~ :: Return non-nil if Org entry at point has date of ~TYPE~ that compares with ~TARGET-DATE~ using ~COMPARATOR~.  Checks all Org-formatted timestamp strings in entry.  ~TYPE~ may be ~active~, ~inactive~, or ~all~, to control whether active, inactive, or all timestamps are checked.  Ranges of each type are also checked.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~.  ~COMPARATOR~ should be a function (like ~<=~).
 +  ~deadline (&optional comparator target-date)~ :: Return non-nil if entry's deadline compares with ~TARGET-DATE~ using ~COMPARATOR~.  ~TARGET-DATE~ should be a string parseable by ~date-to-day~; or if omitted, it is determined automatically using ~org-deadline-warning-days~. ~COMPARATOR~ should be a function (like ~<=~).
++  ~descendants (&optional query)~ :: Return non-nil if current heading has descendant headings.  If ~QUERY~, test it against descendant headings.  This selector may be nested (if you can grok the nesting!).
 +  ~done~ :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
 +  ~habit~ :: Return non-nil if entry is a habit.
 +  ~heading (regexp)~ :: Return non-nil if current entry's heading matches ~REGEXP~ (a regexp string).
@@ -366,6 +375,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Selectors ~ts-a~ and ~ts-i~, aliases for ~ts-active~ and ~ts-inactive~.
 +  Selector ~ts~ now accepts a ~:type~ argument.
 +  Face =org-ql-agenda-due-date=.
++  Selectors ~(children)~ and ~(descendants)~.
 
 *Changed*
 +  Function ~org-ql-query~ renamed to ~org-ql-select~.  ~org-ql-query~ now refers to a new function.

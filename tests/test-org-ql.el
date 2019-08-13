@@ -219,6 +219,29 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((category "ambition"))
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
 
+    (describe "(children)"
+      (org-ql-it "without arguments"
+        (org-ql-expect ((children))
+          '("Test data" "Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas" "Code" "Misc")))
+      (org-ql-it "with sub-query"
+        (org-ql-expect ((children (todo "CHECK")))
+          '("Recurring")))
+      (org-ql-it "with grandchildren query"
+        ;; It's really cool how this works.  It's so simple.
+        (org-ql-expect ((children (children "moon")))
+          '("Test data" "Take over the universe"))))
+
+    (describe "(descendants)"
+      (org-ql-it "without arguments"
+        (org-ql-expect ((descendants))
+          '("Test data" "Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas" "Code" "Misc")))
+      (org-ql-it "with sub-query"
+        (org-ql-expect ((descendants (todo "CHECK")))
+          '("Test data" "Recurring")))
+      (org-ql-it "with granddescendants query"
+        (org-ql-expect ((descendants (descendants "moon")))
+          '("Test data" "Take over the universe" "Take over the moon" "Code"))))
+
     (describe "(clocked)"
 
       (org-ql-it "without arguments"

@@ -253,6 +253,11 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                                          ,@(mapcar #'rec clauses)))
                      ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
                      ((pred stringp) `(regexp ,element))
+                     ;; Quote children queries so the user doesn't have to.
+                     (`(children ,query) `(children ',query))
+                     (`(children) '(children (lambda () t)))
+                     (`(descendants ,query) `(descendants ',query))
+                     (`(descendants) '(descendants (lambda () t)))
                      (`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
                      (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest))
                      (_ element))))
@@ -548,6 +553,32 @@ empty time values to 23:59:59; otherwise, to 00:00:00."
       (float-time (apply #'encode-time parsed-time)))))
 
 ;;;;; Predicates
+
+(org-ql--defpred children (query)
+  "Return non-nil if current entry has children matching QUERY."
+  (save-excursion
+    (save-restriction
+      (org-narrow-to-subtree)
+      (when (org-goto-first-child)
+        ;; Lisp makes this easy and elegant: all we do is modify the query,
+        ;; nesting it inside an (and), and it doesn't descend into grandchildren.
+        (let* ((level (org-current-level))
+               (query (cl-typecase query
+                        (byte-code-function `(and (level ,level)
+                                                  (funcall ,query)))
+                        (t `(and (level ,level)
+                                 ,query)))))
+          (org-ql-select (current-buffer)
+            query :narrow t :action (lambda () t)))))))
+
+(org-ql--defpred descendants (query)
+  "Return non-nil if current entry has descendants matching QUERY."
+  (save-excursion
+    (save-restriction
+      (org-narrow-to-subtree)
+      (when (org-goto-first-child)
+        (org-ql-select (current-buffer)
+          query :narrow t :action (lambda () t))))))
 
 (org-ql--defpred clocked (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
