@@ -72,6 +72,8 @@ Based on `org-agenda-mode-map'.")
 (defvar org-ql-block-header nil
   "A string to override the default header in `org-ql-block' agenda blocks.")
 
+(defvar org-ql-todo-keyword-length nil)
+
 ;; For refreshing results buffers.
 (defvar org-ql-buffers-files)
 (defvar org-ql-query)
@@ -187,6 +189,130 @@ is used, rather than binding it locally."
          :narrow ,narrow
          :super-groups ',super-groups
          :title ,title))))
+
+(cl-defmacro org-ql-agenda* (&rest args)
+  "Display an agenda-like buffer of entries in FILES that match QUERY.
+
+FILES-OR-QUERY is a sexp that is evaluated to get the list of
+buffers and files to scan.
+
+QUERY is an `org-ql' query.  The query may be passed as
+FILES-OR-QUERY and QUERY may be left nil, in which case the list
+of files will automatically be set to the value of calling
+`org-agenda-files'.
+
+SORT is passed to `org-ql', which see..
+
+NARROW, when non-nil, means to respect narrowing in buffers.
+When nil, buffers are widened before being searched.
+
+BUFFER, when non-nil, is a buffer or buffer name to display the
+agenda in, rather than the default.
+
+SUPER-GROUPS is used to bind variable `org-super-agenda-groups',
+which see.  If t, the existing value of `org-super-agenda-groups'
+is used, rather than binding it locally."
+  (declare (indent defun)
+           (advertised-calling-convention (files-or-query &optional query &key sort narrow buffer super-groups) nil))
+  (cl-macrolet ((set-keyword-args (args)
+                                  `(setq sort (plist-get ,args :sort)
+                                         narrow (plist-get ,args :narrow)
+                                         buffer (plist-get ,args :buffer)
+                                         super-groups (plist-get ,args :super-groups))))
+    (let ((files '(org-agenda-files))
+          query sort narrow buffer super-groups)
+      ;; Parse args manually (so we can leave FILES nil for a default argument).
+      ;; TODO: DRY this and org-ql, I think.
+      (pcase args
+        (`(,arg-files ,arg-pred . ,(and rest (guard (keywordp (car rest)))))
+         ;; Files, query, and keyword args (FIXME: Can I combine this and the next one?  Does it
+         ;; matter if rest is nil or starts with a keyword?)
+         (setq files arg-files
+               query arg-pred)
+         (set-keyword-args rest))
+        (`(,arg-pred . ,(and rest (guard (keywordp (car rest)))))
+         ;; Query and keyword args, no files
+         (setq query arg-pred)
+         (set-keyword-args rest))
+        (`(,arg-files ,arg-pred)
+         ;; Files and query, no keywords
+         (setq files arg-files
+               query arg-pred))
+        (`(,arg-pred)
+         ;; Only query
+         (setq query arg-pred)))
+      (when (eq super-groups t)
+        (setq super-groups org-super-agenda-groups))
+      ;; Call --agenda
+      `(org-ql-agenda--agenda* ,files
+         ;; TODO: Probably better to just use eval on org-ql rather than reimplementing parts of it here.
+         ',query
+         :sort ',sort
+         :buffer ,buffer
+         :narrow ,narrow
+         :super-groups ',super-groups))))
+
+(cl-defmacro org-ql-agenda** (&rest args)
+  "Display an agenda-like buffer of entries in FILES that match QUERY.
+
+FILES-OR-QUERY is a sexp that is evaluated to get the list of
+buffers and files to scan.
+
+QUERY is an `org-ql' query.  The query may be passed as
+FILES-OR-QUERY and QUERY may be left nil, in which case the list
+of files will automatically be set to the value of calling
+`org-agenda-files'.
+
+SORT is passed to `org-ql', which see..
+
+NARROW, when non-nil, means to respect narrowing in buffers.
+When nil, buffers are widened before being searched.
+
+BUFFER, when non-nil, is a buffer or buffer name to display the
+agenda in, rather than the default.
+
+SUPER-GROUPS is used to bind variable `org-super-agenda-groups',
+which see.  If t, the existing value of `org-super-agenda-groups'
+is used, rather than binding it locally."
+  (declare (indent defun)
+           (advertised-calling-convention (files-or-query &optional query &key sort narrow buffer super-groups) nil))
+  (cl-macrolet ((set-keyword-args (args)
+                                  `(setq sort (plist-get ,args :sort)
+                                         narrow (plist-get ,args :narrow)
+                                         buffer (plist-get ,args :buffer)
+                                         super-groups (plist-get ,args :super-groups))))
+    (let ((files '(org-agenda-files))
+          query sort narrow buffer super-groups)
+      ;; Parse args manually (so we can leave FILES nil for a default argument).
+      ;; TODO: DRY this and org-ql, I think.
+      (pcase args
+        (`(,arg-files ,arg-pred . ,(and rest (guard (keywordp (car rest)))))
+         ;; Files, query, and keyword args (FIXME: Can I combine this and the next one?  Does it
+         ;; matter if rest is nil or starts with a keyword?)
+         (setq files arg-files
+               query arg-pred)
+         (set-keyword-args rest))
+        (`(,arg-pred . ,(and rest (guard (keywordp (car rest)))))
+         ;; Query and keyword args, no files
+         (setq query arg-pred)
+         (set-keyword-args rest))
+        (`(,arg-files ,arg-pred)
+         ;; Files and query, no keywords
+         (setq files arg-files
+               query arg-pred))
+        (`(,arg-pred)
+         ;; Only query
+         (setq query arg-pred)))
+      (when (eq super-groups t)
+        (setq super-groups org-super-agenda-groups))
+      ;; Call --agenda
+      `(org-ql-agenda--agenda** ,files
+                                ;; TODO: Probably better to just use eval on org-ql rather than reimplementing parts of it here.
+                                ',query
+                                :sort ',sort
+                                :buffer ,buffer
+                                :narrow ,narrow
+                                :super-groups ',super-groups))))
 
 ;;;; Commands
 
@@ -409,6 +535,109 @@ Runs `org-occur-hook' after making the sparse tree."
       (org-agenda-finalize)
       (goto-char (point-min)))))
 
+(cl-defun org-ql-agenda--agenda* (buffers-files query &key entries sort buffer narrow super-groups)
+  "FIXME: Docstring"
+  (declare (indent defun))
+  (when (and super-groups (not org-super-agenda-mode))
+    (user-error "`org-super-agenda-mode' must be activated to use grouping"))
+  (let* ((org-super-agenda-groups super-groups)
+         (entries (or entries
+                      (--> (org-ql-select buffers-files
+                             query
+                             :sort sort
+                             :narrow narrow
+                             :action (lambda ()
+                                       (->> (org-element-headline-parser (line-end-position))
+                                            org-ql--add-markers))))))
+         (org-ql-todo-keyword-length (cl-loop for e in entries
+                                              for todo-keyword = (org-element-property :todo-keyword e)
+                                              when todo-keyword
+                                              maximizing (length todo-keyword)))
+         (string (--> entries
+                      (mapcar #'org-ql-agenda--format-element* it)
+                      (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
+                            (t it))
+                      (s-join "\n" it)))
+         (buffer (cl-etypecase buffer
+                   (string (org-ql-agenda--buffer buffer))
+                   (null (org-ql-agenda--buffer buffer))
+                   (buffer buffer)))
+         (map (copy-keymap org-agenda-mode-map))
+         (inhibit-read-only t))
+    (define-key map "g" #'org-ql-search-refresh)
+    (with-current-buffer buffer
+      (use-local-map map)
+      ;; Prepare buffer, saving data for refreshing.
+      (setq-local org-ql-buffers-files buffers-files)
+      (setq-local org-ql-query query)
+      (setq-local org-ql-sort sort)
+      (setq-local org-ql-narrow narrow)
+      (setq-local org-ql-super-groups super-groups)
+      (setq-local header-line-format (org-ql-agenda--header-line-format buffers-files query))
+      ;; Clear buffer, insert entries, etc.
+      (erase-buffer)
+      (insert string)
+      (pop-to-buffer (current-buffer))
+      (org-agenda-finalize)
+      (goto-char (point-min)))))
+
+(defun org-ql-agenda-todo-keyword-max-length ()
+  "FIXME: Docstring."
+  (->> org-todo-keywords
+       (-map #'cdr)
+       -flatten
+       (--remove (string= "|" it))
+       (--map (progn
+                (string-match (rx (1+ (not (in "(")))) it)
+                (length (match-string 0 it))))
+       (apply #'max)))
+
+(defvar org-ql-agenda-todo-format)
+
+(cl-defun org-ql-agenda--agenda** (buffers-files query &key entries sort buffer narrow super-groups)
+  "FIXME: Docstring"
+  (declare (indent defun))
+  (when (and super-groups (not org-super-agenda-mode))
+    (user-error "`org-super-agenda-mode' must be activated to use grouping"))
+  (let* ((org-super-agenda-groups super-groups)
+         (entries (or entries
+                      (--> (org-ql-select buffers-files
+                             query
+                             :sort sort
+                             :narrow narrow
+                             :action (lambda ()
+                                       (->> (org-element-headline-parser (line-end-position))
+                                            org-ql--add-markers))))))
+         (org-ql-todo-keyword-length (org-ql-agenda-todo-keyword-max-length))
+         (org-ql-agenda-todo-format (concat "%" (number-to-string org-ql-todo-keyword-length) "s"))
+         (string (--> entries
+                      (mapcar #'org-ql-agenda--format-element* it)
+                      (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
+                            (t it))
+                      (s-join "\n" it)))
+         (buffer (cl-etypecase buffer
+                   (string (org-ql-agenda--buffer buffer))
+                   (null (org-ql-agenda--buffer buffer))
+                   (buffer buffer)))
+         (map (copy-keymap org-agenda-mode-map))
+         (inhibit-read-only t))
+    (define-key map "g" #'org-ql-search-refresh)
+    (with-current-buffer buffer
+      (use-local-map map)
+      ;; Prepare buffer, saving data for refreshing.
+      (setq-local org-ql-buffers-files buffers-files)
+      (setq-local org-ql-query query)
+      (setq-local org-ql-sort sort)
+      (setq-local org-ql-narrow narrow)
+      (setq-local org-ql-super-groups super-groups)
+      (setq-local header-line-format (org-ql-agenda--header-line-format buffers-files query))
+      ;; Clear buffer, insert entries, etc.
+      (erase-buffer)
+      (insert string)
+      (pop-to-buffer (current-buffer))
+      (org-agenda-finalize)
+      (goto-char (point-min)))))
+
 (defun org-ql-agenda-block (query)
   "Insert items for QUERY into current buffer.
 QUERY should be an `org-ql' query form.  Intended to be used as a
@@ -570,6 +799,83 @@ return an empty string."
       ;; Add all the necessary properties and faces to the whole string
       (--> string
            ;; TODO: Use agenda-like format strings.
+           (concat "  " it)
+           (org-add-props it properties
+             'todo-state todo-keyword
+             'tags tag-list
+             'org-habit-p habit-property)))))
+
+(defun org-ql-agenda--format-element* (element)
+  ;; This essentially needs to do what `org-agenda-format-item' does,
+  ;; which is a lot.  We are a long way from that, but it's a start.
+  "Return ELEMENT as a string with text-properties set by its property list.
+Its property list should be the second item in the list, as
+returned by `org-element-parse-buffer'.  If ELEMENT is nil,
+return an empty string."
+  (if (not element)
+      ""
+    (let* ((properties (cadr element))
+           ;; Remove the :parent property, which so bloats the size of
+           ;; the properties list that it makes it essentially
+           ;; impossible to debug, because Emacs takes approximately
+           ;; forever to show it in the minibuffer or with
+           ;; `describe-text-properties'.  FIXME: Shouldn't be necessary
+           ;; anymore since we're not parsing the whole buffer.
+
+           ;; Also, remove ":" from key symbols.  FIXME: It would be
+           ;; better to avoid this somehow.  At least, we should use a
+           ;; function to convert plists to alists, if possible.
+           (properties (cl-loop for (key val) on properties by #'cddr
+                                for symbol = (intern (cl-subseq (symbol-name key) 1))
+                                unless (member symbol '(parent))
+                                append (list symbol val)))
+           ;; TODO: --add-faces is used to add the :relative-due-date property, but that fact is
+           ;; hidden by doing it through --add-faces (which calls --add-scheduled-face and
+           ;; --add-deadline-face), and doing it in this form that gets the title hides it even more.
+           ;; Adding the relative due date property should probably be done explicitly and separately
+           ;; (which would also make it easier to do it independently of faces, etc).
+           (title (--> (org-ql-agenda--add-faces element)
+                       (org-element-property :raw-value it)
+                       (org-link-display-format it)))
+           (todo-keyword (-some--> (org-element-property :todo-keyword element)
+                                   (org-ql-agenda--add-todo-face it)
+                                   (format org-ql-agenda-todo-format it)))
+           ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
+           (tag-list (if org-use-tag-inheritance
+                         ;; FIXME: Note that tag inheritance cannot be used here unless markers are
+                         ;; added, otherwise we can't go to the item's buffer to look for inherited
+                         ;; tags.  (Or does `org-element-headline-parser' parse inherited tags too?  I
+                         ;; forget...)
+                         (if-let ((marker (or (org-element-property :org-hd-marker element)
+                                              (org-element-property :org-marker element))))
+                             (with-current-buffer (marker-buffer marker)
+                               ;; I wish `org-get-tags' used the correct buffer automatically.
+                               (org-get-tags marker (not org-use-tag-inheritance)))
+                           ;; No marker found
+                           (warn "No marker found for item: %s" title)
+                           (org-element-property :tags element))
+                       (org-element-property :tags element)))
+           (tag-string (when tag-list
+                         (--> tag-list
+                              (s-join ":" it)
+                              (s-wrap it ":")
+                              (org-add-props it nil 'face 'org-tag))))
+           ;;  (category (org-element-property :category element))
+           (priority-string (-some->> (org-element-property :priority element)
+                                      (char-to-string)
+                                      (format "[#%s]")
+                                      (org-ql-agenda--add-priority-face)))
+           (habit-property (org-with-point-at (org-element-property :begin element)
+                             (when (org-is-habit-p)
+                               (org-habit-parse-todo))))
+           (due-string (pcase (org-element-property :relative-due-date element)
+                         ('nil "        ")
+                         (string (format "%8s" (org-add-props string nil 'face 'org-ql-agenda-due-date)))))
+           (string (s-join " " (-non-nil (list due-string todo-keyword priority-string title tag-string)))))
+      (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
+      ;; Add all the necessary properties and faces to the whole string
+      (--> string
+           ;; FIXME: Use proper prefix
            (concat "  " it)
            (org-add-props it properties
              'todo-state todo-keyword

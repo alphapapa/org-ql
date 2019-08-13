@@ -2485,3 +2485,96 @@ Benchmark results:
 | uncached | slowest            |      3.386679 |        0 |                0 |
 
 
+** Padding to-do keywords
+
+Not sure if these results are quite right.  =elp-profile= shows them being nearly identical.
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1
+    :forms (("No padding" (org-ql-agenda
+                            (and (todo)
+                                 (not (done))
+                                 (tags "Emacs"))
+                            :sort (priority deadline)
+                            :super-groups t))
+                        ("Padding" (org-ql-agenda**
+                           (and (todo)
+                                (not (done))
+                                (tags "Emacs"))
+                           :sort (priority deadline)
+                           :super-groups t))))
+#+END_SRC
+
+#+RESULTS:
+| Form       | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|------------+--------------------+---------------+----------+------------------|
+| No padding | 1.24               |      3.990292 |        0 |                0 |
+| Padding    | slowest            |      4.962510 |        1 |         0.731848 |
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 '(format s- org-ql-)
+    (org-ql-agenda
+      (and (todo)
+           (not (done))
+           (tags "Emacs"))
+      :sort (priority deadline)
+      :super-groups t))
+#+END_SRC
+
+#+RESULTS:
+| Function                            | Times called |   Total time | Average time |
+|-------------------------------------+--------------+--------------+--------------|
+| org-ql-agenda--agenda               |            5 | 26.580556158 | 5.3161112316 |
+| org-ql-select                       |            5 | 19.675620106 | 3.9351240212 |
+| org-ql--select-cached               |           40 | 19.634117127 | 0.4908529281 |
+| org-ql--select                      |           40 | 19.630597547 | 0.4907649386 |
+| org-ql--predicate-tags              |         7315 | 10.949397690 | 0.0014968417 |
+| org-ql--get-tags                    |         7315 | 9.6837818669 | 0.0013238252 |
+| org-ql--predicate-todo              |        48230 | 3.5819731560 | 7.426...e-05 |
+| org-ql-agenda--format-element       |         2435 |  3.019326507 | 0.0012399698 |
+| org-ql--predicate-done              |        11530 | 1.0185417590 | 8.833...e-05 |
+| format                              |        23465 | 0.7703946220 | 3.283...e-05 |
+| s-join                              |         5050 | 0.0558378950 | 1.105...e-05 |
+| org-ql-agenda--add-faces            |         2435 | 0.0284022579 | 1.166...e-05 |
+| org-ql--sort-by                     |            5 | 0.0263453159 | 0.0052690631 |
+| org-ql-agenda--add-scheduled-face   |         2435 | 0.0208554550 | 8.564...e-06 |
+| org-ql--priority<                   |        12372 | 0.0069503440 | 5.617...e-07 |
+| format-time-string                  |          244 | 0.0062056230 | 2.543...e-05 |
+| org-ql-agenda--header-line-format   |            5 | 0.0058773409 | 0.0011754682 |
+| org-ql-agenda--add-todo-face        |         2435 | 0.0056749869 | 2.330...e-06 |
+| org-ql-agenda--font-lock-string     |           10 |  0.005474521 | 0.0005474521 |
+| org-ql-agenda--format-relative-date |          235 | 0.0054201809 | 2.306...e-05 |
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 '(format s- org-ql-)
+    (org-ql-agenda**
+      (and (todo)
+           (not (done))
+           (tags "Emacs"))
+      :sort (todo priority date)
+      :super-groups t))
+#+END_SRC
+
+#+RESULTS:
+| Function                            | Times called |   Total time | Average time |
+|-------------------------------------+--------------+--------------+--------------|
+| org-ql-agenda--agenda**             |            5 | 26.333809735 |  5.266761947 |
+| org-ql-select                       |            5 | 17.267948398 | 3.4535896797 |
+| org-ql--select-cached               |           40 | 17.227040189 | 0.4306760047 |
+| org-ql--select                      |           40 | 17.223625576 | 0.4305906394 |
+| org-ql--predicate-tags              |         7315 | 8.9554375800 | 0.0012242566 |
+| org-ql--get-tags                    |         7315 | 8.8911675469 | 0.0012154706 |
+| org-ql-agenda--format-element*      |         2435 | 3.8197904740 | 0.0015687024 |
+| org-ql--predicate-todo              |        48230 | 3.3793621580 | 7.006...e-05 |
+| org-ql--predicate-done              |        11530 | 0.9646284939 | 8.366...e-05 |
+| s-join                              |         5050 | 0.0551078480 | 1.091...e-05 |
+| format                              |        30100 | 0.0522020250 | 1.734...e-06 |
+| org-ql-agenda--add-faces            |         2435 | 0.0287117619 | 1.179...e-05 |
+| org-ql--sort-by                     |            5 | 0.0257972720 | 0.0051594544 |
+| org-ql-agenda--add-scheduled-face   |         2435 | 0.0209146540 | 8.589...e-06 |
+| org-ql--priority<                   |        12372 | 0.0069437200 | 5.612...e-07 |
+| format-time-string                  |          244 | 0.0061829569 | 2.533...e-05 |
+| org-ql-agenda--header-line-format   |            5 | 0.0058565250 |  0.001171305 |
+| org-ql-agenda--add-todo-face        |         2435 | 0.0056821220 | 2.333...e-06 |
+| org-ql-agenda--font-lock-string     |           10 |  0.005448187 | 0.0005448187 |
+| org-ql-agenda--format-relative-date |          235 | 0.0053996679 | 2.297...e-05 |
