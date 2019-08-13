@@ -751,10 +751,6 @@ comparator, PRIORITY should be a priority string."
 
 ;;;;;; Timestamps
 
-;; TODO: Move active/inactive into (ts) predicate, allowing the first arg to be either
-;; inactive/active or the comparator.  Using numeric comparators is more powerful, concise,
-;; and language-independent than using from/to.  Alternatively, add :before/:after, but I
-;; think the comparators are better.  Also consider using a macro to DRY these out.
 
 (org-ql--defpred ts (&key from to _on regexp)
   ;; The underscore before `on' prevents "unused lexical variable" warnings,
