@@ -290,9 +290,13 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                          (setq from on
                                                to on))
                                        (when from
-                                         (setq from (ts-parse-fill 'begin from)))
+                                         (setq from (cl-typecase from
+                                                      (string (ts-parse-fill 'begin from))
+                                                      (ts from))))
                                        (when to
-                                         (setq to (ts-parse-fill 'end to)))
+                                         (setq to (cl-typecase to
+                                                    (string (ts-parse-fill 'end to))
+                                                    (ts to))))
                                        ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
                                        ;; function, not another `ts'.
                                        `(org-ql--predicate-ts :from ,from :to ,to
@@ -768,8 +772,8 @@ If TO, return non-nil if entry has a timestamp on or before TO.
 
 If ON, return non-nil if entry has a timestamp on date ON.
 
-FROM, TO, and ON should be strings parseable by
-`parse-time-string' but may omit the time value.
+FROM, TO, and ON should be either `ts' structs, or strings
+parseable by `parse-time-string' which may omit the time value.
 
 TYPE may be `active' to match active timestamps, `inactive' to
 match inactive ones, or `both' / nil to match both types."
