@@ -970,6 +970,8 @@ PREDICATES is a list of one or more sorting methods, including:
                               (-sort (sorter pred) items)))
              finally return items)))
 
+;; TODO: Rewrite date sorters using `ts'.
+
 (defun org-ql--date-type< (type a b)
   "Return non-nil if A's date of TYPE is earlier than B's.
 A and B are Org headline elements.  TYPE should be a symbol like
