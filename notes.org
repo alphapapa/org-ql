@@ -1707,3 +1707,42 @@ org-super-agenda--filter-finalize-entries                     5           0.1316
 | re-search-forward             |         3754 | 0.0739803739 | 1.970...e-05 |
 | org-inlinetask-in-task-p      |         1365 | 0.0657829330 | 4.819...e-05 |
 | org-agenda-ng--scheduled-p    |         1247 | 0.0619497850 | 4.967...e-05 |
+
+** Intersecting query results
+
+An idea that /might/ be helpful for performance in /some/ cases, depending on the query, the data, and whether the query has a preamble.  But it looks like it would very rarely be helpful.
+
+#+BEGIN_SRC elisp
+  (cl-defun org-ql-agenda-intersection (buffers-files queries &key entries sort buffer narrow super-groups)
+    "Like `org-ql-agenda', but intersects multiple queries."
+    (declare (indent defun))
+    (let* ((entries (->> queries
+                         (--map (org-ql-select buffers-files
+                                  it
+                                  :action 'element-with-markers
+                                  :narrow narrow
+                                  :sort sort))
+                         (-reduce #'-intersection))))
+      (org-ql-agenda--agenda buffers-files queries
+        :entries entries :super-groups super-groups)))
+
+  (bench-multi-lexical :times 1
+    :forms (("intersection" (let ((org-use-tag-inheritance nil))
+                              (org-ql-agenda-intersection (org-agenda-files)
+                                '((todo "TODO")
+                                  (tags "Emacs"))
+                                :sort '(priority deadline)
+                                :super-groups org-super-agenda-groups)))
+            ("normal" (let ((org-use-tag-inheritance nil))
+                        (org-ql-agenda (org-agenda-files)
+                          (and (todo "TODO")
+                               (tags "Emacs"))
+                          :sort (priority deadline)
+                          :super-groups org-super-agenda-groups)))))
+#+END_SRC
+
+#+RESULTS:
+| Form         | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------+--------------------+---------------+----------+------------------|
+| normal       | 4.03               |      0.275053 |        0 |                0 |
+| intersection | slowest            |      1.109169 |        0 |                0 |
