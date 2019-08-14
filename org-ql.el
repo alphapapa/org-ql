@@ -518,7 +518,7 @@ replace the clause with a preamble."
   "Return results for ARGS and current buffer using cache."
   ;; MAYBE: Timeout cached queries.  Probably not necessarily since they will be removed when a
   ;; buffer is closed, or when a query is run after modifying a buffer.
-  ;; FIXME: Narrowed queries should conflict in the cache, because the region is not
+  ;; FIXME: Narrowed queries will probably conflict in the cache, because the region is not
   ;; stored.  We should either not cache narrow queries, or store the region with it.
   (-let (((&plist :query query :action action :narrow narrow) args))
     (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
@@ -909,7 +909,7 @@ parseable by `parse-time-string' which may omit the time value.
 TYPE may be `active' to match active timestamps, `inactive' to
 match inactive ones, or `both' / nil to match both types."
   ;; TODO: DRY this with the clocked predicate.
-  ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
+  ;; NOTE: FROM and TO are actually expected to be `ts' structs.  The docstring is written
   ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
