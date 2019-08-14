@@ -922,8 +922,7 @@ match inactive ones, or `both' / nil to match both types."
     (save-excursion
       (let ((end-pos (org-entry-end-position)))
         (cond ((not (or from to)) (re-search-forward regexp end-pos t))
-              ((and from to) (test-timestamps (and (ts<= from next-ts)
-                                                   (ts<= next-ts to))))
+              ((and from to) (test-timestamps (ts-in from to next-ts)))
               (from (test-timestamps (ts<= from next-ts)))
               (to (test-timestamps (ts<= next-ts to))))))))
 
