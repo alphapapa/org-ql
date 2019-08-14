@@ -77,10 +77,11 @@ More examples are available in [[examples.org]].
 
   ;; Show a "stuck projects" view: tasks that are not done and have only
   ;; non-task children.
-  (org-ql-agenda (org-agenda-files)
-    (and (todo)
-         (children)
-         (not (children (todo)))))
+  (org-ql-search (org-agenda-files)
+    '(and (todo)
+          (children)
+          (not (children (todo))))
+    :title "Stuck Projects")
 #+END_SRC
 
 * Installation
@@ -238,6 +239,7 @@ This macro is like ~org-ql~, but it presents matching entries in an Agenda-like 
              (deadline <=)
              (scheduled <= today))
          (not (done)))
+    :title "My Agenda View"
     ;; The `org-super-agenda-groups' setting is used automatically when set, or it
     ;; may be overriden by specifying it here:
     :super-groups ((:name "Bills"
@@ -254,6 +256,9 @@ This macro is like ~org-ql~, but it presents matching entries in an Agenda-like 
                    (:priority "B" :order 2)
                    (:priority "C" :order 2)))
 #+END_SRC
+
+*************** TODO Update screenshot (doesn't show title) :noexport:
+*************** END
 
 Which presents this buffer:
 
@@ -407,6 +412,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Selector ~ts~ now accepts a ~:type~ argument.
 +  Face =org-ql-agenda-due-date=.
 +  Selectors ~(children)~ and ~(descendants)~.
++  Function ~org-ql-search~ and macro ~org-ql-agenda~ accept a ~:title~ argument, which is displayed in the header.
 
 *Changed*
 +  Function ~org-ql-query~ renamed to ~org-ql-select~.  ~org-ql-query~ now refers to a new function.

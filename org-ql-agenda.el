@@ -65,6 +65,7 @@
 (defvar org-ql-sort)
 (defvar org-ql-narrow)
 (defvar org-ql-super-groups)
+(defvar org-ql-title)
 
 ;;;; Macros
 
@@ -93,12 +94,13 @@ SUPER-GROUPS is used to bind variable `org-super-agenda-groups',
 which see.  If t, the existing value of `org-super-agenda-groups'
 is used, rather than binding it locally."
   (declare (indent defun)
-           (advertised-calling-convention (files-or-query &optional query &key sort narrow buffer super-groups) nil))
+           (advertised-calling-convention (files-or-query &optional query &key sort narrow buffer super-groups title) nil))
   (cl-macrolet ((set-keyword-args (args)
                                   `(setq sort (plist-get ,args :sort)
                                          narrow (plist-get ,args :narrow)
                                          buffer (plist-get ,args :buffer)
-                                         super-groups (plist-get ,args :super-groups))))
+                                         super-groups (plist-get ,args :super-groups)
+                                         title (plist-get ,args :title))))
     (let ((files '(org-agenda-files))
           query sort narrow buffer super-groups)
       ;; Parse args manually (so we can leave FILES nil for a default argument).
@@ -130,7 +132,8 @@ is used, rather than binding it locally."
          :sort ',sort
          :buffer ,buffer
          :narrow ,narrow
-         :super-groups ',super-groups))))
+         :super-groups ',super-groups
+         :title ,title))))
 
 ;;;; Commands
 
@@ -138,7 +141,7 @@ is used, rather than binding it locally."
 ;; it uses `org-ql-agenda--agenda'.  Maybe this could be better organized.
 
 ;;;###autoload
-(cl-defun org-ql-search (buffers-files query &key narrow groups sort)
+(cl-defun org-ql-search (buffers-files query &key narrow groups sort title)
   "Read QUERY and search with `org-ql'.
 Interactively, prompt for these variables:
 
@@ -158,7 +161,9 @@ NARROW: When non-nil, don't widen buffers before
 searching. Interactively, with prefix, leave narrowed.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
-`priority'."
+`priority'.
+
+TITLE: An optional string displayed in the header."
   (declare (indent defun))
   (interactive (list (pcase-exhaustive (completing-read "Buffers/Files: "
                                                         (list 'buffer 'agenda 'all))
@@ -190,6 +195,7 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
     :narrow narrow
     :sort sort
     :super-groups groups
+    :title title
     :buffer "*Org QL Search*"))
 
 (defun org-ql-search-refresh ()
@@ -200,6 +206,7 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
     :sort org-ql-sort
     :narrow org-ql-narrow
     :super-groups org-ql-super-groups
+    :title org-ql-title
     :buffer (current-buffer)))
 
 ;;;; Functions
@@ -207,7 +214,7 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
-(cl-defun org-ql-agenda--agenda (buffers-files query &key entries sort buffer narrow super-groups)
+(cl-defun org-ql-agenda--agenda (buffers-files query &key entries sort buffer narrow super-groups title)
   "FIXME: Docstring"
   (declare (indent defun))
   (when (and super-groups (not org-super-agenda-mode))
@@ -241,7 +248,8 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
       (setq-local org-ql-sort sort)
       (setq-local org-ql-narrow narrow)
       (setq-local org-ql-super-groups super-groups)
-      (setq-local header-line-format (org-ql-agenda--header-line-format buffers-files query))
+      (setq-local org-ql-title title)
+      (setq-local header-line-format (org-ql-agenda--header-line-format buffers-files query title))
       ;; Clear buffer, insert entries, etc.
       (erase-buffer)
       (insert string)
@@ -276,9 +284,13 @@ the `match' item in the custom command form."
 
 (defalias 'org-ql-block 'org-ql-agenda-block)
 
-(defun org-ql-agenda--header-line-format (buffers-files query)
+(defun org-ql-agenda--header-line-format (buffers-files query &optional title)
   "Return header-line-format for BUFFERS-FILES and QUERY."
-  (let* ((query-formatted (format "%S" query))
+  (let* ((title (if title
+                    (concat (propertize "View: " 'face 'org-agenda-structure)
+                            title " ")
+                  ""))
+         (query-formatted (format "%S" query))
          (query-formatted (propertize (org-ql-agenda--font-lock-string 'emacs-lisp-mode query-formatted)
                                       'help-echo query-formatted))
          (query-width (length query-formatted))
@@ -291,7 +303,8 @@ the `match' item in the custom command form."
                                                    (org-ql-agenda--font-lock-string 'emacs-lisp-mode)
                                                    (s-truncate available-width))
                                               'help-echo buffers-files-formatted)))
-    (concat (propertize "Query: " 'face 'org-agenda-structure)
+    (concat title
+            (propertize "Query: " 'face 'org-agenda-structure)
             query-formatted "  "
             (propertize "In: " 'face 'org-agenda-structure)
             buffers-files-formatted)))
