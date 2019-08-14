@@ -577,7 +577,7 @@ If NARROW is non-nil, buffer will not be widened."
                       ;; searches a buffer without headings, he might be confused.
                       (message "org-ql: No headings in buffer: %s" (current-buffer)))
                     nil)
-                ;; `cl-loop' makes this double-while much clearer than the expanded form.
+                ;; Find matching entries.
                 (cond (preamble-re (cl-loop while (re-search-forward preamble-re nil t)
                                             do (outline-back-to-heading 'invisible-ok)
                                             when (funcall predicate)
