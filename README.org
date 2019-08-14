@@ -413,6 +413,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Face =org-ql-agenda-due-date=.
 +  Selectors ~(children)~ and ~(descendants)~.
 +  Function ~org-ql-search~ and macro ~org-ql-agenda~ accept a ~:title~ argument, which is displayed in the header.
++  Command ~org-ql-search~ offers global ~org-super-agenda-groups~ in completion.
 
 *Changed*
 +  Function ~org-ql-query~ renamed to ~org-ql-select~.  ~org-ql-query~ now refers to a new function.

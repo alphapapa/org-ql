@@ -177,8 +177,10 @@ TITLE: An optional string displayed in the header."
                      :narrow (eq current-prefix-arg '(4))
                      :groups (pcase (completing-read "Group by: "
                                                      (cons "Don't group"
+                                                           "Global groups"
                                                            (cl-loop for type in org-super-agenda-auto-selector-keywords
                                                                     collect (substring (symbol-name type) 6))))
+                               ("Global groups" org-super-agenda-groups)
                                ("Don't group" nil)
                                (property (list (list (intern (concat ":auto-" property))))))
                      :sort (pcase (completing-read "Sort by: "
