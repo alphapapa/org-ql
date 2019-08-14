@@ -53,7 +53,7 @@ This defines a simple list of stored views and a command to easily access them w
                      ;; Formatting isn't required, but it looks better in the header than a struct.
                      ts-format)))
       (org-ql-search (org-agenda-files)
-        `(,type :from ,from :to ,(ts-now)))))
+        `(,type :from ,from :to ,(ts-format (ts-now))))))
 
   ;; Show entries with any timestamp from last 7 days:
   (org-ql-agenda-last-days 7)
