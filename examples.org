@@ -5,7 +5,7 @@
 :TOC:      this
 :END:
   -  [[#stored-views-command][Stored views command]]
-  -  [[#show-entries-with-timestamps-in-the-last-n-days][Show entries with timestamps in the last N days]]
+  -  [[#show-entries-with-recent-timestamps][Show entries with recent timestamps]]
   -  [[#stuck-projects-block-agenda][Stuck projects block agenda]]
   -  [[#listing-bills-coming-due][Listing bills coming due]]
 
@@ -36,11 +36,11 @@ This defines a simple list of stored views and a command to easily access them w
                                                         (:auto-category t)))))))
 #+END_SRC
 
-* Show entries with timestamps in the last N days
+* Show entries with recent timestamps
 
 #+BEGIN_SRC elisp
-  (cl-defun org-ql-agenda-last-days (days &optional (type 'ts))
-    "Show entries from previous DAYS days with timestamps of TYPE.
+  (cl-defun org-ql-agenda-recent-items (days &optional (type 'ts))
+    "Show items from previous DAYS days with timestamps of TYPE.
   TYPE may be `ts', `ts-active', `ts-inactive', `clocked',
   `closed', `deadline', `planning', or `scheduled'."
     (interactive (list (read-number "Days: ")
@@ -53,16 +53,22 @@ This defines a simple list of stored views and a command to easily access them w
                      ;; Formatting isn't required, but it looks better in the header than a struct.
                      ts-format)))
       (org-ql-search (org-agenda-files)
-        `(,type :from ,from :to ,(ts-format (ts-now))))))
+        `(,type :from ,from :to ,(ts-format (ts-now)))
+        :title "Recent items"
+        :sort '(date priority todo)
+        :groups '((:todo "DONE")
+                  (:category "log" :tag "log")
+                  (:auto-parent t)
+                  (:auto-todo t)))))
 
   ;; Show entries with any timestamp from last 7 days:
-  (org-ql-agenda-last-days 7)
+  (org-ql-agenda-recent-items 7)
 
   ;; Show entries clocked in last 7 days:
-  (org-ql-agenda-last-days 30 'clocked)
+  (org-ql-agenda-recent-items 30 'clocked)
 
   ;; Show entries closed in last 7 days:
-  (org-ql-agenda-last-days 30 'closed)
+  (org-ql-agenda-recent-items 30 'closed)
 #+END_SRC
 
 * Stuck projects block agenda
