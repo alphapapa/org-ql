@@ -1,6 +1,15 @@
-* Examples
+#+TITLE: org-ql examples
 
-** Stored views command
+* Contents
+:PROPERTIES:
+:TOC:      this
+:END:
+  -  [[#stored-views-command][Stored views command]]
+  -  [[#show-entries-with-timestamps-in-the-last-n-days][Show entries with timestamps in the last N days]]
+  -  [[#stuck-projects-block-agenda][Stuck projects block agenda]]
+  -  [[#listing-bills-coming-due][Listing bills coming due]]
+
+* Stored views command
 
 This defines a simple list of stored views and a command to easily access them with completion, which may be more convenient than defining a command for each view.
 
@@ -27,7 +36,7 @@ This defines a simple list of stored views and a command to easily access them w
                                                         (:auto-category t)))))))
 #+END_SRC
 
-** Show entries with timestamps in the last N days
+* Show entries with timestamps in the last N days
 
 #+BEGIN_SRC elisp
   (cl-defun org-ql-agenda-last-days (days &optional (type 'ts))
@@ -55,7 +64,28 @@ This defines a simple list of stored views and a command to easily access them w
   ;; Show entries closed in last 7 days:
   (org-ql-agenda-last-days 30 'closed)
 #+END_SRC
-** Listing bills coming due
+
+* Stuck projects block agenda
+
+Reddit user =emptymatrix= [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewtqez8/][shared]] this example of replacing a traditional =org-stuck-projects= view like:
+
+#+BEGIN_SRC elisp
+  (setq org-stuck-projects
+        '("+@project/-DONE" ("NEXT") nil "SCHEDULED:"))
+#+END_SRC
+
+With this =org-ql-block= agenda view, like:
+
+#+BEGIN_SRC elisp
+  (setq org-agenda-custom-commands
+        '(("s" "Stuck Projects"
+           ((org-ql-block '(and (tags "@project")
+                                (not (done))
+                                (not (descendants (todo "NEXT")))
+                                (not (descendants (scheduled)))))))))
+#+END_SRC
+
+* Listing bills coming due
 
 This uses the example in the readme file, but maps across the elements returned by ~org-ql~ to present a simple list of titles and deadlines.
 
@@ -72,3 +102,15 @@ This uses the example in the readme file, but maps across the elements returned 
 #+END_SRC
 
 This could also be put in a script, which could use desktop notifications to remind of bills coming due: [[examples/org-bills-due.el][org-bills-due.el]].
+
+* COMMENT Code                                                     :noexport:
+:PROPERTIES:
+:TOC:      ignore
+:END:
+
+** File-local variables
+
+# Local Variables:
+# eval: (require 'org-make-toc)
+# before-save-hook: org-make-toc
+# End:
