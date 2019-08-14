@@ -5,8 +5,8 @@
 #+BEGIN_SRC elisp
   (cl-defun org-ql-agenda-last-days (days &optional (type 'ts))
     "Show entries from previous DAYS days with timestamps of TYPE.
-   TYPE may be `ts', `ts-active', `ts-inactive', `clocked',
-   `closed', `deadline', `planning', or `scheduled'."
+  TYPE may be `ts', `ts-active', `ts-inactive', `clocked',
+  `closed', `deadline', `planning', or `scheduled'."
     (interactive (list (read-number "Days: ")
                        (->> '(ts ts-active ts-inactive clocked closed deadline planning scheduled)
                             (completing-read "Timestamp type: ")
