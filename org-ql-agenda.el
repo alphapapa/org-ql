@@ -287,7 +287,7 @@ the `match' item in the custom command form."
 (defun org-ql-agenda--header-line-format (buffers-files query &optional title)
   "Return header-line-format for BUFFERS-FILES and QUERY."
   (let* ((title (if title
-                    (concat (propertize "View: " 'face 'org-agenda-structure)
+                    (concat (propertize "View:" 'face 'org-agenda-structure)
                             title " ")
                   ""))
          (query-formatted (format "%S" query))
@@ -304,9 +304,9 @@ the `match' item in the custom command form."
                                                    (s-truncate available-width))
                                               'help-echo buffers-files-formatted)))
     (concat title
-            (propertize "Query: " 'face 'org-agenda-structure)
+            (propertize "Query:" 'face 'org-agenda-structure)
             query-formatted "  "
-            (propertize "In: " 'face 'org-agenda-structure)
+            (propertize "In:" 'face 'org-agenda-structure)
             buffers-files-formatted)))
 
 (defun org-ql-agenda--font-lock-string (mode s)
