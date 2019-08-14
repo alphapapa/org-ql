@@ -1,4 +1,4 @@
-;;; org-ql.el --- Query language for Org buffers  -*- lexical-binding: t; -*-
+;;; org-ql.el --- Org Query Language, search command, and agenda-like view  -*- lexical-binding: t; -*-
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
