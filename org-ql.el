@@ -623,25 +623,6 @@ Or, when possible, fix the problem."
 		  (org-ql--sanity-check-form (cdr elem)))
 	     else do (check elem))))
 
-(defun org-ql--parse-time-string (s &optional end)
-  "Return Unix timestamp by parsing timestamp string S.
-Calls `parse-time-string' and fills in nil second, minute, and
-hour values, then calls `float-time'.  When END is non-nil, sets
-empty time values to 23:59:59; otherwise, to 00:00:00."
-  ;; TODO: Also accept Unix timestamps.
-  (cl-macrolet ((fill-with (place value)
-                           `(unless (nth ,place parsed-time)
-                              (setf (nth ,place parsed-time) ,value))))
-    (let ((parsed-time (parse-time-string s)))
-      (pcase end
-        ('nil (fill-with 0 0)
-              (fill-with 1 0)
-              (fill-with 2 0))
-        (_ (fill-with 0 59)
-           (fill-with 1 59)
-           (fill-with 2 23)))
-      (float-time (apply #'encode-time parsed-time)))))
-
 ;;;;; Predicates
 
 (org-ql--defpred children (query)
