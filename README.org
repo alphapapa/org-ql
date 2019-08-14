@@ -91,7 +91,7 @@ More examples are available in [[examples.org]].
 
 The package may be installed directly from [[https://melpa.org/#/org-ql][MELPA]] or with other tools like [[https://framagit.org/steckerhalter/quelpa][Quelpa]].
 
-After installation. you can use commands like ~org-ql-search~ immediately.
+After installation, you can use commands like ~org-ql-search~ immediately.
 
 To use the functions and macros in your own Elisp code, load the libraries ~org-ql~ and/or ~org-ql-agenda~ with e.g. ~(require 'org-ql)~.
 
