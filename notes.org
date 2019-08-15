@@ -8,6 +8,15 @@
 
 Would probably be useful to have a default sort option.
 
+** TODO [#A] Outline path in buffers-files arg
+
+e.g.
+
+#+BEGIN_SRC elisp
+  (org-ql (olp "~/org/inbox.org" "Emacs" "Ideas")
+    (todo "NEXT"))
+#+END_SRC
+
 ** TODO ~org-agenda-skip-function~
 
 As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
