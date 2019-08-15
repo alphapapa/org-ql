@@ -429,7 +429,7 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 
 #+BEGIN_SRC elisp
   (org-super-agenda--test-with-org-today-date "2017-07-08 00:00"
-    (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+    (org-ql "~/src/emacs/org-super-agenda/test/test.org"
       (and (or (date = today)
                (deadline <=)
                (scheduled <= today))
