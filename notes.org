@@ -104,9 +104,9 @@ This would require processing the predicate to pull out matchers that can be don
     `(bench-multi-lets :times ,times :ensure-equal t
        :lets (("preamble" ((org-ql-use-preamble t)))
               ("no preamble" ((org-ql-use-preamble nil))))
-       :forms ((,(prin1-to-string query) (org-ql-query ,file
-                                           ',query
-                                           :action (lambda () (org-get-heading t t)))))))
+       :forms ((,(prin1-to-string query) (org-ql-select,file
+                                          ',query
+                                          :action (lambda () (org-get-heading t t)))))))
 #+END_SRC
 
 #+BEGIN_SRC elisp
