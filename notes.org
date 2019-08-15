@@ -2,12 +2,6 @@
 
 * Tasks
 
-** TODO Update commentary
-
-** TODO [#B] Default sort
-
-Would probably be useful to have a default sort option.
-
 ** TODO [#A] Outline path in buffers-files arg
 
 e.g.
@@ -16,6 +10,59 @@ e.g.
   (org-ql (olp "~/org/inbox.org" "Emacs" "Ideas")
     (todo "NEXT"))
 #+END_SRC
+
+** TODO [#A] Tools for saving queries and accessing them
+
++ Added example to =examples.org=.
+
+*** TODO Save query from ql-agenda buffer
+
+*** TODO Access saved query from saved query list
+
+*** TODO Org link types
+:PROPERTIES:
+:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
+:END:
+
+This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
+
+**** TODO For all parameters
+
+**** TODO For saved queries
+
+*** TODO Bookmarks
+
+** TODO Add more sorters?
+
++  [ ] =category=
++  [ ] Any date :: e.g. it would search for timestamps (active/inactive?) anywhere in an entry
+
+** TODO [#B] Default sort
+
+Would probably be useful to have a default sort option.
+
+** TODO Document sorters
+
+Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
+
+** TODO Document/figure out tag inheritance
+
+I think it should probably be enabled in most cases, to avoid missing results that users would expect to find, but it will reduce performance in some cases, so users should be able to turn it off when they don't need it.
+
+[2018-06-12 Tue 14:32]  The docstring for ~org-map-entries~ says:
+
+#+BEGIN_QUOTE
+If your function needs to retrieve the tags including inherited tags at the *current* entry, you can use the value of the variable ‘org-scanner-tags’ which will be much faster than getting the value with ‘org-get-tags-at’.  If your function gets properties with ‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’ to t around the call to ‘org-entry-properties’ to get the same speedup.  Note that if your function moves around to retrieve tags and properties at a *different* entry, you cannot use these techniques.
+#+END_QUOTE
+
+** TODO Normalize queries
+
+[2019-07-16 Tue 11:49]  This serves two purposes:
+
+1.  Equivalent queries will return the same results from the cache.
+2.  The selectors that can be converted to the fastest preamble regexps will be sorted first, so the fastest preamble will be used.  Although this may not always be straightforward.  For example, in a file with only a few =TODO= items, the ~(todo "TODO")~ selector would convert to a preamble that would quickly search through the file.  But if there were a thousand =TODO= items, it wouldn't be as much of a benefit, and a ~(regexp "something")~ selector's preamble might be much faster, depending on how many times =something= appears in the file.
+
+So the second purpose might actually be a drawback, because it would prevent users from optimizing their queries with knowledge of their data.  Maybe there should be an option to not normalize queries, so advanced users can order their selectors manually.
 
 ** TODO ~org-agenda-skip-function~
 
@@ -60,156 +107,7 @@ As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integra
 
 I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
 
-** TODO [#A] Tools for saving queries and accessing them
-
-*** TODO Save query from ql-agenda buffer
-
-*** TODO Access saved query from saved query list
-
-*** TODO Org link types
-:PROPERTIES:
-:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
-:END:
-
-This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
-
-**** TODO For all parameters
-
-**** TODO For saved queries
-
-*** TODO Bookmarks
-
-** TODO [#A] Store query for refreshing ql-agenda buffer
-
-** DONE [#B] Dual matching with regexp and predicates
-:PROPERTIES:
-:ID:       39972bb5-fdd0-4754-93ba-c85796a67ccf
-:END:
-
-/Note: This is underway in the =preamble-re= branch./
-
-Searching and matching could be sped up by constructing a regexp that searches directly to the next possible match, and then matching with predicate functions.
-
-For example, a search like:
-
-#+BEGIN_SRC elisp
-  (org-ql (org-agenda-files)
-    (and (regexp "lisp")
-         (scheduled < today)))
-#+END_SRC
-
-Only entries that contain the word =lisp= can be matches, and searching each entry for that word is wasteful.  Instead, we could search the buffer for the next occurrence of =lisp=, then check the scheduled date for that entry.
-
-This would require processing the predicate to pull out matchers that can be done as buffer-wide regexps, e.g. =regexp=, =heading-regexp=, =todo=, and possibly =tags=.  Org has some regexp-building functions that might make this fairly easy, and then we could probably use ~rx~ to make an optimized version of the regexp.  It would also require some refactoring to the searching that would go directly to regexp matches when possible, rather than checking every entry with the predicate.
-
-[2019-07-16 Tue 11:14]  Made new branch =preamble-re-new= based on current =master=.  Seems to work well.  Here's some code for testing and comparing performance (~bench-multi-lets~ is from [[https://github.com/alphapapa/emacs-package-dev-handbook#bench-multi-lets][here]]).
-
-[2019-07-16 Tue 11:56]  Going to merge to =master= as 0.2, so marking this as done, even though there's a bit more that can be done from here.
-
-*** Benchmark code
-
-#+BEGIN_SRC elisp
-  (cl-defmacro org-ql-preamble-bench (&key query (file "tests/data.org") (times 10))
-    `(bench-multi-lets :times ,times :ensure-equal t
-       :lets (("preamble" ((org-ql-use-preamble t)))
-              ("no preamble" ((org-ql-use-preamble nil))))
-       :forms ((,(prin1-to-string query) (org-ql-select,file
-                                          ',query
-                                          :action (lambda () (org-get-heading t t)))))))
-#+END_SRC
-
-#+BEGIN_SRC elisp
-  (org-ql-preamble-bench :query (regexp "Emacs") :times 100)
-#+END_SRC
-
-#+RESULTS:
-| Form                          | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|-------------------------------+--------------------+---------------+----------+------------------|
-| preamble: (regexp "Emacs")    | 1.22               |      0.141767 |        0 |                0 |
-| no preamble: (regexp "Emacs") | slowest            |      0.172398 |        0 |                0 |
-
-#+BEGIN_SRC elisp
-  (org-ql-preamble-bench :file "~/org/inbox.org" :query (regexp "Emacs") :times 5)
-#+END_SRC
-
-#+RESULTS:
-| Form                          | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|-------------------------------+--------------------+---------------+----------+------------------|
-| preamble: (regexp "Emacs")    | 1.59               |      2.011043 |        0 |                0 |
-| no preamble: (regexp "Emacs") | slowest            |      3.206370 |        0 |                0 |
-
-#+BEGIN_SRC elisp
-  (org-ql-preamble-bench :file "~/org/inbox.org" :query (and (regexp "Emacs") (todo)) :times 5)
-#+END_SRC
-
-#+RESULTS:
-| Form                                       | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|--------------------------------------------+--------------------+---------------+----------+------------------|
-| preamble: (and (regexp "Emacs") (todo))    | 1.59               |      2.211503 |        0 |                0 |
-| no preamble: (and (regexp "Emacs") (todo)) | slowest            |      3.512741 |        0 |                0 |
-
-#+BEGIN_SRC elisp
-  (org-ql-preamble-bench :file "~/org/inbox.org" :query (and (regexp "Emacs") (todo) (scheduled)) :times 5)
-#+END_SRC
-
-#+RESULTS:
-| Form                                                   | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|--------------------------------------------------------+--------------------+---------------+----------+------------------|
-| preamble: (and (regexp "Emacs") (todo) (scheduled))    | 1.69               |      2.042456 |        0 |                0 |
-| no preamble: (and (regexp "Emacs") (todo) (scheduled)) | slowest            |      3.453756 |        0 |                0 |
-
-#+BEGIN_SRC elisp
-  (org-ql-preamble-bench :file "~/org/inbox.org" :query (todo "WAITING") :times 2)
-#+END_SRC
-
-#+RESULTS:
-| Form                          | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|-------------------------------+--------------------+---------------+----------+------------------|
-| preamble: (todo "WAITING")    | 15.60              |      0.070684 |        0 |                0 |
-| no preamble: (todo "WAITING") | slowest            |      1.102722 |        0 |                0 |
-
-Wow, that's a huge improvement!
-
-** TODO Normalize queries
-
-[2019-07-16 Tue 11:49]  This serves two purposes:
-
-1.  Equivalent queries will return the same results from the cache.
-2.  The selectors that can be converted to the fastest preamble regexps will be sorted first, so the fastest preamble will be used.  Although this may not always be straightforward.  For example, in a file with only a few =TODO= items, the ~(todo "TODO")~ selector would convert to a preamble that would quickly search through the file.  But if there were a thousand =TODO= items, it wouldn't be as much of a benefit, and a ~(regexp "something")~ selector's preamble might be much faster, depending on how many times =something= appears in the file.
-
-So the second purpose might actually be a drawback, because it would prevent users from optimizing their queries with knowledge of their data.  Maybe there should be an option to not normalize queries, so advanced users can order their selectors manually.
-
-** TODO [#A] Publish to MELPA
-
-** TODO Add more sorters?
-
-+  [ ] =category=
-+  [ ] Any date :: e.g. it would search for timestamps (active/inactive?) anywhere in an entry
-
-** TODO Document matchers/selectors/predicates
-
-And maybe pick a single name for them...
-
-+  =deadline= :: Be sure to explain how it works with regard to the implied date and =today=.
-+  =date=, =scheduled= :: No implied date, but supports =today=.
-
-** TODO Document sorters
-
-Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
-
-** TODO Document/figure out tag inheritance
-
-I think it should probably be enabled in most cases, to avoid missing results that users would expect to find, but it will reduce performance in some cases, so users should be able to turn it off when they don't need it.
-
-[2018-06-12 Tue 14:32]  The docstring for ~org-map-entries~ says:
-
-#+BEGIN_QUOTE
-If your function needs to retrieve the tags including inherited tags at the *current* entry, you can use the value of the variable ‘org-scanner-tags’ which will be much faster than getting the value with ‘org-get-tags-at’.  If your function gets properties with ‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’ to t around the call to ‘org-entry-properties’ to get the same speedup.  Note that if your function moves around to retrieve tags and properties at a *different* entry, you cannot use these techniques.
-#+END_QUOTE
-
-** MAYBE Date predicate that searches entire entry
-
-Because the existing ones only search the special date property line.
+** TODO Update commentary
 
 ** MAYBE Fancier searching for inherited tags
 
@@ -331,6 +229,95 @@ Virtually indistinguishable.  Going to try moving the =byte-compile= call from t
 | org-agenda-ng--add-faces                  |          150 | 0.0144141080 | 9.609...e-05 |
 
 Doesn't seem to make any difference.
+
+** DONE [#B] Dual matching with regexp and predicates
+:PROPERTIES:
+:ID:       39972bb5-fdd0-4754-93ba-c85796a67ccf
+:END:
+
+/Note: This is underway in the =preamble-re= branch./
+
+Searching and matching could be sped up by constructing a regexp that searches directly to the next possible match, and then matching with predicate functions.
+
+For example, a search like:
+
+#+BEGIN_SRC elisp
+  (org-ql (org-agenda-files)
+    (and (regexp "lisp")
+         (scheduled < today)))
+#+END_SRC
+
+Only entries that contain the word =lisp= can be matches, and searching each entry for that word is wasteful.  Instead, we could search the buffer for the next occurrence of =lisp=, then check the scheduled date for that entry.
+
+This would require processing the predicate to pull out matchers that can be done as buffer-wide regexps, e.g. =regexp=, =heading-regexp=, =todo=, and possibly =tags=.  Org has some regexp-building functions that might make this fairly easy, and then we could probably use ~rx~ to make an optimized version of the regexp.  It would also require some refactoring to the searching that would go directly to regexp matches when possible, rather than checking every entry with the predicate.
+
+[2019-07-16 Tue 11:14]  Made new branch =preamble-re-new= based on current =master=.  Seems to work well.  Here's some code for testing and comparing performance (~bench-multi-lets~ is from [[https://github.com/alphapapa/emacs-package-dev-handbook#bench-multi-lets][here]]).
+
+[2019-07-16 Tue 11:56]  Going to merge to =master= as 0.2, so marking this as done, even though there's a bit more that can be done from here.
+
+*** Benchmark code
+
+#+BEGIN_SRC elisp
+  (cl-defmacro org-ql-preamble-bench (&key query (file "tests/data.org") (times 10))
+    `(bench-multi-lets :times ,times :ensure-equal t
+       :lets (("preamble" ((org-ql-use-preamble t)))
+              ("no preamble" ((org-ql-use-preamble nil))))
+       :forms ((,(prin1-to-string query) (org-ql-select,file
+                                          ',query
+                                          :action (lambda () (org-get-heading t t)))))))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :query (regexp "Emacs") :times 100)
+#+END_SRC
+
+#+RESULTS:
+| Form                          | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (regexp "Emacs")    | 1.22               |      0.141767 |        0 |                0 |
+| no preamble: (regexp "Emacs") | slowest            |      0.172398 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :file "~/org/inbox.org" :query (regexp "Emacs") :times 5)
+#+END_SRC
+
+#+RESULTS:
+| Form                          | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (regexp "Emacs")    | 1.59               |      2.011043 |        0 |                0 |
+| no preamble: (regexp "Emacs") | slowest            |      3.206370 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :file "~/org/inbox.org" :query (and (regexp "Emacs") (todo)) :times 5)
+#+END_SRC
+
+#+RESULTS:
+| Form                                       | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (and (regexp "Emacs") (todo))    | 1.59               |      2.211503 |        0 |                0 |
+| no preamble: (and (regexp "Emacs") (todo)) | slowest            |      3.512741 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :file "~/org/inbox.org" :query (and (regexp "Emacs") (todo) (scheduled)) :times 5)
+#+END_SRC
+
+#+RESULTS:
+| Form                                                   | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------------------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (and (regexp "Emacs") (todo) (scheduled))    | 1.69               |      2.042456 |        0 |                0 |
+| no preamble: (and (regexp "Emacs") (todo) (scheduled)) | slowest            |      3.453756 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (org-ql-preamble-bench :file "~/org/inbox.org" :query (todo "WAITING") :times 2)
+#+END_SRC
+
+#+RESULTS:
+| Form                          | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------------------------+--------------------+---------------+----------+------------------|
+| preamble: (todo "WAITING")    | 15.60              |      0.070684 |        0 |                0 |
+| no preamble: (todo "WAITING") | slowest            |      1.102722 |        0 |                0 |
+
+Wow, that's a huge improvement!
 
 ** DONE Operate on list of heading positions
 CLOSED: [2018-05-10 Thu 15:02]
