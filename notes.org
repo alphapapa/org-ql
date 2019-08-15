@@ -51,29 +51,6 @@ As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integra
 
 I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
 
-** TODO [#B] Implied string literal regexp selector
-
-As mentioned [[https://www.reddit.com/r/emacs/comments/c8e0zp/my_gnu_hyperbole_vision_quest_odyssey_two/esmtqow/][here]]:
-
-#+BEGIN_QUOTE markdown
-> Third – The “StringFind” search tool seems to be busted currently, but it’s pretty killer when it works. Basically, it lets you do boolean searches through records, so entering:
-
-> `(and sonnet italian (not petrarch))`
-
-`helm-org-rifle` provides this, e.g. the equivalent query would be:
-
-`sonnet italian !petrarch`
-
-`org-ql` also provides a lispy way to do this, e.g.:
-
-    (org-ql "poetry.org"
-      (and (regexp "sonnet")
-           (regexp "italian")
-           (not (regexp "petrarch"))))
-
-It is more verbose because of the explicit `regexp` selector, but it would be easy to add an implied string literal selector.  Putting that on the to-do list now... ;)
-#+END_QUOTE
-
 ** TODO [#A] Tools for saving queries and accessing them
 
 *** TODO Save query from ql-agenda buffer
