@@ -156,7 +156,7 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 
 ~SORT~: One or a list of ~org-ql~ sorting functions, like ~date~ or ~priority~.
 
-*Bindings:*
+*Bindings:* Keys bound in results buffer.
 +  =g=: Refresh results.
 +  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 
