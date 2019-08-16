@@ -102,7 +102,7 @@ is used, rather than binding it locally."
                                          super-groups (plist-get ,args :super-groups)
                                          title (plist-get ,args :title))))
     (let ((files '(org-agenda-files))
-          query sort narrow buffer super-groups)
+          query sort narrow buffer super-groups title)
       ;; Parse args manually (so we can leave FILES nil for a default argument).
       ;; TODO: DRY this and org-ql, I think.
       (pcase args
