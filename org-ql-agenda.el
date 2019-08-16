@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'map)
 (require 'org)
 (require 'org-element)
 (require 'org-agenda)
@@ -75,6 +76,42 @@ Based on `org-agenda-mode-map'.")
 (defvar org-ql-narrow)
 (defvar org-ql-super-groups)
 (defvar org-ql-title)
+
+;;;; Customization
+
+(defcustom org-ql-views
+  (list (cons "Recent entries" (cl-function
+                                (lambda (days &optional (type 'ts))
+                                  (interactive (list (read-number "Days: ")
+                                                     (->> '(ts ts-active ts-inactive clocked closed deadline planning scheduled)
+                                                          (completing-read "Timestamp type: ")
+                                                          intern)))
+                                  (let ((from (->> (ts-now)
+                                                   (ts-adjust 'day (* -1 days))
+                                                   (ts-apply :hour 0 :minute 0 :second 0)
+                                                   ;; Formatting isn't required, but it looks better in the header than a struct.
+                                                   ts-format)))
+                                    (org-ql-search (org-agenda-files)
+                                      `(,type :from ,from :to ,(ts-format (ts-now)))
+                                      :title "Recent Entries"
+                                      :sort '(date priority todo)
+                                      :groups '((:todo "DONE")
+                                                (:auto-parent t)
+                                                (:auto-todo t)))))))
+        (cons "Stuck Projects" (lambda ()
+                                 (interactive)
+                                 (org-ql-search (org-agenda-files)
+                                   '(and (todo)
+                                         (children)
+                                         (not (children (todo "NEXT"))))
+                                   :title "Stuck Projects"
+                                   :sort '(priority date)))))
+  "Alist of `org-ql-view' commands.
+Each value should be a function that calls,
+e.g. `org-ql-search' as desired."
+  :group 'org-ql
+  :type '(alist :key-type string
+                :value-type function))
 
 ;;;; Macros
 
@@ -219,6 +256,31 @@ TITLE: An optional string displayed in the header."
     :super-groups org-ql-super-groups
     :title org-ql-title
     :buffer (current-buffer)))
+
+(defun org-ql-search-save ()
+  "Save current `org-ql-search' buffer to `org-ql-views'."
+  (interactive)
+  (let* ((name (read-string "Save view as: "))
+         (buffers-files-sexp (cl-etypecase org-ql-buffers-files
+                               (string org-ql-buffers-files)
+                               (list `(list ,@org-ql-buffers-files))
+                               (null nil)))
+         (function `(lambda ()
+                      (interactive)
+                      (org-ql-search ,buffers-files-sexp
+                        ',org-ql-query
+                        :sort ',org-ql-sort
+                        :narrow ,org-ql-narrow
+                        :groups ',org-ql-super-groups
+                        :title ,name))))
+    (map-put org-ql-views name function #'equal)
+    (customize-set-variable 'org-ql-views org-ql-views)
+    (customize-mark-to-save 'org-ql-views)))
+
+(defun org-ql-view (&optional view)
+  "Choose and display a view stored in `org-ql-views'."
+  (interactive (list (completing-read "View: " (mapcar #'car org-ql-views))))
+  (call-interactively (alist-get view org-ql-views nil nil #'string=)))
 
 ;;;; Functions
 

@@ -123,6 +123,7 @@ Alternatively, they may be grouped by:
 
 +  *Showing an agenda-like view:*
      -  ~org-ql-search~ (command)
+     -  ~org-ql-view~ (command)
      -  ~org-ql-block~ (agenda function)
      -  ~org-ql-agenda~ (macro)
 +  *Returning a list of matches or acting on them:*
@@ -157,12 +158,17 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 
 *Bindings:*
 +  =g=: Refresh results.
++  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 
 [[images/org-ql-search.gif]]
 
 Here's an example of using it to generate an agenda-like view for certain files in a directory tree:
 
 [[images/org-ql-search-snippet.png]]
+
+*** org-ql-view
+
+Choose and display a view stored in ~org-ql-views~.
 
 ** Queries
 
@@ -427,6 +433,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Function ~org-ql-search~ and macro ~org-ql-agenda~ accept a ~:title~ argument, which is displayed in the header.
 +  Command ~org-ql-search~ offers global ~org-super-agenda-groups~ in completion.
 +  Customization group ~org-ql~.
++  Command ~org-ql-view~, which displays views saved to variable ~org-ql-views~, which can be saved from ~org-ql-search~ buffers with command ~org-ql-search-save~, which is bound to =C-x C-s= in view buffers.
 +  Variable ~org-ql-view-map~, active in view buffers displayed by ~org-ql-search~, ~org-ql-agenda~, and ~org-ql-view~.
 
 *Changed*

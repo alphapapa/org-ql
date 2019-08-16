@@ -4,37 +4,9 @@
 :PROPERTIES:
 :TOC:      this
 :END:
-  -  [[#stored-views-command][Stored views command]]
   -  [[#show-entries-with-recent-timestamps][Show entries with recent timestamps]]
   -  [[#stuck-projects-block-agenda][Stuck projects block agenda]]
   -  [[#listing-bills-coming-due][Listing bills coming due]]
-
-* Stored views command
-
-This defines a simple list of stored views and a command to easily access them with completion, which may be more convenient than defining a command for each view.
-
-#+BEGIN_SRC elisp
-  (defun org-ql-view (&optional view)
-    "Choose and display a stored `org-ql' view."
-    (interactive (list (completing-read "View: " (mapcar #'car org-ql-views))))
-    (funcall (alist-get view org-ql-views nil nil #'string=)))
-
-  (setq org-ql-views
-        (list (cons "Stuck Projects" (lambda ()
-                                       (org-ql-agenda (org-agenda-files)
-                                         (and (todo)
-                                              (not (todo "TO-WATCH" "TO-READ" "MAYBE" "SOMEDAY"))
-                                              (children)
-                                              (not (children (todo)))
-                                              (not (habit)))
-                                         :title "Stuck Projects"
-                                         :sort (priority date)
-                                         :super-groups ((:name "Home" :tag "home")
-                                                        (:tag ("Emacs" "computer") :order 100)
-                                                        (:auto-parent t)
-                                                        (:todo "WAITING")
-                                                        (:auto-category t)))))))
-#+END_SRC
 
 * Show entries with recent timestamps
 
