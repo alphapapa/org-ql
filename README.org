@@ -111,13 +111,24 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
 The functionality provided may be grouped by:
 
-+  Interactive commands :: ~org-ql-search~
-+  Non-interactive functions and macros :: ~org-ql~ (macro), ~org-ql-select~ (function), ~org-ql-query~ (function), ~org-ql-block~ (agenda function), and ~org-ql-agenda~ (macro)
++  *Interactive commands:* ~org-ql-search~, ~org-ql-view~.
++  *Non-interactive functions and macros:*
+     -  ~org-ql~ (macro)
+     -  ~org-ql-select~ (function)
+     -  ~org-ql-query~ (function)
+     -  ~org-ql-agenda~ (macro)
+     -  ~org-ql-block~ (agenda function)
 
 Alternatively, they may be grouped by:
 
-+  Showing an agenda-like view :: ~org-ql-search~ (command), ~org-ql-block~ (agenda function), and ~org-ql-agenda~ (macro)
-+  Returning a list of matches or acting on them :: ~org-ql~ (macro), ~org-ql-select~ (function), and ~org-ql-query~ (function)
++  *Showing an agenda-like view:*
+     -  ~org-ql-search~ (command)
+     -  ~org-ql-block~ (agenda function)
+     -  ~org-ql-agenda~ (macro)
++  *Returning a list of matches or acting on them:*
+     -  ~org-ql~ (macro)
+     -  ~org-ql-select~ (function)
+     -  ~org-ql-query~ (function)
 
 Feedback on these APIs is welcome.  Eventually, after being tested and polished, they will be considered stable.
 
