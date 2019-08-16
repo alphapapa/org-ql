@@ -11,6 +11,8 @@ e.g.
     (todo "NEXT"))
 #+END_SRC
 
+Also, should support an ~id~ one.
+
 ** TODO [#A] Tools for saving queries and accessing them
 
 + Added example to =examples.org=.
