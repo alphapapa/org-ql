@@ -52,7 +52,8 @@
 
 (defface org-ql-agenda-due-date
   '((t (:slant italic :weight bold)))
-  "Face for due dates in `org-ql-agenda' views.")
+  "Face for due dates in `org-ql-agenda' views."
+  :group 'org-ql)
 
 ;;;; Variables
 

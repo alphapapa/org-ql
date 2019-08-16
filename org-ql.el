@@ -95,6 +95,13 @@ hash table, keyed by arguments passed to
   "Plist of predicates, their corresponding functions, and their docstrings.
 This list should not contain any duplicates.")
 
+;;;; Customization
+
+(defgroup org-ql nil
+  "Customization for `org-ql'."
+  :group 'org
+  :link '(url-link "https://github.com/alphapapa/org-ql"))
+
 ;;;; Macros
 
 (cl-defmacro org-ql--defpred (name args docstring &rest body)
