@@ -60,6 +60,14 @@
 (defvar org-ql-agenda-buffer-name "*Org-QL-Agenda*"
   "Name of default `org-ql-agenda' buffer.")
 
+(defvar org-ql-view-map
+  (let ((map (copy-keymap org-agenda-mode-map)))
+    (define-key map "g" #'org-ql-search-refresh)
+    (define-key map (kbd "C-x C-s") #'org-ql-search-save)
+    map)
+  "Keymap for `org-ql-agenda', `org-ql-search', and `org-ql-views' views.
+Based on `org-agenda-mode-map'.")
+
 ;; For refreshing results buffers.
 (defvar org-ql-buffers-files)
 (defvar org-ql-query)
@@ -240,11 +248,9 @@ TITLE: An optional string displayed in the header."
                    (string (org-ql-agenda--buffer buffer))
                    (null (org-ql-agenda--buffer buffer))
                    (buffer buffer)))
-         (map (copy-keymap org-agenda-mode-map))
          (inhibit-read-only t))
-    (define-key map "g" #'org-ql-search-refresh)
     (with-current-buffer buffer
-      (use-local-map map)
+      (use-local-map org-ql-view-map)
       ;; Prepare buffer, saving data for refreshing.
       (setq-local org-ql-buffers-files buffers-files)
       (setq-local org-ql-query query)
