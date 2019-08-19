@@ -313,14 +313,45 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                      (ts-apply :hour 23 :minute 59 :second 59))))
                         `(,pred :to ,to)))
                      (`(,(and pred (or 'deadline 'scheduled 'planning))
-                        ,(and type (or :from :to :on))
+                        ,(and direction (or :from :to :on))
                         ,(and num-days (pred numberp)))
                       (let ((target (->> (ts-now)
                                          (ts-adjust 'day num-days)
                                          (ts-apply :hour 23 :minute 59 :second 59))))
-                        `(,pred ,type ,target)))
+                        `(,pred ,direction ,target)))
+                     (`(,(and pred (or 'ts 'ts-a 'ts-i 'ts-active 'ts-inactive))
+                        ,(and direction (or :from :to))
+                        ,(and num-days (pred numberp)))
+                      (-let* ((type (pcase-exhaustive pred
+                                      ((or 'ts-i 'ts-inactive) 'inactive)
+                                      ((or 'ts-a 'ts-active) 'active)
+                                      ('ts 'both)))
+                              ((hour minute second) (pcase-exhaustive direction
+                                                      (:from '(0 0 0))
+                                                      (:to '(23 59 59))))
+                              (ts (->> (ts-now)
+                                       (ts-adjust 'day num-days)
+                                       (ts-apply :hour hour :minute minute :second second))))
+                        `(ts :type ,type ,direction ,ts)))
+                     (`(,(and pred (or 'ts 'ts-a 'ts-i 'ts-active 'ts-inactive))
+                        :on
+                        ,(and num-days (pred numberp)))
+                      ;; This rule is only for :on, because we must provide both :from and :to
+                      ;; timestamps to the (ts) selector for the --query-predicate function.
+                      (-let* ((type (pcase-exhaustive pred
+                                      ((or 'ts-i 'ts-inactive) 'inactive)
+                                      ((or 'ts-a 'ts-active) 'active)
+                                      ('ts 'both)))
+                              (from (->> (ts-now)
+                                         (ts-adjust 'day num-days)
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
+                              (to (->> (ts-now)
+                                       (ts-adjust 'day num-days)
+                                       (ts-apply :hour 23 :minute 59 :second 59))))
+                        `(ts :type ,type :from ,from :to ,to)))
                      (`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
                      (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest))
+                     ;; Any other form: passed through unchanged.
                      (_ element))))
     (rec query)))
 
