@@ -292,9 +292,6 @@ This macro is like ~org-ql~, but it presents matching entries in an Agenda-like 
                    (:priority "C" :order 2)))
 #+END_SRC
 
-*************** TODO Update screenshot (doesn't show title) :noexport:
-*************** END
-
 Which presents this buffer:
 
 [[images/screenshot.png]]

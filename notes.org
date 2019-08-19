@@ -13,6 +13,10 @@ e.g.
 
 Also, should support an ~id~ one.
 
+** TODO [#B] Update view screenshots
+
+e.g. doesn't currently show the =View= header.
+
 ** TODO [#A] Tools for saving queries and accessing them
 
 + Added example to =examples.org=.
