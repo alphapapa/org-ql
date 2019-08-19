@@ -11,7 +11,7 @@
 * Show entries with recent timestamps
 
 #+BEGIN_SRC elisp
-  (cl-defun org-ql-agenda-recent-items (days &optional (type 'ts))
+  (cl-defun org-ql-view-recent-items (days &optional (type 'ts))
     "Show items from previous DAYS days with timestamps of TYPE.
   TYPE may be `ts', `ts-active', `ts-inactive', `clocked',
   `closed', `deadline', `planning', or `scheduled'."
@@ -19,28 +19,23 @@
                        (->> '(ts ts-active ts-inactive clocked closed deadline planning scheduled)
                             (completing-read "Timestamp type: ")
                             intern)))
-    (let ((from (->> (ts-now)
-                     (ts-adjust 'day (* -1 days))
-                     (ts-apply :hour 0 :minute 0 :second 0)
-                     ;; Formatting isn't required, but it looks better in the header than a struct.
-                     ts-format)))
-      (org-ql-search (org-agenda-files)
-        `(,type :from ,from :to ,(ts-format (ts-now)))
-        :title "Recent items"
-        :sort '(date priority todo)
-        :groups '((:todo "DONE")
-                  (:category "log" :tag "log")
-                  (:auto-parent t)
-                  (:auto-todo t)))))
+    (org-ql-search (org-agenda-files)
+      `(,type ,days)
+      :title "Recent items"
+      :sort '(date priority todo)
+      :groups '((:todo "DONE")
+                (:name "Log" :category "log" :tag "log")
+                (:auto-parent t)
+                (:auto-todo t))))
 
   ;; Show entries with any timestamp from last 7 days:
-  (org-ql-agenda-recent-items 7)
+  (org-ql-view-recent-items 7)
 
-  ;; Show entries clocked in last 7 days:
-  (org-ql-agenda-recent-items 30 'clocked)
+  ;; Show entries clocked in last 30 days:
+  (org-ql-view-recent-items 30 'clocked)
 
-  ;; Show entries closed in last 7 days:
-  (org-ql-agenda-recent-items 30 'closed)
+  ;; Show entries closed in last 30 days:
+  (org-ql-view-recent-items 30 'closed)
 #+END_SRC
 
 * Stuck projects block agenda

@@ -267,6 +267,10 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
 Replaces bare strings with (regexp) selectors, and appropriate
 `ts'-related selectors."
   ;; This is unsophisticated, but it works.
+  ;; TODO: Maybe query pre-processing should be done in one place,
+  ;; rather than here and in --query-predicate.
+  ;; NOTE: Don't be scared by the `pcase' patterns!  They make this
+  ;; all very easy once you grok the backquoting and unquoting.
   (cl-labels ((rec (element)
                    (pcase element
                      (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
@@ -283,6 +287,38 @@ Replaces bare strings with (regexp) selectors, and appropriate
                      (`(children) '(children (lambda () t)))
                      (`(descendants ,query) `(descendants ',query))
                      (`(descendants) '(descendants (lambda () t)))
+                     ;; Timestamp-based predicates.  I think this is the way that makes the most sense:
+                     ;; set the limit to N days in the future, adjusted to 23:59:59 (since Org doesn't
+                     ;; support timestamps down to the second, anyway, there should be no need to adjust
+                     ;; it forward to 00:00:00 of the next day).  That way, e.g. if it's Monday at 3 PM,
+                     ;; and N is 1, rather than showing items up to 3 PM Tuesday, it will show items any
+                     ;; time on Tuesday.  If this isn't desired, the user can pass a specific timestamp.
+                     (`(,(and pred (or 'clocked 'closed))
+                        ,(and num-days (pred numberp)))
+                      ;; (clocked) and (closed) implicitly look into the past.
+                      (let ((from (->> (ts-now)
+                                       (ts-adjust 'day (* -1 num-days))
+                                       (ts-apply :hour 0 :minute 0 :second 0))))
+                        `(,pred :from ,from)))
+                     (`(deadline auto)
+                      ;; Use `org-deadline-warning-days' as the :to arg.
+                      (let ((to (->> (ts-now)
+                                     (ts-adjust 'day org-deadline-warning-days)
+                                     (ts-apply :hour 23 :minute 59 :second 59))))
+                        `(deadline-warning :to ,to)))
+                     (`(,(and pred (or 'deadline 'scheduled 'planning))
+                        ,(and num-days (pred numberp)))
+                      (let ((to (->> (ts-now)
+                                     (ts-adjust 'day num-days)
+                                     (ts-apply :hour 23 :minute 59 :second 59))))
+                        `(,pred :to ,to)))
+                     (`(,(and pred (or 'deadline 'scheduled 'planning))
+                        ,(and type (or :from :to :on))
+                        ,(and num-days (pred numberp)))
+                      (let ((target (->> (ts-now)
+                                         (ts-adjust 'day num-days)
+                                         (ts-apply :hour 23 :minute 59 :second 59))))
+                        `(,pred ,type ,target)))
                      (`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
                      (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest))
                      (_ element))))
@@ -783,6 +819,14 @@ comparator, PRIORITY should be a priority string."
 ;; TODO: Remove the _on vars from these arg lists.  I think they're not
 ;; necessary, or shouldn't be, since --pre-process-query should handle them.
 
+;; NOTE: These docstrings apply to the functions defined by `org-ql--defpref',
+;; not necessarily to the way users are expected to call them in queries.  The
+;; queries are pre-processed by `org-ql--pre-process-query' to handle
+;; arguments which are constant during a query's execution.
+
+;; TODO: Update the macro to define a user-facing docstring so I don't
+;; have to manually update the documentation.
+
 (org-ql--defpred clocked (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
@@ -839,6 +883,26 @@ If ON, return non-nil if entry has a timestamp on date ON.
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
   (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1))
+
+(org-ql--defpred deadline-warning (&key from to)
+  "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods."
+  (save-excursion
+    (forward-line 1)
+    (when (re-search-forward org-deadline-time-regexp (line-end-position) t)
+      (-let* ((context (org-element-context))
+              ;; Since we need to handle warning periods, we parse the
+              ;; Org timestamp as an org-element rather than as a string.
+              ((_planning (_closed _nil _deadline element . _rest)) context)
+              ((_timestamp (&keys :warning-value :warning-unit)) element)
+              (ts (ts-parse-org-element element))
+              (ts (pcase warning-unit
+                    ('nil ts)
+                    ((and unit (or 'year 'month 'day))
+                     (->> ts (ts-adjust unit (* -1 warning-value))))
+                    ('week (->> ts (ts-adjust 'day (* -7 warning-value)))))))
+        (cond ((and from to) (ts-in from to ts))
+              (from (ts<= from ts))
+              (to (ts<= ts to)))))))
 
 (org-ql--defpred planning (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"

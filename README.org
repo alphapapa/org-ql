@@ -44,16 +44,16 @@ More examples are available in [[examples.org]].
     :action '(org-toggle-tag "Emacs" 'on))
 
   ;; Return a list of bills coming due, searching all Org Agenda files,
-  ;; sorted by deadline.  Deadlines are compared with
-  ;; `org-deadline-warning-days', which is implied by the plain `<=' in
-  ;; the `deadline' predicate.  `org-ql-query' works like `org-ql-select'
-  ;; but offers arguments named like SQL queries.
+  ;; sorted by deadline.  The `auto' argument to `deadline' means to match
+  ;; entries whose deadlines fall within `org-deadline-warning-days'.
+  ;; `org-ql-query' works like `org-ql-select' but offers arguments named
+  ;; like SQL queries.
   (org-ql-query
     :select #'org-get-heading
     :from (org-agenda-files)
     :where '(and (not (done))
                  (tags "bills")
-                 (deadline <=))
+                 (deadline auto))
     :order-by 'deadline)
   ;;=> ("TODO Electric bill" "TODO Water bill")
 
@@ -205,16 +205,22 @@ Arguments are listed next to predicate names, where applicable.
 
 All of these selectors take optional keyword arguments ~:from~, ~:to:~, and ~:on~.  If ~:from~, return non-nil if entry has a timestamp on or after ~:from~.  If ~:to~, return non-nil if entry has a timestamp on or before ~:to~.  If ~:on~, return non-nil if entry has a timestamp on date ~:on~.  Argument values should be either ~ts~ structs, or strings parseable by ~parse-time-string~ which may omit the time value.
 
-+  ~clocked~ :: Return non-nil if current entry was clocked in given period.  If no arguments are specified, return non-nil if entry was clocked at any time.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
-+  ~closed~ :: Return non-nil if current entry was closed in given period.  If no arguments are specified, return non-nil if entry was closed at any time.
-+  ~deadline~ :: Return non-nil if current entry has deadline in given period.  If no arguments are specified, return non-nil if entry has any deadline.
-+  ~planning~ :: Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).  If no arguments are specified, return non-nil if entry is scheduled at any time.
-+  ~scheduled~ :: Return non-nil if current entry is scheduled in given period.  If no arguments are specified, return non-nil if entry is scheduled at any time.
 +  ~ts~ :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.
 +  ~ts-active~ :: Like ~ts~, but only matches active timestamps.
 +  ~ts-a~ :: Like ~ts~, but only matches active timestamps.
 +  ~ts-inactive~ :: Like ~ts~, but only matches inactive timestamps.
 +  ~ts-i~ :: Like ~ts~, but only matches inactive timestamps.
+
+The following selectors can also take a single argument, a number, which looks backward or forward a number of days.  The number can also be negative to invert the direction.
+
+*Backward-looking:*
++  ~clocked~ :: Return non-nil if current entry was clocked in given period.  If no arguments are specified, return non-nil if entry was clocked at any time.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
++  ~closed~ :: Return non-nil if current entry was closed in given period.  If no arguments are specified, return non-nil if entry was closed at any time.
+
+*Forward-looking:*
++  ~deadline~ :: Return non-nil if current entry has deadline in given period.  If argument is =auto=, return non-nil if entry has deadline within =org-deadline-warning-days=.  If no arguments are specified, return non-nil if entry has any deadline.
++  ~planning~ :: Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).  If no arguments are specified, return non-nil if entry is scheduled at any time.
++  ~scheduled~ :: Return non-nil if current entry is scheduled in given period.  If no arguments are specified, return non-nil if entry is scheduled at any time.
 
 ** Functions / Macros
 :PROPERTIES:

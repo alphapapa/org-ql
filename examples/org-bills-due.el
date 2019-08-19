@@ -35,7 +35,7 @@
 
 (-if-let* ((header "Bills due within 3 days")
            (items (org-ql "~/org/main.org"
-                    (and (deadline <= (+ 3 today))
+                    (and (deadline 3)
                          (tags "bills"))
                     :action (org-get-heading 'no-tags 'no-todo)))
            (string (concat "<ul>"

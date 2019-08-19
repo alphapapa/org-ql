@@ -110,6 +110,15 @@ RESULTS should be a list of strings as returned by
              :action (org-ql-test-org-get-heading))
            :to-equal ,results))
 
+(defmacro org-ql-then (&rest body)
+  "Wrap BODY, setting `ts-now' to return timestamp at 2017-07-05 12:00:00."
+  ;; The same time used in `org-super-agenda--test-date', which is where the test data comes from.
+  (declare (indent defun))
+  `(cl-letf (((symbol-function 'ts-now)
+              (lambda ()
+                (make-ts :year 2017 :month 7 :day 5 :hour 12 :minute 0 :second 0))))
+     ,@body))
+
 ;;;; Tests
 
 (describe "org-ql"
@@ -250,6 +259,11 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((clocked))
           '("Learn universal sign language")))
 
+      (org-ql-it "with a number"
+        (org-ql-then
+          (org-ql-expect ((clocked 10))
+            '("Learn universal sign language"))))
+
       (org-ql-it ":from a timestamp"
         (org-ql-expect ((clocked :from "2017-07-05"))
           '("Learn universal sign language"))
@@ -282,6 +296,11 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((closed))
           '("Learn universal sign language")))
 
+      (org-ql-it "with a number"
+        (org-ql-then
+          (org-ql-expect ((closed 10))
+            '("Learn universal sign language"))))
+
       (org-ql-it ":on"
         (org-ql-expect ((closed :on "2017-07-05"))
           '("Learn universal sign language"))
@@ -310,9 +329,20 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((deadline))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs")))
 
+      (org-ql-it "auto"
+        (org-ql-then
+          (org-ql-expect ((deadline auto))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
+
+      (org-ql-it "with a number"
+        (org-ql-then
+          (org-ql-expect ((deadline 2))
+            '("Take over the world" "/r/emacs"))))
+
       (org-ql-it ":on"
         (org-ql-expect ((deadline :on "2017-07-05"))
           '("/r/emacs"))
+
         (org-ql-expect ((deadline :on "2019-06-09"))
           nil))
 
@@ -347,6 +377,11 @@ RESULTS should be a list of strings as returned by
       (org-ql-it "without arguments"
         (org-ql-expect ((planning))
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+
+      (org-ql-it "with a number"
+        (org-ql-then
+          (org-ql-expect ((planning 2))
+            '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
       (org-ql-it ":on"
         (org-ql-expect ((planning :on "2017-07-05"))
@@ -411,6 +446,12 @@ RESULTS should be a list of strings as returned by
       (org-ql-it "without arguments"
         (org-ql-expect ((scheduled))
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+
+      (org-ql-it "with a number"
+        (org-ql-then
+          ;; Using -1 is the easiest way to exclude some results but not all for testing this.
+          (org-ql-expect ((scheduled -1))
+            '("Skype with president of Antarctica"))))
 
       (org-ql-it ":on"
         (org-ql-expect ((scheduled :on "2017-07-05"))
