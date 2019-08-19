@@ -170,6 +170,10 @@ Here's an example of using it to generate an agenda-like view for certain files 
 
 Choose and display a view stored in ~org-ql-views~.
 
+*** org-ql-view-recent-items
+
+Show items in ~FILES~ from last ~DAYS~ days with timestamps of ~TYPE~.  ~TYPE~ may be ~ts~, ~ts-active~, ~ts-inactive~, ~clocked~, ~closed~, ~deadline~, ~planning~, or ~scheduled~.  =FILES= defaults to those returned by the function =org-agenda-files=.
+
 ** Queries
 
 A query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.

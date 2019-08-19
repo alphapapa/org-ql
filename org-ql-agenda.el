@@ -80,24 +80,7 @@ Based on `org-agenda-mode-map'.")
 ;;;; Customization
 
 (defcustom org-ql-views
-  (list (cons "Recent entries" (cl-function
-                                (lambda (days &optional (type 'ts))
-                                  (interactive (list (read-number "Days: ")
-                                                     (->> '(ts ts-active ts-inactive clocked closed deadline planning scheduled)
-                                                          (completing-read "Timestamp type: ")
-                                                          intern)))
-                                  (let ((from (->> (ts-now)
-                                                   (ts-adjust 'day (* -1 days))
-                                                   (ts-apply :hour 0 :minute 0 :second 0)
-                                                   ;; Formatting isn't required, but it looks better in the header than a struct.
-                                                   ts-format)))
-                                    (org-ql-search (org-agenda-files)
-                                      `(,type :from ,from :to ,(ts-format (ts-now)))
-                                      :title "Recent Entries"
-                                      :sort '(date priority todo)
-                                      :groups '((:todo "DONE")
-                                                (:auto-parent t)
-                                                (:auto-todo t)))))))
+  (list (cons "Recent entries" #'org-ql-view-recent-items)
         (cons "Stuck Projects" (lambda ()
                                  (interactive)
                                  (org-ql-search (org-agenda-files)
@@ -281,6 +264,23 @@ TITLE: An optional string displayed in the header."
   "Choose and display a view stored in `org-ql-views'."
   (interactive (list (completing-read "View: " (mapcar #'car org-ql-views))))
   (call-interactively (alist-get view org-ql-views nil nil #'string=)))
+
+(cl-defun org-ql-view-recent-items (days &optional (type 'ts) (files (org-agenda-files)))
+  "Show items in FILES from last DAYS days with timestamps of TYPE.
+TYPE may be `ts', `ts-active', `ts-inactive', `clocked',
+`closed', `deadline', `planning', or `scheduled'."
+  (interactive (list (read-number "Days: ")
+                     (->> '(ts ts-active ts-inactive clocked closed deadline planning scheduled)
+                          (completing-read "Timestamp type: ")
+                          intern)))
+  (org-ql-search files
+    `(,type ,days)
+    :title "Recent items"
+    :sort '(date priority todo)
+    :groups '((:todo "DONE")
+              (:name "Log" :category "log" :tag "log")
+              (:auto-parent t)
+              (:auto-todo t))))
 
 ;;;; Functions
 

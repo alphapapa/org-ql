@@ -10,24 +10,9 @@
 
 * Show entries with recent timestamps
 
-#+BEGIN_SRC elisp
-  (cl-defun org-ql-view-recent-items (days &optional (type 'ts))
-    "Show items from previous DAYS days with timestamps of TYPE.
-  TYPE may be `ts', `ts-active', `ts-inactive', `clocked',
-  `closed', `deadline', `planning', or `scheduled'."
-    (interactive (list (read-number "Days: ")
-                       (->> '(ts ts-active ts-inactive clocked closed deadline planning scheduled)
-                            (completing-read "Timestamp type: ")
-                            intern)))
-    (org-ql-search (org-agenda-files)
-      `(,type ,days)
-      :title "Recent items"
-      :sort '(date priority todo)
-      :groups '((:todo "DONE")
-                (:name "Log" :category "log" :tag "log")
-                (:auto-parent t)
-                (:auto-todo t))))
+You can also access these views with the command ~org-ql-view~.
 
+#+BEGIN_SRC elisp
   ;; Show entries with any timestamp from last 7 days:
   (org-ql-view-recent-items 7)
 
