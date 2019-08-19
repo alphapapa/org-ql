@@ -48,15 +48,15 @@ With this =org-ql-block= agenda view, like:
 This uses the example in the readme file, but maps across the elements returned by ~org-ql~ to present a simple list of titles and deadlines.
 
 #+BEGIN_SRC elisp
-  (--map (list (org-element-property :raw-value it)
-               (org-timestamp-format (org-element-property :deadline it) "%c"))
-         (org-ql (org-agenda-files)
-           (and (not (done))
-                (tags "bills")
-                (deadline <=))
-           :sort deadline))
-  ;;=> (("Electric bill" "Thu 23 Aug 2018 12:00:00 AM CDT")
-  ;;    ("Rent" "Sat 01 Sep 2018 08:00:00 PM CDT"))
+  (org-ql (org-agenda-files)
+    (and (not (done))
+         (tags "bills")
+         (deadline auto))
+    :action (list (substring-no-properties (org-get-heading t t))
+                  (org-entry-get (point) "DEADLINE"))
+    :sort deadline)
+  ;;=> (("Electric bill" "<2018-08-23 Thu +1m>")
+  ;;    ("Rent" "<2018-09-01 Sat +1m>"))
 #+END_SRC
 
 This could also be put in a script, which could use desktop notifications to remind of bills coming due: [[examples/org-bills-due.el][org-bills-due.el]].
