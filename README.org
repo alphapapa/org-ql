@@ -202,12 +202,12 @@ Arguments are listed next to predicate names, where applicable.
 +  ~tags (&optional tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).
 +  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
 
-*** Date/time selectors
+*** Date/time predicates
 :PROPERTIES:
 :TOC:      ignore
 :END:
 
-All of these selectors take optional keyword arguments ~:from~, ~:to:~, and ~:on~:
+All of these predicates take optional keyword arguments ~:from~, ~:to:~, and ~:on~:
 
 +  If ~:from~, return non-nil if entry has a timestamp on or after ~:from~.
 +  If ~:to~, return non-nil if entry has a timestamp on or before ~:to~.
@@ -215,14 +215,14 @@ All of these selectors take optional keyword arguments ~:from~, ~:to:~, and ~:on
 
 Argument values should be either a number of days (positive to look forward, or negative to look backward), a ~ts~ struct, or a string parseable by ~parse-time-string~ which may omit the time value.
 
-*Selectors:*
+*Predicates:*
 +  ~ts~ :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.
 +  ~ts-active~ :: Like ~ts~, but only matches active timestamps.
 +  ~ts-a~ :: Like ~ts~, but only matches active timestamps.
 +  ~ts-inactive~ :: Like ~ts~, but only matches inactive timestamps.
 +  ~ts-i~ :: Like ~ts~, but only matches inactive timestamps.
 
-The following selectors, in addition to the keyword arguments, can also take a single argument, a number, which looks backward or forward a number of days.  The number can be negative to invert the direction.
+The following predicates, in addition to the keyword arguments, can also take a single argument, a number, which looks backward or forward a number of days.  The number can be negative to invert the direction.
 
 *Backward-looking:*
 +  ~clocked~ :: Return non-nil if current entry was clocked in given period.  If no arguments are specified, return non-nil if entry was clocked at any time.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
