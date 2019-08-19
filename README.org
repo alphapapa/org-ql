@@ -302,8 +302,9 @@ Which presents this buffer:
 Here are some other examples:
 
 #+BEGIN_SRC elisp
-  ;; Show an agenda-like view of items in "~/org/main.org" with TODO and SOMEDAY keywords which are
-  ;; tagged "computer" or "Emacs" and in the category "main":
+  ;; Show an agenda-like view of items in "~/org/main.org" with TODO and
+  ;; SOMEDAY keywords which are tagged "computer" or "Emacs" and in the
+  ;; category "main":
   (org-ql-agenda "~/org/main.org"
     (and (todo "TODO" "SOMEDAY")
          (tags "computer" "Emacs")
@@ -313,14 +314,16 @@ Here are some other examples:
   (org-ql-agenda
     (habit))
 
-  ;; Show an agenda-like view similar to a "traditional" Org agenda.
+  ;; Show an agenda-like view similar to a "traditional" Org Agenda with
+  ;; Log Mode turned on.
   (org-ql-agenda
-    (or (habit)
-        (date = today)
-        (deadline <=)
-        (scheduled <= today)
-        (and (todo "DONE" "CANCELLED")
-             (closed = today))))
+    (or (and (not (done))
+             (or (habit)
+                 (deadline auto)
+                 (scheduled :to today)
+                 (ts-active :on today)))
+        (closed :on today))
+    :sort (date priority todo))
 #+END_SRC
 
 *** Listing / acting-on results
