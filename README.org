@@ -26,22 +26,31 @@
 More examples are available in [[examples.org]].
 
 #+BEGIN_SRC elisp
-  ;; Return a list of Org entry elements in the file "~/org/main.org"
-  ;; which have the SOMEDAY to-do keyword, are tagged "Emacs", and have
-  ;; priority B or higher.
-  (org-ql "~/org/main.org"
-    (and (todo "SOMEDAY")
-         (tags "Emacs")
-         (priority >= "B")))
-  ;;=> ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
+  ;; Show entries that have any timestamp within the past week.  Group
+  ;; by date using `org-super-agenda' with the `:auto-ts' group.
+  (org-ql-search (org-agenda-files)
+    '(ts :from -7 :to today)
+    :title "Recent Items"
+    :sort '(date priority todo)
+    :groups '((:auto-ts t)))
 
-  ;; Set the tag "Emacs" on every entry in the inbox file that mentions
-  ;; "Emacs".  `org-ql-select' works like `org-ql' but is a function
-  ;; rather than a macro.  The bare-string query "Emacs" is equivalent
-  ;; to (regexp "Emacs").
-  (org-ql-select "~/org/inbox.org"
-    "Emacs"
-    :action '(org-toggle-tag "Emacs" 'on))
+  ;; Show a GTD-style "stuck projects" view: PROJECT tasks that have no
+  ;; descendants with the NEXT keyword.  If you use a "project" tag
+  ;; instead of the to-do keyword, you could replace (todo "PROJECT")
+  ;; with (tags "project").
+  (org-ql-search (org-agenda-files)
+    '(and (todo "PROJECT")
+          (not (descendants (todo "NEXT"))))
+    :title "Stuck Projects")
+
+  ;; Integrate `org-ql' into a custom Org Agenda command which inserts
+  ;; an `org-ql' block before the regular agenda:
+  (setq org-agenda-custom-commands
+        '(("ces" "Custom: Agenda and Emacs SOMEDAY [#A] items"
+           ((org-ql-block '(and (todo "SOMEDAY")
+                                (tags "Emacs")
+                                (priority "A")))
+            (agenda)))))
 
   ;; Return a list of bills coming due, searching all Org Agenda files,
   ;; sorted by deadline.  The `auto' argument to `deadline' means to match
@@ -66,23 +75,22 @@ More examples are available in [[examples.org]].
           (property "composer" "Chopin")
           (not (property "key"))))
 
-  ;; Integrate `org-ql' into a custom Org Agenda command which inserts
-  ;; an `org-ql' block before the regular agenda:
-  (setq org-agenda-custom-commands
-        '(("ces" "Custom: Agenda and Emacs SOMEDAY [#A] items"
-           ((org-ql-block '(and (todo "SOMEDAY")
-                                (tags "Emacs")
-                                (priority "A")))
-            (agenda)))))
+  ;; Set the tag "Emacs" on every entry in the inbox file that mentions
+  ;; "Emacs".  `org-ql-select' works like `org-ql' but is a function
+  ;; rather than a macro.  The bare-string query "Emacs" is equivalent
+  ;; to (regexp "Emacs").
+  (org-ql-select "~/org/inbox.org"
+    "Emacs"
+    :action '(org-toggle-tag "Emacs" 'on))
 
-  ;; Show a GTD-style "stuck projects" view: PROJECT tasks that have no
-  ;; descendants with the NEXT keyword.  If you use a "project" tag
-  ;; instead of the to-do keyword, you could replace (todo "PROJECT")
-  ;; with (tags "project").
-  (org-ql-search (org-agenda-files)
-    '(and (todo "PROJECT")
-          (not (descendants (todo "NEXT"))))
-    :title "Stuck Projects")
+  ;; Return a list of Org entry elements in the file "~/org/main.org"
+  ;; which have the SOMEDAY to-do keyword, are tagged "Emacs", and have
+  ;; priority B or higher.
+  (org-ql "~/org/main.org"
+    (and (todo "SOMEDAY")
+         (tags "Emacs")
+         (priority >= "B")))
+  ;;=> ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
 #+END_SRC
 
 * Installation
