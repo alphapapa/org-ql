@@ -125,6 +125,8 @@ RESULTS should be a list of strings as returned by
         (substring-no-properties (org-get-heading t t t t))))
 
     (setq test-buffer (find-file-noselect (concat default-directory "tests/data.org"))
+          ;; For manual testing:
+          ;; test-buffer (find-file-noselect "data.org")
           num-headings (with-current-buffer test-buffer
                          (org-with-wide-buffer
                           (goto-char (point-min))
