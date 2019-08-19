@@ -780,6 +780,9 @@ comparator, PRIORITY should be a priority string."
 
 ;;;;;; Timestamps
 
+;; TODO: Remove the _on vars from these arg lists.  I think they're not
+;; necessary, or shouldn't be, since --pre-process-query should handle them.
+
 (org-ql--defpred clocked (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
