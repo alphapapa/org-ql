@@ -88,11 +88,9 @@ function elisp-buttercup-file {
     local file=$(mktemp)
     cat >$file <<EOF
 (defun makem-buttercup-run (oldfun &rest r)
-  "Call buttercup-run, ignoring \"No suites defined\" error."
-  (condition-case err
-      (apply oldfun r)
-    (error (unless (string= "No suites defined" (error-message-string err))
-             (signal (car err) (cdr err))))))
+  "Call buttercup-run only if \`buttercup-suites' is non-nil."
+  (when buttercup-suites
+    (apply oldfun r)))
 
 (advice-add #'buttercup-run :around #'makem-buttercup-run)
 EOF
