@@ -827,11 +827,15 @@ parseable by `parse-time-string' which may omit the time value."
     (forward-line 1)
     (when (re-search-forward org-deadline-time-regexp (line-end-position) t)
       (-let* ((context (org-element-context))
-              ;; Since we need to handle warning periods, we parse the
-              ;; Org timestamp as an org-element rather than as a string.
-              ((_planning (_closed _nil _deadline element . _rest)) context)
-              ((_timestamp (&keys :warning-value :warning-unit)) element)
-              (ts (ts-parse-org-element element))
+              ;; Since we need to handle warning periods, we parse the Org timestamp
+              ;; as an org-element rather than as a string.  Unfortunately, sometimes
+              ;; `org-element-context' returns a timestamp nested inside a `planning'
+              ;; element, other times just the timestamp, so we have to handle both.
+              (deadline-ts-element (pcase context
+                                     (`(planning ,tss) (plist-get tss :deadline))
+                                     (`(timestamp . ,_) context)))
+              ((_timestamp (&keys :warning-value :warning-unit)) deadline-ts-element)
+              (ts (ts-parse-org-element deadline-ts-element))
               (ts (pcase warning-unit
                     ('nil ts)
                     ((and unit (or 'year 'month 'day))
