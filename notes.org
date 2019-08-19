@@ -17,13 +17,13 @@ Also, should support an ~id~ one.
 
 e.g. doesn't currently show the =View= header.
 
-** TODO [#A] Tools for saving queries and accessing them
+** TODO [#A] Tools for saving queries and accessing them [2/4]
 
 + Added example to =examples.org=.
 
-*** TODO Save query from ql-agenda buffer
+*** DONE Save query from ql-agenda buffer
 
-*** TODO Access saved query from saved query list
+*** DONE Access saved query from saved query list
 
 *** TODO Org link types
 :PROPERTIES:
