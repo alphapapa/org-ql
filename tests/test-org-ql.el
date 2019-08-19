@@ -270,17 +270,32 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((clocked :from "2017-07-06"))
           nil))
 
+      (org-ql-it ":from today"
+        (org-ql-then
+          (org-ql-expect ((clocked :from today))
+            '("Learn universal sign language"))))
+
       (org-ql-it ":to a timestamp"
         (org-ql-expect ((clocked :to "2017-07-05"))
           '("Learn universal sign language"))
         (org-ql-expect ((clocked :to "2017-07-04"))
           nil))
 
+      (org-ql-it ":to today"
+        (org-ql-then
+          (org-ql-expect ((clocked :to today))
+            '("Learn universal sign language"))))
+
       (org-ql-it ":on a date"
         (org-ql-expect ((clocked :on "2017-07-05"))
           '("Learn universal sign language"))
         (org-ql-expect ((clocked :on "2018-12-02"))
           nil))
+
+      (org-ql-it ":on today"
+        (org-ql-then
+          (org-ql-expect ((clocked :on today))
+            '("Learn universal sign language"))))
 
       (org-ql-it "within a range (:from and :to)"
         (org-ql-expect ((clocked :from "2017-07-04" :to "2018-12-11"))
@@ -304,6 +319,9 @@ RESULTS should be a list of strings as returned by
       (org-ql-it ":on"
         (org-ql-expect ((closed :on "2017-07-05"))
           '("Learn universal sign language"))
+        (org-ql-then
+          (org-ql-expect ((closed :on today))
+            '("Learn universal sign language")))
         (org-ql-expect ((closed :on "2019-06-09"))
           nil))
 
@@ -312,6 +330,9 @@ RESULTS should be a list of strings as returned by
           '("Learn universal sign language"))
         (org-ql-expect ((closed :from "2017-07-05"))
           '("Learn universal sign language"))
+        (org-ql-then
+          (org-ql-expect ((closed :from today))
+            '("Learn universal sign language")))
         (org-ql-expect ((closed :from "2017-07-06"))
           nil))
 
@@ -320,6 +341,9 @@ RESULTS should be a list of strings as returned by
           nil)
         (org-ql-expect ((closed :to "2017-07-05"))
           '("Learn universal sign language"))
+        (org-ql-then
+          (org-ql-expect ((closed :to today))
+            '("Learn universal sign language")))
         (org-ql-expect ((closed :to "2017-07-06"))
           '("Learn universal sign language"))))
 
@@ -342,6 +366,9 @@ RESULTS should be a list of strings as returned by
       (org-ql-it ":on"
         (org-ql-expect ((deadline :on "2017-07-05"))
           '("/r/emacs"))
+        (org-ql-then
+          (org-ql-expect ((deadline :on today))
+            '("/r/emacs")))
 
         (org-ql-expect ((deadline :on "2019-06-09"))
           nil))
@@ -354,7 +381,10 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((deadline :from "2017-07-06"))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
         (org-ql-expect ((deadline :from "2018-07-06"))
-          nil))
+          nil)
+        (org-ql-then
+          (org-ql-expect ((deadline :from today))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
 
       (org-ql-it ":to"
         (org-ql-expect ((deadline :to "2017-07-04"))
@@ -362,7 +392,10 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((deadline :to "2017-07-05"))
           '("/r/emacs"))
         (org-ql-expect ((deadline :to "2018-07-06"))
-          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
+        (org-ql-then
+          (org-ql-expect ((deadline :to today))
+            '("/r/emacs")))))
 
     (org-ql-it "(done)"
       (org-ql-expect ((done))
@@ -387,7 +420,10 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((planning :on "2017-07-05"))
           '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ((planning :on "2019-06-09"))
-          nil))
+          nil)
+        (org-ql-then
+          (org-ql-expect ((planning :on today))
+            '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
       (org-ql-it ":from"
         (org-ql-expect ((planning :from "2017-07-04"))
@@ -395,7 +431,10 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((planning :from "2017-07-05"))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ((planning :from "2017-07-06"))
-          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease")))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
+        (org-ql-then
+          (org-ql-expect ((planning :from today))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
       (org-ql-it ":to"
         (org-ql-expect ((planning :to "2017-07-04"))
@@ -403,7 +442,10 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((planning :to "2017-07-05"))
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ((planning :to "2018-07-06"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-then
+          (org-ql-expect ((planning :to today))
+            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
 
     (describe "(property)"
 
@@ -457,7 +499,10 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((scheduled :on "2017-07-05"))
           '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ((scheduled :on "2019-06-09"))
-          nil))
+          nil)
+        (org-ql-then
+          (org-ql-expect ((scheduled :on today))
+            '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
       (org-ql-it ":from"
         (org-ql-expect ((scheduled :from "2017-07-04"))
@@ -465,7 +510,10 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((scheduled :from "2017-07-05"))
           '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ((scheduled :from "2017-07-06"))
-          nil))
+          nil)
+        (org-ql-then
+          (org-ql-expect ((scheduled :from today))
+            '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
       (org-ql-it ":to"
         (org-ql-expect ((scheduled :to "2017-07-04"))
@@ -473,7 +521,10 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((scheduled :to "2017-07-05"))
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ((scheduled :to "2018-07-06"))
-          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-then
+          (org-ql-expect ((scheduled :to today))
+            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
 
     (describe "(todo)"
 
@@ -523,11 +574,13 @@ RESULTS should be a list of strings as returned by
             '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
 
         (org-ql-it ":from a timestamp"
-          ;; TODO: Figure out why these take longer than the other (ts) tests.
           (org-ql-expect ((ts :from "2017-07-08" :type active))
             '("Take over the universe" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
           (org-ql-expect ((ts :from "2019-06-08" :type active))
-            nil))
+            nil)
+          (org-ql-then
+            (org-ql-expect ((ts :from today))
+              '("Test data" "Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":from a number of days"
           (org-ql-then
@@ -538,7 +591,10 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((ts :to "2019-06-10" :type active))
             '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ((ts :to "2017-07-04" :type active))
-            '("Skype with president of Antarctica")))
+            '("Skype with president of Antarctica"))
+          (org-ql-then
+            (org-ql-expect ((ts :to today))
+              '("Test data" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":to a number of days"
           (org-ql-then
@@ -549,7 +605,10 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((ts :on "2017-07-05" :type active))
             '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ((ts :on "2019-06-09" :type active))
-            nil))
+            nil)
+          (org-ql-then
+            (org-ql-expect ((ts :on today))
+              '("Test data" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":on a number of days"
           (org-ql-then
@@ -566,7 +625,10 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((ts :from "2017-07-06" :type inactive))
             '("Visit the moon" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ((ts :from "2019-06-08" :type inactive))
-            nil))
+            nil)
+          (org-ql-then
+            (org-ql-expect ((ts-inactive :from today))
+              '("Test data" "Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":from a number of days"
           (org-ql-then
@@ -577,7 +639,10 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((ts :to "2019-06-10" :type inactive))
             '("Test data" "Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ((ts :to "2017-07-04" :type inactive))
-            'nil))
+            'nil)
+          (org-ql-then
+            (org-ql-expect ((ts-inactive :to today))
+              '("Test data" "Learn universal sign language"))))
 
         (org-ql-it ":to a number of days"
           (org-ql-then
@@ -588,7 +653,10 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((ts :on "2017-07-05" :type inactive))
             '("Test data" "Learn universal sign language"))
           (org-ql-expect ((ts :on "2019-06-09" :type inactive))
-            nil))
+            nil)
+          (org-ql-then
+            (org-ql-expect ((ts-inactive :on today))
+              '("Test data" "Learn universal sign language"))))
 
         (org-ql-it ":on a number of days"
           (org-ql-then
@@ -604,7 +672,6 @@ RESULTS should be a list of strings as returned by
             '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
 
         (org-ql-it ":from a timestamp"
-          ;; TODO: Figure out why these take longer than the other (ts) tests.
           (org-ql-expect ((ts :from "2017-07-05"))
             '("Test data" "Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ((ts :from "2017-07-05" :type both))
@@ -612,7 +679,10 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((ts :from "2019-06-08"))
             nil)
           (org-ql-expect ((ts :from "2019-06-08" :type both))
-            nil))
+            nil)
+          (org-ql-then
+            (org-ql-expect ((ts :from today))
+              '("Test data" "Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":from a number of days"
           (org-ql-then
@@ -627,7 +697,10 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((ts :to "2017-07-04"))
             '("Skype with president of Antarctica"))
           (org-ql-expect ((ts :to "2017-07-04" :type both))
-            '("Skype with president of Antarctica")))
+            '("Skype with president of Antarctica"))
+          (org-ql-then
+            (org-ql-expect ((ts :to today))
+              '("Test data" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":to a number of days"
           (org-ql-then
@@ -642,7 +715,10 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((ts :on "2019-06-09"))
             nil)
           (org-ql-expect ((ts :on "2019-06-09" :type both))
-            nil))
+            nil)
+          (org-ql-then
+            (org-ql-expect ((ts :on today))
+              '("Test data" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":on a number of days"
           (org-ql-then

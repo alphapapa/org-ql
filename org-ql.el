@@ -206,7 +206,7 @@ non-nil."
           ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
           ;; (org-use-tag-inheritance t)
           ;; (org-trust-scanner-tags t)
-          (org-ql--today (org-today))
+          (org-ql--today (ts-now))
           (items (->> buffers
                       (--map (with-current-buffer it
                                (unless (derived-mode-p 'org-mode)
@@ -318,155 +318,62 @@ Replaces bare strings with (regexp) selectors, and appropriate
                      (_ element))))
     (rec query)))
 
+(defmacro org-ql--from-to-on ()
+  "For internal use.
+Expands into a form that processes arguments to timestamp-related
+predicates."
+  ;; Several attempts to use `cl-macrolet' and `cl-symbol-macrolet' failed, so I
+  ;; resorted to this top-level macro.  It will do for now.
+  `(progn
+     (when on
+       (setq from on
+             to on))
+     (when from
+       (setq from (pcase from
+                    ((pred stringp) (ts-parse-fill 'begin from))
+                    ((pred numberp) (->> (ts-now)
+                                         (ts-adjust 'day from)
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
+                    ((pred ts-p) from)
+                    ('today (->> (ts-now)
+                                 (ts-apply :hour 0 :minute 0 :second 0))))))
+     (when to
+       (setq to (pcase to
+                  ((pred stringp) (ts-parse-fill 'end to))
+                  ((pred numberp) (->> (ts-now)
+                                       (ts-adjust 'day to)
+                                       (ts-apply :hour 23 :minute 59 :second 59)))
+                  ((pred ts-p) to)
+                  ('today (->> (ts-now)
+                               (ts-apply :hour 23 :minute 59 :second 59))))))))
+
 (defun org-ql--query-predicate (query)
   "Return predicate function for QUERY."
-  (byte-compile `(lambda ()
-                   ;; This is either really elegant or really ugly.  Well, also
-                   ;; possibly somewhere in-between.  At the least, we should do
-                   ;; this in a more flexible, abstracted way, but this will do
-                   ;; for now.  Most importantly, it works!
-                   (let (from to on)
-                     ;; TODO: DRY these macrolets.
-                     ;; MAYBE: Instead of defining clocked, closed, etc. as predicates,
-                     ;; rewrite them to call --predicate-ts directly here.  Only drawback,
-                     ;; I think, is that it would make documentation less automated.
-                     (cl-macrolet ((clocked (&key from to on)
-                                            (when on
-                                              (setq from on
-                                                    to on))
-                                            (when from
-                                              (setq from (cl-etypecase from
-                                                           (string (ts-parse-fill 'begin from))
-                                                           (number (->> (ts-now)
-                                                                        (ts-adjust 'day from)
-                                                                        (ts-apply :hour 0 :minute 0 :second 0)))
-                                                           (ts from))))
-                                            (when to
-                                              (setq to (cl-etypecase to
-                                                         (string (ts-parse-fill 'end to))
-                                                         (number (->> (ts-now)
-                                                                      (ts-adjust 'day to)
-                                                                      (ts-apply :hour 23 :minute 59 :second 59)))
-                                                         (ts to))))
-                                            ;; NOTE: The macro must expand to the actual `org-ql--predicate-clocked'
-                                            ;; function, not another `clocked'.
-                                            `(org-ql--predicate-clocked :from ,from :to ,to))
-                                   (closed (&key from to on)
-                                           (when on
-                                             (setq from on
-                                                   to on))
-                                           (when from
-                                             (setq from (cl-etypecase from
-                                                          (string (ts-parse-fill 'begin from))
-                                                          (number (->> (ts-now)
-                                                                       (ts-adjust 'day from)
-                                                                       (ts-apply :hour 0 :minute 0 :second 0)))
-                                                          (ts from))))
-                                           (when to
-                                             (setq to (cl-etypecase to
-                                                        (string (ts-parse-fill 'end to))
-                                                        (number (->> (ts-now)
-                                                                     (ts-adjust 'day to)
-                                                                     (ts-apply :hour 23 :minute 59 :second 59)))
-                                                        (ts to))))
-                                           ;; NOTE: The macro must expand to the actual `org-ql--predicate-closed'
-                                           ;; function, not another `closed'.
-                                           `(org-ql--predicate-closed :from ,from :to ,to))
-                                   (deadline (&key from to on)
-                                             (when on
-                                               (setq from on
-                                                     to on))
-                                             (when from
-                                               (setq from (cl-etypecase from
-                                                            (string (ts-parse-fill 'begin from))
-                                                            (number (->> (ts-now)
-                                                                         (ts-adjust 'day from)
-                                                                         (ts-apply :hour 0 :minute 0 :second 0)))
-                                                            (ts from))))
-                                             (when to
-                                               (setq to (cl-etypecase to
-                                                          (string (ts-parse-fill 'end to))
-                                                          (number (->> (ts-now)
-                                                                       (ts-adjust 'day to)
-                                                                       (ts-apply :hour 23 :minute 59 :second 59)))
-                                                          (ts to))))
-                                             ;; NOTE: The macro must expand to the actual `org-ql--predicate-deadline'
-                                             ;; function, not another `deadline'.
-                                             `(org-ql--predicate-deadline :from ,from :to ,to))
-                                   (planning (&key from to on)
-                                             (when on
-                                               (setq from on
-                                                     to on))
-                                             (when from
-                                               (setq from (cl-etypecase from
-                                                            (string (ts-parse-fill 'begin from))
-                                                            (number (->> (ts-now)
-                                                                         (ts-adjust 'day from)
-                                                                         (ts-apply :hour 0 :minute 0 :second 0)))
-                                                            (ts from))))
-                                             (when to
-                                               (setq to (cl-etypecase to
-                                                          (string (ts-parse-fill 'end to))
-                                                          (number (->> (ts-now)
-                                                                       (ts-adjust 'day to)
-                                                                       (ts-apply :hour 23 :minute 59 :second 59)))
-                                                          (ts to))))
-                                             ;; NOTE: The macro must expand to the actual `org-ql--predicate-planning'
-                                             ;; function, not another `planning'.
-                                             `(org-ql--predicate-planning :from ,from :to ,to))
-                                   (scheduled (&key from to on)
-                                              (when on
-                                                (setq from on
-                                                      to on))
-                                              (when from
-                                                (setq from (cl-etypecase from
-                                                             (string (ts-parse-fill 'begin from))
-                                                             (number (->> (ts-now)
-                                                                          (ts-adjust 'day from)
-                                                                          (ts-apply :hour 0 :minute 0 :second 0)))
-                                                             (ts from))))
-                                              (when to
-                                                (setq to (cl-etypecase to
-                                                           (string (ts-parse-fill 'end to))
-                                                           (number (->> (ts-now)
-                                                                        (ts-adjust 'day to)
-                                                                        (ts-apply :hour 23 :minute 59 :second 59)))
-                                                           (ts to))))
-                                              ;; NOTE: The macro must expand to the actual `org-ql--predicate-scheduled'
-                                              ;; function, not another `scheduled'.
-                                              `(org-ql--predicate-scheduled :from ,from :to ,to))
-                                   (ts (&key from to on (type 'both))
-                                       (when on
-                                         (setq from on
-                                               to on))
-                                       (when from
-                                         (setq from (cl-etypecase from
-                                                      (string (ts-parse-fill 'begin from))
-                                                      (number (->> (ts-now)
-                                                                   (ts-adjust 'day from)
-                                                                   (ts-apply :hour 0 :minute 0 :second 0)))
-                                                      (ts from))))
-                                       (when to
-                                         (setq to (cl-etypecase to
-                                                    (string (ts-parse-fill 'end to))
-                                                    (number (->> (ts-now)
-                                                                 (ts-adjust 'day to)
-                                                                 (ts-apply :hour 23 :minute 59 :second 59)))
-                                                    (ts to))))
-                                       ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
-                                       ;; function, not another `ts'.
-                                       `(org-ql--predicate-ts :from ,from :to ,to
-                                                              :regexp ,(pcase type
-                                                                         ('both org-tsr-regexp-both)
-                                                                         ('active org-tsr-regexp)
-                                                                         ('inactive org-ql-tsr-regexp-inactive)))))
-                       (cl-symbol-macrolet ((today org-ql--today) ; Necessary because of byte-compiling the lambda
-                                            (= #'=)
-                                            (< #'<)
-                                            (> #'>)
-                                            (<= #'<=)
-                                            (>= #'>=))
-                         ,query))))))
+  (byte-compile
+   `(lambda ()
+      (cl-macrolet ((clocked (&key from to on)
+                             (org-ql--from-to-on)
+                             `(org-ql--predicate-clocked :from ,from :to ,to))
+                    (closed (&key from to on)
+                            (org-ql--from-to-on)
+                            `(org-ql--predicate-closed :from ,from :to ,to))
+                    (deadline (&key from to on)
+                              (org-ql--from-to-on)
+                              `(org-ql--predicate-deadline :from ,from :to ,to))
+                    (planning (&key from to on)
+                              (org-ql--from-to-on)
+                              `(org-ql--predicate-planning :from ,from :to ,to))
+                    (scheduled (&key from to on)
+                               (org-ql--from-to-on)
+                               `(org-ql--predicate-scheduled :from ,from :to ,to))
+                    (ts (&key from to on (type 'both))
+                        (org-ql--from-to-on)
+                        `(org-ql--predicate-ts :from ,from :to ,to
+                                               :regexp ,(pcase type
+                                                          ('both org-tsr-regexp-both)
+                                                          ('active org-tsr-regexp)
+                                                          ('inactive org-ql-tsr-regexp-inactive)))))
+        ,query))))
 
 (defun org-ql--query-preamble (query)
   "Return (QUERY PREAMBLE) for QUERY.

@@ -270,9 +270,9 @@ This macro is like ~org-ql~, but it presents matching entries in an Agenda-like 
 
 #+BEGIN_SRC elisp
   (org-ql-agenda "~/src/emacs/org-super-agenda/test/test.org"
-    (and (or (date = today)
-             (deadline <=)
-             (scheduled <= today))
+    (and (or (ts-active :on today)
+             (deadline auto)
+             (scheduled :to today))
          (not (done)))
     :title "My Agenda View"
     ;; The `org-super-agenda-groups' setting is used automatically when set, or it
