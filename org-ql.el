@@ -312,43 +312,6 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                      (ts-adjust 'day num-days)
                                      (ts-apply :hour 23 :minute 59 :second 59))))
                         `(,pred :to ,to)))
-                     (`(,(and pred (or 'deadline 'scheduled 'planning))
-                        ,(and direction (or :from :to :on))
-                        ,(and num-days (pred numberp)))
-                      (let ((target (->> (ts-now)
-                                         (ts-adjust 'day num-days)
-                                         (ts-apply :hour 23 :minute 59 :second 59))))
-                        `(,pred ,direction ,target)))
-                     (`(,(and pred (or 'ts 'ts-a 'ts-i 'ts-active 'ts-inactive))
-                        ,(and direction (or :from :to))
-                        ,(and num-days (pred numberp)))
-                      (-let* ((type (pcase-exhaustive pred
-                                      ((or 'ts-i 'ts-inactive) 'inactive)
-                                      ((or 'ts-a 'ts-active) 'active)
-                                      ('ts 'both)))
-                              ((hour minute second) (pcase-exhaustive direction
-                                                      (:from '(0 0 0))
-                                                      (:to '(23 59 59))))
-                              (ts (->> (ts-now)
-                                       (ts-adjust 'day num-days)
-                                       (ts-apply :hour hour :minute minute :second second))))
-                        `(ts :type ,type ,direction ,ts)))
-                     (`(,(and pred (or 'ts 'ts-a 'ts-i 'ts-active 'ts-inactive))
-                        :on
-                        ,(and num-days (pred numberp)))
-                      ;; This rule is only for :on, because we must provide both :from and :to
-                      ;; timestamps to the (ts) selector for the --query-predicate function.
-                      (-let* ((type (pcase-exhaustive pred
-                                      ((or 'ts-i 'ts-inactive) 'inactive)
-                                      ((or 'ts-a 'ts-active) 'active)
-                                      ('ts 'both)))
-                              (from (->> (ts-now)
-                                         (ts-adjust 'day num-days)
-                                         (ts-apply :hour 0 :minute 0 :second 0)))
-                              (to (->> (ts-now)
-                                       (ts-adjust 'day num-days)
-                                       (ts-apply :hour 23 :minute 59 :second 59))))
-                        `(ts :type ,type :from ,from :to ,to)))
                      (`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
                      (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest))
                      ;; Any other form: passed through unchanged.
@@ -372,12 +335,18 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                               (setq from on
                                                     to on))
                                             (when from
-                                              (setq from (cl-typecase from
+                                              (setq from (cl-etypecase from
                                                            (string (ts-parse-fill 'begin from))
+                                                           (number (->> (ts-now)
+                                                                        (ts-adjust 'day from)
+                                                                        (ts-apply :hour 0 :minute 0 :second 0)))
                                                            (ts from))))
                                             (when to
-                                              (setq to (cl-typecase to
+                                              (setq to (cl-etypecase to
                                                          (string (ts-parse-fill 'end to))
+                                                         (number (->> (ts-now)
+                                                                      (ts-adjust 'day to)
+                                                                      (ts-apply :hour 23 :minute 59 :second 59)))
                                                          (ts to))))
                                             ;; NOTE: The macro must expand to the actual `org-ql--predicate-clocked'
                                             ;; function, not another `clocked'.
@@ -387,12 +356,18 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                              (setq from on
                                                    to on))
                                            (when from
-                                             (setq from (cl-typecase from
+                                             (setq from (cl-etypecase from
                                                           (string (ts-parse-fill 'begin from))
+                                                          (number (->> (ts-now)
+                                                                       (ts-adjust 'day from)
+                                                                       (ts-apply :hour 0 :minute 0 :second 0)))
                                                           (ts from))))
                                            (when to
-                                             (setq to (cl-typecase to
+                                             (setq to (cl-etypecase to
                                                         (string (ts-parse-fill 'end to))
+                                                        (number (->> (ts-now)
+                                                                     (ts-adjust 'day to)
+                                                                     (ts-apply :hour 23 :minute 59 :second 59)))
                                                         (ts to))))
                                            ;; NOTE: The macro must expand to the actual `org-ql--predicate-closed'
                                            ;; function, not another `closed'.
@@ -402,12 +377,18 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                                (setq from on
                                                      to on))
                                              (when from
-                                               (setq from (cl-typecase from
+                                               (setq from (cl-etypecase from
                                                             (string (ts-parse-fill 'begin from))
+                                                            (number (->> (ts-now)
+                                                                         (ts-adjust 'day from)
+                                                                         (ts-apply :hour 0 :minute 0 :second 0)))
                                                             (ts from))))
                                              (when to
-                                               (setq to (cl-typecase to
+                                               (setq to (cl-etypecase to
                                                           (string (ts-parse-fill 'end to))
+                                                          (number (->> (ts-now)
+                                                                       (ts-adjust 'day to)
+                                                                       (ts-apply :hour 23 :minute 59 :second 59)))
                                                           (ts to))))
                                              ;; NOTE: The macro must expand to the actual `org-ql--predicate-deadline'
                                              ;; function, not another `deadline'.
@@ -417,12 +398,18 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                                (setq from on
                                                      to on))
                                              (when from
-                                               (setq from (cl-typecase from
+                                               (setq from (cl-etypecase from
                                                             (string (ts-parse-fill 'begin from))
+                                                            (number (->> (ts-now)
+                                                                         (ts-adjust 'day from)
+                                                                         (ts-apply :hour 0 :minute 0 :second 0)))
                                                             (ts from))))
                                              (when to
-                                               (setq to (cl-typecase to
+                                               (setq to (cl-etypecase to
                                                           (string (ts-parse-fill 'end to))
+                                                          (number (->> (ts-now)
+                                                                       (ts-adjust 'day to)
+                                                                       (ts-apply :hour 23 :minute 59 :second 59)))
                                                           (ts to))))
                                              ;; NOTE: The macro must expand to the actual `org-ql--predicate-planning'
                                              ;; function, not another `planning'.
@@ -432,12 +419,18 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                                 (setq from on
                                                       to on))
                                               (when from
-                                                (setq from (cl-typecase from
+                                                (setq from (cl-etypecase from
                                                              (string (ts-parse-fill 'begin from))
+                                                             (number (->> (ts-now)
+                                                                          (ts-adjust 'day from)
+                                                                          (ts-apply :hour 0 :minute 0 :second 0)))
                                                              (ts from))))
                                               (when to
-                                                (setq to (cl-typecase to
+                                                (setq to (cl-etypecase to
                                                            (string (ts-parse-fill 'end to))
+                                                           (number (->> (ts-now)
+                                                                        (ts-adjust 'day to)
+                                                                        (ts-apply :hour 23 :minute 59 :second 59)))
                                                            (ts to))))
                                               ;; NOTE: The macro must expand to the actual `org-ql--predicate-scheduled'
                                               ;; function, not another `scheduled'.
@@ -447,12 +440,18 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                          (setq from on
                                                to on))
                                        (when from
-                                         (setq from (cl-typecase from
+                                         (setq from (cl-etypecase from
                                                       (string (ts-parse-fill 'begin from))
+                                                      (number (->> (ts-now)
+                                                                   (ts-adjust 'day from)
+                                                                   (ts-apply :hour 0 :minute 0 :second 0)))
                                                       (ts from))))
                                        (when to
-                                         (setq to (cl-typecase to
+                                         (setq to (cl-etypecase to
                                                     (string (ts-parse-fill 'end to))
+                                                    (number (->> (ts-now)
+                                                                 (ts-adjust 'day to)
+                                                                 (ts-apply :hour 23 :minute 59 :second 59)))
                                                     (ts to))))
                                        ;; NOTE: The macro must expand to the actual `org-ql--predicate-ts'
                                        ;; function, not another `ts'.
