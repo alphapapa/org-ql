@@ -75,12 +75,13 @@ More examples are available in [[examples.org]].
                                 (priority "A")))
             (agenda)))))
 
-  ;; Show a "stuck projects" view: tasks that are not done and have only
-  ;; non-task children.
+  ;; Show a GTD-style "stuck projects" view: PROJECT tasks that have no
+  ;; descendants with the NEXT keyword.  If you use a "project" tag
+  ;; instead of the to-do keyword, you could replace (todo "PROJECT")
+  ;; with (tags "project").
   (org-ql-search (org-agenda-files)
-    '(and (todo)
-          (children)
-          (not (children (todo))))
+    '(and (todo "PROJECT")
+          (not (descendants (todo "NEXT"))))
     :title "Stuck Projects")
 #+END_SRC
 
