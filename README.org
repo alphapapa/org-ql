@@ -214,14 +214,12 @@ All of these predicates take optional keyword arguments ~:from~, ~:to:~, and ~:o
 +  If ~:to~, return non-nil if entry has a timestamp on or before ~:to~.
 +  If ~:on~, return non-nil if entry has a timestamp on date ~:on~.
 
-Argument values should be either a number of days (positive to look forward, or negative to look backward), a ~ts~ struct, or a string parseable by ~parse-time-string~ which may omit the time value.
+Argument values should be either a number of days (positive to look forward, or negative to look backward), a ~ts~ struct, or a string parseable by ~parse-time-string~ (the string may omit the time value).
 
 *Predicates:*
 +  ~ts~ :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.
-+  ~ts-active~ :: Like ~ts~, but only matches active timestamps.
-+  ~ts-a~ :: Like ~ts~, but only matches active timestamps.
-+  ~ts-inactive~ :: Like ~ts~, but only matches inactive timestamps.
-+  ~ts-i~ :: Like ~ts~, but only matches inactive timestamps.
++  ~ts-active~, ~ts-a~ :: Like ~ts~, but only matches active timestamps.
++  ~ts-inactive~, ~ts-i~ :: Like ~ts~, but only matches inactive timestamps.
 
 The following predicates, in addition to the keyword arguments, can also take a single argument, a number, which looks backward or forward a number of days.  The number can be negative to invert the direction.
 
