@@ -1001,6 +1001,47 @@ A and B are Org headline elements."
             (a-priority t)
             (b-priority nil)))))
 
+;;;; Functions/Occur
+
+(defun org-ql-occur (query &optional keep-previous callback)
+  "Make a compact tree which shows all matches of the query.
+
+QUERY is an `org-ql' query sexp (quoted, since this is a
+function).
+
+The tree will show the lines where the query matches, and any other context
+defined in `org-show-context-detail', which see.
+
+When optional argument KEEP-PREVIOUS is non-nil, highlighting and
+exposing done by a previous call to `org-occur' or `org-ql-occur'
+will be kept, to allow stacking of calls to this command.
+
+Optional argument CALLBACK can be a function of no argument.  In this case,
+it is called with point at the end of the match, match data being set
+accordingly.  Current match is shown only if the return value is non-nil.
+The function must neither move point nor alter narrowing."
+  (interactive (list (read-minibuffer "Query: ")))
+  (unless keep-previous
+    (org-remove-occur-highlights nil nil t))
+  ;; (push (cons regexp callback) org-occur-parameters)
+  (let ((result (org-ql-query (current-buffer) query
+                  :action
+                  (lambda ()
+                    (when (or (not callback)
+                              (funcall callback))
+                      (when org-highlight-sparse-tree-matches
+                        (org-highlight-new-match (match-beginning 0) (match-end 0)))
+                      (org-show-context 'occur-tree)
+                      t)))))
+    (when org-remove-highlights-with-change
+      (add-hook 'before-change-functions 'org-remove-occur-highlights
+                nil 'local))
+    (unless org-sparse-tree-open-archived-trees
+      (org-hide-archived-subtrees (point-min) (point-max)))
+    (run-hooks 'org-occur-hook)
+    (when (called-interactively-p 'interactive)
+      (message "%d match(es) for query %s" (length result) query))))
+
 ;;;; Footer
 
 (provide 'org-ql)
