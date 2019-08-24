@@ -1012,7 +1012,10 @@ function).
 The tree will show the lines where the query matches, and any other context
 defined in `org-show-context-detail', which see.
 
-When optional argument KEEP-PREVIOUS is non-nil, highlighting and
+BUFFER is the buffer to work on.  If omitted, it defaults to
+the current buffer.
+
+When KEEP-PREVIOUS is non-nil, highlighting and
 exposing done by a previous call to `org-occur' or `org-ql-occur'
 will be kept, to allow stacking of calls to this command."
   (interactive (list (read-minibuffer "Query: ")))
