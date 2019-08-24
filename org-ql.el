@@ -1003,7 +1003,7 @@ A and B are Org headline elements."
 
 ;;;; Functions/Occur
 
-(defun org-ql-occur (query &optional keep-previous callback)
+(cl-defun org-ql-occur (query &key keep-previous)
   "Make a compact tree which shows all matches of the query.
 
 QUERY is an `org-ql' query sexp (quoted, since this is a
@@ -1014,12 +1014,7 @@ defined in `org-show-context-detail', which see.
 
 When optional argument KEEP-PREVIOUS is non-nil, highlighting and
 exposing done by a previous call to `org-occur' or `org-ql-occur'
-will be kept, to allow stacking of calls to this command.
-
-Optional argument CALLBACK can be a function of no argument.  In this case,
-it is called with point at the end of the match, match data being set
-accordingly.  Current match is shown only if the return value is non-nil.
-The function must neither move point nor alter narrowing."
+will be kept, to allow stacking of calls to this command."
   (interactive (list (read-minibuffer "Query: ")))
   (unless keep-previous
     (org-remove-occur-highlights nil nil t))
@@ -1027,12 +1022,10 @@ The function must neither move point nor alter narrowing."
   (let ((result (org-ql-query (current-buffer) query
                   :action
                   (lambda ()
-                    (when (or (not callback)
-                              (funcall callback))
-                      (when org-highlight-sparse-tree-matches
-                        (org-highlight-new-match (match-beginning 0) (match-end 0)))
-                      (org-show-context 'occur-tree)
-                      t)))))
+                    (when org-highlight-sparse-tree-matches
+                      (org-highlight-new-match (match-beginning 0) (match-end 0)))
+                    (org-show-context 'occur-tree)
+                    t))))
     (when org-remove-highlights-with-change
       (add-hook 'before-change-functions 'org-remove-occur-highlights
                 nil 'local))
