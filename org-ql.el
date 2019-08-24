@@ -1016,24 +1016,31 @@ When optional argument KEEP-PREVIOUS is non-nil, highlighting and
 exposing done by a previous call to `org-occur' or `org-ql-occur'
 will be kept, to allow stacking of calls to this command."
   (interactive (list (read-minibuffer "Query: ")))
-  (unless keep-previous
-    (org-remove-occur-highlights nil nil t))
-  ;; (push (cons regexp callback) org-occur-parameters)
-  (let ((result (org-ql-select buffer query
-                  :action
-                  (lambda ()
-                    (when org-highlight-sparse-tree-matches
-                      (org-highlight-new-match (match-beginning 0) (match-end 0)))
-                    (org-show-context 'occur-tree)
-                    t))))
-    (when org-remove-highlights-with-change
-      (add-hook 'before-change-functions 'org-remove-occur-highlights
-                nil 'local))
-    (unless org-sparse-tree-open-archived-trees
-      (org-hide-archived-subtrees (point-min) (point-max)))
-    (run-hooks 'org-occur-hook)
-    (when (called-interactively-p 'interactive)
-      (message "%d match(es) for query %s" (length result) query))))
+  (unless (bufferp buffer)
+    (user-error "BUFFER should be a single buffer"))
+  (with-current-buffer buffer
+    (unless keep-previous
+      (org-remove-occur-highlights nil nil t))
+    (when (or (not keep-previous)       ; do not want to keep
+              (not org-occur-highlights)) ; no previous matches
+      ;; hide everything
+      (org-overview))
+    ;; (push (cons regexp callback) org-occur-parameters)
+    (let ((result (org-ql-select buffer query
+                    :action
+                    (lambda ()
+                      (when org-highlight-sparse-tree-matches
+                        (org-highlight-new-match (match-beginning 0) (match-end 0)))
+                      (org-show-context 'occur-tree)
+                      t))))
+      (when org-remove-highlights-with-change
+        (add-hook 'before-change-functions 'org-remove-occur-highlights
+                  nil 'local))
+      (unless org-sparse-tree-open-archived-trees
+        (org-hide-archived-subtrees (point-min) (point-max)))
+      (run-hooks 'org-occur-hook)
+      (when (called-interactively-p 'interactive)
+        (message "%d match(es) for query %s" (length result) query)))))
 
 ;;;; Footer
 
