@@ -1003,7 +1003,7 @@ A and B are Org headline elements."
 
 ;;;; Functions/Occur
 
-(cl-defun org-ql-occur (query &key keep-previous)
+(cl-defun org-ql-occur (query &key (buffer (current-buffer)) keep-previous)
   "Make a compact tree which shows all matches of the query.
 
 QUERY is an `org-ql' query sexp (quoted, since this is a
@@ -1019,7 +1019,7 @@ will be kept, to allow stacking of calls to this command."
   (unless keep-previous
     (org-remove-occur-highlights nil nil t))
   ;; (push (cons regexp callback) org-occur-parameters)
-  (let ((result (org-ql-select (current-buffer) query
+  (let ((result (org-ql-select buffer query
                   :action
                   (lambda ()
                     (when org-highlight-sparse-tree-matches
