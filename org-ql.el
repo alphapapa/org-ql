@@ -1019,7 +1019,7 @@ will be kept, to allow stacking of calls to this command."
   (unless keep-previous
     (org-remove-occur-highlights nil nil t))
   ;; (push (cons regexp callback) org-occur-parameters)
-  (let ((result (org-ql-query (current-buffer) query
+  (let ((result (org-ql-select (current-buffer) query
                   :action
                   (lambda ()
                     (when org-highlight-sparse-tree-matches
