@@ -1003,6 +1003,7 @@ A and B are Org headline elements."
 
 ;;;; Functions/Occur
 
+;;;###autoload
 (cl-defun org-ql-occur (query &key (buffer (current-buffer)) keep-previous)
   "Make a compact tree which shows all matches of the query.
 
