@@ -100,6 +100,7 @@ e.g. `org-ql-search' as desired."
 
 ;; FIXME: DRY these two macros.
 
+;;;###autoload
 (cl-defmacro org-ql-agenda (&rest args)
   "Display an agenda-like buffer of entries in FILES that match QUERY.
 
@@ -260,11 +261,13 @@ TITLE: An optional string displayed in the header."
     (customize-set-variable 'org-ql-views org-ql-views)
     (customize-mark-to-save 'org-ql-views)))
 
+;;;###autoload
 (defun org-ql-view (&optional view)
   "Choose and display a view stored in `org-ql-views'."
   (interactive (list (completing-read "View: " (mapcar #'car org-ql-views))))
   (call-interactively (alist-get view org-ql-views nil nil #'string=)))
 
+;;;###autoload
 (cl-defun org-ql-view-recent-items (days &optional (type 'ts) (files (org-agenda-files)))
   "Show items in FILES from last DAYS days with timestamps of TYPE.
 TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
@@ -336,6 +339,7 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
       (org-agenda-finalize)
       (goto-char (point-min)))))
 
+;;;###autoload
 (defun org-ql-agenda-block (query)
   "Insert items for QUERY into current buffer.
 QUERY should be an `org-ql' query form.  Like other agenda block
@@ -361,6 +365,7 @@ the `match' item in the custom command form."
          org-agenda-finalize-entries
          insert)))
 
+;;;###autoload (autoload 'org-ql-block "org-ql-agenda")
 (defalias 'org-ql-block 'org-ql-agenda-block)
 
 (defun org-ql-agenda--header-line-format (buffers-files query &optional title)

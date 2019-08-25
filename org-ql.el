@@ -120,6 +120,7 @@ match."
        (push (list :name ',pred-name :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates)
        (cl-defun ,fn-name ,args ,docstring ,@body))))
 
+;;;###autoload
 (cl-defmacro org-ql (buffers-or-files query &key sort narrow action)
   "Expands into a call to `org-ql-select' with the same arguments.
 For convenience, arguments should be unquoted."
@@ -135,6 +136,7 @@ For convenience, arguments should be unquoted."
 (define-hash-table-test 'org-ql-hash-test #'equal (lambda (args)
                                                     (sxhash-equal (prin1-to-string args))))
 
+;;;###autoload
 (cl-defun org-ql-select (buffers-or-files query &key action narrow sort)
   "Return items matching QUERY in BUFFERS-OR-FILES.
 
@@ -227,6 +229,7 @@ non-nil."
       ((pred functionp) (sort items sort))
       (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
 
+;;;###autoload
 (cl-defun org-ql-query (&key (select 'element-with-markers) from where narrow order-by)
   "Like `org-ql-select', but arguments are named more like a SQL query.
 
