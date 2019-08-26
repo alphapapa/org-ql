@@ -342,7 +342,8 @@ QUERY should be an `org-ql' query form.  Like other agenda block
 commands, it searches files returned by function
 `org-agenda-files'.  Intended to be used as a user-defined
 function in `org-agenda-custom-commands'.  QUERY corresponds to
-the `match' item in the custom command form."
+the `match' item in the custom command form.  Inserts a newline
+after the block."
   (when-let* ((from (org-agenda-files nil 'ifmode))
               (items (org-ql-select from
                        query :action 'element-with-markers)))
@@ -359,7 +360,8 @@ the `match' item in the custom command form."
     (->> items
          (-map #'org-ql-agenda--format-element)
          org-agenda-finalize-entries
-         insert)))
+         insert)
+    (insert "\n")))
 
 (defalias 'org-ql-block 'org-ql-agenda-block)
 
