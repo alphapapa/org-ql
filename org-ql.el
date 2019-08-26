@@ -217,15 +217,14 @@ non-nil."
     ;; Sort items
     (pcase sort
       (`nil items)
-      ((guard (and sort
-                   (setq sort (-list sort))
-                   (cl-loop for elem in sort
-                            always (memq elem '(date deadline scheduled todo priority)))))
+      ((or 'date 'deadline 'scheduled 'todo 'priority
+           (guard (cl-loop for elem in sort
+                           always (memq elem '(date deadline scheduled todo priority)))))
        ;; Default sorting functions
-       (org-ql--sort-by items sort))
+       (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
       ((pred functionp) (sort items sort))
-      (_ (user-error "SORT must be either nil, or one or a list of the defined sorting methods (see documentation)")))))
+      (_ (user-error "SORT must be either nil, one or a list of the defined sorting methods (see documentation), or a comparison function of two arguments")))))
 
 (cl-defun org-ql-query (&key (select 'element-with-markers) from where narrow order-by)
   "Like `org-ql-select', but arguments are named more like a SQL query.
