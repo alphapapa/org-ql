@@ -447,6 +447,29 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((planning :to today))
             '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
 
+    (describe "(priority)"
+
+      (org-ql-it "without arguments"
+        (org-ql-expect ((priority))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor")))
+      (org-ql-it "with a priority"
+        (org-ql-expect ((priority "A"))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
+      (org-ql-it "= a priority"
+        (org-ql-expect ((priority = "A"))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
+      (org-ql-it "< a priority"
+        (org-ql-expect ((priority < "B"))
+          '("Take over the moon" "Get haircut")))
+      (org-ql-it "<= a priority"
+        (org-ql-expect ((priority <= "B"))
+          '("Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Get haircut" "Internet" "Fix flux capacitor")))
+      (org-ql-it "> a priority"
+        (org-ql-expect ((priority > "B"))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
+      (org-ql-it ">= a priority"
+        (org-ql-expect ((priority >= "B"))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Renew membership in supervillain club" "Learn universal sign language" "Internet" "Spaceship lease" "Fix flux capacitor"))))
     (describe "(property)"
 
       ;; MAYBE: Add support for (property) without arguments.

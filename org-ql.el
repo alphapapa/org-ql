@@ -311,6 +311,16 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                      (ts-adjust 'day num-days)
                                      (ts-apply :hour 23 :minute 59 :second 59))))
                         `(,pred :to ,to)))
+                     ;; Priorities
+                     (`(priority) ;; Match any defined priority by comparing to C.
+                      ;; Note that we quote the comparator again for consistency.
+                      `(priority '>= "C"))
+                     (`(priority ,_letter) element)
+                     (`(priority ,comparator ,letter)
+                      ;; Quote comparator.
+                      `(priority ',comparator ,letter))
+
+                     ;; Timestamps
                      (`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
                      (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest))
                      ;; Any other form: passed through unchanged.
@@ -435,6 +445,39 @@ replace the clause with a preamble."
                                  (setq org-ql-preamble org-ql-planning-regexp)
                                  ;; Return element, because the predicate still needs testing.
                                  element)
+
+                                ;; Priorities.
+                                ;; NOTE: This only accepts A, B, or C.  I haven't seen
+                                ;; other priorities in the wild, so this will do for now.
+                                (`(priority)
+                                 ;; Any priority.
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank) "[#" (in "ABC") "]") t))
+                                 nil)
+                                (`(priority ,letter)
+                                 ;; Specific priority without comparator.
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank)
+                                                                           (optional (1+ upper) (1+ blank))
+                                                                           "[#" ,letter "]") t))
+                                 nil)
+                                (`(priority ,comparator ,letter)
+                                 (let* ((priority-letters '("A" "B" "C"))
+                                        (index (-elem-index letter priority-letters))
+                                        ;; NOTE: Higher priority == lower number.
+                                        ;; NOTE: Because we need to support both preamble-based queries and
+                                        ;; regular predicate ones, we work around an idiosyncrasy of query
+                                        ;; pre-processing by accepting both quoted and double-quoted comparator
+                                        ;; function symbols.  Not the most elegant solution, but it works.
+                                        (priorities (s-join "" (pcase comparator
+                                                                 ((or '= ''=) (list letter))
+                                                                 ((or '> ''>) (cl-subseq priority-letters 0 index))
+                                                                 ((or '>= ''>=) (cl-subseq priority-letters 0 (1+ index)))
+                                                                 ((or '< ''<) (cl-subseq priority-letters (1+ index)))
+                                                                 ((or '<= ''<=) (cl-subseq priority-letters index))))))
+                                   (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank) (optional (1+ upper) (1+ blank))
+                                                                             "[#" (in ,priorities) "]") t))
+                                   nil))
+
+                                ;; Properties.
                                 (`(property ,property ,value)
                                  ;; We do NOT return nil, because the predicate still needs to be tested,
                                  ;; because the regexp could match a string not inside a property drawer.
@@ -687,7 +730,9 @@ COMPARATOR may be `<', `<=', `>', or `>='."
 COMPARATOR-OR-PRIORITY should be either a comparator function,
 like `<=', or a priority string, like \"A\" (in which case (`='
 will be the comparator).  If COMPARATOR-OR-PRIORITY is a
-comparator, PRIORITY should be a priority string."
+comparator, PRIORITY should be a priority string.  If both
+arguments are nil, return non-nil if heading has any defined
+priority."
   (let* (comparator)
     (cond ((null priority)
            ;; No comparator given: compare only given priority with =
