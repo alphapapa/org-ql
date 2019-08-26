@@ -163,9 +163,9 @@ widen and search the entire buffer).
 
 SORT is either nil, in which case items are not sorted; or one or
 a list of defined `org-ql' sorting methods (`date', `deadline',
-`scheduled', `todo', or `priority'); or a user-defined comparator
-function that accepts two items as arguments and returns nil or
-non-nil."
+`scheduled', `todo', `priority', or `random'); or a user-defined
+comparator function that accepts two items as arguments and
+returns nil or non-nil."
   (declare (indent defun))
   (-let* ((buffers (->> (cl-typecase buffers-or-files
                           (null (list (current-buffer)))
@@ -217,9 +217,9 @@ non-nil."
     ;; Sort items
     (pcase sort
       (`nil items)
-      ((or 'date 'deadline 'scheduled 'todo 'priority
+      ((or 'date 'deadline 'scheduled 'todo 'priority 'random
            (guard (cl-loop for elem in sort
-                           always (memq elem '(date deadline scheduled todo priority)))))
+                           always (memq elem '(date deadline scheduled todo priority 'random)))))
        ;; Default sorting functions
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
@@ -938,6 +938,8 @@ PREDICATES is a list of one or more sorting methods, including:
                         (apply-partially #'org-ql--date-type< (intern (concat ":" (symbol-name symbol)))))
                        ('date #'org-ql--date<)
                        ('priority #'org-ql--priority<)
+                       ('random (lambda (&rest _ignore)
+                                  (= 0 (random 2))))
                        ;; NOTE: 'todo is handled below
                        ;; FIXME: Add more?
                        (_ (user-error "Invalid sorting predicate: %s" symbol))))

@@ -356,7 +356,7 @@ Return items matching ~QUERY~ in ~BUFFERS-OR-FILES~.
 
 If ~NARROW~ is non-nil, buffers are not widened (the default is to widen and search the entire buffer).
 
-~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods (~date~, ~deadline~, ~scheduled~, ~todo~, or ~priority~); or a user-defined comparator function that accepts two items as arguments and returns nil or non-nil.
+~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods (~date~, ~deadline~, ~scheduled~, ~todo~, ~priority~, or ~random~); or a user-defined comparator function that accepts two items as arguments and returns nil or non-nil.
 
 Examples:
 
@@ -459,6 +459,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Customization group ~org-ql~.
 +  Command ~org-ql-view~, which displays views saved to variable ~org-ql-views~, which can be saved from ~org-ql-search~ buffers with command ~org-ql-search-save~, which is bound to =C-x C-s= in view buffers.
 +  Variable ~org-ql-view-map~, active in view buffers displayed by ~org-ql-search~, ~org-ql-agenda~, and ~org-ql-view~.
++  =random= sort method.
 
 *Changed*
 +  Function ~org-ql-query~ renamed to ~org-ql-select~.  ~org-ql-query~ now refers to a new function.
