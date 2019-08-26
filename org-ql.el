@@ -401,7 +401,7 @@ replace the clause with a preamble."
                                  ;; Return element, because the predicate still needs testing.
                                  element)
                                 (`(regexp . ,regexps)
-                                 (setq org-ql-preamble (rx-to-string `(or ,@regexps) t))
+                                 (setq org-ql-preamble (s-join "\\|" regexps))
                                  ;; Return nil, because we don't need to test the predicate.
                                  nil)
                                 (`(todo . ,(and todo-keywords (guard todo-keywords)))
