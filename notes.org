@@ -1808,3 +1808,34 @@ An idea that /might/ be helpful for performance in /some/ cases, depending on th
 |--------------+--------------------+---------------+----------+------------------|
 | normal       | 4.03               |      0.275053 |        0 |                0 |
 | intersection | slowest            |      1.109169 |        0 |                0 |
+
+** [2019-08-29 Thu 06:24]  Benchmarking org-ql compared to re-search-forward for getting headings in buffer
+:PROPERTIES:
+:ID:       fcc09229-ed24-42eb-a1fd-31d8f7d4c8d5
+:END:
+
+Minimal difference, and that's a very large file, too.  On smaller files it's thousandths of a second.
+
+#+BEGIN_SRC elisp
+  (with-current-buffer (find-buffer-visiting "~/org/inbox.org")
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("org-ql" (org-ql-select (current-buffer)
+                          '(level 1)
+                          :action '(progn
+                                     (font-lock-ensure (line-beginning-position) (line-end-position))
+                                     (cons (org-get-heading t) (point)))))
+              ("re-search-forward" (org-with-wide-buffer
+                                    (goto-char (point-min))
+                                    (when (org-before-first-heading-p)
+                                      (outline-next-heading))
+                                    (cl-loop while (re-search-forward (rx bol "*" (1+ blank)) nil t)
+                                             do (font-lock-ensure (line-beginning-position) (line-end-position))
+                                             collect (cons (org-get-heading t) (match-beginning 0))))))))
+#+END_SRC
+
+#+RESULTS:
+| Form              | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------------+--------------------+---------------+----------+------------------|
+| re-search-forward | 1.17               |      0.520375 |        0 |                0 |
+| org-ql            | slowest            |      0.608281 |        0 |                0 |
+
