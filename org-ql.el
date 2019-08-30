@@ -661,8 +661,12 @@ Or, when possible, fix the problem."
                                                   (funcall ,query)))
                         (t `(and (level ,level)
                                  ,query)))))
-          (org-ql-select (current-buffer)
-            query :narrow t :action (lambda () t)))))))
+          (catch 'found
+            (org-ql-select (current-buffer)
+              query
+              :narrow t
+              :action (lambda ()
+                        (throw 'found t)))))))))
 
 (org-ql--defpred descendants (query)
   "Return non-nil if current entry has descendants matching QUERY."
@@ -670,8 +674,12 @@ Or, when possible, fix the problem."
     (save-restriction
       (org-narrow-to-subtree)
       (when (org-goto-first-child)
-        (org-ql-select (current-buffer)
-          query :narrow t :action (lambda () t))))))
+        (catch 'found
+          (org-ql-select (current-buffer)
+            query
+            :narrow t
+            :action (lambda ()
+                      (throw 'found t))))))))
 
 (org-ql--defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
