@@ -2,6 +2,10 @@
 
 * Tasks
 
+** TODO [#C] Test caching
+
+See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
+
 ** TODO [#A] Outline path in buffers-files arg
 
 e.g.
