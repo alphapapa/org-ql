@@ -285,30 +285,31 @@ TITLE: An optional string displayed in the header."
   (interactive (list (completing-read "View: " (mapcar #'car org-ql-views))))
   (call-interactively (alist-get view org-ql-views nil nil #'string=)))
 
-(cl-defun org-ql-view-recent-items (days &optional (type 'ts) (files (org-agenda-files)))
+(cl-defun org-ql-view-recent-items
+    (&key days type
+          (files (org-agenda-files))
+          (groups '((:auto-parent t)
+                    (:auto-todo t))))
   "Show items in FILES from last DAYS days with timestamps of TYPE.
 TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
 `closed'."
-  (interactive (list (read-number "Days: ")
-                     (->> '(ts ts-active ts-inactive clocked closed)
-                          (completing-read "Timestamp type: ")
-                          intern)))
+  (interactive (list :days (read-number "Days: ")
+                     :type (->> '(ts ts-active ts-inactive clocked closed)
+                                (completing-read "Timestamp type: ")
+                                intern)))
   ;; It doesn't make much sense to use other date-based selectors to
   ;; look into the past, so to prevent confusion, we won't allow them.
   (-let* ((query (pcase-exhaustive type
                    ((or 'ts 'ts-active 'ts-inactive)
                     ;; These predicates look forward by default, so we must invert the number.
-                    `(,type :from ,(* -1 days) :to 0))
+                    `(,type :from ,(- days) :to 0))
                    ((or 'clocked 'closed)
                     `(,type :from ,days :to 0)))))
     (org-ql-search files
       query
       :title "Recent items"
       :sort '(date priority todo)
-      :groups '((:todo "DONE")
-                (:name "Log" :category "log" :tag "log")
-                (:auto-parent t)
-                (:auto-todo t)))))
+      :groups groups)))
 
 ;;;; Functions
 
