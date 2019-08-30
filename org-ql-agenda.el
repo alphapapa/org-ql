@@ -80,7 +80,27 @@ Based on `org-agenda-mode-map'.")
 ;;;; Customization
 
 (defcustom org-ql-views
-  (list (cons "Recent entries" #'org-ql-view-recent-items)
+  (list (cons "Agenda-like" (lambda ()
+                              (interactive)
+                              (org-ql-search (org-agenda-files)
+                                '(and (not (done))
+                                      (or (habit)
+                                          (deadline auto)
+                                          (scheduled :to today)
+                                          (ts-active :on today)))
+                                :sort '(date priority todo)
+                                :groups (when (boundp org-super-agenda-groups)
+                                          org-super-agenda-groups))))
+        (cons "Recent entries" #'org-ql-view-recent-items)
+        (cons "Review (to-do keyword without timestamp in past 2 weeks)"
+              (lambda ()
+                (interactive)
+                (org-ql-search (org-agenda-files)
+                  '(and (todo)
+                        (not (ts :from -14)))
+                  :title "Review"
+                  :sort '(date priority todo)
+                  :groups '((:auto-parent t)))))
         (cons "Stuck Projects" (lambda ()
                                  (interactive)
                                  (org-ql-search (org-agenda-files)
