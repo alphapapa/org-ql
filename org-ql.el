@@ -540,15 +540,20 @@ replace the clause with a preamble."
   "Return results for ARGS and current buffer using cache."
   ;; MAYBE: Timeout cached queries.  Probably not necessarily since they will be removed when a
   ;; buffer is closed, or when a query is run after modifying a buffer.
-  ;; FIXME: Narrowed queries will probably conflict in the cache, because the region is not
-  ;; stored.  We should either not cache narrow queries, or store the region with it.
-  (-let (((&plist :query query :action action :narrow narrow) args))
+  (-let* (((&plist :query :preamble-re :action :narrow) args)
+          (query-cache-key
+           ;; The key must include the preamble, because some queries are replaced by
+           ;; the preamble, leaving a nil query, which would make the key ambiguous.
+           (list :query query :preamble-re preamble-re :action action
+                 (if narrow
+                     ;; Use bounds of narrowed portion of buffer.
+                     (cons (point-min) (point-max))
+                   nil))))
     (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
               (query-cache (cadr buffer-cache))
               (modified-tick (car buffer-cache))
               (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
-              (cache-key (list query action narrow))
-              (cached-result (gethash cache-key query-cache)))
+              (cached-result (gethash query-cache-key query-cache)))
         (pcase cached-result
           ('org-ql-nil nil)
           (_ cached-result))
@@ -558,10 +563,10 @@ replace the clause with a preamble."
                (puthash (current-buffer)
                         (list (buffer-modified-tick)
                               (let ((table (make-hash-table :test 'org-ql-hash-test)))
-                                (puthash args (or new-result 'org-ql-nil) table)
+                                (puthash query-cache-key (or new-result 'org-ql-nil) table)
                                 table))
                         org-ql-cache))
-              (t (puthash args (or new-result 'org-ql-nil) query-cache)))
+              (t (puthash query-cache-key (or new-result 'org-ql-nil) query-cache)))
         new-result))))
 
 (cl-defun org-ql--select (&key preamble-re predicate action narrow &allow-other-keys)
