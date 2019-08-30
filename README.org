@@ -476,6 +476,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Don't search buffers without headings, and show a message if the user attempts it.
 +  Don't search hidden/special buffers.
 +  Properly accept arbitrary sort functions in =org-ql-select=, etc.  (Fixes [[https://github.com/alphapapa/org-ql/issues/37][#37]].  Thanks to [[https://github.com/mz-pdm][Milan Zamazal]].)
++  Planning-line-related predicates searched too far into entries.
 
 *Compatibility*
 +  Fixes for compatibility with Org 9.2.  (Thanks to [[https://github.com/ataias][Ataias Pereira Reis]] and [[https://github.com/dakra][Daniel Kraus]].)

@@ -844,7 +844,8 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
-  (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1))
+  (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1
+                        :limit (line-end-position 2)))
 
 (org-ql--defpred deadline (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
@@ -863,10 +864,13 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
-  (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1))
+  (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1
+                        :limit (line-end-position 2)))
 
 (org-ql--defpred deadline-warning (&key from to)
-  "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods."
+  "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods.
+Should be called on a planning line, because it does not search
+past the end of the current line."
   (save-excursion
     (forward-line 1)
     (when (re-search-forward org-deadline-time-regexp (line-end-position) t)
@@ -906,7 +910,8 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
-  (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1))
+  (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1
+                        :limit (line-end-position 2)))
 
 (org-ql--defpred scheduled (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
@@ -925,9 +930,10 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
-  (org-ql--predicate-ts :from from :to to :regexp org-scheduled-time-regexp :match-group 1))
+  (org-ql--predicate-ts :from from :to to :regexp org-scheduled-time-regexp :match-group 1
+                        :limit (line-end-position 2)))
 
-(org-ql--defpred ts (&key from to _on regexp (match-group 0))
+(org-ql--defpred ts (&key from to _on regexp (match-group 0) (limit (org-entry-end-position)))
   ;; The underscore before `on' prevents "unused lexical variable" warnings,
   ;; because we pre-process that argument in a macro before this function is
   ;; called.  The `regexp' argument is also provided by the macro and is not
@@ -947,24 +953,29 @@ FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value.
 
 TYPE may be `active' to match active timestamps, `inactive' to
-match inactive ones, or `both' / nil to match both types."
+match inactive ones, or `both' / nil to match both types.
+
+LIMIT bounds the search for the timestamp REGEXP.  It defaults to
+the end of the entry, i.e. the position returned by
+`org-entry-end-position', but for certain searches it should be
+bound to a different positiion, e.g. for planning lines, the end
+of the line after the heading."
   ;; TODO: DRY this with the clocked predicate.
   ;; NOTE: FROM and TO are actually expected to be `ts' structs.  The docstring is written
   ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
   ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
-                                `(when (re-search-forward regexp end-pos t)
+                                `(when (re-search-forward regexp limit t)
                                    (ts-parse-org (match-string match-group))))
                 (test-timestamps (pred-form)
                                  `(cl-loop for next-ts = (next-timestamp)
                                            while next-ts
                                            thereis ,pred-form)))
     (save-excursion
-      (let ((end-pos (org-entry-end-position)))
-        (cond ((not (or from to)) (re-search-forward regexp end-pos t))
-              ((and from to) (test-timestamps (ts-in from to next-ts)))
-              (from (test-timestamps (ts<= from next-ts)))
-              (to (test-timestamps (ts<= next-ts to))))))))
+      (cond ((not (or from to)) (re-search-forward regexp limit t))
+            ((and from to) (test-timestamps (ts-in from to next-ts)))
+            (from (test-timestamps (ts<= from next-ts)))
+            (to (test-timestamps (ts<= next-ts to)))))))
 
 ;;;;; Sorting
 
