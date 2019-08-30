@@ -79,6 +79,39 @@ This works pretty well.  It needs polishing, and some refactoring so items can b
              -non-nil
              (org-ql-agenda--agenda nil nil
                :entries)))))
+
+  (cl-defun org-ql-select-recursive (buffers-or-files queries &key action narrow sort)
+    (cl-labels ((rec (queries element indent)
+                     (org-with-point-at (org-element-property :org-marker element)
+                       (when-let* ((results (progn
+                                              (org-narrow-to-subtree)
+                                              (org-ql-select (current-buffer)
+                                                (car queries)
+                                                :action 'element-with-markers
+                                                :narrow t
+                                                :sort sort))))
+                         ;; Indent entry for each level
+                         (setf results (--map
+                                        (org-element-put-property it :raw-value
+                                                                  (concat (s-repeat (* 5 indent) " ")
+                                                                          (org-element-property :raw-value it)))
+                                        results))
+                         (cons it (if (cdr queries)
+                                      (--map (rec (cdr queries) it)
+                                             results)
+                                    results))))))
+      (when-let* ((indent 0)
+                  (results (org-ql-select buffers-or-files
+                             (car queries)
+                             :action 'element-with-markers
+                             :narrow narrow
+                             :sort sort)))
+        (->> (if (cdr queries)
+                 (--map (rec (cdr queries) it (1+ indent))
+                        results)
+               results)
+             (-flatten-n (1- (length queries)))
+             -non-nil))))
 #+END_SRC
 
 ** TODO Add more sorters?
