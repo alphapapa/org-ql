@@ -316,30 +316,35 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
 ;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
 ;; headline-parser when they don't need it.
 
-(cl-defun org-ql-agenda--agenda (buffers-files query &key entries sort buffer narrow super-groups title)
+(cl-defun org-ql-agenda--agenda (buffers-files query &key entries strings sort buffer narrow super-groups title)
   "FIXME: Docstring"
+  ;; TODO: Rename `entries' to `elements'.
   (declare (indent defun))
   (when (and super-groups (not org-super-agenda-mode))
     (user-error "`org-super-agenda-mode' must be activated to use grouping"))
+  (when (and entries strings)
+    (user-error "Only one of ENTRIES or STRINGS may be provided"))
   (let* ((org-super-agenda-groups super-groups)
-         (entries (or entries
-                      (--> (org-ql-select buffers-files
-                             query
-                             :sort sort
-                             :narrow narrow
-                             :action (lambda ()
-                                       (->> (org-element-headline-parser (line-end-position))
-                                            org-ql--add-markers))))))
-         (string (--> entries
-                      (mapcar #'org-ql-agenda--format-element it)
-                      (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
-                            (t it))
-                      (s-join "\n" it)))
          (buffer (cl-etypecase buffer
                    (string (org-ql-agenda--buffer buffer))
                    (null (org-ql-agenda--buffer buffer))
                    (buffer buffer)))
-         (inhibit-read-only t))
+         (inhibit-read-only t)
+         string)
+    (cond (entries)
+          (strings (setf string (s-join "\n" strings)))
+          (query (setf entries (org-ql-select buffers-files
+                                 query
+                                 :sort sort
+                                 :narrow narrow
+                                 :action 'element-with-markers)))
+          (t (user-error "One of QUERY, ENTRIES, or STRINGS must be provided")))
+    (unless string
+      (setf string (--> entries
+                        (mapcar #'org-ql-agenda--format-element it)
+                        (cond ((bound-and-true-p org-super-agenda-mode) (org-super-agenda--group-items it))
+                              (t it))
+                        (s-join "\n" it))))
     (with-current-buffer buffer
       (use-local-map org-ql-view-map)
       ;; Prepare buffer, saving data for refreshing.
