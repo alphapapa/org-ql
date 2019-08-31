@@ -6,6 +6,38 @@
 
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
+** TODO [#B] Timeline view
+
+e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
+
+#+BEGIN_SRC elisp
+  (cl-defun org-ql-timeline (buffers-files query)
+    (let ((results
+           (org-ql-select buffers-files
+             query :action
+             (lambda ()
+               (let* ((heading-string
+                       (->> (org-element-headline-parser
+                             (line-end-position))
+                            org-ql--add-markers
+                            org-ql-agenda--format-element))
+                      (timestamps
+                       (cl-loop with limit = (org-entry-end-position)
+                                while (re-search-forward org-ts-regexp-both
+                                                         limit t)
+                                collect (ts-parse-org (match-string 0))))
+                      (timestamp-strings
+                       (->> timestamps
+                            (-sort #'ts<)
+                            (--map (concat " " (ts-format it))))))
+                 (s-join "\n" (cons heading-string timestamp-strings))))
+             :sort '(date))))
+      (org-ql-agenda--agenda nil nil :strings results)))
+
+  (org-ql-timeline (org-agenda-files)
+                   '(and "Emacs" (ts)))
+#+END_SRC
+
 ** TODO [#A] Outline path in buffers-files arg
 
 e.g.
