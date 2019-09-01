@@ -313,9 +313,6 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
 
 ;;;; Functions
 
-;; TODO: Move the action-fn down into --filter-buffer, so users can avoid calling the
-;; headline-parser when they don't need it.
-
 (cl-defun org-ql-agenda--agenda (buffers-files query &key entries strings sort buffer narrow super-groups title)
   "FIXME: Docstring"
   ;; TODO: Rename `entries' to `elements'.
