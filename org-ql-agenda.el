@@ -485,19 +485,19 @@ return an empty string."
                        (org-link-display-format it)))
            (todo-keyword (-some--> (org-element-property :todo-keyword element)
                                    (org-ql-agenda--add-todo-face it)))
-           ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
+           ;; TODO: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
            (tag-list (if org-use-tag-inheritance
-                         ;; FIXME: Note that tag inheritance cannot be used here unless markers are
-                         ;; added, otherwise we can't go to the item's buffer to look for inherited
-                         ;; tags.  (Or does `org-element-headline-parser' parse inherited tags too?  I
-                         ;; forget...)
+                         ;; NOTE: Tag inheritance cannot be used here unless markers are added, otherwise
+                         ;; we can't go to the item's buffer to look for inherited tags.  (Or does
+                         ;; `org-element-headline-parser' parse inherited tags too?  I forget...)
                          (if-let ((marker (or (org-element-property :org-hd-marker element)
                                               (org-element-property :org-marker element))))
                              (with-current-buffer (marker-buffer marker)
                                ;; I wish `org-get-tags' used the correct buffer automatically.
                                (org-get-tags marker (not org-use-tag-inheritance)))
-                           ;; No marker found
-                           (warn "No marker found for item: %s" title)
+                           ;; No marker found.
+                           ;; MAYBE: Issue some kind of warning when no marker is found, because it's
+                           ;; likely a mistake.  But we don't want to be annoying in case it's intentional.
                            (org-element-property :tags element))
                        (org-element-property :tags element)))
            (tag-string (when tag-list
