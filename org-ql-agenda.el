@@ -118,7 +118,7 @@ e.g. `org-ql-search' as desired."
 
 ;;;; Macros
 
-;; FIXME: DRY these two macros.
+;; TODO: DRY these two macros.
 
 (cl-defmacro org-ql-agenda (&rest args)
   "Display an agenda-like buffer of entries in FILES that match QUERY.
@@ -378,7 +378,7 @@ after the block."
                        query :action 'element-with-markers)))
     ;; Not sure if calling the prepare function is necessary, but let's follow the pattern.
     (org-agenda-prepare)
-    ;; FIXME: `org-agenda--insert-overriding-header' is from an Org version newer than
+    ;; TODO: `org-agenda--insert-overriding-header' is from an Org version newer than
     ;; I'm using.  Should probably declare it as a minimum Org version after upgrading.
     ;;  (org-agenda--insert-overriding-header (org-ql-agenda--header-line-format from query))
     (insert (org-add-props (org-ql-agenda--header-line-format from query)
@@ -421,7 +421,7 @@ after the block."
 
 (defun org-ql-agenda--font-lock-string (mode s)
   "Return string S font-locked according to MODE."
-  ;; FIXME: Is this the proper way to do this?  It works, but I feel like there must be a built-in way...
+  ;; TODO: Is this the proper way to do this?  It works, but I feel like there must be a built-in way...
   (with-temp-buffer
     (delay-mode-hooks
       (insert s)
@@ -465,10 +465,10 @@ return an empty string."
            ;; the properties list that it makes it essentially
            ;; impossible to debug, because Emacs takes approximately
            ;; forever to show it in the minibuffer or with
-           ;; `describe-text-properties'.  FIXME: Shouldn't be necessary
+           ;; `describe-text-properties'.  TODO: Shouldn't be necessary
            ;; anymore since we're not parsing the whole buffer.
 
-           ;; Also, remove ":" from key symbols.  FIXME: It would be
+           ;; Also, remove ":" from key symbols.  TODO: It would be
            ;; better to avoid this somehow.  At least, we should use a
            ;; function to convert plists to alists, if possible.
            (properties (cl-loop for (key val) on properties by #'cddr
@@ -520,7 +520,7 @@ return an empty string."
       (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
       ;; Add all the necessary properties and faces to the whole string
       (--> string
-           ;; FIXME: Use proper prefix
+           ;; TODO: Use agenda-like format strings.
            (concat "  " it)
            (org-add-props it properties
              'todo-state todo-keyword
@@ -548,7 +548,7 @@ return an empty string."
              ;; (current-day-number
              ;; NOTE: Not currently used, but if we ever implement a more "traditional" agenda that
              ;; shows perspective of multiple days at once, we'll need this, so I'll leave it for now.
-             ;;  ;; FIXME: This is supposed to be the, shall we say,
+             ;;  ;; NOTE: This is supposed to be the, shall we say,
              ;;  ;; pretend, or perspective, day number that this pass
              ;;  ;; through the agenda is being made for.  We need to
              ;;  ;; either set this in the calling function, set it here,
@@ -561,12 +561,12 @@ return an empty string."
              (difference-days (- today-day-number scheduled-day-number))
              (relative-due-date (org-add-props (org-ql-agenda--format-relative-date difference-days) nil
                                   'help-echo (org-element-property :raw-value scheduled-date)))
-             ;; FIXME: Unused for now:
+             ;; NOTE: Unused for now:
              ;; (show-all (or (eq org-agenda-repeating-timestamp-show-all t)
              ;;               (member todo-keyword org-agenda-repeating-timestamp-show-all)))
-             ;; FIXME: Unused for now: (sexp-p (string-prefix-p "%%" raw-value))
-             ;; FIXME: Unused for now: (raw-value (org-element-property :raw-value scheduled-date))
-             ;; FIXME: I don't remember what `repeat-day-number' was for, but we aren't using it.
+             ;; NOTE: Unused for now: (sexp-p (string-prefix-p "%%" raw-value))
+             ;; NOTE: Unused for now: (raw-value (org-element-property :raw-value scheduled-date))
+             ;; NOTE: I don't remember what `repeat-day-number' was for, but we aren't using it.
              ;; But I'll leave it here for now.
              ;; (repeat-day-number (cond (sexp-p (org-time-string-to-absolute scheduled-date))
              ;;                          ((< today-day-number scheduled-day-number) scheduled-day-number)
@@ -576,7 +576,7 @@ return an empty string."
              ;;                                  current-day-number
              ;;                                today-day-number)
              ;;                              'future
-             ;;                              ;; FIXME: I don't like
+             ;;                              ;; NOTE: I don't like
              ;;                              ;; calling `current-buffer'
              ;;                              ;; here.  If the element has
              ;;                              ;; a marker, we should use
@@ -610,9 +610,9 @@ property."
              (difference-days (- today-day-number deadline-day-number))
              (relative-due-date (org-add-props (org-ql-agenda--format-relative-date difference-days) nil
                                   'help-echo (org-element-property :raw-value deadline-date)))
-             ;; FIXME: Unused for now: (todo-keyword (org-element-property :todo-keyword element))
-             ;; FIXME: Unused for now: (done-p (member todo-keyword org-done-keywords))
-             ;; FIXME: Unused for now: (today-p (= today-day-number deadline-day-number))
+             ;; NOTE: Unused for now: (todo-keyword (org-element-property :todo-keyword element))
+             ;; NOTE: Unused for now: (done-p (member todo-keyword org-done-keywords))
+             ;; NOTE: Unused for now: (today-p (= today-day-number deadline-day-number))
              (deadline-passed-fraction (--> (- deadline-day-number today-day-number)
                                             (float it)
                                             (/ it (max org-deadline-warning-days 1))
