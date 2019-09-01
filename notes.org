@@ -1885,7 +1885,8 @@ An idea that /might/ be helpful for performance in /some/ cases, depending on th
   (cl-defun org-ql-agenda-intersection (buffers-files queries &key entries sort buffer narrow super-groups)
     "Like `org-ql-agenda', but intersects multiple queries."
     (declare (indent defun))
-    (let* ((entries (->> queries
+    (let* ((org-ql-cache (ht))
+           (entries (->> queries
                          (--map (org-ql-select buffers-files
                                   it
                                   :action 'element-with-markers
@@ -1913,8 +1914,200 @@ An idea that /might/ be helpful for performance in /some/ cases, depending on th
 #+RESULTS:
 | Form         | x faster than next | Total runtime | # of GCs | Total GC runtime |
 |--------------+--------------------+---------------+----------+------------------|
-| normal       | 4.03               |      0.275053 |        0 |                0 |
-| intersection | slowest            |      1.109169 |        0 |                0 |
+| normal       | 3.70               |      0.233147 |        0 |                0 |
+| intersection | slowest            |      0.862512 |        0 |                0 |
+
+*** Alternative approach
+
+[2019-09-01 Sun 08:17]  This is very experimental, but the results are surprising.  When the action function returns a fairly simple list, the intersection is very slightly faster.  When returning full elements, the intersection is much slower, so that it more than doubles the runtime.  I wonder if the element list comparison is short-circuiting, or if it looks at the whole lists, because it seems like it shouldn't take more than 4-5 list elements before it realizes that two lists don't match.
+
+Anyway, looks like this approach isn't viable, at least not without a much more complicated implementation, which probably wouldn't be worth it.
+
+#+BEGIN_SRC elisp
+  (let* ((action-fn (lambda ()
+                      (list (current-buffer)
+                            (point)
+                            (substring-no-properties (org-get-heading t t)))))
+         (files '("~/org/main.org")))
+    ;; NOTE: Careful to use the same files and action in each one.  I duplicated
+    ;; the variable in each form to make individual testing easier.
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("normal" (->> (let ((org-ql-cache (ht))
+                                   (action-fn (lambda ()
+                                                (list (current-buffer)
+                                                      (point)
+                                                      (substring-no-properties (org-get-heading t t)))))
+                                   (files '("~/org/main.org")))
+                               (org-ql-select files
+                                 '(and (not (done))
+                                       (or (habit)
+                                           (deadline auto)
+                                           (scheduled :to today)
+                                           (ts-active :on today)
+                                           (closed :on today)))
+                                 :action action-fn))))
+              ("Testing" (let* ((org-ql-cache (ht))
+                                (files '("~/org/main.org"))
+                                (action-fn (lambda ()
+                        (list (current-buffer)
+                              (point)
+                              (substring-no-properties (org-get-heading t t)))))
+                                (and-queries '(not (done)))
+                                (or-queries '((habit)
+                                              (deadline auto)
+                                              (scheduled :to today)
+                                              (ts-active :on today)
+                                              (closed :on today)))
+                                (and-results (org-ql-select files
+                                               and-queries
+                                               :action action-fn))
+                                (or-results (cl-loop for query in or-queries
+                                                     append (org-ql-select files
+                                                              query
+                                                              :action action-fn))))
+                           (seq-intersection and-results
+                                             (->> or-results
+                                                  -uniq)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------+--------------------+---------------+----------+------------------|
+| Testing | 1.15               |      0.248376 |        0 |                0 |
+| normal  | slowest            |      0.284897 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+
+;; With caching enabled
+  (let* ((action-fn (lambda ()
+                      (list (current-buffer)
+                            (point)
+                            (substring-no-properties (org-get-heading t t)))))
+         (files '("~/org/main.org")))
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("normal" (->> (org-ql-select files
+                               '(and (not (done))
+                                     (or (habit)
+                                         (deadline auto)
+                                         (scheduled :to today)
+                                         (ts-active :on today)
+                                         (closed :on today)))
+                               :action action-fn)))
+              ("Testing" (let* ((files '("~/org/main.org"))
+                                (and-queries '(not (done)))
+                                (or-queries '((habit)
+                                              (deadline auto)
+                                              (scheduled :to today)
+                                              (ts-active :on today)
+                                              (closed :on today)))
+                                (and-results (org-ql-select files
+                                               and-queries
+                                               :action action-fn))
+                                (or-results (cl-loop for query in or-queries
+                                                     append (org-ql-select files
+                                                              query
+                                                              :action action-fn))))
+                           (seq-intersection and-results
+                                             (->> or-results
+                                                  -uniq)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------+--------------------+---------------+----------+------------------|
+| normal  | 13.72              |      0.002311 |        0 |                0 |
+| Testing | slowest            |      0.031707 |        0 |                0 |
+
+Using full views:
+
+#+BEGIN_SRC elisp
+  (let* ((action-fn (lambda ()
+                      (list (current-buffer)
+                            (point)
+                            (substring-no-properties (org-get-heading t t)))))
+         (files '("~/org/main.org")))
+    (bench-multi-lexical :times 1
+      :forms (("normal" (->> (let ((org-ql-cache (ht))
+                                   (files '("~/org/main.org")))
+                               (org-ql-search files
+                                 '(and (not (done))
+                                       (or (habit)
+                                           (deadline auto)
+                                           (scheduled :to today)
+                                           (ts-active :on today)
+                                           (closed :on today)))))))
+              ("Testing" (let* ((org-ql-cache (ht))
+                                (files '("~/org/main.org"))
+                                (and-queries '(not (done)))
+                                (or-queries '((habit)
+                                              (deadline auto)
+                                              (scheduled :to today)
+                                              (ts-active :on today)
+                                              (closed :on today)))
+                                (and-results (org-ql-select files
+                                               and-queries
+                                               :action 'element-with-markers))
+                                (or-results (cl-loop for query in or-queries
+                                                     append (org-ql-select files
+                                                              query
+                                                              :action 'element-with-markers)))
+                                (final-results (seq-intersection and-results
+                                                                 (->> or-results
+                                                                      -uniq))))
+                           (org-ql-agenda--agenda nil nil
+                             :entries final-results)
+                         
+                           )))))
+#+END_SRC
+
+#+RESULTS:
+| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------+--------------------+---------------+----------+------------------|
+| normal  | 1.74               |      0.534742 |        0 |                0 |
+| Testing | slowest            |      0.931897 |        0 |                0 |
+
+Just gathering results, but using elements:
+
+#+BEGIN_SRC elisp
+  (let* ((action-fn 'element-with-markers)
+         (files '("~/org/main.org")))
+    ;; NOTE: Careful to use the same files and action in each one.  I duplicated
+    ;; the variable in each form to make individual testing easier.
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("normal" (->> (let ((org-ql-cache (ht)))
+                               (org-ql-select files
+                                 '(and (not (done))
+                                       (or (habit)
+                                           (deadline auto)
+                                           (scheduled :to today)
+                                           (ts-active :on today)
+                                           (closed :on today)))
+                                 :action action-fn))))
+              ("Testing" (let* ((org-ql-cache (ht))
+                                (and-queries '(not (done)))
+                                (or-queries '((habit)
+                                              (deadline auto)
+                                              (scheduled :to today)
+                                              (ts-active :on today)
+                                              (closed :on today)))
+                                (and-results (org-ql-select files
+                                               and-queries
+                                               :action action-fn))
+                                (or-results (cl-loop for query in or-queries
+                                                     append (org-ql-select files
+                                                              query
+                                                              :action action-fn))))
+                           (seq-intersection and-results
+                                             (->> or-results
+                                                  -uniq)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------+--------------------+---------------+----------+------------------|
+| normal  | 2.27               |      0.314218 |        0 |                0 |
+| Testing | slowest            |      0.714587 |        0 |                0 |
+
 
 ** [2019-08-29 Thu 06:24]  Benchmarking org-ql compared to re-search-forward for getting headings in buffer
 :PROPERTIES:
