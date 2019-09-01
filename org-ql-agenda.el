@@ -120,6 +120,7 @@ e.g. `org-ql-search' as desired."
 
 ;; TODO: DRY these two macros.
 
+;;;###autoload
 (cl-defmacro org-ql-agenda (&rest args)
   "Display an agenda-like buffer of entries in FILES that match QUERY.
 
@@ -286,11 +287,13 @@ TITLE: An optional string displayed in the header."
     (customize-set-variable 'org-ql-views org-ql-views)
     (customize-mark-to-save 'org-ql-views)))
 
+;;;###autoload
 (defun org-ql-view (&optional view)
   "Choose and display a view stored in `org-ql-views'."
   (interactive (list (completing-read "View: " (mapcar #'car org-ql-views))))
   (call-interactively (alist-get view org-ql-views nil nil #'string=)))
 
+;;;###autoload
 (cl-defun org-ql-view-recent-items
     (&key days type
           (files (org-agenda-files))
@@ -392,6 +395,7 @@ after the block."
          insert)
     (insert "\n")))
 
+;;;###autoload
 (defalias 'org-ql-block 'org-ql-agenda-block)
 
 (defun org-ql-agenda--header-line-format (buffers-files query &optional title)
