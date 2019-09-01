@@ -252,13 +252,19 @@ TITLE: An optional string displayed in the header."
 (defun org-ql-search-refresh ()
   "Refresh current `org-ql-search' buffer."
   (interactive)
-  (org-ql-agenda--agenda org-ql-buffers-files
-    org-ql-query
-    :sort org-ql-sort
-    :narrow org-ql-narrow
-    :super-groups org-ql-super-groups
-    :title org-ql-title
-    :buffer (current-buffer)))
+  (let ((current-line (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
+        (old-pos (point)))
+    (org-ql-agenda--agenda org-ql-buffers-files
+      org-ql-query
+      :sort org-ql-sort
+      :narrow org-ql-narrow
+      :super-groups org-ql-super-groups
+      :title org-ql-title
+      :buffer (current-buffer))
+    (goto-char (point-min))
+    (or (search-forward current-line nil t)
+        (goto-char old-pos))
+    (beginning-of-line)))
 
 (defun org-ql-search-save ()
   "Save current `org-ql-search' buffer to `org-ql-views'."

@@ -460,6 +460,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Command ~org-ql-view~, which displays views saved to variable ~org-ql-views~, which can be saved from ~org-ql-search~ buffers with command ~org-ql-search-save~, which is bound to =C-x C-s= in view buffers.
 +  Variable ~org-ql-view-map~, active in view buffers displayed by ~org-ql-search~, ~org-ql-agenda~, and ~org-ql-view~.
 +  =random= sort method.
++  Save position when refreshing search buffers.
 
 *Changed*
 +  Function ~org-ql-query~ renamed to ~org-ql-select~.  ~org-ql-query~ now refers to a new function.
