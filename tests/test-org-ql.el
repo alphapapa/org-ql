@@ -557,8 +557,6 @@ RESULTS should be a list of strings as returned by
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony")))
 
       (org-ql-it "with 1 argument"
-        ;; FIXME: Figure out why this takes >10x longer than the other (todo)
-        ;; tests, according to Buttercup.  Might just be GC, though.
         (org-ql-expect ((todo "WAITING")
                         :sort todo)
           '("Visit the moon")))

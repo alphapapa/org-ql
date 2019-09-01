@@ -414,10 +414,11 @@ replace the clause with a preamble."
                                  ;; Return nil, because we don't need to test the predicate.
                                  nil)
                                 (`(todo . ,(and todo-keywords (guard todo-keywords)))
-                                 ;; FIXME: With case-folding, a query like (todo "WAITING") can find a non-todo
-                                 ;; heading named "Waiting".  For correctness, we could test the predicate
-                                 ;; anyway, but that would negate some of the speed, and in most cases it
-                                 ;; probably won't matter, so I'm leaving it this way for now.
+                                 ;; FIXME: With case-folding, a query like (todo "WAITING") can find a
+                                 ;; non-todo heading named "Waiting".  For correctness, we could test the
+                                 ;; predicate anyway, but that would negate some of the speed, and in
+                                 ;; most cases it probably won't matter, so I'm leaving it this way for
+                                 ;; now.  Maybe we should use a special variable to control case-folding.
                                  (setq org-ql-preamble
                                        (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol))
                                                      t))
@@ -624,7 +625,7 @@ If NARROW is non-nil, buffer will not be widened."
 ELEMENT should be an Org element like that returned by
 `org-element-headline-parser'.  This function should be called
 from within ELEMENT's buffer."
-  ;; FIXME: `org-agenda-new-marker' works, until it doesn't, because...I don't know.  It sometimes
+  ;; NOTE: `org-agenda-new-marker' works, until it doesn't, because...I don't know.  It sometimes
   ;; raises errors or returns markers that don't point into a buffer.  `copy-marker' always works,
   ;; of course, but maybe it will leave "dangling" markers, which could affect performance over
   ;; time?  I don't know, but for now, it seems that we have to use `copy-marker'.
@@ -765,7 +766,7 @@ priority."
     (setq priority (* 1000 (- org-lowest-priority (string-to-char priority))))
     (when-let ((item-priority (save-excursion
                                 (save-match-data
-                                  ;; FIXME: Is the save-match-data above necessary?
+                                  ;; TODO: Is the save-match-data above necessary?
                                   (when (and (looking-at org-heading-regexp)
                                              (save-match-data
                                                (string-match org-priority-regexp (match-string 0))))
@@ -976,7 +977,6 @@ of the line after the heading."
   ;; TODO: DRY this with the clocked predicate.
   ;; NOTE: FROM and TO are actually expected to be `ts' structs.  The docstring is written
   ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
-  ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward regexp limit t)
                                    (ts-parse-org (match-string match-group))))
@@ -992,25 +992,25 @@ of the line after the heading."
 
 ;;;;; Sorting
 
-;; FIXME: These appear to work properly, but it would be good to have tests for them.
+;; TODO: These appear to work properly, but it would be good to have tests for them.
 ;; MAYBE: Add timestamp sorter.  Could be slow in some cases, without clever caching of timestamps per-entry.
 
 (defun org-ql--sort-by (items predicates)
   "Return ITEMS sorted by PREDICATES.
 PREDICATES is a list of one or more sorting methods, including:
 `deadline', `scheduled', and `priority'."
-  ;; FIXME: Test `date' type.
   ;; MAYBE: Use macrolet instead of flet.
   (cl-flet* ((sorter (symbol)
                      (pcase symbol
                        ((or 'deadline 'scheduled)
                         (apply-partially #'org-ql--date-type< (intern (concat ":" (symbol-name symbol)))))
+                       ;; TODO: Rename `date' to `planning'.  `date' should be something else.
                        ('date #'org-ql--date<)
                        ('priority #'org-ql--priority<)
                        ('random (lambda (&rest _ignore)
                                   (= 0 (random 2))))
                        ;; NOTE: 'todo is handled below
-                       ;; FIXME: Add more?
+                       ;; TODO: Add more.
                        (_ (user-error "Invalid sorting predicate: %s" symbol))))
              (sort-by-todo-keyword (items)
                                    (let* ((grouped-items (--group-by (when-let (keyword (org-element-property :todo-keyword it))
