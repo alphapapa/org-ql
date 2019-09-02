@@ -265,6 +265,10 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 
 ** TODO Update commentary
 
+** TODO [#B] Quickly change sorting/grouping in search views
+
+With caching, the search doesn't need to be repeated, so resorting/regrouping can be very fast.
+
 ** MAYBE Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
