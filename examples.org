@@ -4,9 +4,24 @@
 :PROPERTIES:
 :TOC:      this
 :END:
+  -  [[#find-entries-matching-a-certain-custom_id][Find entries matching a certain CUSTOM_ID]]
   -  [[#show-entries-with-recent-timestamps][Show entries with recent timestamps]]
   -  [[#stuck-projects-block-agenda][Stuck projects block agenda]]
   -  [[#listing-bills-coming-due][Listing bills coming due]]
+
+* Find entries matching a certain =CUSTOM_ID=
+
+Since queries can contain both built-in =org-ql= predicate expressions and arbitrary expressions, they can be combined in useful ways.  This example uses the built-in =property= predicate to quickly locate entries that have the =CUSTOM_ID= property set, and then compares the value of that property to the string =issue=.
+
+#+BEGIN_SRC elisp
+  (org-ql-query
+    :select #'org-get-heading
+    :from "~/org/tickets.org"
+    :where '(and (property "CUSTOM_ID")
+                 (string-match "issue" (org-entry-get (point) "CUSTOM_ID"))))
+#+END_SRC
+
+Using the =property= predicate as the first clause of the two clauses joined with =and= allows =org-ql= to optimize the query by searching through the buffer directly to entries that set the =CUSTOM_ID= property, which is much faster than testing every entry in a buffer.  Also, If the query were only the =string-match= call, it would signal an error on entries that didn't have the property set, because =org-entry-get= would return nil.
 
 * Show entries with recent timestamps
 
