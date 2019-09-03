@@ -277,6 +277,27 @@ When tag inheritance is enabled, and the given tags aren't file-level tags, we c
 
 [2019-09-02 Mon 05:20]  Especially with some of the new packages that make =tabulated-list-mode= easier to use, like =navigel=.  However, it would probably break grouping, or require some kind of adapter or extension to do grouping, so I don't know if that would work.  Something like =magit-section= would be more flexible, and could be recursively grouped, like in =magit-todos=.
 
+*** Code idea
+
+Inserting items into a view could look something like this:
+
+#+BEGIN_SRC elisp
+  (org-ql-view--insert-items
+   :header (ts-format "%Y-%m-%d" (ts-now))
+   :items (org-ql-query
+            :select #'org-ql-current-item
+            :from (org-agenda-files)
+            :where '(or (deadline auto)
+                        (scheduled :on today)
+                        (ts-active :on today)))
+   :group-by '(org-ql-item-priority
+               org-ql-item-todo))
+#+END_SRC
+
+Items would be structs, and the =group-by= argument would be a list of accessors, like how =magit-todos= works.  Arbitrary functions could also be passed to =group-by=, as whatever value the function returns is used to group them.  =org-ql-current-item= would be a function that turns the result of =org-element-headline-parser= into the struct.
+
+Not sure if it should automatically add the number of items to the header, or if that should be done manually.
+
 ** DONE Byte-compile lambdas
 CLOSED: [2018-05-09 Wed 17:30]
 :LOGBOOK:
