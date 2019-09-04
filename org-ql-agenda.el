@@ -320,6 +320,43 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
       :sort '(date priority todo)
       :groups groups)))
 
+;;;###autoload
+(cl-defun org-ql-sparse-tree (query &key keep-previous (buffer (current-buffer)))
+  "Show a sparse tree for QUERY in BUFFER and return number of results.
+The tree will show the lines where the query matches, and any
+other context defined in `org-show-context-detail', which see.
+
+QUERY is an `org-ql' query sexp (quoted, since this is a
+function).  BUFFER defaults to the current buffer.
+
+When KEEP-PREVIOUS is non-nil (interactively, with prefix), the
+outline is not reset to the overview state before finding
+matches, which allows stacking calls to this command.
+
+Runs `org-occur-hook' after making the sparse tree."
+  ;; Code based on `org-occur'.
+  ;; TODO: Use `helm-org-ql' plain-text query processing.
+  (interactive (list (read-minibuffer "Query: ")
+                     :keep-previous current-prefix-arg))
+  (with-current-buffer buffer
+    (unless keep-previous
+      ;; We don't do highlighting, because queries aren't regexps, but
+      ;; we remove existing `org-occur' highlights, just in case.
+      (org-remove-occur-highlights nil nil t)
+      (org-overview))
+    (let ((num-results 0))
+      (org-ql-select buffer query
+        :action (lambda ()
+                  (org-show-context 'occur-tree)
+                  (cl-incf num-results)))
+      (unless org-sparse-tree-open-archived-trees
+        (org-hide-archived-subtrees (point-min) (point-max)))
+      (run-hooks 'org-occur-hook)
+      (unless (get-buffer-window buffer)
+        (pop-to-buffer buffer))
+      (message "%d matches" num-results)
+      num-results)))
+
 ;;;; Functions
 
 (cl-defun org-ql-agenda--agenda (buffers-files query &key entries strings sort buffer narrow super-groups title)

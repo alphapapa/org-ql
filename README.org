@@ -120,7 +120,7 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
 The functionality provided may be grouped by:
 
-+  *Interactive commands:* ~org-ql-search~, ~org-ql-view~.
++  *Interactive commands:* ~org-ql-search~, ~org-ql-view~, =org-ql-sparse-tree=.
 +  *Non-interactive functions and macros:*
      -  ~org-ql~ (macro)
      -  ~org-ql-select~ (function)
@@ -135,6 +135,8 @@ Alternatively, they may be grouped by:
      -  ~org-ql-view~ (command)
      -  ~org-ql-block~ (agenda function)
      -  ~org-ql-agenda~ (macro)
++  *Showing a tree in a buffer:*
+     -  =org-ql-sparse-tree= (command)
 +  *Returning a list of matches or acting on them:*
      -  ~org-ql~ (macro)
      -  ~org-ql-select~ (function)
@@ -182,6 +184,12 @@ Choose and display a view stored in ~org-ql-views~.
 *** org-ql-view-recent-items
 
 Show items in ~FILES~ from last ~DAYS~ days with timestamps of ~TYPE~.  ~TYPE~ may be ~ts~, ~ts-active~, ~ts-inactive~, ~clocked~, ~closed~, ~deadline~, ~planning~, or ~scheduled~.  =FILES= defaults to those returned by the function =org-agenda-files=.
+
+*** org-ql-sparse-tree =(query &key keep-previous (buffer (current-buffer)))=
+
+Show a sparse tree for ~QUERY~ in ~BUFFER~ and return number of results.  The tree will show the lines where the query matches, and any other context defined in ~org-show-context-detail~, which see.
+
+~QUERY~ is an ~org-ql~ query sexp (quoted, since this is a function).  ~BUFFER~ defaults to the current buffer.  When ~KEEP-PREVIOUS~ is non-nil (interactively, with prefix), the outline is not reset to the overview state before finding matches, which allows stacking calls to this command.  Runs ~org-occur-hook~ after making the sparse tree.
 
 ** Queries
 
@@ -443,7 +451,8 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 ** 0.3-pre
 
-Nothing new yet.
+*Added*
++  Command =org-ql-sparse-tree=, like =org-sparse-tree= for =org-ql= queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
 
 ** 0.2
 :PROPERTIES:
