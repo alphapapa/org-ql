@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.2
+;; Version: 0.3-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (s "1.12.0") (ts "0.2"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
