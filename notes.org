@@ -2172,3 +2172,105 @@ Minimal difference, and that's a very large file, too.  On smaller files it's th
 | re-search-forward | 1.17               |      0.520375 |        0 |                0 |
 | org-ql            | slowest            |      0.608281 |        0 |                0 |
 
+** Caching of inherited tags
+
+[2019-09-05 Thu 07:59]  Implemented a per-buffer tags cache that seems to significantly speed up tags queries that use tag inheritance.  It persists as long as the buffer remains unmodified, and it's usable from any code as a single function that automatically uses caching.  It also returns inherited tags and local tags separately, which could be useful for having separate selectors, one for inherited tags, one for local tags, and one for both.
+
+#+BEGIN_SRC elisp
+  (defvar org-ql-tags-cache (ht)
+    "Per-buffer tags cache.
+  Keyed by buffer.  Each value is a cons of the buffer's modified
+  tick, and another hash table keyed on buffer position, whose
+  values are a list of two lists, inherited tags and local tags, as
+  strings.")
+
+  (defun org-ql--tags-at (position)
+    "Return tags for POSITION in current buffer.
+  Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
+    ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
+    ;; bound in the else clause, so destructured variables that are non-nil,
+    ;; like found caches, are not available in the else clause.
+    (if-let* ((buffer-cache (gethash (current-buffer) org-ql-tags-cache))
+              (modified-tick (car buffer-cache))
+              (tags-cache (cdr buffer-cache))
+              (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+              (cached-result (gethash position tags-cache)))
+        ;; Found in cache: return them.
+        (pcase cached-result
+          ('org-ql-nil nil)
+          (_ cached-result))
+      ;; Not found in cache: get tags and cache them.
+      (let* ((local-tags (or (org-get-tags position 'local)
+                             'org-ql-nil))
+             (inherited-tags (or (save-excursion
+                                   (when (org-up-heading-safe)
+                                     (-let* (((inherited local) (org-ql--tags-at (point)))
+                                             (inherited-tags (when (or inherited local)
+                                                               (cond ((and (listp inherited)
+                                                                           (listp local))
+                                                                      (append inherited local))
+                                                                     ((cond ((listp inherited) inherited)
+                                                                            ((listp local) local)))))))
+                                       (when inherited-tags
+                                         (->> inherited-tags -non-nil -uniq)))))
+                                 'org-ql-nil))
+             (all-tags (list inherited-tags local-tags)))
+        ;; Check caches again, because they may have been set now.
+        ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
+        (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
+              modified-tick (car buffer-cache)
+              tags-cache (cdr buffer-cache)
+              buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+        (cond ((or (not buffer-cache)
+                   (not buffer-unmodified-p))
+               ;; Buffer-local tags cache empty or invalid: make new one.
+               (puthash (current-buffer)
+                        (cons (buffer-modified-tick)
+                              (let ((table (make-hash-table)))
+                                (puthash position all-tags table)
+                                table))
+                        org-ql-tags-cache)
+               ;; Return tags, not the cons put on the buffer-cache.
+               all-tags)
+              ;; Buffer-local tags cache found, but no result: store this one.
+              (t (puthash position all-tags tags-cache))))))
+
+  (org-ql--defpred tags-cached (&rest tags)
+    "Return non-nil if current heading has one or more of TAGS (a list of strings)."
+    ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
+    ;; to run `org-get-tags' for every heading, especially with inheritance.
+    (cl-macrolet ((tags-p (tags)
+                          `(and ,tags
+                                (not (eq 'org-ql-nil ,tags)))))
+      (-let* (((inherited local) (org-ql--tags-at (point))))
+        (cl-typecase tags
+          (null (or (tags-p inherited)
+                    (tags-p local)))
+          (otherwise (or (when (tags-p inherited)
+                           (seq-intersection tags inherited))
+                         (when (tags-p local)
+                           (seq-intersection tags local))))))))
+#+END_SRC
+
+Benchmark results:
+
+#+BEGIN_SRC elisp
+  (let* ((buffers '("~/org/main.org"))
+         (tags '("Emacs")))
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("uncached" (let ((org-ql-cache (ht)))
+                            (org-ql-select buffers
+                              `(tags ,@tags))))
+              ("cached" (let ((org-ql-cache (ht))
+                              (org-ql-tags-cache (ht)))
+                          (org-ql-select buffers
+                            `(tags-cached ,@tags)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| cached   | 6.51               |      0.519871 |        0 |                0 |
+| uncached | slowest            |      3.386679 |        0 |                0 |
+
+
