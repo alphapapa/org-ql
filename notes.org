@@ -6,6 +6,14 @@
 
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
+** TODO [#A] Helm command
+
+In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
+
+*** TODO Add
+
+*** TODO Demonstrate
+
 ** TODO [#B] Timeline view
 
 e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
