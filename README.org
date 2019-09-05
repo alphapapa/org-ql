@@ -216,7 +216,11 @@ Arguments are listed next to predicate names, where applicable.
 +  ~priority (&optional comparator-or-priority priority)~ :: Return non-nil if current heading has a certain priority.  ~COMPARATOR-OR-PRIORITY~ should be either a comparator function, like ~<=~, or a priority string, like "A" (in which case (~=~ will be the comparator).  If ~COMPARATOR-OR-PRIORITY~ is a comparator, ~PRIORITY~ should be a priority string.  If both arguments are nil, return non-nil if heading has any defined priority.
 +  ~property (property &optional value)~ :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a custom predicate form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
 +  ~regexp (regexp)~ :: Return non-nil if current entry matches ~REGEXP~ (a regexp string).  Matches against entire entry, from beginning of its heading to the next heading.
-+  ~tags (&optional tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).
++  ~tags (&optional tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
++  =tags-inherited (&optional tags)= :: Return non-nil if current heading's inherited tags include one or more of =TAGS= (a list of strings).  If TAGS is nil, return non-nil if heading has any inherited tags.
+     -  Aliases: =inherited-tags=, =tags-i=, =itags=.
++  =tags-local (&optional tags)= :: Return non-nil if current heading's local tags include one or more of =TAGS= (a list of strings).  If TAGS is nil, return non-nil if heading has any local tags.
+     -  Aliases: =local-tags=, =tags-l=, =ltags=.
 +  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
 
 *** Date/time predicates
@@ -453,6 +457,10 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 *Added*
 +  Command =org-ql-sparse-tree=, like =org-sparse-tree= for =org-ql= queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
++  Per-buffer, per-heading tag caching, which increases the speed of tags-related queries by 6-7x.
++  More tags-related predicates and aliases:
+     -  For inherited tags: =tags-inherited=, =inherited-tags=, =tags-i=, =itags=.
+     -  For heading-local tags: =tags-local=, =local-tags=, =tags-l=, =ltags=.
 
 ** 0.2
 :PROPERTIES:

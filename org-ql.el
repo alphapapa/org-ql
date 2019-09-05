@@ -90,6 +90,13 @@ Each value is a list of the buffer's modified tick and another
 hash table, keyed by arguments passed to
 `org-ql--select-cached'.")
 
+(defvar org-ql-tags-cache (make-hash-table :weakness 'key)
+  "Per-buffer tags cache.
+Keyed by buffer.  Each value is a cons of the buffer's modified
+tick, and another hash table keyed on buffer position, whose
+values are a list of two lists, inherited tags and local tags, as
+strings.")
+
 (defvar org-ql-predicates
   (list (list :name 'org-back-to-heading :fn (symbol-function 'org-back-to-heading)))
   "Plist of predicates, their corresponding functions, and their docstrings.
@@ -323,6 +330,10 @@ Replaces bare strings with (regexp) selectors, and appropriate
                       ;; Quote comparator.
                       `(priority ',comparator ,letter))
 
+                     ;; Tags: inherited and local predicate aliases.
+                     (`(,(or 'tags-i 'itags 'inherited-tags) . ,tags) `(tags-inherited ,@tags))
+                     (`(,(or 'tags-l 'ltags 'local-tags) . ,tags) `(tags-local ,@tags))
+
                      ;; Timestamps
                      (`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
                      (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest))
@@ -509,10 +520,9 @@ replace the clause with a preamble."
                                  (setq org-ql-preamble org-scheduled-time-regexp)
                                  ;; Return element, because the predicate still needs testing.
                                  element)
-                                ;; TODO: Add selector for tags without inheritance.
-                                ((and `(tags . ,tags) (guard (not org-use-tag-inheritance)))
-                                 ;; When tag inheritance is disabled, we only consider direct tags,
-                                 ;; so we can search directly to headings containing one of the tags.
+                                (`((or 'tags-local 'local-tags 'tags-l 'ltags) . ,tags)
+                                 ;; When searching for local, non-inherited tags, we can
+                                 ;; search directly to headings containing one of the tags.
                                  (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ space) (1+ not-newline)
                                                                            ":" (or ,@tags) ":")
                                                                      t))
@@ -621,6 +631,50 @@ If NARROW is non-nil, buffer will not be widened."
         ;; Restore original function mappings.
         (fset (plist-get it :name) (plist-get it :fn))))))
 
+(defun org-ql--tags-at (position)
+  "Return tags for POSITION in current buffer.
+Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
+  ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
+  ;; bound in the else clause, so destructured variables that are non-nil,
+  ;; like found caches, are not available in the else clause.
+  (if-let* ((buffer-cache (gethash (current-buffer) org-ql-tags-cache))
+            (modified-tick (car buffer-cache))
+            (tags-cache (cdr buffer-cache))
+            (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+            (cached-result (gethash position tags-cache)))
+      ;; Found in cache: return them.
+      (pcase cached-result
+        ('org-ql-nil nil)
+        (_ cached-result))
+    ;; Not found in cache: get tags and cache them.
+    (let* ((local-tags (or (org-ql--get-tags position 'local)
+                           'org-ql-nil))
+           (inherited-tags (or (save-excursion
+                                 (when (org-up-heading-safe)
+                                   (-let* (((inherited local) (org-ql--tags-at (point))))
+                                     (when (or inherited local)
+                                       (cond ((and (listp inherited)
+                                                   (listp local))
+                                              (->> (append inherited local)
+                                                   -non-nil -uniq))
+                                             ((listp inherited) inherited)
+                                             ((listp local) local))))))
+                               'org-ql-nil))
+           (all-tags (list inherited-tags local-tags)))
+      ;; Check caches again, because they may have been set now.
+      ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
+      (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
+            modified-tick (car buffer-cache)
+            tags-cache (cdr buffer-cache)
+            buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+      (unless (and buffer-cache buffer-unmodified-p)
+        ;; Buffer-local tags cache empty or invalid: make new one.
+        (setf tags-cache (make-hash-table))
+        (puthash (current-buffer)
+                 (cons (buffer-modified-tick) tags-cache)
+                 org-ql-tags-cache))
+      (puthash position all-tags tags-cache))))
+
 ;;;;; Helpers
 
 (defun org-ql--add-markers (element)
@@ -713,13 +767,49 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   (or (apply #'org-ql--predicate-todo org-done-keywords)))
 
 (org-ql--defpred tags (&rest tags)
-  "Return non-nil if current heading has one or more of TAGS (a list of strings)."
+  "Return non-nil if current heading has one or more of TAGS (a list of strings).
+Tests both inherited and local tags."
   ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
   ;; to run `org-get-tags' for every heading, especially with inheritance.
-  (when-let ((tags-at (org-ql--get-tags (point) (not org-use-tag-inheritance))))
-    (cl-typecase tags
-      (null t)
-      (otherwise (seq-intersection tags tags-at)))))
+  (cl-macrolet ((tags-p (tags)
+                        `(and ,tags
+                              (not (eq 'org-ql-nil ,tags)))))
+    (-let* (((inherited local) (org-ql--tags-at (point))))
+      (cl-typecase tags
+        (null (or (tags-p inherited)
+                  (tags-p local)))
+        (otherwise (or (when (tags-p inherited)
+                         (seq-intersection tags inherited))
+                       (when (tags-p local)
+                         (seq-intersection tags local))))))))
+
+(org-ql--defpred tags-inherited (&rest tags)
+  "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
+If TAGS is nil, return non-nil if heading has any inherited tags."
+  ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
+  ;; to run `org-get-tags' for every heading, especially with inheritance.
+  (cl-macrolet ((tags-p (tags)
+                        `(and ,tags
+                              (not (eq 'org-ql-nil ,tags)))))
+    (-let* (((inherited _) (org-ql--tags-at (point))))
+      (cl-typecase tags
+        (null (tags-p inherited))
+        (otherwise (when (tags-p inherited)
+                     (seq-intersection tags inherited)))))))
+
+(org-ql--defpred tags-local (&rest tags)
+  "Return non-nil if current heading's local tags include one or more of TAGS (a list of strings).
+If TAGS is nil, return non-nil if heading has any local tags."
+  ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
+  ;; to run `org-get-tags' for every heading, especially with inheritance.
+  (cl-macrolet ((tags-p (tags)
+                        `(and ,tags
+                              (not (eq 'org-ql-nil ,tags)))))
+    (-let* (((_ local) (org-ql--tags-at (point))))
+      (cl-typecase tags
+        (null (tags-p local))
+        (otherwise (when (tags-p local)
+                     (seq-intersection tags local)))))))
 
 (org-ql--defpred level (level-or-comparator &optional level)
   "Return non-nil if current heading's outline level matches arguments.
