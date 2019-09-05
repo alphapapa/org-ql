@@ -330,7 +330,10 @@ Replaces bare strings with (regexp) selectors, and appropriate
                       ;; Quote comparator.
                       `(priority ',comparator ,letter))
 
-                     ;; Tags: inherited and local predicate aliases.
+                     ;; Tags.
+                     (`(,(or 'tags-all 'tags&) . ,tags) `(and ,@(--map `(tags ,it) tags)))
+                     ;; MAYBE: -all versions for inherited and local.
+                     ;; Inherited and local predicate aliases.
                      (`(,(or 'tags-i 'itags 'inherited-tags) . ,tags) `(tags-inherited ,@tags))
                      (`(,(or 'tags-l 'ltags 'local-tags) . ,tags) `(tags-local ,@tags))
 

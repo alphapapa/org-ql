@@ -631,6 +631,14 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((not (tags-local "personal" "world")))
           '("Test data" "Take over the universe" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling"))))
 
+    (describe "(tags-all), (tags&)"
+
+      (org-ql-it "with 2 tags"
+        (org-ql-expect ((tags-all "universe" "personal"))
+          '("Practice leaping tall buildings in a single bound"))
+        (org-ql-expect ((tags& "ambition" "space"))
+          '("Visit Mars" "Visit the moon"))))
+
     (describe "(ts)"
 
       (describe "active"
