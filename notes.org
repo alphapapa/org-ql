@@ -289,6 +289,100 @@ It would probably be an all-encompassing system, because predicates would need t
 
 Maybe a good improvement to make later, after the project is more developed.
 
+*** Struct PoC code
+
+This works okay (except the priority accessor needs to be fixed, because Org priorities are awkward to get).  I'm guessing all the extra function calls would make it undesirable in cases of returning many results, but it's a flexible concept that makes sorting easy.
+
+#+BEGIN_SRC elisp
+  (ts-defstruct org-ql-node
+    file position marker
+    (level
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (org-outline-level)))
+    (heading
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          ;; TODO: Org 9.2+ adds 2 more args to `org-get-heading'.
+                          (org-get-heading t t)))
+    (priority
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (org-get-priority )))
+    (tags
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (->> (org-ql--tags-at (point))
+                               -flatten
+                               (delq 'org-ql-nil))))
+    (todo
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (org-get-todo-state)))
+    (outline-path
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (org-split-string (org-format-outline-path (org-get-outline-path)
+                                                                     nil nil "")
+                                            ""))))
+
+  (defcustom helm-org-ql-sort
+    '(org-ql-node-priority org-ql-node-todo)
+    "FIXME"
+    )
+
+  (cl-defun helm-org-ql (buffers-files &optional no-and)
+    "Display results in BUFFERS-FILES for an `org-ql' query using Helm.
+  Interactively, search the current buffer.
+
+  NOTE: Atoms in the query are turned into strings where
+  appropriate, which makes it unnecessary to type quotation marks
+  around words that are intended to be searched for as indepenent
+  strings.
+
+  Also, unless NO-AND is non-nil (interactively, with prefix), all
+  query tokens are wrapped in an implied (and) form. This is
+  because a query must be a sexp, so when typing multiple clauses,
+  either (and) or (or) would be required around them, and (and) is
+  typically more useful, because it narrows down results.
+
+  For example, this raw input:
+
+   Emacs git
+
+  Is transformed into this query:
+
+   (and \"Emacs\" \"git\")
+
+  However, quoted strings remain quoted, so this input:
+
+   \"something else\" (tags \"funny\")
+
+  Is transformed into this query:
+
+   (and \"something else\" (tags \"funny\"))"
+    (interactive (list (current-buffer) current-prefix-arg))
+    (let ((helm-input-idle-delay helm-org-ql-input-idle-delay))
+      (helm :sources
+            (helm-build-sync-source "helm-org-ql-agenda-files"
+              :candidates (lambda ()
+                            (let* ((query (helm-org-ql--input-to-query helm-pattern no-and))
+                                   (window-width (window-width (helm-window))))
+                              (when query
+                                (let ((results (org-ql-select buffers-files
+                                                 query
+                                                 :action '(make-org-ql-node :marker (point-marker)))))
+                                  (when helm-org-ql-sort
+                                    (dolist (sorter (reverse helm-org-ql-sort))
+                                      (setf results (sort results sorter))))
+                                  (cl-loop for it in-ref results
+                                           do (setf it (concat (buffer-name (org-ql-node-file it)) ":"
+                                                               (or (org-ql-node-todo it) "")
+                                                               (or (org-ql-node-priority it) "")
+                                                               (org-ql-node-heading it) "\\"
+                                                               (org-ql-node-outline-path it))))
+                                  results))))
+              :match #'identity
+              :fuzzy-match nil
+              :multimatch nil
+              :volatile t
+              :action #'helm-org-goto-marker))))
+#+END_SRC
+
 ** MAYBE Implement view with tabulated-list-mode or magit-section
 
 [2019-09-02 Mon 05:20]  Especially with some of the new packages that make =tabulated-list-mode= easier to use, like =navigel=.  However, it would probably break grouping, or require some kind of adapter or extension to do grouping, so I don't know if that would work.  Something like =magit-section= would be more flexible, and could be recursively grouped, like in =magit-todos=.
