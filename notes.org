@@ -277,6 +277,10 @@ When tag inheritance is enabled, and the given tags aren't file-level tags, we c
 
 [2019-09-02 Mon 05:20]  Especially with some of the new packages that make =tabulated-list-mode= easier to use, like =navigel=.  However, it would probably break grouping, or require some kind of adapter or extension to do grouping, so I don't know if that would work.  Something like =magit-section= would be more flexible, and could be recursively grouped, like in =magit-todos=.
 
+*** TODO Experiment with =widget=
+
+The code that powers the customization UI.  Has collapsible and customizable widgets.  Might be perfect.  Might even enable editing items in the list, with functions to make the changes in the source  buffers.
+
 *** Code idea
 
 Inserting items into a view could look something like this:
