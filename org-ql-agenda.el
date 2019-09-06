@@ -490,6 +490,8 @@ return an empty string."
                                 for symbol = (intern (cl-subseq (symbol-name key) 1))
                                 unless (member symbol '(parent))
                                 append (list symbol val)))
+           (marker (or (org-element-property :org-hd-marker element)
+                       (org-element-property :org-marker element)))
            ;; TODO: --add-faces is used to add the :relative-due-date property, but that fact is
            ;; hidden by doing it through --add-faces (which calls --add-scheduled-face and
            ;; --add-deadline-face), and doing it in this form that gets the title hides it even more.
@@ -505,8 +507,7 @@ return an empty string."
                          ;; NOTE: Tag inheritance cannot be used here unless markers are added, otherwise
                          ;; we can't go to the item's buffer to look for inherited tags.  (Or does
                          ;; `org-element-headline-parser' parse inherited tags too?  I forget...)
-                         (if-let ((marker (or (org-element-property :org-hd-marker element)
-                                              (org-element-property :org-marker element))))
+                         (if marker
                              (with-current-buffer (marker-buffer marker)
                                ;; I wish `org-get-tags' used the correct buffer automatically.
                                (org-get-tags marker (not org-use-tag-inheritance)))
@@ -520,7 +521,6 @@ return an empty string."
                               (s-join ":" it)
                               (s-wrap it ":")
                               (org-add-props it nil 'face 'org-tag))))
-           ;;  (category (org-element-property :category element))
            (priority-string (-some->> (org-element-property :priority element)
                                       (char-to-string)
                                       (format "[#%s]")
@@ -531,12 +531,16 @@ return an empty string."
            (due-string (pcase (org-element-property :relative-due-date element)
                          ('nil "")
                          (string (format " %s " (org-add-props string nil 'face 'org-ql-agenda-due-date)))))
+           (category (when marker
+                       (with-current-buffer (marker-buffer marker)
+                         (org-get-category marker))))
            (string (funcall org-ql-agenda-format-function
                             `((todo . ,todo-keyword)
                               (priority . ,priority-string)
                               (title . ,title)
                               (due . ,due-string)
-                              (tags . ,tag-string))
+                              (tags . ,tag-string)
+                              (category . ,category))
                             element)))
       (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
       ;; Add all the necessary properties and faces to the whole string
