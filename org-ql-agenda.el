@@ -116,6 +116,17 @@ e.g. `org-ql-search' as desired."
   :type '(alist :key-type string
                 :value-type function))
 
+(defcustom org-ql-agenda-format-function
+  #'org-ql-agenda-default-format-function
+  "Function used to format entries in `org-ql-agenda-block'.
+
+This function receives two arguments: a map-like data containing
+strings which can be used for formatting agenda entries, and a plist
+returned by `org-element-headline-parser'.
+"
+  :group 'org-ql
+  :type 'function)
+
 ;;;; Macros
 
 ;; TODO: DRY these two macros.
@@ -520,7 +531,13 @@ return an empty string."
            (due-string (pcase (org-element-property :relative-due-date element)
                          ('nil "")
                          (string (format " %s " (org-add-props string nil 'face 'org-ql-agenda-due-date)))))
-           (string (s-join " " (-non-nil (list todo-keyword priority-string title due-string tag-string)))))
+           (string (funcall org-ql-agenda-format-function
+                            `((todo . ,todo-keyword)
+                              (priority . ,priority-string)
+                              (title . ,title)
+                              (due . ,due-string)
+                              (tags . ,tag-string))
+                            element)))
       (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
       ;; Add all the necessary properties and faces to the whole string
       (--> string
@@ -530,6 +547,20 @@ return an empty string."
              'todo-state todo-keyword
              'tags tag-list
              'org-habit-p habit-property)))))
+
+(defun org-ql-agenda-default-format-function (map _element)
+  "Default function used to format entries in org-ql-agenda.
+
+MAP is a map-like data structure containing some information
+commonly used for agenda entries, which can be accessed using
+`map-elt' function from map.el.
+
+This should be the default value for `org-ql-agenda-format-function'."
+  (s-join " " (-non-nil (list (map-elt map 'todo)
+                              (map-elt map 'priority)
+                              (map-elt map 'title)
+                              (map-elt map 'due)
+                              (map-elt map 'tags)))))
 
 (defun org-ql-agenda--add-faces (element)
   "Return ELEMENT with deadline and scheduled faces added."
