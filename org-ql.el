@@ -897,9 +897,11 @@ priority."
                thereis (save-excursion
                          (re-search-forward regexp end t))))))
 
-(org-ql--defpred heading (regexp)
-  "Return non-nil if current entry's heading matches REGEXP (a regexp string)."
-  (string-match regexp (org-get-heading 'no-tags 'no-todo)))
+(org-ql--defpred heading (&rest regexps)
+  "Return non-nil if current entry's heading matches any of REGEXPS (regexp strings)."
+  ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
+  (let ((heading (org-get-heading 'no-tags 'no-todo)))
+    (--any (string-match it heading) regexps)))
 
 (org-ql--defpred property (property &optional value)
   "Return non-nil if current entry has PROPERTY (a string), and optionally VALUE (a string)."
