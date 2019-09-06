@@ -52,10 +52,11 @@ With this =org-ql-block= agenda view, like:
 #+BEGIN_SRC elisp
   (setq org-agenda-custom-commands
         '(("s" "Stuck Projects"
-           ((org-ql-block '(and (tags "@project")
-                                (not (done))
-                                (not (descendants (todo "NEXT")))
-                                (not (descendants (scheduled)))))))))
+            ((org-ql-block '(and (tags "@project")
+                                 (not (done))
+                                 (not (descendants (todo "NEXT")))
+                                 (not (descendants (scheduled))))
+                           ((org-ql-block-header "Stuck Projects")))))))
 #+END_SRC
 
 * Listing bills coming due

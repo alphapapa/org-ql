@@ -270,7 +270,8 @@ For use as a custom agenda block type in ~org-agenda-custom-commands~.  For exam
         '(("ces" "Custom: Agenda and Emacs SOMEDAY [#A] items"
            ((org-ql-block '(and (todo "SOMEDAY")
                                 (tags "Emacs")
-                                (priority "A")))
+                                (priority "A"))
+                          ((org-ql-block-header "SOMEDAY :Emacs: High-priority")))
             (agenda)))))
 #+END_SRC
 
@@ -284,6 +285,8 @@ Which would be equivalent to a ~tags-todo~ search like this:
 #+END_SRC
 
 However, the ~org-ql-block~ version runs in about 1/5th the time.
+
+The variable =org-ql-block-header= may be bound to a string to use as the block header, otherwise the header is formed automatically.
 
 **** Macro: ~org-ql-agenda~
 
@@ -464,6 +467,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
      -  For inherited tags: =tags-inherited=, =inherited-tags=, =tags-i=, =itags=.
      -  For heading-local tags: =tags-local=, =local-tags=, =tags-l=, =ltags=.
      -  =tags-all=, =tags&=: Matches all given tags using boolean =AND= (rather than boolean =OR=, which the =tags= predicate uses).
++  Variable =org-ql-block-header=, which overrides the default header in =org-ql-block= agenda blocks.
 
 *Changed*
 +  Predicate =heading= now accepts multiple regexps.

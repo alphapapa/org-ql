@@ -69,6 +69,9 @@
   "Keymap for `org-ql-agenda', `org-ql-search', and `org-ql-views' views.
 Based on `org-agenda-mode-map'.")
 
+(defvar org-ql-block-header nil
+  "A string to override the default header in `org-ql-block' agenda blocks.")
+
 ;; For refreshing results buffers.
 (defvar org-ql-buffers-files)
 (defvar org-ql-query)
@@ -408,12 +411,16 @@ Runs `org-occur-hook' after making the sparse tree."
 
 (defun org-ql-agenda-block (query)
   "Insert items for QUERY into current buffer.
-QUERY should be an `org-ql' query form.  Like other agenda block
-commands, it searches files returned by function
-`org-agenda-files'.  Intended to be used as a user-defined
-function in `org-agenda-custom-commands'.  QUERY corresponds to
-the `match' item in the custom command form.  Inserts a newline
-after the block."
+QUERY should be an `org-ql' query form.  Intended to be used as a
+user-defined function in `org-agenda-custom-commands'.  QUERY
+corresponds to the `match' item in the custom command form.
+
+Like other agenda block commands, it searches files returned by
+function `org-agenda-files'.  Inserts a newline after the block.
+
+If `org-ql-block-header' is non-nil, it is used as the header
+string for the block, otherwise a the header is formed
+automatically from the query."
   (when-let* ((from (org-agenda-files nil 'ifmode))
               (items (org-ql-select from
                        query :action 'element-with-markers)))
@@ -421,8 +428,8 @@ after the block."
     (org-agenda-prepare)
     ;; TODO: `org-agenda--insert-overriding-header' is from an Org version newer than
     ;; I'm using.  Should probably declare it as a minimum Org version after upgrading.
-    ;;  (org-agenda--insert-overriding-header (org-ql-agenda--header-line-format from query))
-    (insert (org-add-props (org-ql-agenda--header-line-format from query)
+    ;;  (org-agenda--insert-overriding-header (or org-ql-block-header (org-ql-agenda--header-line-format from query)))
+    (insert (org-add-props (or org-ql-block-header (org-ql-agenda--header-line-format from query))
 		nil 'face 'org-agenda-structure) "\n")
     ;; Calling `org-agenda-finalize' should be unnecessary, because in a "series" agenda,
     ;; `org-agenda-multi' is bound non-nil, in which case `org-agenda-finalize' does nothing.
