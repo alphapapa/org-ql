@@ -33,6 +33,7 @@
 ;;;; Macros
 
 (defmacro org-ql-defkeymap (name copy docstring &rest maps)
+  ;; Copied from `defkeymap' in elexandria.el.
   "Define a new keymap variable (using `defvar').
 
 NAME is a symbol, which will be the new variable's symbol.  COPY
@@ -310,7 +311,7 @@ Does not include newline."
                                         (otherwise 1)))))
     (with-slots (header items) section
       (concat (propertize (format "%s"
-                                  (or header "Section"))
+                                  (or header "None"))
                           'face 'magit-section-heading)
               " (" (number-to-string (num-items items)) ")"))))
 
@@ -318,23 +319,16 @@ Does not include newline."
   "Insert ITEM into current buffer.
 Does not insert newline."
   (pcase-let* (((cl-struct org-ql-item todo priority heading tags) item)
-               (todo (when todo
-                       (propertize todo 'face (org-get-todo-face todo))))
-               (priority (when priority
-                           (propertize (concat "[#" priority "]") 'face (org-get-priority-face priority))))
-               (tags (when tags
-                       (propertize (s-join ":" tags) 'face 'org-tag-group)
-                       ))
                (beg (point)))
     (insert org-ql-view-item-indent)
     (when todo
-      (insert todo " "))
+      (insert (propertize todo 'face (org-get-todo-face todo)) " "))
     (when priority
-      (insert priority " "))
+      (insert (propertize (concat "[#" priority "]") 'face (org-get-priority-face priority)) " "))
     (when heading
       (insert heading " "))
     (when tags
-      (insert tags))
+      (insert (propertize (s-join ":" tags) 'face 'org-tag-group)))
     (put-text-property beg (point) :org-ql-view-section item)))
 
 (cl-defmethod org-ql-view-insert ((item string))
