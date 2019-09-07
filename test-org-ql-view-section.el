@@ -1,3 +1,6 @@
+(require 'org-ql-item)
+(require 'org-ql-view)
+
 (let* ((buffer (get-buffer-create "test-org-ql-view-section"))
        (sub-section1 (org-ql-view-section
                       :items (list (make-org-ql-item :level 1
