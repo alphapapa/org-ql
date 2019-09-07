@@ -115,7 +115,8 @@
                      '(todo)
                      :action #'org-ql-item-at)
                    (-sort (-on #'string< #'org-ql-item-priority))
-                   (org-ql-view-sort-planning)))
+                   (org-ql-view-sort-planning)
+                   (org-ql-view-sort-todo)))
        (top-section (org-ql-view-section
                      :header "To-Do by Planning Date"
                      :items items))
@@ -129,8 +130,7 @@
                                             (ts-format "%B %Y" it)))
                                         (lambda (item)
                                           (awhen (or (org-ql-item-deadline-ts item) (org-ql-item-scheduled-ts item))
-                                            (ts-format "%d %B" it)))
-                                        'org-ql-item-todo
+                                            (ts-format "%d %A" it)))
                                         ))
     (pop-to-buffer buffer)))
 (let* ((buffer (get-buffer-create "test-org-ql-view-section"))
@@ -151,6 +151,27 @@
                                         (lambda (item)
                                           (awhen (or (org-ql-item-deadline-ts item) (org-ql-item-scheduled-ts item))
                                             (ts-format "%B %Y" it)))
+                                        'org-ql-item-priority
+
+                                        ))
+    (pop-to-buffer buffer)))
+
+(let* ((buffer (get-buffer-create "test-org-ql-view-section"))
+       (items (->> (org-ql-select "~/src/emacs/org-ql/tests/data.org"
+                     '(todo)
+                     :action #'org-ql-item-at)
+                   (-sort (-on #'string< #'org-ql-item-priority))
+                   (org-ql-view-sort-planning)))
+       (top-section (org-ql-view-section
+                     :header "To-Do by Planning Date"
+                     :items items))
+       (inhibit-read-only t))
+  (with-current-buffer buffer
+    (read-only-mode 1)
+    (erase-buffer)
+    (org-ql-view-insert top-section
+                        :group-by (list 'org-ql-item-priority
+                                        'org-ql-item-todo
 
                                         ))
     (pop-to-buffer buffer)))

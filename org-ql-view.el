@@ -43,6 +43,12 @@ Used in `org-ql-view-string'.")
   "Map for `org-ql-view' maps."
   [tab] org-ql-view-section-toggle)
 
+;;;; Faces
+
+(defface org-ql-view-heading
+  `((t (:height 1.2 :weight bold)))
+  "Face for headings in `org-ql-view' buffers.")
+
 ;;;; Classes
 
 (org-ql-defclass org-ql-view-section ()
@@ -75,7 +81,7 @@ Used in `org-ql-view-string'.")
   "String used to indent individual items."
   :type 'string)
 
-(defcustom org-ql-view-item-indent-per-level 2
+(defcustom org-ql-view-item-indent-per-level 3
   "Number of spaces used to indent items at each level."
   :type 'integer)
 
@@ -179,7 +185,7 @@ Does not include newline."
     (with-slots (header items) section
       (concat (propertize (format "%s"
                                   (or header "None"))
-                          'face 'magit-section-heading)
+                          'face 'org-ql-view-heading)
               " (" (number-to-string (num-items items)) ")"))))
 
 (cl-defmethod org-ql-view-insert ((item org-ql-item))
