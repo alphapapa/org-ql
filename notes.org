@@ -771,6 +771,100 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
                            :keymap helm-org-rifle-map))))
 #+END_SRC
 
+* In the wild
+
+** [[https://github.com/AloisJanicek/.doom.d-2nd][Alois Janicek]]
+
+*** [[https://github.com/AloisJanicek/.doom.d-2nd/commit/41ed1080f6f90463fc1f1d7e47cef9864756867c][further tweaking org-ql views · AloisJanicek/.doom.d-2nd@41ed108 · GitHub]]
+
+#+BEGIN_SRC elisp :eval never
+;; Hydras
+(defhydra gtd-agenda (:color blue
+                             :body-pre
+                             (if (aj/has-heading-p +INBOX)
+                                 (org-ql-search `(,+INBOX) "*"
+                                   :sort '(date))
+                               (org-ql-search (org-agenda-files)
+                                 '(todo "NEXT")
+                                 :sort '(date priority todo)
+                                 :groups '((:auto-category t))))
+                             )
+  "agenda"
+  ("a" (org-ql-agenda (org-agenda-files)
+         (and (or (ts-active :on today)
+                  (deadline auto)
+                  (scheduled :to today))
+              (not (done)))) "agenda")
+
+  ("t" (org-ql-search (org-agenda-files)
+         '(todo "TODO")
+         :sort '(date priority todo)
+         :groups '((:auto-category t))) "todo")
+
+  ("n" (org-ql-search (org-agenda-files)
+         '(todo "NEXT")
+         :sort '(date priority todo)
+         :groups '((:auto-category t))) "next")
+
+  ("h" (org-ql-search (org-agenda-files)
+         '(todo "HOLD")
+         :sort '(date priority todo)
+         :groups '((:auto-category t))) "hold")
+
+  ("s" (org-ql-search (org-agenda-files)
+         '(tags "someday")
+         :sort '(date priority todo)
+         :groups '((:auto-category t))) "someday")
+
+  ("r" (org-ql-search (org-agenda-files)
+         '(ts :from -7 :to today)
+         :sort '(date priority todo)
+         :groups '((:auto-ts t))) "recent")
+
+  ("i" (org-ql-search `(,+INBOX) "*"
+         :sort '(date)) "inbox")
+  )
+#+END_SRC
+
+** [[https://github.com/pestctrl/emacs-config][Benson Chu]]
+
+*** [[https://github.com/pestctrl/emacs-config/commit/fa3068003373a0c93e23c728b5dbad2d7c11e2e1][Experimental agenda view with org-ql · pestctrl/emacs-config@fa30680 · GitHub]]
+
+#+BEGIN_SRC elisp :eval never
+              ("f" "fastdev?"
+               ((org-ql-block '(tags "refile")
+                              ((org-agenda-overriding-header "Refile tasks")))
+                (tags-todo ,(concat dev-tag "/!" (mapconcat #'identity my/active-projects-and-tasks "|"))
+                           ((org-agenda-overriding-header "Stuck Projects")
+                            (org-agenda-skip-function 'my/dev-show-stuck-projects)
+                            (org-tags-match-list-sublevels 'indented)
+                            (org-agenda-sorting-strategy
+                             '((agenda category-keep)))))
+                (tags-todo ,(concat dev-tag "-short" "/!" (mapconcat #'identity my/active-projects-and-tasks "|"))
+                           ((org-agenda-overriding-header "Active Projects")
+                            (org-agenda-skip-function 'my/dev-show-active-projects)
+                            (org-tags-match-list-sublevels 'indented)
+                            (org-agenda-sorting-strategy
+                             '((agenda category-keep)))))
+                (org-ql-block '(and (tags "dev")
+                                    (todo "WAIT"))
+                              ((org-agenda-overriding-header "Waiting tasks")))
+                (org-ql-block '(and (tags "dev")
+                                    (todo "NEXT"))
+                              ((org-agenda-overriding-header "Things to do")))
+                (agenda ""
+                        ((org-agenda-skip-function 'my/agenda-custom-skip)
+                         (org-agenda-span 'day)
+                         (org-agenda-tag-filter-preset (quote (,dev-tag)))
+                         (org-agenda-skip-deadline-if-done t)
+                         (org-agenda-skip-scheduled-if-done t)
+                         (org-super-agenda-groups '((:name "Overdue" :and (:deadline past :log nil))
+                                                    (:name "Upcoming" :deadline future)
+                                                    (:name "Should do" :and (:scheduled past :log nil))
+                                                    (:name "Today" :time-grid t
+                                                           :and (:not (:and (:not (:scheduled today)
+                                                                                  :not (:deadline today)))))))))))
+#+END_SRC
 * Profiling
 
 ** Preambles
