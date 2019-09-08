@@ -383,9 +383,15 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
               :action #'helm-org-goto-marker))))
 #+END_SRC
 
-** MAYBE Implement view with tabulated-list-mode or magit-section
+** UNDERWAY Implement view with tabulated-list-mode or magit-section
 
 [2019-09-02 Mon 05:20]  Especially with some of the new packages that make =tabulated-list-mode= easier to use, like =navigel=.  However, it would probably break grouping, or require some kind of adapter or extension to do grouping, so I don't know if that would work.  Something like =magit-section= would be more flexible, and could be recursively grouped, like in =magit-todos=.
+
+[2019-09-08 Sun 10:06]  Came up with a prototype yesterday, in branch =wip/view-section=.  Seems to work pretty well.
+
+One of the things in that branch is =org-ql-item=, which is a struct used to carry data for query results.  It seems to work well.
+
+Another idea for it is to simply store the element from =org-element-headline-parser= in one of its slots, and populate all of the other slots lazily, like =ts=.  It already does that for a couple of slots, but I think it makes sense to do it for all of them, to reduce the overhead of making the struct for every query result.
 
 *** TODO Experiment with =widget=
 
@@ -865,6 +871,7 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
                                                            :and (:not (:and (:not (:scheduled today)
                                                                                   :not (:deadline today)))))))))))
 #+END_SRC
+
 * Profiling
 
 ** Preambles
