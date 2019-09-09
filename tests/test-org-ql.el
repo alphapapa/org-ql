@@ -251,7 +251,13 @@ RESULTS should be a list of strings as returned by
           '("Test data" "Recurring")))
       (org-ql-it "with granddescendants query"
         (org-ql-expect ((descendants (descendants "moon")))
-          '("Test data" "Take over the universe" "Take over the moon" "Code"))))
+          '("Test data" "Take over the universe")))
+      (org-ql-it "with query that should not match parent"
+        ;; This test would fail if the `descendants' predicate did not properly exclude
+        ;; the parent heading by narrowing the buffer to begin at the first child.
+        (org-ql-expect ((and (descendants (todo "WAITING"))
+                             (not (descendants (todo "TODO" "NEXT")))))
+          '("Take over the moon"))))
 
     (describe "(clocked)"
 

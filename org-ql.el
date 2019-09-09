@@ -748,6 +748,7 @@ Or, when possible, fix the problem."
     (save-restriction
       (org-narrow-to-subtree)
       (when (org-goto-first-child)
+        (narrow-to-region (point) (point-max))
         (catch 'found
           (org-ql-select (current-buffer)
             query
