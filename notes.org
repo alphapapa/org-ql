@@ -737,46 +737,6 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
            (not (done)))))
 #+END_SRC
 
-** Helm
-
-#+BEGIN_SRC elisp
-  (defun helm-org-ql-heading ()
-    (let* ((path (mapconcat 'identity
-                            (nreverse (org-split-string (org-format-outline-path (org-get-outline-path)
-                                                                                 1000 nil "")
-                                                        ""))
-                            org-sticky-header-outline-path-reversed-separator))
-           (s (concat (org-sticky-header--get-prefix)
-                      (org-get-heading)
-                      org-sticky-header-outline-path-reversed-separator
-                      path)))
-      (remove-list-of-text-properties 0 (length s) '(line-prefix) s)
-      (s-trim (if (> (length s) (window-width))
-                  (concat (substring s 0 (- (window-width) 2))
-                          "..")
-                s))))
-
-  (defun helm-org-ql-next ()
-    (interactive)
-    (helm :sources (list (helm-build-sync-source "helm-org-ql"
-                           ;;  :after-init-hook helm-org-rifle-after-init-hook
-                           :candidates (lambda ()
-                                         (or (when-let* ((items (org-ql-select (org-agenda-files)
-                                                                  '(todo "NEXT")
-                                                                  :action 'element-with-markers
-                                                                  :sort '(priority date))))
-                                               (--map (let* ((marker (org-element-property :org-marker it)))
-                                                        (org-with-point-at marker
-                                                          (cons (helm-org-ql-heading) marker)))
-                                                      items))
-                                             (list "NONE")))
-                           :match 'identity
-                           :multiline nil
-                           :volatile t
-                           :action 'helm-org-rifle-actions
-                           :keymap helm-org-rifle-map))))
-#+END_SRC
-
 * In the wild
 
 ** [[https://github.com/AloisJanicek/.doom.d-2nd][Alois Janicek]]

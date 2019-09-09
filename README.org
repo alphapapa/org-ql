@@ -6,7 +6,7 @@
 
 [[https://melpa.org/#/org-ql][file:https://melpa.org/packages/org-ql-badge.svg]] [[https://stable.melpa.org/#/org-ql][file:https://stable.melpa.org/packages/org-ql-badge.svg]]
 
-~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and return a list of them or perform actions on them.  Commands are also provided which display a buffer with matching results, similar to an Org Agenda buffer.
+~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and return a list of them or perform actions on them.  Commands are also provided which display matching results.
 
 * Contents
 :PROPERTIES:
@@ -120,7 +120,7 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
 The functionality provided may be grouped by:
 
-+  *Interactive commands:* ~org-ql-search~, ~org-ql-view~, =org-ql-sparse-tree=.
++  *Interactive commands:* ~org-ql-search~, ~org-ql-view~, =org-ql-sparse-tree=, =helm-org-ql=.
 +  *Non-interactive functions and macros:*
      -  ~org-ql~ (macro)
      -  ~org-ql-select~ (function)
@@ -137,6 +137,8 @@ Alternatively, they may be grouped by:
      -  ~org-ql-agenda~ (macro)
 +  *Showing a tree in a buffer:*
      -  =org-ql-sparse-tree= (command)
++  *Showing results with Helm*:
+     -  =helm-org-ql= (command)
 +  *Returning a list of matches or acting on them:*
      -  ~org-ql~ (macro)
      -  ~org-ql-select~ (function)
@@ -176,6 +178,16 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 Here's an example of using it to generate an agenda-like view for certain files in a directory tree:
 
 [[images/org-ql-search-snippet.png]]
+
+*** helm-org-ql
+
+This command displays matches with Helm.  *Note:* Helm is not a package dependency, so this command only works if the package =helm-org= is installed.
+
+Note also that queries in this command are specially handled so that quotes around strings may be omitted for ease of typing.
+
++  Press =C-x C-s= in the Helm session to save the results to an =org-ql-search= buffer.
+
+[[images/helm-org-ql.gif]]
 
 *** org-ql-view
 
@@ -462,6 +474,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 ** 0.3-pre
 
 *Added*
++  Command =helm-org-ql=.
 +  Command =org-ql-sparse-tree=, like =org-sparse-tree= for =org-ql= queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
 +  Per-buffer, per-heading tag caching, which increases the speed of tags-related queries by 6-7x.
 +  More tags-related predicates and aliases:
