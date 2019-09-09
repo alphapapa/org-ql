@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.2
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (s "1.12.0") (ts "0.2"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -683,6 +683,7 @@ Or, when possible, fix the problem."
     (save-restriction
       (org-narrow-to-subtree)
       (when (org-goto-first-child)
+        (narrow-to-region (point) (point-max))
         (catch 'found
           (org-ql-select (current-buffer)
             query
