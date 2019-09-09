@@ -321,6 +321,7 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                      (ts-adjust 'day num-days)
                                      (ts-apply :hour 23 :minute 59 :second 59))))
                         `(,pred :to ,to)))
+
                      ;; Priorities
                      (`(priority) ;; Match any defined priority by comparing to C.
                       ;; Note that we quote the comparator again for consistency.
@@ -446,6 +447,7 @@ replace the clause with a preamble."
                                  (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":STYLE:" (1+ space)
                                                                            "habit" (0+ space) eol)))
                                  nil)
+                                ;; Heading levels.
                                 (`(level ,comparator-or-num ,num)
                                  (let ((repeat (pcase comparator-or-num
                                                  ('< `(repeat 1 ,(1- num) "*"))
@@ -459,6 +461,8 @@ replace the clause with a preamble."
                                 (`(level ,num)
                                  (setq org-ql-preamble (rx-to-string `(seq bol (repeat ,num "*") " ") t))
                                  nil)
+
+                                ;; Planning lines.
                                 (`(planning . ,_)
                                  (setq org-ql-preamble org-ql-planning-regexp)
                                  ;; Return element, because the predicate still needs testing.
