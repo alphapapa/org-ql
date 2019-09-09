@@ -447,6 +447,22 @@ replace the clause with a preamble."
                                  (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":STYLE:" (1+ space)
                                                                            "habit" (0+ space) eol)))
                                  nil)
+
+                                ;; Heading text.
+                                (`(heading ,regexp)
+                                 ;; Only one regexp: match with preamble only.
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
+                                                                           ,regexp)
+                                                                     'no-group))
+                                 nil)
+                                (`(heading . ,regexps)
+                                 ;; Multiple regexps: use preamble to match against first
+                                 ;; regexp, then let the predicate match the rest.
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
+                                                                           ,(car regexps))
+                                                                     'no-group))
+                                 element)
+
                                 ;; Heading levels.
                                 (`(level ,comparator-or-num ,num)
                                  (let ((repeat (pcase comparator-or-num
