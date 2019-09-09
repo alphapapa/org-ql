@@ -275,7 +275,7 @@ function error {
     return 1
 }
 function die {
-    error "$@"
+    [[ $@ ]] && error "$@"
     exit $errors
 }
 function log {
@@ -362,7 +362,7 @@ function compile {
 
     batch-byte-compile "${project_byte_compile_files[@]}" \
         && success "Compiling finished without errors." \
-            || error "Compiling failed."
+            || error "Compilation failed."
 }
 
 function lint {
@@ -414,7 +414,7 @@ function tests {
 }
 
 function test-buttercup {
-    compile || die "Compilation required for tests."
+    compile || die
 
     verbose 1 "Running Buttercup tests..."
 
@@ -430,7 +430,7 @@ function test-buttercup {
 }
 
 function test-ert {
-    compile || die "Compilation required for tests."
+    compile || die
 
     verbose 1 "Running ERT tests..."
     debug "Test files: ${project_test_files[@]}"
