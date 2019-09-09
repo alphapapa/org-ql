@@ -411,6 +411,20 @@ RESULTS should be a list of strings as returned by
       (org-ql-expect ((habit))
         '("Practice leaping tall buildings in a single bound")))
 
+    (describe "(path)"
+      (org-ql-it "without arguments"
+        (org-ql-expect ((path))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+      (org-ql-it "with one argument"
+        (org-ql-expect ((path "data"))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+      (org-ql-it "with two matching arguments"
+        (org-ql-expect ((path "data" "tests"))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling")))
+      (org-ql-it "with two arguments, one matching"
+        (org-ql-expect ((path "data" "nope"))
+          '("Test data" "Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony" "Code" "Agenda examining" "Agenda censoring" "Auto grouping" "Auto categories" "Date" "Effort" "Misc" "let-plist" "Profiling"))))
+
     (describe "(planning)"
 
       (org-ql-it "without arguments"

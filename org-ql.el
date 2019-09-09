@@ -783,6 +783,15 @@ Or, when possible, fix the problem."
       (null t)
       (otherwise (member category categories)))))
 
+(org-ql--defpred path (&rest regexps)
+  "Return non-nil if current heading's buffer's filename path matches any of REGEXPS (regexp strings).
+Without arguments, return non-nil if buffer is file-backed."
+  (when (buffer-file-name)
+    (cl-typecase regexps
+      (null t)
+      (list (cl-loop for regexp in regexps
+                     thereis (string-match regexp (buffer-file-name)))))))
+
 (org-ql--defpred todo (&rest keywords)
   "Return non-nil if current heading is a TODO item.
 With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strings)."
