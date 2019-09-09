@@ -13,11 +13,5 @@ endif
 
 # * Rules
 
-# Unless/until I add Cask support to makem.sh, I'm keeping this,
-# because Cask lets me run the tests with a different version of Org
-# than I have installed personally.
-cask:
-	@cask exec buttercup -L .
-
 %:
 	@./makem.sh $(VERBOSE) $(@)

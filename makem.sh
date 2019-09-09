@@ -272,6 +272,7 @@ function debug {
 function error {
     echo_color red "ERROR ($(ts)): $@" >&2
     ((errors++))
+    return 1
 }
 function die {
     error "$@"
@@ -353,7 +354,11 @@ function all {
 }
 
 function compile {
+    [[ $compile ]] || return 0
+    unset compile  # Only compile once.
+
     verbose 1 "Compiling..."
+    debug "Byte-compile files: ${project_byte_compile_files[@]}"
 
     batch-byte-compile "${project_byte_compile_files[@]}" \
         && success "Compiling finished without errors." \
@@ -409,6 +414,8 @@ function tests {
 }
 
 function test-buttercup {
+    compile || die "Compilation required for tests."
+
     verbose 1 "Running Buttercup tests..."
 
     local buttercup_file="$(elisp-buttercup-file)"
@@ -423,14 +430,10 @@ function test-buttercup {
 }
 
 function test-ert {
-    # Run ERT tests.
-    debug "Test files: ${project_test_files[@]}"
-    debug "Byte-compile files: ${project_byte_compile_files[@]}"
-    debug "Compile: $compile"
-
-    [[ $compile ]] && compile
+    compile || die "Compilation required for tests."
 
     verbose 1 "Running ERT tests..."
+    debug "Test files: ${project_test_files[@]}"
 
     run_emacs \
         $(load-files-args "${project_test_files[@]}") \
