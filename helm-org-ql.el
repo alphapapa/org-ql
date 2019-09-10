@@ -91,7 +91,8 @@ Based on `helm-map'.")
 ;;;; Commands
 
 ;;;###autoload
-(cl-defun helm-org-ql (buffers-files &optional (no-and current-prefix-arg))
+(cl-defun helm-org-ql (buffers-files
+                       &optional (no-and current-prefix-arg) (name "helm-org-ql"))
   "Display results in BUFFERS-FILES for an `org-ql' query using Helm.
 Interactively, search the current buffer.
 
@@ -128,7 +129,7 @@ Is transformed into this query:
                                                    "AND"))
           :sources
           ;; Expansion of `helm-build-sync-source' macro.
-          (helm-make-source "helm-org-ql-agenda-files" 'helm-source-sync
+          (helm-make-source name 'helm-source-sync
             :candidates #'(lambda nil
                             (let* ((query (helm-org-ql--input-to-query helm-pattern no-and))
                                    (window-width (window-width (helm-window))))
@@ -150,14 +151,15 @@ Is transformed into this query:
 (defun helm-org-ql-agenda-files ()
   "Search agenda files with `helm-org-ql', which see."
   (interactive)
-  (helm-org-ql (org-agenda-files)))
+  (helm-org-ql (org-agenda-files) nil "helm-org-ql-agenda-files"))
 
 ;;;###autoload
 (defun helm-org-ql-org-directory ()
   "Search Org files in `org-directory' with `helm-org-ql'."
   (interactive)
   (helm-org-ql (directory-files org-directory 'full
-                                (rx ".org" eos))))
+                                (rx ".org" eos))
+               nil "helm-org-ql-org-directory"))
 
 (defun helm-org-ql-show-marker (marker)
   "Show heading at MARKER."
