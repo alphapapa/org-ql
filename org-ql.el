@@ -214,9 +214,6 @@ returns nil or non-nil."
                       `(lambda (&rest _ignore)
                          ,action)))
                     (_ (user-error "Invalid action form: %s" action))))
-          ;; TODO: Figure out how to use or reimplement the org-scanner-tags feature.
-          ;; (org-use-tag-inheritance t)
-          ;; (org-trust-scanner-tags t)
           (org-ql--today (ts-now))
           (items (->> buffers
                       (--map (with-current-buffer it
@@ -812,8 +809,6 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
 (org-ql--defpred tags (&rest tags)
   "Return non-nil if current heading has one or more of TAGS (a list of strings).
 Tests both inherited and local tags."
-  ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
-  ;; to run `org-get-tags' for every heading, especially with inheritance.
   (cl-macrolet ((tags-p (tags)
                         `(and ,tags
                               (not (eq 'org-ql-nil ,tags)))))
@@ -829,8 +824,6 @@ Tests both inherited and local tags."
 (org-ql--defpred tags-inherited (&rest tags)
   "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any inherited tags."
-  ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
-  ;; to run `org-get-tags' for every heading, especially with inheritance.
   (cl-macrolet ((tags-p (tags)
                         `(and ,tags
                               (not (eq 'org-ql-nil ,tags)))))
@@ -843,8 +836,6 @@ If TAGS is nil, return non-nil if heading has any inherited tags."
 (org-ql--defpred tags-local (&rest tags)
   "Return non-nil if current heading's local tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any local tags."
-  ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
-  ;; to run `org-get-tags' for every heading, especially with inheritance.
   (cl-macrolet ((tags-p (tags)
                         `(and ,tags
                               (not (eq 'org-ql-nil ,tags)))))
