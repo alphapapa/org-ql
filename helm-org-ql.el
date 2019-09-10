@@ -42,6 +42,7 @@
 ;; Declare Helm functions since Helm may not be installed.
 (declare-function helm "ext:helm")
 (declare-function helm-run-after-exit "ext:helm")
+(declare-function helm-window "ext:helm-lib")
 (declare-function helm-buffer-get "ext:helm-lib")
 (declare-function helm-make-source "ext:helm-source")
 (declare-function helm-org-goto-marker "ext:helm-org")
