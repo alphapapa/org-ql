@@ -488,6 +488,9 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Predicate =heading= now accepts multiple regexps, which are matched with boolean =AND=.
 +  Predicate =regexp= now matches its regexp arguments with boolean =AND=.
 
+*Fixed*
++  Predicate =heading= now matches only against heading text, i.e. not including tags at the end of the line, to-do keyword, etc.
+
 ** 0.2.1
 
 *Fixed*
