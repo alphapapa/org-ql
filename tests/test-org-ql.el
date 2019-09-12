@@ -411,6 +411,16 @@ RESULTS should be a list of strings as returned by
       (org-ql-expect ((habit))
         '("Practice leaping tall buildings in a single bound")))
 
+    (describe "(heading)"
+      (org-ql-it "with one argument"
+        (org-ql-expect ((heading "world"))
+          ;; NOTE: This--correctly--does not match the "Skype with president of
+          ;; Antarctica" heading, which has the tag ":world:" in its heading line.
+          '("Take over the world")))
+      (org-ql-it "with two arguments"
+        (org-ql-expect ((heading "Take over" "world"))
+          '("Take over the world"))))
+
     (describe "(path)"
       (org-ql-it "without arguments"
         (org-ql-expect ((path))
