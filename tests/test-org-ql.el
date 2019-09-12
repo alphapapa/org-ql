@@ -512,19 +512,19 @@ RESULTS should be a list of strings as returned by
           '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
 
       (org-ql-it "with 2 arguments"
-        (org-ql-expect ((regexp "Take over" "pizza")
+        (org-ql-expect ((regexp "Take over" "universe")
                         :sort todo)
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut")))
+          '("Take over the universe")))
 
       (org-ql-it "with a plain string"
         (org-ql-expect ("Take over"
                         :sort todo)
           '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
 
-      (org-ql-it "with two plain strings"
-        (org-ql-expect ((or "Take over" "pizza")
+      (org-ql-it "with two plain strings in an OR"
+        (org-ql-expect ((or "Take over" "universe")
                         :sort todo)
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Order a pizza" "Get haircut"))))
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut"))))
 
     (describe "(scheduled)"
 

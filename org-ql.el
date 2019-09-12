@@ -427,9 +427,9 @@ replace the clause with a preamble."
                                  ;; Return element, because the predicate still needs testing.
                                  element)
                                 (`(regexp . ,regexps)
-                                 (setq org-ql-preamble (s-join "\\|" regexps))
-                                 ;; Return nil, because we don't need to test the predicate.
-                                 nil)
+                                 ;; Search for first regexp, then confirm with predicate.
+                                 (setq org-ql-preamble (car regexps))
+                                 element)
                                 (`(todo . ,(and todo-keywords (guard todo-keywords)))
                                  ;; FIXME: With case-folding, a query like (todo "WAITING") can find a
                                  ;; non-todo heading named "Waiting".  For correctness, we could test the
@@ -910,15 +910,15 @@ priority."
   (org-is-habit-p))
 
 (org-ql--defpred regexp (&rest regexps)
-  "Return non-nil if current entry matches one of REGEXPS (regexp strings)."
+  "Return non-nil if current entry matches all of REGEXPS (regexp strings)."
   (let ((end (or (save-excursion
                    (outline-next-heading))
                  (point-max))))
     (save-excursion
       (goto-char (line-beginning-position))
       (cl-loop for regexp in regexps
-               thereis (save-excursion
-                         (re-search-forward regexp end t))))))
+               always (save-excursion
+                        (re-search-forward regexp end t))))))
 
 (org-ql--defpred heading (&rest regexps)
   "Return non-nil if current entry's heading matches all REGEXPS (regexp strings)."
