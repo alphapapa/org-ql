@@ -481,6 +481,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Variable =org-ql-block-header=, which overrides the default header in =org-ql-block= agenda blocks.
 +  Predicate =(path)=.
 +  Option =org-ql-views= may now be customized in a guided, structured way with the customization UI (e.g. =M-x customize-option RET org-ql-views RET=, or press =c= in the =org-ql-view-sidebar= buffer).
++  Enable more Org Agenda commands in =org-ql-view= buffers (e.g. setting deadlines and scheduling).  (Fixes [[https://github.com/alphapapa/org-ql/issues/35][#35]].  Thanks to [[https://github.com/mz-pdm][Milan Zamazal]] and [[https://github.com/mskorzhinskiy][Mikhail Skorzhinskii]].)
 
 *Changed*
 +  Predicate =heading= now accepts multiple regexps, which are matched with boolean =AND=.
