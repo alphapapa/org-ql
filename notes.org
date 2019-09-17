@@ -286,6 +286,10 @@ Another idea for it is to simply store the element from =org-element-headline-pa
 
 The code that powers the customization UI.  Has collapsible and customizable widgets.  Might be perfect.  Might even enable editing items in the list, with functions to make the changes in the source  buffers.
 
+*** TODO Experiment with =hierarchy=
+
+[[https://github.com/DamienCassou/hierarchy][hierarchy.el]] might be very helpful for implementing a hierarchy UI.  Maybe the =parentfn= could be used to create sections easily.
+
 *** Code idea
 
 Inserting items into a view could look something like this:
