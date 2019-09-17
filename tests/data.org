@@ -130,6 +130,44 @@ I don't know when I'll get to this, so it's undated.
 * Code
 
 #+BEGIN_SRC elisp
+  (cl-defun ap/org-tweak-timestamps (&key (offset 0) epoch-ts)
+    "Advance all timestamps in the current buffer as if the earliest one was on today.
+  OFFSET changes which timestamp (in chronological order) is set to
+  today.  Or, if EPOCH-TS is non-nil, use it as the new zero-point
+  for today."
+    (let* ((tss (->> (org-with-wide-buffer
+                      (goto-char (point-min))
+                      (cl-loop while (re-search-forward org-ts-regexp-both nil t)
+                               collect (ts-parse-org (match-string 0))))
+                     (-sort #'ts<)))
+           (epoch-ts (if epoch-ts
+                         (ts-parse-org epoch-ts)
+                       (nth offset tss)))
+           (difference-secs (ts-diff (ts-now) epoch-ts))
+           (days (floor (/ difference-secs 86400))))
+      (org-with-wide-buffer
+       (goto-char (point-min))
+       (while (re-search-forward org-ts-regexp-both nil t)
+         (let* ((ts (ts-parse-org (match-string 0)))
+                (timed-p (string-match-p (rx (repeat 2 digit) ":" (repeat 2 digit) (or ">" "]")) (match-string 0)))
+                (type (cond ((string-prefix-p "<" (match-string 0)) 'active)
+                            ((string-prefix-p "[" (match-string 0)) 'inactive)
+                            (t (error "Unknown ts type"))))
+                (brackets (cl-ecase type
+                            ('active (cons "<" ">"))
+                            ('inactive (cons "[" "]"))))
+                (format-string (concat (car brackets)
+                                       (if timed-p
+                                           "%Y-%m-%d %a %H:%M"
+                                         "%Y-%m-%d %a")
+                                       (cdr brackets)))
+                (new-ts (ts-adjust 'day days ts))
+                (new-ts-string (ts-format format-string new-ts)))
+           (replace-match new-ts-string t t nil 0))))
+      (message "Tweaked from epoch: %s" (ts-format epoch-ts))))
+#+END_SRC
+
+#+BEGIN_SRC elisp
 (org-time-string-to-absolute (org-entry-get (point) "SCHEDULED"))
 #+END_SRC
 
