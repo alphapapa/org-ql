@@ -198,22 +198,34 @@ RESULTS should be a list of strings as returned by
     (describe "(level)"
       (it "with a number"
         (expect (org-ql--query-preamble '(level 2))
-                :to-equal `(t ,(rx bol (repeat 2 "*") " "))))
+                :to-equal (list :query t
+                                :preamble (rx bol (repeat 2 "*") " ")
+                                :preamble-case-fold t)))
       (it "with two numbers"
         (expect (org-ql--query-preamble '(level 2 4))
-                :to-equal `(t ,(rx bol (repeat 2 4 "*") " "))))
+                :to-equal (list :query t
+                                :preamble (rx bol (repeat 2 4 "*") " ")
+                                :preamble-case-fold t)))
       (it "<"
         (expect (org-ql--query-preamble '(level < 3))
-                :to-equal `(t ,(rx bol (repeat 1 2 "*") " "))))
+                :to-equal (list :query t
+                                :preamble (rx bol (repeat 1 2 "*") " ")
+                                :preamble-case-fold t)))
       (it "<="
         (expect (org-ql--query-preamble '(level <= 2))
-                :to-equal `(t ,(rx bol (repeat 1 2 "*") " "))))
+                :to-equal (list :query t
+                                :preamble (rx bol (repeat 1 2 "*") " ")
+                                :preamble-case-fold t)))
       (it ">"
         (expect (org-ql--query-preamble '(level > 2))
-                :to-equal `(t ,(rx bol (>= 3 "*") " "))))
+                :to-equal (list :query t
+                                :preamble (rx bol (>= 3 "*") " ")
+                                :preamble-case-fold t)))
       (it ">="
         (expect (org-ql--query-preamble '(level >= 2))
-                :to-equal `(t ,(rx bol (>= 2 "*") " "))))))
+                :to-equal (list :query t
+                                :preamble (rx bol (>= 2 "*") " ")
+                                :preamble-case-fold t)))))
 
   (describe "Query results"
 

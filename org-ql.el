@@ -193,7 +193,7 @@ returns nil or non-nil."
                         ;; Ignore special/hidden buffers.
                         (--remove (string-prefix-p " " (buffer-name it)))))
           (query (org-ql--pre-process-query query))
-          ((query preamble-re) (org-ql--query-preamble query))
+          ((&plist :query :preamble :preamble-case-fold) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
           (action (pcase action
                     ;; NOTE: These two lambdas are backquoted to prevent "unused lexical
@@ -219,7 +219,7 @@ returns nil or non-nil."
                       (--map (with-current-buffer it
                                (unless (derived-mode-p 'org-mode)
                                  (user-error "Not an Org buffer: %s" (buffer-name)))
-                               (org-ql--select-cached :query query :preamble-re preamble-re
+                               (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
                                                       :predicate predicate :action action :narrow narrow)))
                       (-flatten-n 1))))
     ;; Sort items
@@ -402,13 +402,14 @@ predicates."
         ,query))))
 
 (defun org-ql--query-preamble (query)
-  "Return (QUERY PREAMBLE) for QUERY.
+  "Return plist (QUERY PREAMBLE PREAMBLE-CASE-FOLD) for QUERY.
 When QUERY has a clause with a corresponding preamble, and it's
 appropriate to use one (i.e. the clause is not in an `or'),
 replace the clause with a preamble."
   (pcase org-ql-use-preamble
-    ('nil (list query nil))
-    (_ (let (org-ql-preamble)
+    ('nil (list :query query :preamble nil))
+    (_ (let ((preamble-case-fold t)
+             org-ql-preamble)
          (cl-labels ((rec (element)
                           (or (when org-ql-preamble
                                 ;; Only one preamble is allowed
@@ -431,14 +432,10 @@ replace the clause with a preamble."
                                  (setq org-ql-preamble (car regexps))
                                  element)
                                 (`(todo . ,(and todo-keywords (guard todo-keywords)))
-                                 ;; FIXME: With case-folding, a query like (todo "WAITING") can find a
-                                 ;; non-todo heading named "Waiting".  For correctness, we could test the
-                                 ;; predicate anyway, but that would negate some of the speed, and in
-                                 ;; most cases it probably won't matter, so I'm leaving it this way for
-                                 ;; now.  Maybe we should use a special variable to control case-folding.
-                                 (setq org-ql-preamble
+                                 (setf org-ql-preamble
                                        (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol))
-                                                     t))
+                                                     t)
+                                       preamble-case-fold nil)
                                  ;; Return nil, don't test the predicate.
                                  nil)
                                 (`(habit)
@@ -494,6 +491,7 @@ replace the clause with a preamble."
                                  nil)
                                 (`(priority ,letter)
                                  ;; Specific priority without comparator.
+                                 ;; MAYBE: Disable case-folding.
                                  (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank)
                                                                            (optional (1+ upper) (1+ blank))
                                                                            "[#" ,letter "]") t))
@@ -517,6 +515,7 @@ replace the clause with a preamble."
                                    nil))
 
                                 ;; Properties.
+                                ;; MAYBE: Should case folding be disabled for properties?  What about values?
                                 (`(property ,property ,value)
                                  ;; We do NOT return nil, because the predicate still needs to be tested,
                                  ;; because the regexp could match a string not inside a property drawer.
@@ -572,17 +571,17 @@ replace the clause with a preamble."
                               `((or)))
                           t)
                          (query (-flatten-n 1 query))))
-           (list query org-ql-preamble))))))
+           (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold))))))
 
 (defun org-ql--select-cached (&rest args)
   "Return results for ARGS and current buffer using cache."
   ;; MAYBE: Timeout cached queries.  Probably not necessarily since they will be removed when a
   ;; buffer is closed, or when a query is run after modifying a buffer.
-  (-let* (((&plist :query :preamble-re :action :narrow) args)
+  (-let* (((&plist :query :preamble :action :narrow :preamble-case-fold) args)
           (query-cache-key
            ;; The key must include the preamble, because some queries are replaced by
            ;; the preamble, leaving a nil query, which would make the key ambiguous.
-           (list :query query :preamble-re preamble-re :action action
+           (list :query query :preamble preamble :action action :preamble-case-fold preamble-case-fold
                  (if narrow
                      ;; Use bounds of narrowed portion of buffer.
                      (cons (point-min) (point-max))
@@ -607,7 +606,8 @@ replace the clause with a preamble."
               (t (puthash query-cache-key (or new-result 'org-ql-nil) query-cache)))
         new-result))))
 
-(cl-defun org-ql--select (&key preamble-re predicate action narrow &allow-other-keys)
+(cl-defun org-ql--select (&key preamble preamble-case-fold predicate action narrow
+                               &allow-other-keys)
   "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
 If NARROW is non-nil, buffer will not be widened."
   ;; Since the mappings are stored in the variable `org-ql-predicates', macros like `flet'
@@ -643,11 +643,12 @@ If NARROW is non-nil, buffer will not be widened."
                       (message "org-ql: No headings in buffer: %s" (current-buffer)))
                     nil)
                 ;; Find matching entries.
-                (cond (preamble-re (cl-loop while (re-search-forward preamble-re nil t)
-                                            do (outline-back-to-heading 'invisible-ok)
-                                            when (funcall predicate)
-                                            collect (funcall action)
-                                            do (outline-next-heading)))
+                (cond (preamble (let ((case-fold-search preamble-case-fold))
+                                  (cl-loop while (re-search-forward preamble nil t)
+                                           do (outline-back-to-heading 'invisible-ok)
+                                           when (funcall predicate)
+                                           collect (funcall action)
+                                           do (outline-next-heading))))
                       (t (cl-loop when (funcall predicate)
                                   collect (funcall action)
                                   while (outline-next-heading))))))))

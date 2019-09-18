@@ -490,6 +490,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 *Fixed*
 +  Predicate =heading= now matches only against heading text, i.e. not including tags at the end of the line, to-do keyword, etc.
++  Predicate =todo= now matches case-sensitively, avoiding non-todo-keyword matches (e.g. a heading which begins =Waiting on= will no longer match for a todo keyword =WAITING=).
 
 ** 0.2.1
 
