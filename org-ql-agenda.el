@@ -119,6 +119,17 @@ e.g. `org-ql-search' as desired."
   :type '(alist :key-type string
                 :value-type function))
 
+(defcustom org-ql-agenda-format-function
+  #'org-ql-agenda-default-format-function
+  "Function used to format entries in `org-ql-agenda-block'.
+
+This function receives two arguments: a map-like data containing
+strings which can be used for formatting agenda entries, and a plist
+returned by `org-element-headline-parser'.
+"
+  :group 'org-ql
+  :type 'function)
+
 ;;;; Macros
 
 ;; TODO: DRY these two macros.
@@ -524,6 +535,8 @@ return an empty string."
                                 for symbol = (intern (cl-subseq (symbol-name key) 1))
                                 unless (member symbol '(parent))
                                 append (list symbol val)))
+           (marker (or (org-element-property :org-hd-marker element)
+                       (org-element-property :org-marker element)))
            ;; TODO: --add-faces is used to add the :relative-due-date property, but that fact is
            ;; hidden by doing it through --add-faces (which calls --add-scheduled-face and
            ;; --add-deadline-face), and doing it in this form that gets the title hides it even more.
@@ -539,8 +552,7 @@ return an empty string."
                          ;; NOTE: Tag inheritance cannot be used here unless markers are added, otherwise
                          ;; we can't go to the item's buffer to look for inherited tags.  (Or does
                          ;; `org-element-headline-parser' parse inherited tags too?  I forget...)
-                         (if-let ((marker (or (org-element-property :org-hd-marker element)
-                                              (org-element-property :org-marker element))))
+                         (if marker
                              (with-current-buffer (marker-buffer marker)
                                ;; I wish `org-get-tags' used the correct buffer automatically.
                                (org-get-tags marker (not org-use-tag-inheritance)))
@@ -554,7 +566,6 @@ return an empty string."
                               (s-join ":" it)
                               (s-wrap it ":")
                               (org-add-props it nil 'face 'org-tag))))
-           ;;  (category (org-element-property :category element))
            (priority-string (-some->> (org-element-property :priority element)
                                       (char-to-string)
                                       (format "[#%s]")
@@ -565,7 +576,17 @@ return an empty string."
            (due-string (pcase (org-element-property :relative-due-date element)
                          ('nil "")
                          (string (format " %s " (org-add-props string nil 'face 'org-ql-agenda-due-date)))))
-           (string (s-join " " (-non-nil (list todo-keyword priority-string title due-string tag-string)))))
+           (category (when marker
+                       (with-current-buffer (marker-buffer marker)
+                         (org-get-category marker))))
+           (string (funcall org-ql-agenda-format-function
+                            `((todo . ,todo-keyword)
+                              (priority . ,priority-string)
+                              (title . ,title)
+                              (due . ,due-string)
+                              (tags . ,tag-string)
+                              (category . ,category))
+                            element)))
       (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
       ;; Add all the necessary properties and faces to the whole string
       (--> string
@@ -575,6 +596,20 @@ return an empty string."
              'todo-state todo-keyword
              'tags tag-list
              'org-habit-p habit-property)))))
+
+(defun org-ql-agenda-default-format-function (map _element)
+  "Default function used to format entries in org-ql-agenda.
+
+MAP is a map-like data structure containing some information
+commonly used for agenda entries, which can be accessed using
+`map-elt' function from map.el.
+
+This should be the default value for `org-ql-agenda-format-function'."
+  (s-join " " (-non-nil (list (map-elt map 'todo)
+                              (map-elt map 'priority)
+                              (map-elt map 'title)
+                              (map-elt map 'due)
+                              (map-elt map 'tags)))))
 
 (defun org-ql-agenda--add-faces (element)
   "Return ELEMENT with deadline and scheduled faces added."
