@@ -131,16 +131,14 @@ Is transformed into this query:
           :sources
           ;; Expansion of `helm-build-sync-source' macro.
           (helm-make-source name 'helm-source-sync
-            :candidates #'(lambda nil
-                            (let* ((query (helm-org-ql--input-to-query helm-pattern no-and))
-                                   (window-width (window-width (helm-window))))
-                              (when query
-                                (with-current-buffer (helm-buffer-get)
-                                  (setq helm-org-ql-buffers-files buffers-files))
-                                (ignore-errors
-                                  ;; Ignore errors that might be caused by partially typed queries.
-                                  (org-ql-select buffers-files query
-                                    :action (list 'helm-org-ql--heading window-width))))))
+            :candidates (lambda nil
+                          (let* ((query (helm-org-ql--input-to-query helm-pattern no-and))
+                                 (window-width (window-width (helm-window))))
+                            (when query
+                              (with-current-buffer (helm-buffer-get)
+                                (setq helm-org-ql-buffers-files buffers-files))
+                              (org-ql-select buffers-files query
+                                :action (list 'helm-org-ql--heading window-width)))))
             :match #'identity
             :fuzzy-match nil
             :multimatch nil

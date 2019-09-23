@@ -118,23 +118,13 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
 * Usage
 
-The functionality provided may be grouped by:
-
-+  *Interactive commands:* ~org-ql-search~, ~org-ql-view~, =org-ql-sparse-tree=, =helm-org-ql=.
-+  *Non-interactive functions and macros:*
-     -  ~org-ql~ (macro)
-     -  ~org-ql-select~ (function)
-     -  ~org-ql-query~ (function)
-     -  ~org-ql-agenda~ (macro)
-     -  ~org-ql-block~ (agenda function)
-
-Alternatively, they may be grouped by:
+These commands and functions are included:
 
 +  *Showing an agenda-like view:*
      -  ~org-ql-search~ (command)
      -  ~org-ql-view~ (command)
-     -  ~org-ql-block~ (agenda function)
-     -  ~org-ql-agenda~ (macro)
+     -  =org-ql-view-sidebar= (command)
+     -  ~org-ql-block~ (agenda block function)
 +  *Showing a tree in a buffer:*
      -  =org-ql-sparse-tree= (command)
 +  *Showing results with Helm*:
@@ -192,6 +182,12 @@ Note also that queries in this command are specially handled so that quotes arou
 *** org-ql-view
 
 Choose and display a view stored in ~org-ql-views~.
+
+*** org-ql-view-sidebar
+
+Show a sidebar window listing views stored in =org-ql-views= for easy access.  In the sidebar, press =RET= or =mouse-1= to show the view at point, and press =c= to customize the view at point.
+
+[[images/org-ql-view-sidebar.gif]]
 
 *** org-ql-view-recent-items
 
@@ -476,6 +472,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 *Added*
 +  Command =helm-org-ql=.
 +  Command =org-ql-sparse-tree=, like =org-sparse-tree= for =org-ql= queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
++  Command =org-ql-view-sidebar=.
 +  Per-buffer, per-heading tag caching, which increases the speed of tags-related queries by 6-7x.
 +  More tags-related predicates and aliases:
      -  For inherited tags: =tags-inherited=, =inherited-tags=, =tags-i=, =itags=.
@@ -483,14 +480,22 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
      -  =tags-all=, =tags&=: Matches all given tags using boolean =AND= (rather than boolean =OR=, which the =tags= predicate uses).
 +  Variable =org-ql-block-header=, which overrides the default header in =org-ql-block= agenda blocks.
 +  Predicate =(path)=.
++  Option =org-ql-views= may now be customized in a guided, structured way with the customization UI (e.g. =M-x customize-option RET org-ql-views RET=, or press =c= in the =org-ql-view-sidebar= buffer).
 
 *Changed*
 +  Predicate =heading= now accepts multiple regexps, which are matched with boolean =AND=.
 +  Predicate =regexp= now matches its regexp arguments with boolean =AND=.
++  Package =org-super-agenda= is now a dependency.  This removes the need for awkward code to handle the case where it's not installed, and makes grouping features always available.  Of course, the global minor mode =org-super-agenda-mode= is not activated by =org-ql=, so no behavior is changed in Org Agenda or =org-ql=; it only means that commands like =org-ql-search= will always provide grouping when called with the appropriate arguments.
+
+*Removed*
++  Macro =org-ql-agenda=.  Instead, use function =org-ql-search=.  See also command =org-ql-view=, etc.
 
 *Fixed*
 +  Predicate =heading= now matches only against heading text, i.e. not including tags at the end of the line, to-do keyword, etc.
 +  Predicate =todo= now matches case-sensitively, avoiding non-todo-keyword matches (e.g. a heading which begins =Waiting on= will no longer match for a todo keyword =WAITING=).
+
+*Internal*
++  Refactored code from file =org-ql-agenda.el= into files =org-ql-search.el= and =org-ql-view.el=.  Function and variable names have been changed accordingly.
 
 ** 0.2.1
 

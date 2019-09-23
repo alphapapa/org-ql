@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 ;; Version: 0.3-pre
-;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (s "1.12.0") (ts "0.2"))
+;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (org-super-agenda "1.2-pre") (ov "1.0.6") (s "1.12.0") (ts "0.2"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -162,7 +162,7 @@ point at the beginning of its heading.  It may be:
 - `element-with-markers': Equivalent to calling
   `org-element-headline-parser', with markers added using
   `org-ql--add-markers'.  Suitable for formatting with
-  `org-ql-agenda--format-element', allowing insertion into an Org
+  `org-ql-view--format-element', allowing insertion into an Org
   Agenda-like buffer.
 
 - A sexp, which will be byte-compiled into a lambda function.
@@ -247,7 +247,7 @@ are returned by this function.  It may be:
 - `element-with-markers': Equivalent to
   `org-element-headline-parser', with markers added using
   `org-ql--add-markers'.  Suitable for formatting with
-  `org-ql-agenda--format-element', allowing insertion into an Org
+  `org-ql-view--format-element', allowing insertion into an Org
   Agenda-like buffer.
 
 - A sexp, which will be byte-compiled into a lambda function.
