@@ -2,87 +2,9 @@
 
 * Tasks
 
-** TODO [#C] Test caching
+** TODO [#A] Document sorters
 
-See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
-
-** TODO [#A] Helm command
-
-In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
-
-*** TODO Add
-
-*** TODO Demonstrate
-
-** TODO [#B] Timeline view
-
-e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
-
-#+BEGIN_SRC elisp
-  (cl-defun org-ql-timeline (buffers-files query)
-    (let ((results
-           (org-ql-select buffers-files
-             query :action
-             (lambda ()
-               (let* ((heading-string
-                       (->> (org-element-headline-parser
-                             (line-end-position))
-                            org-ql--add-markers
-                            org-ql-agenda--format-element))
-                      (timestamps
-                       (cl-loop with limit = (org-entry-end-position)
-                                while (re-search-forward org-ts-regexp-both
-                                                         limit t)
-                                collect (ts-parse-org (match-string 0))))
-                      (timestamp-strings
-                       (->> timestamps
-                            (-sort #'ts<)
-                            (--map (concat " " (ts-format it))))))
-                 (s-join "\n" (cons heading-string timestamp-strings))))
-             :sort '(date))))
-      (org-ql-agenda--agenda nil nil :strings results)))
-
-  (org-ql-timeline (org-agenda-files)
-                   '(and "Emacs" (ts)))
-
-  ;; More timeline-like version, organized by date rather than task.
-
-  (cl-defun org-ql-timeline* (buffers-files query &key filter-ts)
-    (let* ((ts-ht (ht))
-           (results (org-ql-select buffers-files
-                      query
-                      :action (lambda ()
-                                (let* ((heading-string
-                                        (->> (org-element-headline-parser
-                                              (line-end-position))
-                                             org-ql--add-markers
-                                             org-ql-agenda--format-element))
-                                       (date-timestamps
-                                        ;; Each one set to 00:00:00.
-                                        (cl-loop with limit = (org-entry-end-position)
-                                                 while (re-search-forward org-ts-regexp-both
-                                                                          limit t)
-                                                 collect (->> (match-string 0)
-                                                              ts-parse-org
-                                                              (ts-apply :hour 0 :minute 0 :second 0)))))
-                                  (setf date-timestamps (delete-dups date-timestamps))
-                                  (when filter-ts
-                                    (setf date-timestamps (cl-remove-if-not filter-ts date-timestamps)))
-                                  (--each date-timestamps
-                                    (push heading-string (gethash it ts-ht)))))))
-           (tss-sorted (-sort #'ts< (ht-keys ts-ht)))
-           (strings (cl-loop for ts in tss-sorted
-                             collect (concat "\n"
-                                             (propertize (ts-format "%Y-%m-%d" ts)
-                                                         'face 'org-agenda-structure))
-                             append (ht-get ts-ht ts))))
-      (org-ql-agenda--agenda nil nil :strings strings)))
-
-  (org-ql-timeline* (org-agenda-files)
-                    '(ts :from -14)
-                    :filter-ts `(lambda (ts)
-                                  (ts<= ,(ts-adjust 'day -14 (ts-now)) ts)))
-#+END_SRC
+Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
 
 ** TODO [#A] Outline path in buffers-files arg
 
@@ -94,10 +16,6 @@ e.g.
 #+END_SRC
 
 Also, should support an ~id~ one.
-
-** TODO [#B] Update view screenshots
-
-e.g. doesn't currently show the =View= header.
 
 ** TODO [#A] Tools for saving queries and accessing them [2/4]
 
@@ -119,6 +37,28 @@ This would be useful for having a menu of saved queries as Org links, or even bo
 **** TODO For saved queries
 
 *** TODO Bookmarks
+
+** TODO [#B] Add more sorters?
+
++  [ ] =category=
++  [ ] Any date :: e.g. it would search for timestamps (active/inactive?) anywhere in an entry
+
+** TODO [#B] Default sort
+
+Would probably be useful to have a default sort option.
+
+** TODO [#B] Normalize queries
+
+[2019-07-16 Tue 11:49]  This serves two purposes:
+
+1.  Equivalent queries will return the same results from the cache.
+2.  The selectors that can be converted to the fastest preamble regexps will be sorted first, so the fastest preamble will be used.  Although this may not always be straightforward.  For example, in a file with only a few =TODO= items, the ~(todo "TODO")~ selector would convert to a preamble that would quickly search through the file.  But if there were a thousand =TODO= items, it wouldn't be as much of a benefit, and a ~(regexp "something")~ selector's preamble might be much faster, depending on how many times =something= appears in the file.
+
+So the second purpose might actually be a drawback, because it would prevent users from optimizing their queries with knowledge of their data.  Maybe there should be an option to not normalize queries, so advanced users can order their selectors manually.
+
+** TODO [#B] Quickly change sorting/grouping in search views
+
+With caching, the search doesn't need to be repeated, so resorting/regrouping can be very fast.
 
 ** TODO [#B] Recursive queries
 
@@ -196,39 +136,86 @@ This works pretty well.  It needs polishing, and some refactoring so items can b
              -non-nil))))
 #+END_SRC
 
-** TODO Add more sorters?
+** TODO [#B] Timeline view
+:PROPERTIES:
+:ID:       00573552-ffe9-4608-8904-7f6c73246b6d
+:END:
 
-+  [ ] =category=
-+  [ ] Any date :: e.g. it would search for timestamps (active/inactive?) anywhere in an entry
+e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
 
-** TODO [#B] Default sort
+#+BEGIN_SRC elisp
+  (cl-defun org-ql-timeline (buffers-files query)
+    (let ((results
+           (org-ql-select buffers-files
+             query :action
+             (lambda ()
+               (let* ((heading-string
+                       (->> (org-element-headline-parser
+                             (line-end-position))
+                            org-ql--add-markers
+                            org-ql-agenda--format-element))
+                      (timestamps
+                       (cl-loop with limit = (org-entry-end-position)
+                                while (re-search-forward org-ts-regexp-both
+                                                         limit t)
+                                collect (ts-parse-org (match-string 0))))
+                      (timestamp-strings
+                       (->> timestamps
+                            (-sort #'ts<)
+                            (--map (concat " " (ts-format it))))))
+                 (s-join "\n" (cons heading-string timestamp-strings))))
+             :sort '(date))))
+      (org-ql-agenda--agenda nil nil :strings results)))
 
-Would probably be useful to have a default sort option.
+  (org-ql-timeline (org-agenda-files)
+                   '(and "Emacs" (ts)))
 
-** TODO Document sorters
+  ;; More timeline-like version, organized by date rather than task.
 
-Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
+  (cl-defun org-ql-timeline* (buffers-files query &key filter-ts)
+    (let* ((ts-ht (ht))
+           (results (org-ql-select buffers-files
+                      query
+                      :action (lambda ()
+                                (let* ((heading-string
+                                        (->> (org-element-headline-parser
+                                              (line-end-position))
+                                             org-ql--add-markers
+                                             org-ql-agenda--format-element))
+                                       (date-timestamps
+                                        ;; Each one set to 00:00:00.
+                                        (cl-loop with limit = (org-entry-end-position)
+                                                 while (re-search-forward org-ts-regexp-both
+                                                                          limit t)
+                                                 collect (->> (match-string 0)
+                                                              ts-parse-org
+                                                              (ts-apply :hour 0 :minute 0 :second 0)))))
+                                  (setf date-timestamps (delete-dups date-timestamps))
+                                  (when filter-ts
+                                    (setf date-timestamps (cl-remove-if-not filter-ts date-timestamps)))
+                                  (--each date-timestamps
+                                    (push heading-string (gethash it ts-ht)))))))
+           (tss-sorted (-sort #'ts< (ht-keys ts-ht)))
+           (strings (cl-loop for ts in tss-sorted
+                             collect (concat "\n"
+                                             (propertize (ts-format "%Y-%m-%d" ts)
+                                                         'face 'org-agenda-structure))
+                             append (ht-get ts-ht ts))))
+      (org-ql-agenda--agenda nil nil :strings strings)))
 
-** TODO Document/figure out tag inheritance
+  (org-ql-timeline* (org-agenda-files)
+                    '(ts :from -14)
+                    :filter-ts `(lambda (ts)
+                                  (ts<= ,(ts-adjust 'day -14 (ts-now)) ts)))
+#+END_SRC
 
-I think it should probably be enabled in most cases, to avoid missing results that users would expect to find, but it will reduce performance in some cases, so users should be able to turn it off when they don't need it.
+[2019-09-26 Thu 21:28]  Would probably make sense to implement this using the view-sections someday.
 
-[2018-06-12 Tue 14:32]  The docstring for ~org-map-entries~ says:
+** TODO [#B] Update view screenshots
 
-#+BEGIN_QUOTE
-If your function needs to retrieve the tags including inherited tags at the *current* entry, you can use the value of the variable ‘org-scanner-tags’ which will be much faster than getting the value with ‘org-get-tags-at’.  If your function gets properties with ‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’ to t around the call to ‘org-entry-properties’ to get the same speedup.  Note that if your function moves around to retrieve tags and properties at a *different* entry, you cannot use these techniques.
-#+END_QUOTE
+e.g. doesn't currently show the =View= header.
 
-** TODO Normalize queries
-
-[2019-07-16 Tue 11:49]  This serves two purposes:
-
-1.  Equivalent queries will return the same results from the cache.
-2.  The selectors that can be converted to the fastest preamble regexps will be sorted first, so the fastest preamble will be used.  Although this may not always be straightforward.  For example, in a file with only a few =TODO= items, the ~(todo "TODO")~ selector would convert to a preamble that would quickly search through the file.  But if there were a thousand =TODO= items, it wouldn't be as much of a benefit, and a ~(regexp "something")~ selector's preamble might be much faster, depending on how many times =something= appears in the file.
-
-So the second purpose might actually be a drawback, because it would prevent users from optimizing their queries with knowledge of their data.  Maybe there should be an option to not normalize queries, so advanced users can order their selectors manually.
-
-** TODO ~org-agenda-skip-function~
+** TODO [#C] ~org-agenda-skip-function~
 
 As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
 
@@ -271,17 +258,56 @@ As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integra
 
 I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
 
-** TODO Update commentary
+** TODO [#C] Test caching
 
-** TODO [#B] Quickly change sorting/grouping in search views
+See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
-With caching, the search doesn't need to be repeated, so resorting/regrouping can be very fast.
+** TODO [#C] Update commentary
 
-** MAYBE Fancier searching for inherited tags
+** UNDERWAY [#A] Helm command
 
-When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
+In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
 
-** MAYBE "Node" caching
+*** TODO Add
+
+*** TODO Demonstrate
+
+** UNDERWAY [#B] Implement view with tabulated-list-mode or magit-section
+
+[2019-09-02 Mon 05:20]  Especially with some of the new packages that make =tabulated-list-mode= easier to use, like =navigel=.  However, it would probably break grouping, or require some kind of adapter or extension to do grouping, so I don't know if that would work.  Something like =magit-section= would be more flexible, and could be recursively grouped, like in =magit-todos=.
+
+[2019-09-08 Sun 10:06]  Came up with a prototype yesterday, in branch =wip/view-section=.  Seems to work pretty well.
+
+One of the things in that branch is =org-ql-item=, which is a struct used to carry data for query results.  It seems to work well.
+
+Another idea for it is to simply store the element from =org-element-headline-parser= in one of its slots, and populate all of the other slots lazily, like =ts=.  It already does that for a couple of slots, but I think it makes sense to do it for all of them, to reduce the overhead of making the struct for every query result.
+
+*** TODO Experiment with =widget=
+
+The code that powers the customization UI.  Has collapsible and customizable widgets.  Might be perfect.  Might even enable editing items in the list, with functions to make the changes in the source  buffers.
+
+*** Code idea
+
+Inserting items into a view could look something like this:
+
+#+BEGIN_SRC elisp
+  (org-ql-view--insert-items
+   :header (ts-format "%Y-%m-%d" (ts-now))
+   :items (org-ql-query
+            :select #'org-ql-current-item
+            :from (org-agenda-files)
+            :where '(or (deadline auto)
+                        (scheduled :on today)
+                        (ts-active :on today)))
+   :group-by '(org-ql-item-priority
+               org-ql-item-todo))
+#+END_SRC
+
+Items would be structs, and the =group-by= argument would be a list of accessors, like how =magit-todos= works.  Arbitrary functions could also be passed to =group-by=, as whatever value the function returns is used to group them.  =org-ql-current-item= would be a function that turns the result of =org-element-headline-parser= into the struct.
+
+Not sure if it should automatically add the number of items to the header, or if that should be done manually.
+
+** MAYBE [#C] "Node" caching
 
 [2019-09-05 Thu 12:30]  At each node checked by a predicate, make a struct that stores attributes we can query for, as well as parent node position.  This would let us speed up ancestor-based queries, like =(ancestor (todo "WAITING"))=.  Ideally it would also serve as the tag hierarchy cache.
 
@@ -383,40 +409,9 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
               :action #'helm-org-goto-marker))))
 #+END_SRC
 
-** UNDERWAY Implement view with tabulated-list-mode or magit-section
+** MAYBE [#C] Fancier searching for inherited tags
 
-[2019-09-02 Mon 05:20]  Especially with some of the new packages that make =tabulated-list-mode= easier to use, like =navigel=.  However, it would probably break grouping, or require some kind of adapter or extension to do grouping, so I don't know if that would work.  Something like =magit-section= would be more flexible, and could be recursively grouped, like in =magit-todos=.
-
-[2019-09-08 Sun 10:06]  Came up with a prototype yesterday, in branch =wip/view-section=.  Seems to work pretty well.
-
-One of the things in that branch is =org-ql-item=, which is a struct used to carry data for query results.  It seems to work well.
-
-Another idea for it is to simply store the element from =org-element-headline-parser= in one of its slots, and populate all of the other slots lazily, like =ts=.  It already does that for a couple of slots, but I think it makes sense to do it for all of them, to reduce the overhead of making the struct for every query result.
-
-*** TODO Experiment with =widget=
-
-The code that powers the customization UI.  Has collapsible and customizable widgets.  Might be perfect.  Might even enable editing items in the list, with functions to make the changes in the source  buffers.
-
-*** Code idea
-
-Inserting items into a view could look something like this:
-
-#+BEGIN_SRC elisp
-  (org-ql-view--insert-items
-   :header (ts-format "%Y-%m-%d" (ts-now))
-   :items (org-ql-query
-            :select #'org-ql-current-item
-            :from (org-agenda-files)
-            :where '(or (deadline auto)
-                        (scheduled :on today)
-                        (ts-active :on today)))
-   :group-by '(org-ql-item-priority
-               org-ql-item-todo))
-#+END_SRC
-
-Items would be structs, and the =group-by= argument would be a list of accessors, like how =magit-todos= works.  Arbitrary functions could also be passed to =group-by=, as whatever value the function returns is used to group them.  =org-ql-current-item= would be a function that turns the result of =org-element-headline-parser= into the struct.
-
-Not sure if it should automatically add the number of items to the header, or if that should be done manually.
+When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
 
 ** DONE Byte-compile lambdas
 CLOSED: [2018-05-09 Wed 17:30]
@@ -534,6 +529,18 @@ Virtually indistinguishable.  Going to try moving the =byte-compile= call from t
 | org-agenda-ng--add-faces                  |          150 | 0.0144141080 | 9.609...e-05 |
 
 Doesn't seem to make any difference.
+
+** DONE Document/figure out tag inheritance
+
+I think it should probably be enabled in most cases, to avoid missing results that users would expect to find, but it will reduce performance in some cases, so users should be able to turn it off when they don't need it.
+
+[2018-06-12 Tue 14:32]  The docstring for ~org-map-entries~ says:
+
+#+BEGIN_QUOTE
+If your function needs to retrieve the tags including inherited tags at the *current* entry, you can use the value of the variable ‘org-scanner-tags’ which will be much faster than getting the value with ‘org-get-tags-at’.  If your function gets properties with ‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’ to t around the call to ‘org-entry-properties’ to get the same speedup.  Note that if your function moves around to retrieve tags and properties at a *different* entry, you cannot use these techniques.
+#+END_QUOTE
+
+[2019-09-26 Thu 21:31]  Handled with the tag caching recently implemented.
 
 ** DONE [#B] Dual matching with regexp and predicates
 :PROPERTIES:
