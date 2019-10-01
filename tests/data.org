@@ -14,40 +14,40 @@ DEADLINE: <2017-07-15 Sat -1m>
 :END:
 
 *** TODO [#A] Take over the world                                     :world:
-    DEADLINE: <2017-07-07 Fri>
+DEADLINE: <2017-07-07 Fri>
 
  I'd like to be finished with this before the weekend...
 
 **** TODO [#A] Skype with president of Antarctica            :world:meetings:
-     SCHEDULED: <2017-07-04 Tue 21:00>
+SCHEDULED: <2017-07-04 Tue 21:00>
 
   Not sure what his timezone is...
 
 *** TODO [#B] Take over Mars
 
 **** TODO Visit Mars                                    :space:travel:planet:
-     DEADLINE: <2017-09-20 Wed -3m>
+DEADLINE: <2017-09-20 Wed -3m>
 
   Ah, the red planet...
 
 *** TODO [#C] Take over the moon
 
 **** WAITING Visit the moon                                    :space:travel:
-     DEADLINE: <2017-08-27 Sun -2m>
-  :LOGBOOK:
-  -  State "WAITING"    from              [2017-07-24 Mon 19:01]
-  :END:
+DEADLINE: <2017-08-27 Sun -2m>
+:LOGBOOK:
+-  State "WAITING"    from              [2017-07-24 Mon 19:01]
+:END:
 
   Just waiting on that callback from NASA...
 
 *** TODO Practice leaping tall buildings in a single bound         :personal:
-    SCHEDULED: <2017-07-05 Wed +2d>
-    :PROPERTIES:
-    :STYLE:    habit
-    :END:
+SCHEDULED: <2017-07-05 Wed +2d>
+:PROPERTIES:
+:STYLE:    habit
+:END:
 
 *** TODO [#B] Renew membership in supervillain club
-    DEADLINE: <2017-07-10 Mon -1w>
+DEADLINE: <2017-07-10 Mon -1w>
 
 *** DONE [#B] Learn universal sign language
 CLOSED: [2017-07-05 Wed 03:02]
@@ -93,13 +93,13 @@ Gotta buy one first, though.
 :END:
 
 *** CHECK /r/emacs                                            :website:Emacs:
-    DEADLINE: <2017-07-05 Wed +1w>
+DEADLINE: <2017-07-05 Wed +1w>
 
 *** TODO Shop for groceries                             :food:shopping:@town:
-    SCHEDULED: <2017-07-05 Wed +1w>
-    :PROPERTIES:
-    :Effort:   30
-    :END:
+SCHEDULED: <2017-07-05 Wed +1w>
+:PROPERTIES:
+:Effort:   30
+:END:
 
 *** Sunrise/sunset
 
@@ -112,8 +112,8 @@ Gotta buy one first, though.
 :END:
 
 *** SOMEDAY Rewrite Emacs in Common Lisp :Emacs:elisp:computers:software:programming:
-    SCHEDULED: <2017-07-05 Wed>
-    :LOGBOOK:
+SCHEDULED: <2017-07-05 Wed>
+:LOGBOOK:
     -  State "SOMEDAY"    from "MAYBE"      [2017-07-24 Mon 18:59]
     -  State "MAYBE"      from              [2017-07-24 Mon 18:58]
     :END:
