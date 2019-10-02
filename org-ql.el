@@ -1016,9 +1016,7 @@ parseable by `parse-time-string' which may omit the time value."
                         :limit (line-end-position 2)))
 
 (org-ql--defpred deadline-warning (&key from to)
-  "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods.
-Should be called on a planning line, because it does not search
-past the end of the current line."
+  "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods."
   (save-excursion
     (forward-line 1)
     (when (re-search-forward org-deadline-time-regexp (line-end-position) t)
@@ -1031,15 +1029,16 @@ past the end of the current line."
                                      (`(planning ,tss) (plist-get tss :deadline))
                                      (`(timestamp . ,_) context)))
               ((_timestamp (&keys :warning-value :warning-unit)) deadline-ts-element)
-              (ts (ts-parse-org-element deadline-ts-element))
-              (ts (pcase warning-unit
-                    ('nil ts)
-                    ((and unit (or 'year 'month 'day))
-                     (->> ts (ts-adjust unit (* -1 warning-value))))
-                    ('week (->> ts (ts-adjust 'day (* -7 warning-value)))))))
-        (cond ((and from to) (ts-in from to ts))
-              (from (ts<= from ts))
-              (to (ts<= ts to)))))))
+              (ts (ts-parse-org-element deadline-ts-element)))
+        (pcase warning-unit
+          ('nil  ;; Deadline has no warning unit: compare with ts passed in.
+           (cond ((and from to) (ts-in from to ts))
+                 (from (ts<= from ts))
+                 (to (ts<= ts to))))
+          ;; Deadline has warning unit: compare with current time (`org-ql--today').
+          ((and unit (or 'year 'month 'day))
+           (ts<= (->> ts (ts-adjust unit (- warning-value))) org-ql--today))
+          ('week (ts<= (->> ts (ts-adjust 'day (* -7 warning-value))) org-ql--today)))))))
 
 (org-ql--defpred planning (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
