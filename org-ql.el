@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.2.1
+;; Version: 0.2.2
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (s "1.12.0") (ts "0.2"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -899,15 +899,16 @@ parseable by `parse-time-string' which may omit the time value."
                                      (`(planning ,tss) (plist-get tss :deadline))
                                      (`(timestamp . ,_) context)))
               ((_timestamp (&keys :warning-value :warning-unit)) deadline-ts-element)
-              (ts (ts-parse-org-element deadline-ts-element))
-              (ts (pcase warning-unit
-                    ('nil ts)
-                    ((and unit (or 'year 'month 'day))
-                     (->> ts (ts-adjust unit (* -1 warning-value))))
-                    ('week (->> ts (ts-adjust 'day (* -7 warning-value)))))))
-        (cond ((and from to) (ts-in from to ts))
-              (from (ts<= from ts))
-              (to (ts<= ts to)))))))
+              (ts (ts-parse-org-element deadline-ts-element)))
+        (pcase warning-unit
+          ('nil  ;; Deadline has no warning unit: compare with ts passed in.
+           (cond ((and from to) (ts-in from to ts))
+                 (from (ts<= from ts))
+                 (to (ts<= ts to))))
+          ;; Deadline has warning unit: compare with current time (`org-ql--today').
+          ((and unit (or 'year 'month 'day))
+           (ts<= (->> ts (ts-adjust unit (- warning-value))) org-ql--today))
+          ('week (ts<= (->> ts (ts-adjust 'day (* -7 warning-value))) org-ql--today)))))))
 
 (org-ql--defpred planning (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
