@@ -210,9 +210,6 @@ Interactively, prompt for NAME."
     (cl-typecase view
       (function (call-interactively view))
       (list (-let* (((&plist :buffers-files :query :sort :narrow :super-groups :title) view)
-                    (buffers-files (cl-typecase buffers-files
-                                     (function (funcall buffers-files))
-                                     (list buffers-files)))
                     (super-groups (cl-typecase super-groups
                                     (symbol (symbol-value super-groups))
                                     (list super-groups))))

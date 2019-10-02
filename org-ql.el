@@ -149,7 +149,8 @@ For convenience, arguments should be unquoted."
 (cl-defun org-ql-select (buffers-or-files query &key action narrow sort)
   "Return items matching QUERY in BUFFERS-OR-FILES.
 
-BUFFERS-OR-FILES is a one or a list of files and/or buffers.
+BUFFERS-OR-FILES is a file or buffer, a list of files and/or
+buffers, or a function which returns such a list.
 
 QUERY is an `org-ql' query sexp (quoted, since this is a
 function).
@@ -180,6 +181,7 @@ returns nil or non-nil."
   (declare (indent defun))
   (-let* ((buffers (->> (cl-typecase buffers-or-files
                           (null (list (current-buffer)))
+                          (function (funcall buffers-or-files))
                           (list buffers-or-files)
                           (otherwise (list buffers-or-files)))
                         (--map (cl-etypecase it
