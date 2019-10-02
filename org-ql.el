@@ -886,9 +886,7 @@ parseable by `parse-time-string' which may omit the time value."
                         :limit (line-end-position 2)))
 
 (org-ql--defpred deadline-warning (&key from to)
-  "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods.
-Should be called on a planning line, because it does not search
-past the end of the current line."
+  "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods."
   (save-excursion
     (forward-line 1)
     (when (re-search-forward org-deadline-time-regexp (line-end-position) t)
