@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.2.2
+;; Version: 0.2.3
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (org "9.0") (s "1.12.0") (ts "0.2"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -460,7 +460,7 @@ replace the clause with a preamble."
                                 (`(priority ,letter)
                                  ;; Specific priority without comparator.
                                  (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank)
-                                                                           (optional (1+ upper) (1+ blank))
+                                                                           (0+ nonl) (1+ blank)
                                                                            "[#" ,letter "]") t))
                                  nil)
                                 (`(priority ,comparator ,letter)
