@@ -495,7 +495,7 @@ replace the clause with a preamble."
                                  ;; Specific priority without comparator.
                                  ;; MAYBE: Disable case-folding.
                                  (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank)
-                                                                           (optional (1+ upper) (1+ blank))
+                                                                           (0+ nonl) (1+ blank)
                                                                            "[#" ,letter "]") t))
                                  nil)
                                 (`(priority ,comparator ,letter)
