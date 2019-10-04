@@ -75,8 +75,8 @@
   (if-let* ((sexp (elisp--preceding-sexp))
             (sexp (pcase sexp
                     (`(org-ql . ,_) (setf (car sexp) 'org-ql-agenda))
-                    (`(org-ql-expect ,ql-args . ,_) (setf sexp `(org-ql-agenda test-buffer
-                                                                  ,@ql-args)))
+                    (`(org-ql-expect ,ql-args . ,_) (setf sexp `(org-ql-select test-buffer
+                                                                  ',@ql-args)))
                     (_ nil))))
 
       (eval sexp)
