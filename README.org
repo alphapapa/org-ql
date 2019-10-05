@@ -32,7 +32,7 @@ More examples are available in [[examples.org]].
     '(ts :from -7 :to today)
     :title "Recent Items"
     :sort '(date priority todo)
-    :groups '((:auto-ts t)))
+    :super-groups '((:auto-ts t)))
 
   ;; Show a GTD-style "stuck projects" view: PROJECT tasks that have no
   ;; descendants with the NEXT keyword.  If you use a "project" tag
