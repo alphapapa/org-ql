@@ -6,6 +6,194 @@
 
 Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
 
+** TODO [#C] Test caching
+
+See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
+
+** TODO [#A] Helm command
+
+In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
+
+*** TODO Add
+
+*** TODO Demonstrate
+
+*** UNDERWAY Parsing non-Lisp queries
+
+[2019-09-12 Thu 12:56]  Lisp is so much easier to deal with, but some people don't like parentheses.  So I'm trying to add a non-Lisp-style query syntax.  It gets complicated.  The =peg= library helps, but its documentation is sparse and incomplete.  This seems to work fairly well for single-token queries, but I'm not sure if I can or should cram it all into one parser, or use separate ones for certain keywords.
+
+#+BEGIN_SRC elisp
+  (-let* ((input "todo:check|someday")
+          (input "tags:universe+space")
+          (input "heading:\"spaced phrase\"")
+          (input "")
+          (input "heading:\"spaced phrase\"+another")
+          combinator
+          (parsed (peg-parse-string ((predicate (substring keyword) ":" (opt args))
+                                     (keyword (or "heading" "tags" "todo" "property"))
+                                     (args (+ (and (or quoted-arg unquoted-arg) (opt separator))))
+                                     (quoted-arg "\"" unquoted-arg "\"")
+                                     (unquoted-arg (substring (+ (not (or separator "\"")) (any))))
+                                     (separator (or (and "|" (action (setf combinator 'or)))
+                                                    (and "+" (action (setf combinator 'and)))
+                                                    (and ":" (action (setf combinator 'arg))))))
+                                    input 'noerror))
+          ((predicate . args) (nreverse parsed)))
+    (when predicate
+      (list :predicate predicate :args args :combinator combinator)))
+  ;;=> (:predicate "heading" :args ("spaced phrase" "another" t) :combinator and)
+#+END_SRC
+
+I don't know where the =t= is coming from.
+
+The next step is to make it work with multi-token queries.  It needs to handle all of the tokens in one parser so it can handle quoted phrases (if we split on spaces, it would split quoted phrases).  But that makes getting the arguments out of it more difficult.  Probably need to do something like this:
+
+#+BEGIN_SRC elisp
+  (-let* ((input "todo:check|someday")
+          (input "tags:universe+space")
+          (input "heading:\"spaced phrase\"")
+          (input "")
+          (input "heading:\"spaced phrase\"+another")
+          combinator
+          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
+                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
+                                               (opt (syntax-class whitespace))))
+                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
+                                     (predicate (substring keyword) ":" (opt args))
+                                     (keyword (or "heading" "tags" "todo" "property"))
+                                     (args (+ (and (or quoted-arg unquoted-arg) (opt separator))))
+                                     (quoted-arg "\"" unquoted-arg "\"")
+                                     (unquoted-arg (substring (+ (not (or separator "\"")) (any))))
+                                     (separator (or (and "|" (action (setf combinator 'or)))
+                                                    (and "+" (action (setf combinator 'and)))
+                                                    (and ":" (action (setf combinator 'arg))))))
+                                    input 'noerror)))
+    parsed)
+#+END_SRC
+
+In which lists are pushed onto the stack and returned, rather than strings.  But I don't understand yet exactly how to use the =var= forms to consume input from the "value stack"; I need to study the examples more.  I'm also not sure if that will even work with a variable number of arguments.
+
+This seems to work, but we'll have to parse the args again in a separate step:
+
+#+BEGIN_SRC elisp
+  (-let* ((input "todo:check|someday")
+          (input "tags:universe+space")
+          (input "heading:\"spaced phrase\"")
+          (input "")
+          (input "heading:\"spaced phrase\"+another")
+          (input "heading:\"spaced phrase\"+another todo:check")
+          combinator
+          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
+                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
+                                               (opt (+ (syntax-class whitespace) (any)))))
+                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
+                                     (predicate (substring keyword) ":" (opt args))
+                                     (keyword (or "heading" "tags" "todo" "property"))
+                                     (args (substring (+ (and (or quoted-arg unquoted-arg) (opt separator)))))
+                                     (quoted-arg "\"" (+ (not (or separator "\"")) (any)) "\"")
+                                     (unquoted-arg (+ (not (or separator "\"" (syntax-class whitespace))) (any)))
+                                     (separator (or (and "|" (action (setf combinator 'or)))
+                                                    (and "+" (action (setf combinator 'and)))
+                                                    (and ":" (action (setf combinator 'arg))))))
+                                    input 'noerror)))
+    parsed)
+    ;;=> (t (:predicate "todo" :args "check") (:predicate "heading" :args "\"spaced phrase\"+another"))
+#+END_SRC
+
+Well, a bit of fiddling (lots of trial-and-error required) produced this:
+
+#+BEGIN_SRC elisp
+  (-let* ((input "todo:check|someday")
+          (input "tags:universe+space")
+          (input "heading:\"spaced phrase\"")
+          (input "")
+          (input "heading:\"spaced phrase\"+another")
+          (input "heading:\"spaced phrase\"+another todo:check")
+          combinator
+          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
+                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
+                                               (opt (+ (syntax-class whitespace) (any)))))
+                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
+                                     (predicate (substring keyword) ":" (opt args))
+                                     (keyword (or "heading" "tags" "todo" "property"))
+                                     (args (list (+ (and (substring (or quoted-arg unquoted-arg)) (opt separator)))))
+                                     (quoted-arg "\"" (+ (not (or separator "\"")) (any)) "\"")
+                                     (unquoted-arg (+ (not (or separator "\"" (syntax-class whitespace))) (any)))
+                                     (separator (or (and "|" (action (setf combinator 'or)))
+                                                    (and "+" (action (setf combinator 'and)))
+                                                    (and ":" (action (setf combinator 'arg))))))
+                                    input 'noerror)))
+    parsed)
+    ;;=> (t (:predicate "todo" :args ("check")) (:predicate "heading" :args ("\"spaced phrase\"" "another")))
+#+END_SRC
+
+That seems pretty usable!
+
+** TODO [#B] Timeline view
+
+e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
+
+#+BEGIN_SRC elisp
+  (cl-defun org-ql-timeline (buffers-files query)
+    (let ((results
+           (org-ql-select buffers-files
+             query :action
+             (lambda ()
+               (let* ((heading-string
+                       (->> (org-element-headline-parser
+                             (line-end-position))
+                            org-ql--add-markers
+                            org-ql-agenda--format-element))
+                      (timestamps
+                       (cl-loop with limit = (org-entry-end-position)
+                                while (re-search-forward org-ts-regexp-both
+                                                         limit t)
+                                collect (ts-parse-org (match-string 0))))
+                      (timestamp-strings
+                       (->> timestamps
+                            (-sort #'ts<)
+                            (--map (concat " " (ts-format it))))))
+                 (s-join "\n" (cons heading-string timestamp-strings))))
+             :sort '(date))))
+      (org-ql-agenda--agenda nil nil :strings results)))
+
+  (org-ql-timeline (org-agenda-files)
+                   '(and "Emacs" (ts)))
+
+  ;; More timeline-like version, organized by date rather than task.
+
+  (cl-defun org-ql-timeline* (buffers-files query &key filter-ts)
+    (let* ((ts-ht (ht))
+           (results (org-ql-select buffers-files
+                      query
+                      :action (lambda ()
+                                (let* ((heading-string
+                                        (->> (org-element-headline-parser
+                                              (line-end-position))
+                                             org-ql--add-markers
+                                             org-ql-agenda--format-element))
+                                       (date-timestamps
+                                        ;; Each one set to 00:00:00.
+                                        (cl-loop with limit = (org-entry-end-position)
+                                                 while (re-search-forward org-ts-regexp-both
+                                                                          limit t)
+                                                 collect (->> (match-string 0)
+                                                              ts-parse-org
+                                                              (ts-apply :hour 0 :minute 0 :second 0)))))
+                                  (setf date-timestamps (delete-dups date-timestamps))
+                                  (when filter-ts
+                                    (setf date-timestamps (cl-remove-if-not filter-ts date-timestamps)))
+                                  (--each date-timestamps
+                                    (push heading-string (gethash it ts-ht)))))))
+           (tss-sorted (-sort #'ts< (ht-keys ts-ht)))
+           (strings (cl-loop for ts in tss-sorted
+                             collect (concat "\n"
+                                             (propertize (ts-format "%Y-%m-%d" ts)
+                                                         'face 'org-agenda-structure))
+                             append (ht-get ts-ht ts))))
+      (org-ql-agenda--agenda nil nil :strings strings)))
+#+END_SRC
+
 ** TODO [#A] Outline path in buffers-files arg
 
 e.g.

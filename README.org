@@ -6,13 +6,15 @@
 
 [[https://melpa.org/#/org-ql][file:https://melpa.org/packages/org-ql-badge.svg]] [[https://stable.melpa.org/#/org-ql][file:https://stable.melpa.org/packages/org-ql-badge.svg]]
 
-~org-ql~ is a lispy query language for Org files.  It allows you to find Org entries matching certain criteria and return a list of them or perform actions on them.  Commands are also provided which display matching results.
+This package provides a query language for Org files.  It offers two syntax styles: Lisp-like sexps and search engine-like keywords.
+
+It includes three libraries: The =org-ql= library is flexible and may be used as a backend for other tools.  The libraries =org-ql-search= and =helm-org-ql= provide interactive search commands and saved views.
 
 * Contents
 :PROPERTIES:
 :TOC:      this
 :END:
-  -  [[#examples][Examples]]
+  -  [[#screenshots][Screenshots]]
   -  [[#installation][Installation]]
   -  [[#usage][Usage]]
     -  [[#commands][Commands]]
@@ -21,77 +23,15 @@
   -  [[#changelog][Changelog]]
   -  [[#notes][Notes]]
 
-* Examples
+* Screenshots
 
-More examples are available in [[examples.org]].
+[[images/org-ql-search.gif]]
 
-#+BEGIN_SRC elisp
-  ;; Show entries that have any timestamp within the past week.  Group
-  ;; by date using `org-super-agenda' with the `:auto-ts' group.
-  (org-ql-search (org-agenda-files)
-    '(ts :from -7 :to today)
-    :title "Recent Items"
-    :sort '(date priority todo)
-    :groups '((:auto-ts t)))
+[[images/org-ql-search-snippet.png]]
 
-  ;; Show a GTD-style "stuck projects" view: PROJECT tasks that have no
-  ;; descendants with the NEXT keyword.  If you use a "project" tag
-  ;; instead of the to-do keyword, you could replace (todo "PROJECT")
-  ;; with (tags "project").
-  (org-ql-search (org-agenda-files)
-    '(and (todo "PROJECT")
-          (not (descendants (todo "NEXT"))))
-    :title "Stuck Projects")
+[[images/helm-org-ql.gif]]
 
-  ;; Integrate `org-ql' into a custom Org Agenda command which inserts
-  ;; an `org-ql' block before the regular agenda:
-  (setq org-agenda-custom-commands
-        '(("ces" "Custom: Agenda and Emacs SOMEDAY [#A] items"
-           ((org-ql-block '(and (todo "SOMEDAY")
-                                (tags "Emacs")
-                                (priority "A")))
-            (agenda)))))
-
-  ;; Return a list of bills coming due, searching all Org Agenda files,
-  ;; sorted by deadline.  The `auto' argument to `deadline' means to match
-  ;; entries whose deadlines fall within `org-deadline-warning-days'.
-  ;; `org-ql-query' works like `org-ql-select' but offers arguments named
-  ;; like SQL queries.
-  (org-ql-query
-    :select #'org-get-heading
-    :from (org-agenda-files)
-    :where '(and (not (done))
-                 (tags "bills")
-                 (deadline auto))
-    :order-by 'deadline)
-  ;;=> ("TODO Electric bill" "TODO Water bill")
-
-  ;; If you kept a database of music in an Org file, you could run a
-  ;; query like this to find tracks composed by Chopin that do not have
-  ;; their key recorded in the database.  `org-ql-search' works like
-  ;; `org-ql-select' and displays results in an agenda-like buffer:
-  (org-ql-search "~/org/music.org"
-    '(and (property "genre" "classical")
-          (property "composer" "Chopin")
-          (not (property "key"))))
-
-  ;; Set the tag "Emacs" on every entry in the inbox file that mentions
-  ;; "Emacs".  `org-ql-select' works like `org-ql' but is a function
-  ;; rather than a macro.  The bare-string query "Emacs" is equivalent
-  ;; to (regexp "Emacs").
-  (org-ql-select "~/org/inbox.org"
-    "Emacs"
-    :action '(org-toggle-tag "Emacs" 'on))
-
-  ;; Return a list of Org entry elements in the file "~/org/main.org"
-  ;; which have the SOMEDAY to-do keyword, are tagged "Emacs", and have
-  ;; priority B or higher.
-  (org-ql "~/org/main.org"
-    (and (todo "SOMEDAY")
-         (tags "Emacs")
-         (priority >= "B")))
-  ;;=> ((headline (:raw-value "org-board" :begin 1220270 :end 1220403 ...)) ...)
-#+END_SRC
+[[images/org-ql-view-sidebar.gif]]
 
 * Installation
 :PROPERTIES:
@@ -100,9 +40,9 @@ More examples are available in [[examples.org]].
 
 The package may be installed directly from [[https://melpa.org/#/org-ql][MELPA]] or with other tools like [[https://framagit.org/steckerhalter/quelpa][Quelpa]].
 
-After installation, you can use commands like ~org-ql-search~ immediately.
+After installation, you can use the commands without additional configuration.  /Note: The command =helm-org-ql= only works if the package =helm-org= is installed; Helm is not a dependency of this package, so it's not automatically installed./
 
-To use the functions and macros in your own Elisp code, load the libraries ~org-ql~ and/or ~org-ql-agenda~ with e.g. ~(require 'org-ql)~.
+To use the functions and macros in your own Elisp code, use libraries =org-ql= and =org-ql-view=.
 
 ** Quelpa
 
@@ -134,7 +74,9 @@ These commands and functions are included:
      -  ~org-ql-select~ (function)
      -  ~org-ql-query~ (function)
 
-Feedback on these APIs is welcome.  Eventually, after being tested and polished, they will be considered stable.
+Feedback on these APIs is welcome.  Eventually, after being tested and polished, they will be considered stable. 
+
+Lisp code examples are in [[examples.org]].
 
 ** Commands
 :PROPERTIES:
@@ -142,6 +84,8 @@ Feedback on these APIs is welcome.  Eventually, after being tested and polished,
 :END:
 
 *** org-ql-search
+
+/Note: This command supports both sexp queries and [[#non-sexp-query-syntax][non-sexp queries]]./
 
 Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variables:
 
@@ -163,21 +107,15 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 +  =g=: Refresh results.
 +  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 
-[[images/org-ql-search.gif]]
-
-Here's an example of using it to generate an agenda-like view for certain files in a directory tree:
-
-[[images/org-ql-search-snippet.png]]
+*Note:* The view buffer is currently put in ~org-agenda-mode~, which means that /some/ Org Agenda commands work, such as jumping to entries and changing item priorities (without necessarily updating the view).  This feature is experimental and not guaranteed to work correctly with all commands.  (It works to the extent it does because the appropriate text properties are placed on each item, imitating an Agenda buffer.)
 
 *** helm-org-ql
 
+/Note: This command uses [[#non-sexp-query-syntax][non-sexp queries]]./
+
 This command displays matches with Helm.  *Note:* Helm is not a package dependency, so this command only works if the package =helm-org= is installed.
 
-Note also that queries in this command are specially handled so that quotes around strings may be omitted for ease of typing.
-
 +  Press =C-x C-s= in the Helm session to save the results to an =org-ql-search= buffer.
-
-[[images/helm-org-ql.gif]]
 
 *** org-ql-view
 
@@ -186,8 +124,6 @@ Choose and display a view stored in ~org-ql-views~.
 *** org-ql-view-sidebar
 
 Show a sidebar window listing views stored in =org-ql-views= for easy access.  In the sidebar, press =RET= or =mouse-1= to show the view at point, and press =c= to customize the view at point.
-
-[[images/org-ql-view-sidebar.gif]]
 
 *** org-ql-view-recent-items
 
@@ -201,11 +137,32 @@ Show a sparse tree for ~QUERY~ in ~BUFFER~ and return number of results.  The tr
 
 ** Queries
 
-A query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.
+An =org-ql= query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.
 
 *Notes:*
 +  Bare strings like ~"string"~ are automatically converted to ~(regexp "string")~ predicates.
-+  Standard numeric comparator function symbols (~<~, ~<=~, ~>~, ~>=~, ~=~ ) need not be quoted when passed as an argument to these predicates.  The resemblance to infix notation is coincidental.  See examples in documentation.
++  Standard numeric comparator function symbols (~<~, ~<=~, ~>~, ~>=~, ~=~ ) need not be quoted when passed as an argument to predicates which accept them.  The resemblance to infix notation is coincidental.
+
+*** Non-sexp query syntax
+:PROPERTIES:
+:TOC:      ignore
+:END:
+
+The command =org-ql-search= also accepts, and the command =helm-org-ql= only accepts, an alternative, non-sexp query syntax.  The syntax is simple, and a few examples of queries in both syntaxes should suffice.  By default, when multiple predicates are used, they are combined with boolean =and=.
+
+| Sexp syntax                                     | Non-sexp syntax                         |
+|-------------------------------------------------+-----------------------------------------|
+| ~(todo)~                                          | ~todo:~                                   |
+| ~(todo "SOMEDAY")~                                | ~todo:SOMEDAY~                            |
+| ~(todo "SOMEDAY" "WAITING")~                      | ~todo:SOMEDAY,WAITING~                    |
+| ~(ts :on today)~                                  | ~ts:on=today~                             |
+| ~(ts-active :from "2017-01-01" :to "2018-01-01")~ | ~ts-active:from=2017-01-01,to=2018-01-01~ |
+| ~(clocked :on -1)~                                | ~clocked:on=-1~                           |
+| ~(heading "quoted phrase" "word")~                | ~heading:"quoted phrase",word~            |
+| ~(and (tags "book" "books") (priority "A"))~      | ~tags:book,books priority:A~              |
+| ~(priority >= B)~                                 | ~priority:A,B~                            |
+
+Note that the =priority= predicate does not support comparators in the non-sexp syntax, so multiple priorities should be passed instead, as seen in the last example.
 
 *** Predicates
 :PROPERTIES:
@@ -296,67 +253,6 @@ Which would be equivalent to a ~tags-todo~ search like this:
 However, the ~org-ql-block~ version runs in about 1/5th the time.
 
 The variable =org-ql-block-header= may be bound to a string to use as the block header, otherwise the header is formed automatically.
-
-**** Macro: ~org-ql-agenda~
-
-This macro is like ~org-ql~, but it presents matching entries in an Agenda-like view.  It's compatible with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]], which provides grouping.  For example:
-
-#+BEGIN_SRC elisp
-  (org-ql-agenda "~/src/emacs/org-super-agenda/test/test.org"
-    (and (or (ts-active :on today)
-             (deadline auto)
-             (scheduled :to today))
-         (not (done)))
-    :title "My Agenda View"
-    ;; The `org-super-agenda-groups' setting is used automatically when set, or it
-    ;; may be overriden by specifying it here:
-    :super-groups ((:name "Bills"
-                          :tag "bills")
-                   (:todo ("SOMEDAY" "TO-READ" "CHECK" "TO-WATCH" "WATCHING")
-                          :order 7)
-                   (:name "Personal"
-                          :habit t
-                          :tag "personal"
-                          :order 3)
-                   (:todo "WAITING"
-                          :order 6)
-                   (:priority "A" :order 1)
-                   (:priority "B" :order 2)
-                   (:priority "C" :order 2)))
-#+END_SRC
-
-Which presents this buffer:
-
-[[images/screenshot.png]]
-
-*Note:* The view buffer is currently put in ~org-agenda-mode~, which means that /some/ Org Agenda commands work, such as jumping to entries and changing item priorities (without necessarily updating the view).  This feature is experimental and not guaranteed to work correctly with all commands.  (It works to the extent it does because the appropriate text properties are placed on each item, imitating an Agenda buffer.)
-
-Here are some other examples:
-
-#+BEGIN_SRC elisp
-  ;; Show an agenda-like view of items in "~/org/main.org" with TODO and
-  ;; SOMEDAY keywords which are tagged "computer" or "Emacs" and in the
-  ;; category "main":
-  (org-ql-agenda "~/org/main.org"
-    (and (todo "TODO" "SOMEDAY")
-         (tags "computer" "Emacs")
-         (category "main")))
-
-  ;; Show an agenda-like view of all habits in all agenda files:
-  (org-ql-agenda
-    (habit))
-
-  ;; Show an agenda-like view similar to a "traditional" Org Agenda with
-  ;; Log Mode turned on.
-  (org-ql-agenda
-    (or (and (not (done))
-             (or (habit)
-                 (deadline auto)
-                 (scheduled :to today)
-                 (ts-active :on today)))
-        (closed :on today))
-    :sort (date priority todo))
-#+END_SRC
 
 *** Listing / acting-on results
 
@@ -470,6 +366,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 ** 0.3-pre
 
 *Added*
++  Alternative, non-sexp query syntax for commands =org-ql-search= and =helm-org-ql=.  See [[#non-sexp-query-syntax][documentation]].
 +  Command =helm-org-ql=.
 +  Command =org-ql-sparse-tree=, like =org-sparse-tree= for =org-ql= queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
 +  Command =org-ql-view-sidebar=.

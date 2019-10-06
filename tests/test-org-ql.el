@@ -227,6 +227,52 @@ RESULTS should be a list of strings as returned by
                                 :preamble (rx bol (>= 2 "*") " ")
                                 :preamble-case-fold t)))))
 
+  (describe "Plain query parsing"
+
+    ;; TODO: Other predicates.
+
+    (it "Regexp predicates"
+      (expect (org-ql--plain-query "scheduled")
+              ;; No colon after keyword, so not a predicate query.
+              :to-equal '(regexp "scheduled"))
+      (expect (org-ql--plain-query "regexp:word")
+              :to-equal '(regexp "word"))
+      (expect (org-ql--plain-query "regexp:\"quoted phrase\"")
+              :to-equal '(regexp "quoted phrase")))
+    (it "Timestamp-based predicates"
+      (expect (org-ql--plain-query "scheduled:on=2017-07-07")
+              :to-equal '(scheduled :on "2017-07-07"))
+      (expect (org-ql--plain-query "deadline:from=2017-07-07,to=2017-07-09")
+              :to-equal '(deadline :from "2017-07-07" :to "2017-07-09"))
+      (expect (org-ql--plain-query "planning:from=2017-07-07")
+              :to-equal '(planning :from "2017-07-07"))
+      (expect (org-ql--plain-query "closed:from=2017-07-07")
+              :to-equal '(closed :from "2017-07-07"))
+      (expect (org-ql--plain-query "ts-active:to=2017-07-07")
+              :to-equal '(ts-active :to "2017-07-07"))
+      (expect (org-ql--plain-query "ts-inactive:to=2017-07-07")
+              :to-equal '(ts-inactive :to "2017-07-07"))
+      (expect (org-ql--plain-query "ts-a:to=2017-07-07")
+              :to-equal '(ts-a :to "2017-07-07"))
+      (expect (org-ql--plain-query "ts-i:on=2017-07-07")
+              :to-equal '(ts-i :on "2017-07-07"))
+      (expect (org-ql--plain-query "ts:")
+              :to-equal '(ts))
+      (expect (org-ql--plain-query "clocked:")
+              :to-equal '(clocked)))
+    (it "To-do predicates"
+      (expect (org-ql--plain-query "todo:")
+              :to-equal '(todo))
+      (expect (org-ql--plain-query "todo:TODO")
+              :to-equal '(todo "TODO"))
+      (expect (org-ql--plain-query "todo:TODO,SOMEDAY")
+              :to-equal '(todo "TODO" "SOMEDAY")))
+    (it "Compound queries"
+      (expect (org-ql--plain-query "todo:SOMEDAY ts-a:from=2020-01-01,to=2021-01-01")
+              :to-equal '(and (todo "SOMEDAY") (ts-a :from "2020-01-01" :to "2021-01-01")))
+      (expect (org-ql--plain-query "regexp:\"quoted phrase\" todo:SOMEDAY")
+              :to-equal '(and (regexp "quoted phrase") (todo "SOMEDAY")))))
+
   (describe "Query results"
 
     ;; TODO: Other predicates.

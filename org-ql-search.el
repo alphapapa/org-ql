@@ -58,7 +58,6 @@ matches, which allows stacking calls to this command.
 
 Runs `org-occur-hook' after making the sparse tree."
   ;; Code based on `org-occur'.
-  ;; TODO: Use `helm-org-ql' plain-text query processing.
   (interactive (list (read-minibuffer "Query: ")
                      :keep-previous current-prefix-arg))
   (with-current-buffer buffer
@@ -83,7 +82,7 @@ Runs `org-occur-hook' after making the sparse tree."
 ;;;###autoload
 (cl-defun org-ql-search (buffers-files query &key narrow super-groups sort title
                                        (buffer org-ql-view-buffer))
-  "Read QUERY and search with `org-ql'.
+  "Search for QUERY with `org-ql'.
 Interactively, prompt for these variables:
 
 BUFFERS-FILES: A list of buffers and/or files to search.
@@ -94,6 +93,9 @@ Interactively, may also be:
 - `agenda': search buffers returned by the function `org-agenda-files'
 - An expression which evaluates to a list of files/buffers
 - A space-separated list of file or buffer names
+
+QUERY: An `org-ql' query in either sexp or \"plain string\"
+form (see documentation).
 
 SUPER-GROUPS: An `org-super-agenda' group set.  See variable
 `org-super-agenda-groups'.
@@ -120,7 +122,7 @@ necessary."
                        ("buffer" (current-buffer))
                        ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
                        (else (s-split (rx (1+ space)) else)))
-                     (read-minibuffer "Query: ")
+                     (read-string "Query: ")
                      :narrow (eq current-prefix-arg '(4))
                      :super-groups (when (bound-and-true-p org-super-agenda-auto-selector-keywords)
                                      (pcase (completing-read "Group by: "
@@ -140,13 +142,19 @@ necessary."
                                                          "todo"))
                              ("Don't sort" nil)
                              (sort (intern sort)))))
-  (let* ((results (org-ql-select buffers-files query
+  (let* ((query (cl-etypecase query
+                  (string (if (string-match-p (rx bos (1+ alpha) ":") query)
+                              ;; Parse non-sexp query into sexp query.
+                              (org-ql--plain-query query)
+                            ;; Read sexp query.
+                            (read query)))
+                  (list query)))
+         (results (org-ql-select buffers-files query
                     :action 'element-with-markers
                     :narrow narrow
                     :sort sort))
          (strings (-map #'org-ql-view--format-element results))
-         (title (or title (format "%S in %S" query buffers-files)))
-         (buffer (or buffer (format "%s %s*" org-ql-view-buffer-name-prefix title)))
+         (buffer (or buffer (format "%s %s*" org-ql-view-buffer-name-prefix (or title query))))
          (header (org-ql-view--header-line-format buffers-files query title))
          ;; Bind variables for `org-ql-view--display' to set.
          (org-ql-view-buffers-files buffers-files)
