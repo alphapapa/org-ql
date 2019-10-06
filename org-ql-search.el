@@ -119,7 +119,7 @@ necessary."
                        ("agenda" (org-agenda-files))
                        ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
                                         (buffer-list)))
-                       ("buffer" (current-buffer))
+                       ((or "" "buffer") (current-buffer))
                        ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
                        (else (s-split (rx (1+ space)) else)))
                      (read-string "Query: ")
@@ -129,9 +129,10 @@ necessary."
                                                              (append (list "Don't group"
                                                                            "Global super-groups")
                                                                      (cl-loop for type in org-super-agenda-auto-selector-keywords
-                                                                              collect (substring (symbol-name type) 6))))
+                                                                              collect (substring (symbol-name type) 6)))
+                                                             nil t)
                                        ("Global super-groups" org-super-agenda-groups)
-                                       ("Don't group" nil)
+                                       ((or "" "Don't group") nil)
                                        (property (list (list (intern (concat ":auto-" property)))))))
                      :sort (pcase (completing-read "Sort by: "
                                                    (list "Don't sort"
@@ -139,8 +140,9 @@ necessary."
                                                          "deadline"
                                                          "priority"
                                                          "scheduled"
-                                                         "todo"))
-                             ("Don't sort" nil)
+                                                         "todo")
+                                                   nil t)
+                             ((or "" "Don't sort") nil)
                              (sort (intern sort)))))
   (let* ((query (cl-etypecase query
                   (string (if (string-match-p (rx bos (1+ alpha) ":") query)
