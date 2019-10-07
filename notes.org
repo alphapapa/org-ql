@@ -2,6 +2,39 @@
 
 * Tasks
 
+** TODO [#A] Outline path predicate
+
+[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
+
+#+BEGIN_SRC org
+  ,* Food
+
+  ,** Fruits
+
+  ,*** Blueberries
+
+  ,*** Grapes
+
+  ,** Vegetables
+
+  ,*** Carrots
+
+  ,*** Potatoes
+#+END_SRC
+
+Matching could work like this:
+
++  ~(outline "Food")~ :: Would return all nodes.
++  ~(outline "Fruits")~ :: Would return all fruits.
+
+Matching at a specific path would be something like:
+
++  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
+
+I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
+
+To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
+
 ** TODO [#A] Document sorters
 
 Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
@@ -195,6 +228,9 @@ e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-or
 #+END_SRC
 
 ** TODO [#A] Outline path in buffers-files arg
+:PROPERTIES:
+:ID:       6935361a-9e1d-48ec-8d17-876a90b90f50
+:END:
 
 e.g.
 
