@@ -124,7 +124,7 @@ docstring.  BODY is the body of the predicate.
 Predicates will be called with point on the beginning of an Org
 heading and should return non-nil if the heading's entry is a
 match."
-  (declare (debug (symbolp listp stringp def-body))
+  (declare (debug ([&or symbolp listp] listp stringp def-body))
            (indent defun))
   (let* ((aliases (when (listp name)
                     (cdr name)))
