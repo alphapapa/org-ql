@@ -2,46 +2,9 @@
 
 * Tasks
 
-** TODO [#A] Outline path predicate
-
-[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
-
-#+BEGIN_SRC org
-  ,* Food
-
-  ,** Fruits
-
-  ,*** Blueberries
-
-  ,*** Grapes
-
-  ,** Vegetables
-
-  ,*** Carrots
-
-  ,*** Potatoes
-#+END_SRC
-
-Matching could work like this:
-
-+  ~(outline "Food")~ :: Would return all nodes.
-+  ~(outline "Fruits")~ :: Would return all fruits.
-
-Matching at a specific path would be something like:
-
-+  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
-
-I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
-
-To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
-
 ** TODO [#A] Document sorters
 
 Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
-
-** TODO [#C] Test caching
-
-See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
 ** TODO [#A] Helm command
 
@@ -162,6 +125,41 @@ Well, a bit of fiddling (lots of trial-and-error required) produced this:
 
 That seems pretty usable!
 
+** TODO [#A] Outline path in buffers-files arg
+:PROPERTIES:
+:ID:       6935361a-9e1d-48ec-8d17-876a90b90f50
+:END:
+
+e.g.
+
+#+BEGIN_SRC elisp
+  (org-ql (olp "~/org/inbox.org" "Emacs" "Ideas")
+    (todo "NEXT"))
+#+END_SRC
+
+Also, should support an ~id~ one.
+
+** TODO [#A] Tools for saving queries and accessing them [2/4]
+
++ Added example to =examples.org=.
+
+*** DONE Save query from ql-agenda buffer
+
+*** DONE Access saved query from saved query list
+
+*** TODO Org link types
+:PROPERTIES:
+:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
+:END:
+
+This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
+
+**** TODO For all parameters
+
+**** TODO For saved queries
+
+*** TODO Bookmarks
+
 ** TODO [#B] Timeline view
 
 e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
@@ -226,41 +224,6 @@ e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-or
                              append (ht-get ts-ht ts))))
       (org-ql-agenda--agenda nil nil :strings strings)))
 #+END_SRC
-
-** TODO [#A] Outline path in buffers-files arg
-:PROPERTIES:
-:ID:       6935361a-9e1d-48ec-8d17-876a90b90f50
-:END:
-
-e.g.
-
-#+BEGIN_SRC elisp
-  (org-ql (olp "~/org/inbox.org" "Emacs" "Ideas")
-    (todo "NEXT"))
-#+END_SRC
-
-Also, should support an ~id~ one.
-
-** TODO [#A] Tools for saving queries and accessing them [2/4]
-
-+ Added example to =examples.org=.
-
-*** DONE Save query from ql-agenda buffer
-
-*** DONE Access saved query from saved query list
-
-*** TODO Org link types
-:PROPERTIES:
-:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
-:END:
-
-This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
-
-**** TODO For all parameters
-
-**** TODO For saved queries
-
-*** TODO Bookmarks
 
 ** TODO [#B] Add more sorters?
 
@@ -439,6 +402,10 @@ e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-or
 
 e.g. doesn't currently show the =View= header.
 
+** TODO [#C] Test caching
+
+See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
+
 ** TODO [#C] ~org-agenda-skip-function~
 
 As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
@@ -488,6 +455,41 @@ See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test
 
 ** TODO [#C] Update commentary
 
+** UNDERWAY [#A] Outline path predicate
+
+[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
+
+#+BEGIN_SRC org
+  ,* Food
+
+  ,** Fruits
+
+  ,*** Blueberries
+
+  ,*** Grapes
+
+  ,** Vegetables
+
+  ,*** Carrots
+
+  ,*** Potatoes
+#+END_SRC
+
+Matching could work like this:
+
++  ~(outline "Food")~ :: Would return all nodes.
++  ~(outline "Fruits")~ :: Would return all fruits.
+
+Matching at a specific path would be something like:
+
++  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
+
+I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
+
+To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
+
+[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
+
 ** UNDERWAY [#A] Helm command
 
 In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
@@ -531,13 +533,15 @@ Items would be structs, and the =group-by= argument would be a list of accessors
 
 Not sure if it should automatically add the number of items to the header, or if that should be done manually.
 
-** MAYBE [#C] "Node" caching
+** UNDERWAY [#B] "Node" caching
 
 [2019-09-05 Thu 12:30]  At each node checked by a predicate, make a struct that stores attributes we can query for, as well as parent node position.  This would let us speed up ancestor-based queries, like =(ancestor (todo "WAITING"))=.  Ideally it would also serve as the tag hierarchy cache.
 
 It would probably be an all-encompassing system, because predicates would need to refer to the cached node when available.  So maybe the struct should be like =ts-defstruct=, with lazy, caching accessors, which would move some of the predicates' code into the accessors.
 
 Maybe a good improvement to make later, after the project is more developed.
+
+[2019-10-07 Mon 13:08]  This has basically been implemented in =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but as functions and values rather than with structs.  It remains to be seen how this works with =ancestor= queries, but I suspect it will help a lot.
 
 *** Struct PoC code
 
