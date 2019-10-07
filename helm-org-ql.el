@@ -33,6 +33,7 @@
 (require 'org)
 
 (require 'org-ql)
+(require 'org-ql-search)
 
 ;; (require 'helm)
 ;; (require 'helm-org)
@@ -125,51 +126,20 @@ Is transformed into this query:
   (let ((boolean (if current-prefix-arg 'or boolean))
         (helm-input-idle-delay helm-org-ql-input-idle-delay))
     (helm :prompt (format "Query (boolean %s): " (-> boolean symbol-name upcase))
-          :sources
-          ;; Expansion of `helm-build-sync-source' macro.
-          (helm-make-source name 'helm-source-sync
-            :candidates (lambda nil
-                          (let* ((query (org-ql--plain-query helm-pattern boolean))
-                                 (window-width (window-width (helm-window))))
-                            (when query
-                              (with-current-buffer (helm-buffer-get)
-                                (setq helm-org-ql-buffers-files buffers-files))
-                              (ignore-errors
-                                ;; Ignore errors that might be caused by partially typed queries.
-
-                                ;; FIXME: This doesn't prevent warnings that are errors occurring during
-                                ;; byte-compilation due to partially typed values which can't be correctly
-                                ;; pre-processed, e.g. "ts:to=2019-01-0", which can't be parsed into a
-                                ;; timestamp.  A "*Compile-Log*" buffer is displayed with "Error: Wrong type
-                                ;; argument: integerp, nil".  With my Helm settings, it's hidden as soon as
-                                ;; the query is typed correctly, so it's tolerable, but I'd prefer to fix it.
-                                ;; I haven't found a way to ignore the error/warning; `with-no-warnings' has
-                                ;; no effect, and we're already using `ignore-errors'.  The only solution I
-                                ;; can think of would be to ignore the errors/warnings higher up the chain
-                                ;; where byte-compilation is actually done, but it might not be a good idea
-                                ;; to always ignore such errors/warnings.
-                                (org-ql-select buffers-files query
-                                  :action (list 'helm-org-ql--heading window-width))))))
-            :match #'identity
-            :fuzzy-match nil
-            :multimatch nil
-            :volatile t
-            :keymap helm-org-ql-map
-            :action helm-org-ql-actions))))
+          :sources (helm-org-ql-source buffers-files :name name))))
 
 ;;;###autoload
 (defun helm-org-ql-agenda-files ()
   "Search agenda files with `helm-org-ql', which see."
   (interactive)
-  (helm-org-ql (org-agenda-files) :name "helm-org-ql-agenda-files"))
+  (helm-org-ql (org-agenda-files) :name "Org Agenda Files"))
 
 ;;;###autoload
 (defun helm-org-ql-org-directory ()
   "Search Org files in `org-directory' with `helm-org-ql'."
   (interactive)
-  (helm-org-ql (directory-files org-directory 'full
-                                (rx ".org" eos))
-               :name "helm-org-ql-org-directory"))
+  (helm-org-ql (org-ql-search-directories-files)
+               :name "Org Directory Files"))
 
 (defun helm-org-ql-show-marker (marker)
   "Show heading at MARKER."
@@ -197,6 +167,39 @@ Is transformed into this query:
     (helm-run-after-exit #'org-ql-search buffers-files query)))
 
 ;;;; Functions
+
+(cl-defun helm-org-ql-source (buffers-files &key (name "helm-org-ql"))
+  "Return Helm source named NAME that searches BUFFERS-FILES with `helm-org-ql'."
+  ;; Expansion of `helm-build-sync-source' macro.
+  (helm-make-source name 'helm-source-sync
+    :candidates (lambda nil
+                  (let* ((query (org-ql--plain-query helm-pattern))
+                         (window-width (window-width (helm-window))))
+                    (when query
+                      (with-current-buffer (helm-buffer-get)
+                        (setq helm-org-ql-buffers-files buffers-files))
+                      (ignore-errors
+                        ;; Ignore errors that might be caused by partially typed queries.
+
+                        ;; FIXME: This doesn't prevent warnings that are errors occurring during
+                        ;; byte-compilation due to partially typed values which can't be correctly
+                        ;; pre-processed, e.g. "ts:to=2019-01-0", which can't be parsed into a
+                        ;; timestamp.  A "*Compile-Log*" buffer is displayed with "Error: Wrong type
+                        ;; argument: integerp, nil".  With my Helm settings, it's hidden as soon as
+                        ;; the query is typed correctly, so it's tolerable, but I'd prefer to fix it.
+                        ;; I haven't found a way to ignore the error/warning; `with-no-warnings' has
+                        ;; no effect, and we're already using `ignore-errors'.  The only solution I
+                        ;; can think of would be to ignore the errors/warnings higher up the chain
+                        ;; where byte-compilation is actually done, but it might not be a good idea
+                        ;; to always ignore such errors/warnings.
+                        (org-ql-select buffers-files query
+                          :action (list 'helm-org-ql--heading window-width))))))
+    :match #'identity
+    :fuzzy-match nil
+    :multimatch nil
+    :volatile t
+    :keymap helm-org-ql-map
+    :action helm-org-ql-actions))
 
 (defun helm-org-ql--heading (window-width)
   "Return string for Helm for heading at point.

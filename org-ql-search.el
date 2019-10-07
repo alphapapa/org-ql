@@ -30,6 +30,7 @@
 (require 'cl-lib)
 
 (require 'dash)
+(require 'f)
 (require 'org-super-agenda)
 (require 's)
 
@@ -40,6 +41,30 @@
 
 (defvar org-ql-block-header nil
   "An optional string to override the default header in `org-ql-block' agenda blocks.")
+
+;;;; Customization
+
+(defgroup org-ql-search nil
+  "Options for `org-ql-search' commands."
+  :group 'org-ql)
+
+(defcustom org-ql-search-directories-files-regexp "\.org$"
+  "Regular expression to match Org filenames in `org-directory'.
+Files matching this regexp will be searched.  By default,
+\".org\" files are matched, but you may also select to include
+\".org_archive\" files, or use a custom regexp."
+  :type '(radio (const :tag "Normal \".org\" files" :value "\.org$")
+                (const :tag "Also include \".org_archive\" files" "\.org\\(_archive\\)?$")
+                (string :tag "Custom regular expression")))
+
+(defcustom org-ql-search-directories-files-recursive nil
+  "Recurse into subdirectories by default in `org-ql-search-directories-files'.
+This should probably be disabled by default, because
+e.g. `org-directory' may include deeply nested directories of
+non-Org files, such as a \".git\" directory, Org attachments
+directories, etc, which would make it slow to list the
+`org-directory' files recursively."
+  :type 'boolean)
 
 ;;;; Commands
 
@@ -91,6 +116,7 @@ Interactively, may also be:
 - `buffer': search the current buffer
 - `all': search all Org buffers
 - `agenda': search buffers returned by the function `org-agenda-files'
+- `directory': search Org files in `org-directory'
 - An expression which evaluates to a list of files/buffers
 - A space-separated list of file or buffer names
 
@@ -114,12 +140,13 @@ display the results.  By default, the value of
 necessary."
   (declare (indent defun))
   (interactive (list (pcase-exhaustive (completing-read "Buffers/Files: "
-                                                        (list 'buffer 'agenda 'all)
+                                                        (list 'buffer 'agenda 'directory 'all)
                                                         nil t)
+                       ((or "" "buffer") (current-buffer))
                        ("agenda" (org-agenda-files))
                        ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
                                         (buffer-list)))
-                       ((or "" "buffer") (current-buffer))
+                       ("directory" (org-ql-search-directories-files))
                        ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
                        (else (s-split (rx (1+ space)) else)))
                      (read-string "Query: ")
@@ -204,6 +231,22 @@ automatically from the query."
 
 ;;;###autoload
 (defalias 'org-ql-block 'org-ql-search-block)
+
+;;;; Functions
+
+(cl-defun org-ql-search-directories-files (&key (directories (list org-directory))
+                                                (recurse org-ql-search-directories-files-recursive)
+                                                (regexp org-ql-search-directories-files-regexp))
+  "Return list of matching files in DIRECTORIES, a list of directory paths.
+When RECURSE is non-nil, recurse into subdirectories.  When
+REGEXP is non-nil, only return files that match REGEXP."
+  (let ((files (->> directories
+                    (--map (f-files it nil recurse))
+                    -flatten)))
+    (if regexp
+        (--select (string-match regexp it)
+                  files)
+      files)))
 
 ;;;; Footer
 

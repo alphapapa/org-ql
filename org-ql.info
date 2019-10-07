@@ -690,6 +690,11 @@ File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
    • Predicates outline-path (alias olp) and outline-path-segment (alias
      olps).
    • Info manual.
+   • Command ‘org-ql-search’ can search files in ‘org-directory’;
+     customization options are available in the ‘org-ql-search’ group.
+   • Function ‘helm-org-ql-source’, which returns a Helm source that
+     searches given buffers/files with ‘helm-org-ql’.  It can be used
+     for custom Helm commands that search certain files.
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
@@ -959,16 +964,16 @@ Node: Agenda-like views17687
 Node: Listing / acting-on results19092
 Node: Changelog23694
 Node: 04-pre24201
-Node: 0324505
-Node: 02327481
-Node: 02227707
-Node: 02127973
-Node: 0228170
-Node: 0132203
-Node: Notes32302
-Node: Comparison with Org Agenda searches32464
-Node: org-sidebar33335
-Node: License33614
+Node: 0324862
+Node: 02327838
+Node: 02228064
+Node: 02128330
+Node: 0228527
+Node: 0132560
+Node: Notes32659
+Node: Comparison with Org Agenda searches32821
+Node: org-sidebar33692
+Node: License33971
 
 End Tag Table
 
