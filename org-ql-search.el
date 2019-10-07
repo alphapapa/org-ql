@@ -139,28 +139,39 @@ display the results.  By default, the value of
 `org-ql-view-buffer' is used, and a new buffer is created if
 necessary."
   (declare (indent defun))
-  (interactive (list (pcase-exhaustive (completing-read "Buffers/Files: "
-                                                        (list 'buffer 'agenda 'directory 'all)
-                                                        nil t)
-                       ((or "" "buffer") (current-buffer))
-                       ("agenda" (org-agenda-files))
-                       ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                                        (buffer-list)))
-                       ("directory" (org-ql-search-directories-files))
-                       ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
-                       (else (s-split (rx (1+ space)) else)))
-                     (read-string "Query: ")
-                     :narrow (eq current-prefix-arg '(4))
+  (interactive (list (if (and org-ql-view-buffers-files
+                              (bufferp org-ql-view-buffers-files))
+                         ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
+                         ;; TODO: Find a way to fix this.
+                         org-ql-view-buffers-files
+                       (pcase-exhaustive (completing-read "Buffers/Files: "
+                                                          (list 'buffer 'agenda 'directory 'all)
+                                                          nil nil (when org-ql-view-buffers-files
+                                                                    (prin1-to-string (cons 'list org-ql-view-buffers-files))))
+                         ((or "" "buffer") (current-buffer))
+                         ("agenda" (org-agenda-files))
+                         ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                                          (buffer-list)))
+                         ("directory" (org-ql-search-directories-files))
+                         ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
+                         (else (s-split (rx (1+ space)) else))))
+                     (read-string "Query: " (when org-ql-view-query
+                                              (format "%S" org-ql-view-query)))
+                     :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
                      :super-groups (when (bound-and-true-p org-super-agenda-auto-selector-keywords)
-                                     (pcase (completing-read "Group by: "
-                                                             (append (list "Don't group"
-                                                                           "Global super-groups")
-                                                                     (cl-loop for type in org-super-agenda-auto-selector-keywords
-                                                                              collect (substring (symbol-name type) 6)))
-                                                             nil t)
-                                       ("Global super-groups" org-super-agenda-groups)
-                                       ((or "" "Don't group") nil)
-                                       (property (list (list (intern (concat ":auto-" property)))))))
+                                     (let ((keywords (cl-loop for type in org-super-agenda-auto-selector-keywords
+                                                              collect (substring (symbol-name type) 6))))
+                                       (pcase (completing-read "Group by: "
+                                                               (append (list "Don't group"
+                                                                             "Global super-groups")
+                                                                       keywords)
+                                                               nil nil (when org-ql-view-super-groups
+                                                                         (format "%S" org-ql-view-super-groups)))
+                                         ("Global super-groups" org-super-agenda-groups)
+                                         ((or "" "Don't group") nil)
+                                         ((and keyword (guard (member keyword keywords)))
+                                          (list (list (intern (concat ":auto-" keyword)))))
+                                         (else (read else)))))
                      :sort (pcase (completing-read "Sort by: "
                                                    (list "Don't sort"
                                                          "date"
@@ -168,35 +179,42 @@ necessary."
                                                          "priority"
                                                          "scheduled"
                                                          "todo")
-                                                   nil t)
+                                                   nil t (when org-ql-view-sort
+                                                           (prin1-to-string org-ql-view-sort)))
                              ((or "" "Don't sort") nil)
                              (sort (intern sort)))))
-  (let* ((query (cl-etypecase query
-                  (string (if (string-match-p (rx bos (1+ alpha) ":") query)
+  ;; NOTE: Using `with-temp-buffer' is a hack to work around the fact that `make-local-variable'
+  ;; does not work reliably from inside a `let' form when the target buffer is current on entry
+  ;; to or exit from the `let', even though `make-local-variable' is actually done in
+  ;; `org-ql-view--display'.  So we do all this within a temp buffer, which works around it.
+  (with-temp-buffer
+    (let* ((query (cl-etypecase query
+                    (string (if (or (string-prefix-p "(" query)
+                                    (string-prefix-p "\"" query))
+                                ;; Read sexp query.
+                                (read query)
                               ;; Parse non-sexp query into sexp query.
-                              (org-ql--plain-query query)
-                            ;; Read sexp query.
-                            (read query)))
-                  (list query)))
-         (results (org-ql-select buffers-files query
-                    :action 'element-with-markers
-                    :narrow narrow
-                    :sort sort))
-         (strings (-map #'org-ql-view--format-element results))
-         (buffer (or buffer (format "%s %s*" org-ql-view-buffer-name-prefix (or title query))))
-         (header (org-ql-view--header-line-format buffers-files query title))
-         ;; Bind variables for `org-ql-view--display' to set.
-         (org-ql-view-buffers-files buffers-files)
-         (org-ql-view-query query)
-         (org-ql-view-sort sort)
-         (org-ql-view-narrow narrow)
-         (org-ql-view-super-groups super-groups)
-         (org-ql-view-title title))
-    (when super-groups
-      (let ((org-super-agenda-groups super-groups))
-        (setf strings (org-super-agenda--group-items strings))))
-    (org-ql-view--display :buffer buffer :header header
-      :string (s-join "\n" strings))))
+                              (org-ql--plain-query query)))
+                    (list query)))
+           (results (org-ql-select buffers-files query
+                      :action 'element-with-markers
+                      :narrow narrow
+                      :sort sort))
+           (strings (-map #'org-ql-view--format-element results))
+           (buffer (or buffer (format "%s %s*" org-ql-view-buffer-name-prefix (or title query))))
+           (header (org-ql-view--header-line-format buffers-files query title))
+           ;; Bind variables for `org-ql-view--display' to set.
+           (org-ql-view-buffers-files buffers-files)
+           (org-ql-view-query query)
+           (org-ql-view-sort sort)
+           (org-ql-view-narrow narrow)
+           (org-ql-view-super-groups super-groups)
+           (org-ql-view-title title))
+      (when super-groups
+        (let ((org-super-agenda-groups super-groups))
+          (setf strings (org-super-agenda--group-items strings))))
+      (org-ql-view--display :buffer buffer :header header
+        :string (s-join "\n" strings)))))
 
 (defun org-ql-search-block (query)
   "Insert items for QUERY into current buffer.

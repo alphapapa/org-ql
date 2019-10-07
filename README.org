@@ -105,7 +105,7 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 ~SORT~: One or a list of ~org-ql~ sorting functions, like ~date~ or ~priority~.
 
 *Bindings:* Keys bound in results buffer.
-+  =g=: Refresh results.
++  =g=: Refresh results.  With prefix, prompt to adjust search parameters.
 +  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 
 *Note:* The view buffer is currently put in ~org-agenda-mode~, which means that /some/ Org Agenda commands work, such as jumping to entries and changing item priorities (without necessarily updating the view).  This feature is experimental and not guaranteed to work correctly with all commands.  (It works to the extent it does because the appropriate text properties are placed on each item, imitating an Agenda buffer.)
@@ -376,6 +376,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Predicates =outline-path= (alias =olp=) and =outline-path-segment= (alias =olps=).
 +  Info manual.
 +  Command ~org-ql-search~ can search files in ~org-directory~; customization options are available in the ~org-ql-search~ group.
++  Command ~org-ql-view-refresh~ can be called with a prefix argument to adjust search parameters.
 +  Function ~helm-org-ql-source~, which returns a Helm source that searches given buffers/files with ~helm-org-ql~.  It can be used for custom Helm commands that search certain files.
 
 *Internal*

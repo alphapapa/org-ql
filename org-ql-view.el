@@ -266,18 +266,27 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
           'face '(:weight bold :inherit highlight))
       (org-ql-view key))))
 
-(defun org-ql-view-refresh ()
-  "Refresh current `org-ql-search' buffer."
-  (interactive)
-  (let ((current-line (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
-        (old-pos (point)))
-    (org-ql-search org-ql-view-buffers-files
-      org-ql-view-query
-      :sort org-ql-view-sort
-      :narrow org-ql-view-narrow
-      :super-groups org-ql-view-super-groups
-      :title org-ql-view-title
-      :buffer (current-buffer))
+(defun org-ql-view-refresh (&optional prompt)
+  "Refresh current `org-ql-search' buffer.
+If PROMPT is non-nil (interactively, with prefix), prompt to
+update search arguments."
+  (interactive "P")
+  (let* ((current-line (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
+         (old-pos (point))
+         (defaults (list org-ql-view-buffers-files
+                         org-ql-view-query
+                         :sort org-ql-view-sort
+                         :narrow org-ql-view-narrow
+                         :super-groups org-ql-view-super-groups
+                         :title org-ql-view-title))
+         (org-ql-view-buffer (current-buffer)))
+    (if prompt
+        (call-interactively #'org-ql-search)
+      (apply #'org-ql-search defaults))
+    ;; Now in the results buffer.
+    (rename-buffer (format "%s %s*"
+                           org-ql-view-buffer-name-prefix
+                           (or org-ql-view-title org-ql-view-query)))
     (goto-char (point-min))
     (or (when (search-forward current-line nil t)
           (beginning-of-line))
@@ -338,17 +347,24 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
 `org-ql-view-query', `org-ql-view-sort', `org-ql-view-narrow',
 `org-ql-view-super-groups', `org-ql-title.'"
   (declare (indent defun))
-  (let* ((buffer (cl-etypecase buffer
+  (let* ((vars (list 'org-ql-view-buffers-files 'org-ql-view-query
+                     'org-ql-view-sort 'org-ql-view-narrow
+                     'org-ql-view-super-groups 'org-ql-view-title))
+         ;; Save the values of variables which are set buffer-locally in the
+         ;; results buffer, which we want to override and set buffer-locally again.
+         (vals (cl-loop for symbol in vars
+                        collect (cons symbol (symbol-value symbol))))
+         (buffer (cl-etypecase buffer
                    (string (org-ql-view--buffer buffer))
                    (null (org-ql-view--buffer buffer))
                    (buffer buffer))))
     (with-current-buffer buffer
       (use-local-map org-ql-view-map)
       ;; Prepare buffer, saving data for refreshing.
-      (cl-loop for symbol in (list 'org-ql-view-buffers-files 'org-ql-view-query
-                                   'org-ql-view-sort 'org-ql-view-narrow
-                                   'org-ql-view-super-groups 'org-ql-view-title)
-               do (set (make-local-variable symbol) (symbol-value symbol)))
+      (cl-loop for symbol in vars
+               do (progn
+                    (kill-local-variable symbol)
+                    (set (make-local-variable symbol) (alist-get symbol vals nil nil #'equal))))
       (setf header-line-format header)
       ;; Clear buffer, insert entries, etc.
       (let ((inhibit-read-only t))

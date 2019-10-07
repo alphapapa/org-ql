@@ -216,7 +216,8 @@ Interactively, with prefix, leave narrowed.
 ‘priority’.
 
    *Bindings:* Keys bound in results buffer.
-   • g: Refresh results.
+   • g: Refresh results.  With prefix, prompt to adjust search
+     parameters.
    • C-x C-s: Save query to variable ‘org-ql-views’ (accessible with
      command ‘org-ql-view’).
 
@@ -692,6 +693,8 @@ File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
    • Info manual.
    • Command ‘org-ql-search’ can search files in ‘org-directory’;
      customization options are available in the ‘org-ql-search’ group.
+   • Command ‘org-ql-view-refresh’ can be called with a prefix argument
+     to adjust search parameters.
    • Function ‘helm-org-ql-source’, which returns a Helm source that
      searches given buffers/files with ‘helm-org-ql’.  It can be used
      for custom Helm commands that search certain files.
@@ -950,30 +953,30 @@ Node: Quelpa2241
 Node: Usage2684
 Node: Commands3594
 Node: org-ql-search3823
-Node: helm-org-ql5416
-Node: org-ql-view5828
-Node: org-ql-view-sidebar6026
-Node: org-ql-view-recent-items6382
-Node: org-ql-sparse-tree6866
-Node: Queries7666
-Node: Non-sexp query syntax8508
-Node: Predicates10008
-Node: Date/time predicates14865
-Node: Functions / Macros17500
-Node: Agenda-like views17687
-Node: Listing / acting-on results19092
-Node: Changelog23694
-Node: 04-pre24201
-Node: 0324862
-Node: 02327838
-Node: 02228064
-Node: 02128330
-Node: 0228527
-Node: 0132560
-Node: Notes32659
-Node: Comparison with Org Agenda searches32821
-Node: org-sidebar33692
-Node: License33971
+Node: helm-org-ql5471
+Node: org-ql-view5883
+Node: org-ql-view-sidebar6081
+Node: org-ql-view-recent-items6437
+Node: org-ql-sparse-tree6921
+Node: Queries7721
+Node: Non-sexp query syntax8563
+Node: Predicates10063
+Node: Date/time predicates14920
+Node: Functions / Macros17555
+Node: Agenda-like views17742
+Node: Listing / acting-on results19147
+Node: Changelog23749
+Node: 04-pre24256
+Node: 0325029
+Node: 02328005
+Node: 02228231
+Node: 02128497
+Node: 0228694
+Node: 0132727
+Node: Notes32826
+Node: Comparison with Org Agenda searches32988
+Node: org-sidebar33859
+Node: License34138
 
 End Tag Table
 
