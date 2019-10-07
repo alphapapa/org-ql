@@ -479,6 +479,25 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((heading "Take over" "world"))
           '("Take over the world"))))
 
+    (describe "(outline-path)"
+      (org-ql-it "with one argument"
+        (org-ql-expect ((outline-path "symphony"))
+          '("Write a symphony")))
+      (org-ql-it "with two arguments"
+        (org-ql-expect ((outline-path "idea" "symphony"))
+          '("Write a symphony"))))
+
+    (describe "(outline-path-segment)"
+      (org-ql-it "with one argument"
+        (org-ql-expect ((outline-path-segment "symphony"))
+          '("Write a symphony")))
+      (org-ql-it "with a contiguous segment"
+        (org-ql-expect ((outline-path-segment "idea" "symphony"))
+          '("Write a symphony")))
+      (org-ql-it "with a non-contiguous segment"
+        (org-ql-expect ((outline-path-segment "data" "symphony"))
+          nil)))
+
     (describe "(path)"
       (org-ql-it "without arguments"
         (org-ql-expect ((path))
