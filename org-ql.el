@@ -1274,7 +1274,7 @@ A and B are Org headline elements."
   ;; ends up being not defined correctly at expansion time.
 
   (defmacro org-ql--def-plain-query-fn ()
-    "Define function `org-ql--input-query'.
+    "Define function `org-ql--plain-query'.
 Builds the PEG expression using predicates defined in
 `org-ql-predicates' and `org-ql-predicates-extra-aliases'."
     (let* ((predicates (--map (symbol-name (plist-get it :name))
