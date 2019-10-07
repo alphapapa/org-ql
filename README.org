@@ -1,10 +1,10 @@
 #+TITLE: org-ql
 
-#+BEGIN_HTML
-<a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
-#+END_HTML
+# NOTE: Using =BEGIN_HTML= for this causes TeX/info export to fail, but this HTML block works.
+#+HTML: <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
 
-[[https://melpa.org/#/org-ql][file:https://melpa.org/packages/org-ql-badge.svg]] [[https://stable.melpa.org/#/org-ql][file:https://stable.melpa.org/packages/org-ql-badge.svg]]
+# NOTE: To avoid having this in the info manual, we use HTML rather than Org syntax; it still appears with the GitHub renderer.
+#+HTML: <a href="https://melpa.org/#/org-ql"><img src="https://melpa.org/packages/org-ql-badge.svg"></a> <a href="https://stable.melpa.org/#/org-ql"><img src="https://stable.melpa.org/packages/org-ql-badge.svg"></a>
 
 This package provides a query language for Org files.  It offers two syntax styles: Lisp-like sexps and search engine-like keywords.
 
@@ -63,12 +63,12 @@ These commands and functions are included:
 +  *Showing an agenda-like view:*
      -  ~org-ql-search~ (command)
      -  ~org-ql-view~ (command)
-     -  =org-ql-view-sidebar= (command)
+     -  ~org-ql-view-sidebar~ (command)
      -  ~org-ql-block~ (agenda block function)
 +  *Showing a tree in a buffer:*
-     -  =org-ql-sparse-tree= (command)
+     -  ~org-ql-sparse-tree~ (command)
 +  *Showing results with Helm*:
-     -  =helm-org-ql= (command)
+     -  ~helm-org-ql~ (command)
 +  *Returning a list of matches or acting on them:*
      -  ~org-ql~ (macro)
      -  ~org-ql-select~ (function)
@@ -76,6 +76,7 @@ These commands and functions are included:
 
 Feedback on these APIs is welcome.  Eventually, after being tested and polished, they will be considered stable. 
 
+# TODO: Find a way to get these examples included in the info manual.
 Lisp code examples are in [[examples.org]].
 
 ** Commands
@@ -129,7 +130,9 @@ Show a sidebar window listing views stored in =org-ql-views= for easy access.  I
 
 Show items in ~FILES~ from last ~DAYS~ days with timestamps of ~TYPE~.  ~TYPE~ may be ~ts~, ~ts-active~, ~ts-inactive~, ~clocked~, ~closed~, ~deadline~, ~planning~, or ~scheduled~.  =FILES= defaults to those returned by the function =org-agenda-files=.
 
-*** org-ql-sparse-tree =(query &key keep-previous (buffer (current-buffer)))=
+*** org-ql-sparse-tree
+
+Arguments: ~(query &key keep-previous (buffer (current-buffer)))~
 
 Show a sparse tree for ~QUERY~ in ~BUFFER~ and return number of results.  The tree will show the lines where the query matches, and any other context defined in ~org-show-context-detail~, which see.
 
@@ -171,29 +174,29 @@ Note that the =priority= predicate does not support comparators in the non-sexp 
 
 Arguments are listed next to predicate names, where applicable.
 
-+  ~category (&optional categories)~ :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
-+  ~children (&optional query)~ :: Return non-nil if current heading has direct child headings.  If ~QUERY~, test it against child headings.  This selector may be nested, e.g. to match grandchild headings.
-+  ~descendants (&optional query)~ :: Return non-nil if current heading has descendant headings.  If ~QUERY~, test it against descendant headings.  This selector may be nested (if you can grok the nesting!).
-+  ~done~ :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
-+  ~habit~ :: Return non-nil if entry is a habit.
-+  ~heading (&rest regexps)~ :: Return non-nil if current entry's heading matches all ~REGEXPS~ (regexp strings).
-+  ~level (level-or-comparator &optional level)~ :: Return non-nil if current heading's outline level matches arguments.  The following forms are accepted: ~(level NUMBER)~: Matches if heading level is ~NUMBER~.  ~(level NUMBER NUMBER)~: Matches if heading level is equal to or between NUMBERs.  ~(level COMPARATOR NUMBER)~: Matches if heading level compares to ~NUMBER~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.
-+  =outline-path (&rest strings)= :: Return non-nil if current node's outline path matches all of =STRINGS=.  Each string may appear as a substring in any part of the node's outline path.  For example, the path =Food/Fruits/Grapes= would match ~(olp "Fruit" "Grape")~.
-     -  Aliases: =olp=.
-+  =outline-path-segment (&rest strings)= :: Return non-nil if current node's outline path matches =STRINGS=.  Matches =STRINGS= as a contiguous segment of the outline path.  Each string is compared as a substring.  For example the path =Food/Fruits/Grapes= would match ~(olps "Fruit" "Grape")~ but not ~(olps "Food" "Grape")~.
-     -  Aliases: =olps=.
-+  =path (&rest regexps)= :: Return non-nil if current heading's buffer's filename path matches any of =REGEXPS= (regexp strings).  Without arguments, return non-nil if buffer is file-backed.
-+  ~priority (&optional comparator-or-priority priority)~ :: Return non-nil if current heading has a certain priority.  ~COMPARATOR-OR-PRIORITY~ should be either a comparator function, like ~<=~, or a priority string, like "A" (in which case (~=~ will be the comparator).  If ~COMPARATOR-OR-PRIORITY~ is a comparator, ~PRIORITY~ should be a priority string.  If both arguments are nil, return non-nil if heading has any defined priority.
-+  ~property (property &optional value)~ :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a custom predicate form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
-+  ~regexp (&rest regexps)~ :: Return non-nil if current entry matches all of ~REGEXPS~ (regexp strings).  Matches against entire entry, from beginning of its heading to the next heading.
-+  ~tags (&optional tags)~ :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
-+  =tags-inherited (&optional tags)= :: Return non-nil if current heading's inherited tags include one or more of =TAGS= (a list of strings).  If TAGS is nil, return non-nil if heading has any inherited tags.
-     -  Aliases: =inherited-tags=, =tags-i=, =itags=.
-+  =tags-local (&optional tags)= :: Return non-nil if current heading's local tags include one or more of =TAGS= (a list of strings).  If TAGS is nil, return non-nil if heading has any local tags.
-     -  Aliases: =local-tags=, =tags-l=, =ltags=.
-+  =tags-all (tags)= :: Return non-nil if current heading includes all of =TAGS=.  Tests both inherited and local tags.
-     -  Aliases: =tags&=.
-+  ~todo (&optional keywords)~ :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
++  =category (&optional categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
++  =children (&optional query)= :: Return non-nil if current heading has direct child headings.  If ~QUERY~, test it against child headings.  This selector may be nested, e.g. to match grandchild headings.
++  =descendants (&optional query)= :: Return non-nil if current heading has descendant headings.  If ~QUERY~, test it against descendant headings.  This selector may be nested (if you can grok the nesting!).
++  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
++  =habit= :: Return non-nil if entry is a habit.
++  =heading (&rest regexps)= :: Return non-nil if current entry's heading matches all ~REGEXPS~ (regexp strings).
++  =level (level-or-comparator &optional level)= :: Return non-nil if current heading's outline level matches arguments.  The following forms are accepted: ~(level NUMBER)~: Matches if heading level is ~NUMBER~.  ~(level NUMBER NUMBER)~: Matches if heading level is equal to or between NUMBERs.  ~(level COMPARATOR NUMBER)~: Matches if heading level compares to ~NUMBER~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.
++  =outline-path (&rest strings)= :: Return non-nil if current node's outline path matches all of ~STRINGS~.  Each string may appear as a substring in any part of the node's outline path.  For example, the path =Food/Fruits/Grapes= would match ~(olp "Fruit" "Grape")~.
+     -  Aliases: ~olp~.
++  =outline-path-segment (&rest strings)= :: Return non-nil if current node's outline path matches ~STRINGS~.  Matches ~STRINGS~ as a contiguous segment of the outline path.  Each string is compared as a substring.  For example the path ~Food/Fruits/Grapes~ would match ~(olps "Fruit" "Grape")~ but not ~(olps "Food" "Grape")~.
+     -  Aliases: ~olps~.
++  =path (&rest regexps)= :: Return non-nil if current heading's buffer's filename path matches any of ~REGEXPS~ (regexp strings).  Without arguments, return non-nil if buffer is file-backed.
++  =priority (&optional comparator-or-priority priority)= :: Return non-nil if current heading has a certain priority.  ~COMPARATOR-OR-PRIORITY~ should be either a comparator function, like ~<=~, or a priority string, like "A" (in which case (~=~ will be the comparator).  If ~COMPARATOR-OR-PRIORITY~ is a comparator, ~PRIORITY~ should be a priority string.  If both arguments are nil, return non-nil if heading has any defined priority.
++  =property (property &optional value)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a custom predicate form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
++  =regexp (&rest regexps)= :: Return non-nil if current entry matches all of ~REGEXPS~ (regexp strings).  Matches against entire entry, from beginning of its heading to the next heading.
++  =tags (&optional tags)= :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
++  =tags-inherited (&optional tags)= :: Return non-nil if current heading's inherited tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any inherited tags.
+     -  Aliases: ~inherited-tags~, ~tags-i~, ~itags~.
++  =tags-local (&optional tags)= :: Return non-nil if current heading's local tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any local tags.
+     -  Aliases: ~local-tags~, ~tags-l~, ~ltags~.
++  =tags-all (tags)= :: Return non-nil if current heading includes all of ~TAGS~.  Tests both inherited and local tags.
+     -  Aliases: ~tags&~.
++  =todo (&optional keywords)= :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
 
 *** Date/time predicates
 :PROPERTIES:
@@ -208,21 +211,21 @@ All of these predicates take optional keyword arguments ~:from~, ~:to:~, and ~:o
 
 Argument values should be either a number of days (positive to look forward, or negative to look backward), a ~ts~ struct, or a string parseable by ~parse-time-string~ (the string may omit the time value).
 
-*Predicates:*
-+  ~ts~ :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.
-+  ~ts-active~, ~ts-a~ :: Like ~ts~, but only matches active timestamps.
-+  ~ts-inactive~, ~ts-i~ :: Like ~ts~, but only matches inactive timestamps.
++  *Predicates*
+     -  =ts= :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.
+     -  =ts-active=, =ts-a= :: Like =ts=, but only matches active timestamps.
+     -  =ts-inactive=, =ts-i= :: Like =ts=, but only matches inactive timestamps.
 
 The following predicates, in addition to the keyword arguments, can also take a single argument, a number, which looks backward or forward a number of days.  The number can be negative to invert the direction.
 
-*Backward-looking:*
-+  ~clocked~ :: Return non-nil if current entry was clocked in given period.  If no arguments are specified, return non-nil if entry was clocked at any time.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
-+  ~closed~ :: Return non-nil if current entry was closed in given period.  If no arguments are specified, return non-nil if entry was closed at any time.
++  *Backward-looking*
+     -  =clocked= :: Return non-nil if current entry was clocked in given period.  If no arguments are specified, return non-nil if entry was clocked at any time.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
+     -  =closed= :: Return non-nil if current entry was closed in given period.  If no arguments are specified, return non-nil if entry was closed at any time.
 
-*Forward-looking:*
-+  ~deadline~ :: Return non-nil if current entry has deadline in given period.  If argument is =auto=, return non-nil if entry has deadline within =org-deadline-warning-days=.  If no arguments are specified, return non-nil if entry has any deadline.
-+  ~planning~ :: Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).  If no arguments are specified, return non-nil if entry is scheduled at any time.
-+  ~scheduled~ :: Return non-nil if current entry is scheduled in given period.  If no arguments are specified, return non-nil if entry is scheduled at any time.
++  *Forward-looking*
+     -  =deadline= :: Return non-nil if current entry has deadline in given period.  If argument is =auto=, return non-nil if entry has deadline within =org-deadline-warning-days=.  If no arguments are specified, return non-nil if entry has any deadline.
+     -  =planning= :: Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).  If no arguments are specified, return non-nil if entry is scheduled at any time.
+     -  =scheduled= :: Return non-nil if current entry is scheduled in given period.  If no arguments are specified, return non-nil if entry is scheduled at any time.
 
 ** Functions / Macros
 :PROPERTIES:
@@ -371,6 +374,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 *Added*
 +  Predicates =outline-path= (alias =olp=) and =outline-path-segment= (alias =olps=).
++  Info manual.
 
 *Internal*
 +  Added generic node data cache to speed up recursive, tree-based queries.
@@ -571,9 +575,32 @@ Generates the predicate subtree.
 
 If ~org-ql~ is loaded byte-compiled, the argument lists are not named properly (not sure why, as ~help-function-arglist~ is supposed to handle that).  We could run the function in another Emacs process with ~async~ to avoid this.
 
+* COMMENT Export setup                                             :noexport:
+:PROPERTIES:
+:TOC:      ignore
+:END:
+
+# Copied from org-super-agenda's readme, in which much was borrowed from Org's =org-manual.org=.
+
+#+OPTIONS: broken-links:t *:t
+
+** Info export options
+
+#+TEXINFO_DIR_CATEGORY: Emacs
+#+TEXINFO_DIR_TITLE: Org QL: (org-ql)
+#+TEXINFO_DIR_DESC: Query language, search commands, and saved views for Org files
+
+# NOTE: We could use these, but that causes a pointless error, "org-compile-file: File "..README.info" wasn't produced...", so we just rename the files in the after-save-hook instead.
+# #+TEXINFO_FILENAME: org-ql.info
+# #+EXPORT_FILE_NAME: org-ql.texi
+
 ** File-local variables
 
+# NOTE: Setting org-comment-string buffer-locally is a nasty hack to work around GitHub's org-ruby's HTML rendering, which does not respect noexport tags.  The only way to hide this tree from its output is to use the COMMENT keyword, but that prevents Org from processing the export options declared in it.  So since these file-local variables don't affect org-ruby, wet set org-comment-string to an unused keyword, which prevents Org from deleting this tree from the export buffer, which allows it to find the export options in it.  And since org-export does respect the noexport tag, the tree is excluded from the info page.
+
 # Local Variables:
-# eval: (require 'org-make-toc)
 # before-save-hook: org-make-toc
+# after-save-hook: (lambda nil (when (and (require 'ox-texinfo nil t) (org-texinfo-export-to-info)) (delete-file "README.texi") (rename-file "README.info" "org-ql.info" t)))
+# org-export-initial-scope: buffer
+# org-comment-string: "NOTCOMMENT"
 # End:

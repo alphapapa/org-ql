@@ -1,0 +1,978 @@
+This is README.info, produced by makeinfo version 5.2 from README.texi.
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Org QL: (org-ql).     Query language, search commands, and saved views for Org files.
+END-INFO-DIR-ENTRY
+
+
+File: README.info,  Node: Top,  Next: Contents,  Up: (dir)
+
+org-ql
+******
+
+* Menu:
+
+* Contents::
+* Screenshots::
+* Installation::
+* Usage::
+* Changelog::
+* Notes::
+* License::
+
+— The Detailed Node Listing —
+
+
+
+Installation
+
+* Quelpa::
+
+
+Usage
+
+* Commands::
+* Queries::
+* Functions / Macros::
+
+Commands
+
+* org-ql-search::
+* helm-org-ql::
+* org-ql-view::
+* org-ql-view-sidebar::
+* org-ql-view-recent-items::
+* org-ql-sparse-tree::
+
+
+
+Queries
+
+* Non-sexp query syntax::
+* Predicates::
+* Date/time predicates::
+
+
+
+Functions / Macros
+
+* Agenda-like views::
+* Listing / acting-on results::
+
+Changelog
+
+* 0.4-pre: 04-pre. 
+* 0.3: 03. 
+* 0.2.3: 023. 
+* 0.2.2: 022. 
+* 0.2.1: 021. 
+* 0.2: 02. 
+* 0.1: 01. 
+
+
+
+Notes
+
+* Comparison with Org Agenda searches::
+* org-sidebar::
+
+This package provides a query language for Org files.  It offers two
+syntax styles: Lisp-like sexps and search engine-like keywords.
+
+   It includes three libraries: The org-ql library is flexible and may
+be used as a backend for other tools.  The libraries org-ql-search and
+helm-org-ql provide interactive search commands and saved views.
+
+
+File: README.info,  Node: Contents,  Next: Screenshots,  Prev: Top,  Up: Top
+
+1 Contents
+**********
+
+   • • • 
+        • • • • • 
+
+File: README.info,  Node: Screenshots,  Next: Installation,  Prev: Contents,  Up: Top
+
+2 Screenshots
+*************
+
+
+File: README.info,  Node: Installation,  Next: Usage,  Prev: Screenshots,  Up: Top
+
+3 Installation
+**************
+
+The package may be installed directly from MELPA
+(https://melpa.org/#/org-ql) or with other tools like Quelpa
+(https://framagit.org/steckerhalter/quelpa).
+
+   After installation, you can use the commands without additional
+configuration.  _Note: The command helm-org-ql only works if the package
+helm-org is installed; Helm is not a dependency of this package, so it’s
+not automatically installed._
+
+   To use the functions and macros in your own Elisp code, use libraries
+org-ql and org-ql-view.
+
+* Menu:
+
+* Quelpa::
+
+
+File: README.info,  Node: Quelpa,  Up: Installation
+
+3.1 Quelpa
+==========
+
+Installing with Quelpa (https://framagit.org/steckerhalter/quelpa) is
+easy:
+
+  1. Install quelpa-use-package
+     (https://framagit.org/steckerhalter/quelpa-use-package#installation)
+     (which can be installed directly from MELPA).
+  2. Add this form to your init file:
+
+     (use-package org-ql
+       :quelpa (org-ql :fetcher github :repo "alphapapa/org-ql"))
+
+
+File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
+
+4 Usage
+*******
+
+These commands and functions are included:
+
+   • *Showing an agenda-like view:*
+        • ‘org-ql-search’ (command)
+        • ‘org-ql-view’ (command)
+        • ‘org-ql-view-sidebar’ (command)
+        • ‘org-ql-block’ (agenda block function)
+   • *Showing a tree in a buffer:*
+        • ‘org-ql-sparse-tree’ (command)
+   • *Showing results with Helm*:
+        • ‘helm-org-ql’ (command)
+   • *Returning a list of matches or acting on them:*
+        • ‘org-ql’ (macro)
+        • ‘org-ql-select’ (function)
+        • ‘org-ql-query’ (function)
+
+   Feedback on these APIs is welcome.  Eventually, after being tested
+and polished, they will be considered stable.
+
+   Lisp code examples are in .
+
+* Menu:
+
+* Commands::
+* Queries::
+* Functions / Macros::
+
+
+File: README.info,  Node: Commands,  Next: Queries,  Up: Usage
+
+4.1 Commands
+============
+
+* Menu:
+
+* org-ql-search::
+* helm-org-ql::
+* org-ql-view::
+* org-ql-view-sidebar::
+* org-ql-view-recent-items::
+* org-ql-sparse-tree::
+
+
+File: README.info,  Node: org-ql-search,  Next: helm-org-ql,  Up: Commands
+
+4.1.1 org-ql-search
+-------------------
+
+_Note: This command supports both sexp queries and ._
+
+   Read ‘QUERY’ and search with ‘org-ql’.  Interactively, prompt for
+these variables:
+
+   ‘BUFFERS-FILES’: ‘A’ list of buffers and/or files to search.
+Interactively, may also be:
+
+   • ‘buffer’: search the current buffer
+   • ‘all’: search all Org buffers
+   • ‘agenda’: search buffers returned by the function
+     ‘org-agenda-files’
+   • An expression which evaluates to a list of files/buffers
+   • A space-separated list of file or buffer names
+
+   ‘GROUPS’: An ‘org-super-agenda’ group set.  See variable
+‘org-super-agenda-groups’.
+
+   ‘NARROW’: When non-nil, don’t widen buffers before searching.
+Interactively, with prefix, leave narrowed.
+
+   ‘SORT’: One or a list of ‘org-ql’ sorting functions, like ‘date’ or
+‘priority’.
+
+   *Bindings:* Keys bound in results buffer.
+   • g: Refresh results.
+   • C-x C-s: Save query to variable ‘org-ql-views’ (accessible with
+     command ‘org-ql-view’).
+
+   *Note:* The view buffer is currently put in ‘org-agenda-mode’, which
+means that _some_ Org Agenda commands work, such as jumping to entries
+and changing item priorities (without necessarily updating the view).
+This feature is experimental and not guaranteed to work correctly with
+all commands.  (It works to the extent it does because the appropriate
+text properties are placed on each item, imitating an Agenda buffer.)
+
+
+File: README.info,  Node: helm-org-ql,  Next: org-ql-view,  Prev: org-ql-search,  Up: Commands
+
+4.1.2 helm-org-ql
+-----------------
+
+_Note: This command uses ._
+
+   This command displays matches with Helm.  *Note:* Helm is not a
+package dependency, so this command only works if the package helm-org
+is installed.
+
+   • Press C-x C-s in the Helm session to save the results to an
+     org-ql-search buffer.
+
+
+File: README.info,  Node: org-ql-view,  Next: org-ql-view-sidebar,  Prev: helm-org-ql,  Up: Commands
+
+4.1.3 org-ql-view
+-----------------
+
+Choose and display a view stored in ‘org-ql-views’.
+
+
+File: README.info,  Node: org-ql-view-sidebar,  Next: org-ql-view-recent-items,  Prev: org-ql-view,  Up: Commands
+
+4.1.4 org-ql-view-sidebar
+-------------------------
+
+Show a sidebar window listing views stored in org-ql-views for easy
+access.  In the sidebar, press RET or mouse-1 to show the view at point,
+and press c to customize the view at point.
+
+
+File: README.info,  Node: org-ql-view-recent-items,  Next: org-ql-sparse-tree,  Prev: org-ql-view-sidebar,  Up: Commands
+
+4.1.5 org-ql-view-recent-items
+------------------------------
+
+Show items in ‘FILES’ from last ‘DAYS’ days with timestamps of ‘TYPE’.
+‘TYPE’ may be ‘ts’, ‘ts-active’, ‘ts-inactive’, ‘clocked’, ‘closed’,
+‘deadline’, ‘planning’, or ‘scheduled’.  FILES defaults to those
+returned by the function org-agenda-files.
+
+
+File: README.info,  Node: org-ql-sparse-tree,  Prev: org-ql-view-recent-items,  Up: Commands
+
+4.1.6 org-ql-sparse-tree
+------------------------
+
+Arguments: ‘(query &key keep-previous (buffer (current-buffer)))’
+
+   Show a sparse tree for ‘QUERY’ in ‘BUFFER’ and return number of
+results.  The tree will show the lines where the query matches, and any
+other context defined in ‘org-show-context-detail’, which see.
+
+   ‘QUERY’ is an ‘org-ql’ query sexp (quoted, since this is a function).
+‘BUFFER’ defaults to the current buffer.  When ‘KEEP-PREVIOUS’ is
+non-nil (interactively, with prefix), the outline is not reset to the
+overview state before finding matches, which allows stacking calls to
+this command.  Runs ‘org-occur-hook’ after making the sparse tree.
+
+
+File: README.info,  Node: Queries,  Next: Functions / Macros,  Prev: Commands,  Up: Usage
+
+4.2 Queries
+===========
+
+An org-ql query is a lisp form which may contain arbitrary lisp forms,
+as well as certain built-in predicates.  It is byte-compiled into a
+predicate function which is tested with point on each heading in an Org
+buffer; when it returns non-nil, the heading matches the query.
+
+   *Notes:*
+   • Bare strings like ‘"string"’ are automatically converted to
+     ‘(regexp "string")’ predicates.
+   • Standard numeric comparator function symbols (‘<’, ‘<=’, ‘>’, ‘>=’,
+     ‘=’ ) need not be quoted when passed as an argument to predicates
+     which accept them.  The resemblance to infix notation is
+     coincidental.
+
+* Menu:
+
+* Non-sexp query syntax::
+* Predicates::
+* Date/time predicates::
+
+
+File: README.info,  Node: Non-sexp query syntax,  Next: Predicates,  Up: Queries
+
+4.2.1 Non-sexp query syntax
+---------------------------
+
+The command org-ql-search also accepts, and the command helm-org-ql only
+accepts, an alternative, non-sexp query syntax.  The syntax is simple,
+and a few examples of queries in both syntaxes should suffice.  By
+default, when multiple predicates are used, they are combined with
+boolean and.
+
+Sexp syntax                                         Non-sexp syntax
+------------------------------------------------------------------------------------------------
+‘(todo)’                                            ‘todo:’
+‘(todo "SOMEDAY")’                                  ‘todo:SOMEDAY’
+‘(todo "SOMEDAY" "WAITING")’                        ‘todo:SOMEDAY,WAITING’
+‘(ts :on today)’                                    ‘ts:on=today’
+‘(ts-active :from "2017-01-01" :to "2018-01-01")’   ‘ts-active:from=2017-01-01,to=2018-01-01’
+‘(clocked :on -1)’                                  ‘clocked:on=-1’
+‘(heading "quoted phrase" "word")’                  ‘heading:"quoted phrase",word’
+‘(and (tags "book" "books") (priority "A"))’        ‘tags:book,books priority:A’
+‘(priority >= B)’                                   ‘priority:A,B’
+
+   Note that the priority predicate does not support comparators in the
+non-sexp syntax, so multiple priorities should be passed instead, as
+seen in the last example.
+
+
+File: README.info,  Node: Predicates,  Next: Date/time predicates,  Prev: Non-sexp query syntax,  Up: Queries
+
+4.2.2 Predicates
+----------------
+
+Arguments are listed next to predicate names, where applicable.
+
+‘category (&optional categories)’
+     Return non-nil if current heading is in one or more of ‘CATEGORIES’
+     (a list of strings).
+‘children (&optional query)’
+     Return non-nil if current heading has direct child headings.  If
+     ‘QUERY’, test it against child headings.  This selector may be
+     nested, e.g.  to match grandchild headings.
+‘descendants (&optional query)’
+     Return non-nil if current heading has descendant headings.  If
+     ‘QUERY’, test it against descendant headings.  This selector may be
+     nested (if you can grok the nesting!).
+‘done’
+     Return non-nil if entry’s ‘TODO’ keyword is in ‘org-done-keywords’.
+‘habit’
+     Return non-nil if entry is a habit.
+‘heading (&rest regexps)’
+     Return non-nil if current entry’s heading matches all ‘REGEXPS’
+     (regexp strings).
+‘level (level-or-comparator &optional level)’
+     Return non-nil if current heading’s outline level matches
+     arguments.  The following forms are accepted: ‘(level NUMBER)’:
+     Matches if heading level is ‘NUMBER’.  ‘(level NUMBER NUMBER)’:
+     Matches if heading level is equal to or between NUMBERs.  ‘(level
+     COMPARATOR NUMBER)’: Matches if heading level compares to ‘NUMBER’
+     with ‘COMPARATOR’.  ‘COMPARATOR’ may be ‘<’, ‘<=’, ‘>’, or ‘>=’.
+‘outline-path (&rest strings)’
+     Return non-nil if current node’s outline path matches all of
+     ‘STRINGS’.  Each string may appear as a substring in any part of
+     the node’s outline path.  For example, the path Food/Fruits/Grapes
+     would match ‘(olp "Fruit" "Grape")’.
+        • Aliases: ‘olp’.
+‘outline-path-segment (&rest strings)’
+     Return non-nil if current node’s outline path matches ‘STRINGS’.
+     Matches ‘STRINGS’ as a contiguous segment of the outline path.
+     Each string is compared as a substring.  For example the path
+     ‘Food/Fruits/Grapes’ would match ‘(olps "Fruit" "Grape")’ but not
+     ‘(olps "Food" "Grape")’.
+        • Aliases: ‘olps’.
+‘path (&rest regexps)’
+     Return non-nil if current heading’s buffer’s filename path matches
+     any of ‘REGEXPS’ (regexp strings).  Without arguments, return
+     non-nil if buffer is file-backed.
+‘priority (&optional comparator-or-priority priority)’
+     Return non-nil if current heading has a certain priority.
+     ‘COMPARATOR-OR-PRIORITY’ should be either a comparator function,
+     like ‘<=’, or a priority string, like "A" (in which case (‘=’ will
+     be the comparator).  If ‘COMPARATOR-OR-PRIORITY’ is a comparator,
+     ‘PRIORITY’ should be a priority string.  If both arguments are nil,
+     return non-nil if heading has any defined priority.
+‘property (property &optional value)’
+     Return non-nil if current entry has ‘PROPERTY’ (a string), and
+     optionally ‘VALUE’ (a string).  Note that property inheritance is
+     currently _not_ enabled for this predicate.  If you need to test
+     with inheritance, you could use a custom predicate form, like
+     ‘(org-entry-get (point) "PROPERTY" 'inherit)’.
+‘regexp (&rest regexps)’
+     Return non-nil if current entry matches all of ‘REGEXPS’ (regexp
+     strings).  Matches against entire entry, from beginning of its
+     heading to the next heading.
+‘tags (&optional tags)’
+     Return non-nil if current heading has one or more of ‘TAGS’ (a list
+     of strings).  Tests both inherited and local tags.
+‘tags-inherited (&optional tags)’
+     Return non-nil if current heading’s inherited tags include one or
+     more of ‘TAGS’ (a list of strings).  If ‘TAGS’ is nil, return
+     non-nil if heading has any inherited tags.
+        • Aliases: ‘inherited-tags’, ‘tags-i’, ‘itags’.
+‘tags-local (&optional tags)’
+     Return non-nil if current heading’s local tags include one or more
+     of ‘TAGS’ (a list of strings).  If ‘TAGS’ is nil, return non-nil if
+     heading has any local tags.
+        • Aliases: ‘local-tags’, ‘tags-l’, ‘ltags’.
+‘tags-all (tags)’
+     Return non-nil if current heading includes all of ‘TAGS’.  Tests
+     both inherited and local tags.
+        • Aliases: ‘tags&’.
+‘todo (&optional keywords)’
+     Return non-nil if current heading is a ‘TODO’ item.  With
+     ‘KEYWORDS’, return non-nil if its keyword is one of ‘KEYWORDS’ (a
+     list of strings).  When called without arguments, only matches
+     non-done tasks (i.e.  does not match keywords in
+     ‘org-done-keywords’).
+
+
+File: README.info,  Node: Date/time predicates,  Prev: Predicates,  Up: Queries
+
+4.2.3 Date/time predicates
+--------------------------
+
+All of these predicates take optional keyword arguments ‘:from’, ‘:to:’,
+and ‘:on’:
+
+   • If ‘:from’, return non-nil if entry has a timestamp on or after
+     ‘:from’.
+   • If ‘:to’, return non-nil if entry has a timestamp on or before
+     ‘:to’.
+   • If ‘:on’, return non-nil if entry has a timestamp on date ‘:on’.
+
+   Argument values should be either a number of days (positive to look
+forward, or negative to look backward), a ‘ts’ struct, or a string
+parseable by ‘parse-time-string’ (the string may omit the time value).
+
+   • *Predicates*
+     ‘ts’
+          Return non-nil if current entry has a timestamp in given
+          period.  If no arguments are specified, return non-nil if
+          entry has any timestamp.
+     ‘ts-active, ts-a’
+          Like ts, but only matches active timestamps.
+     ‘ts-inactive, ts-i’
+          Like ts, but only matches inactive timestamps.
+
+   The following predicates, in addition to the keyword arguments, can
+also take a single argument, a number, which looks backward or forward a
+number of days.  The number can be negative to invert the direction.
+
+   • *Backward-looking*
+     ‘clocked’
+          Return non-nil if current entry was clocked in given period.
+          If no arguments are specified, return non-nil if entry was
+          clocked at any time.  Note: Clock entries are expected to be
+          clocked out.  Currently clocked entries (i.e.  with unclosed
+          timestamp ranges) are ignored.
+     ‘closed’
+          Return non-nil if current entry was closed in given period.
+          If no arguments are specified, return non-nil if entry was
+          closed at any time.
+
+   • *Forward-looking*
+     ‘deadline’
+          Return non-nil if current entry has deadline in given period.
+          If argument is auto, return non-nil if entry has deadline
+          within org-deadline-warning-days.  If no arguments are
+          specified, return non-nil if entry has any deadline.
+     ‘planning’
+          Return non-nil if current entry has planning timestamp in
+          given period (i.e.  its deadline, scheduled, or closed
+          timestamp).  If no arguments are specified, return non-nil if
+          entry is scheduled at any time.
+     ‘scheduled’
+          Return non-nil if current entry is scheduled in given period.
+          If no arguments are specified, return non-nil if entry is
+          scheduled at any time.
+
+
+File: README.info,  Node: Functions / Macros,  Prev: Queries,  Up: Usage
+
+4.3 Functions / Macros
+======================
+
+* Menu:
+
+* Agenda-like views::
+* Listing / acting-on results::
+
+
+File: README.info,  Node: Agenda-like views,  Next: Listing / acting-on results,  Up: Functions / Macros
+
+4.3.1 Agenda-like views
+-----------------------
+
+  1. Function: ‘org-ql-block’
+
+     For use as a custom agenda block type in
+     ‘org-agenda-custom-commands’.  For example, you could define a
+     custom series command like this, which would list all priority A
+     items tagged Emacs with to-do keyword SOMEDAY, followed by the
+     standard agenda view, in a single buffer:
+
+          (setq org-agenda-custom-commands
+                '(("ces" "Custom: Agenda and Emacs SOMEDAY [#A] items"
+                   ((org-ql-block '(and (todo "SOMEDAY")
+                                        (tags "Emacs")
+                                        (priority "A"))
+                                  ((org-ql-block-header "SOMEDAY :Emacs: High-priority")))
+                    (agenda)))))
+
+     Which would be equivalent to a ‘tags-todo’ search like this:
+
+          (setq org-agenda-custom-commands
+                '(("ces" "Custom: Agenda and Emacs SOMEDAY [#A] items"
+                   ((tags-todo "PRIORITY=\"A\"+Emacs/!SOMEDAY")
+                    (agenda)))))
+
+     However, the ‘org-ql-block’ version runs in about 1/5th the time.
+
+     The variable org-ql-block-header may be bound to a string to use as
+     the block header, otherwise the header is formed automatically.
+
+
+File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,  Up: Functions / Macros
+
+4.3.2 Listing / acting-on results
+---------------------------------
+
+  1. Function: ‘org-ql-select’
+
+     _Arguments:_ ‘(buffers-or-files query &key action narrow sort)’
+
+     Return items matching ‘QUERY’ in ‘BUFFERS-OR-FILES’.
+
+     ‘BUFFERS-OR-FILES’ is a one or a list of files and/or buffers.
+
+     ‘QUERY’ is an ‘org-ql’ query sexp (quoted, since this is a
+     function).
+
+     ‘ACTION’ is a function which is called on each matching entry with
+     point at the beginning of its heading.  It may be:
+
+        • ‘element’ or nil: Equivalent to ‘org-element-headline-parser’.
+
+        • ‘element-with-markers’: Equivalent to calling
+          ‘org-element-headline-parser’, with markers added using
+          ‘org-ql--add-markers’.  Suitable for formatting with
+          ‘org-ql-agenda--format-element’, allowing insertion into an
+          Org Agenda-like buffer.
+
+        • A sexp, which will be byte-compiled into a lambda function.
+
+        • A function symbol.
+
+     If ‘NARROW’ is non-nil, buffers are not widened (the default is to
+     widen and search the entire buffer).
+
+     ‘SORT’ is either nil, in which case items are not sorted; or one or
+     a list of defined ‘org-ql’ sorting methods (‘date’, ‘deadline’,
+     ‘scheduled’, ‘todo’, ‘priority’, or ‘random’); or a user-defined
+     comparator function that accepts two items as arguments and returns
+     nil or non-nil.
+
+     Examples:
+
+          ;; Return list of to-do headings in inbox file with tags and to-do keywords:
+          (org-ql-select "~/org/inbox.org"
+            '(todo)
+            :action #'org-get-heading)
+          ;; => ("TODO Practice leaping tall buildings in a single bound  :personal:" ...)
+
+          ;; Without tags and to-do keywords:
+          (org-ql-select "~/org/inbox.org"
+            '(todo)
+            :action '(org-get-heading t t))
+          ;; => ("Practice leaping tall buildings in a single bound" ...)
+
+          ;; Return WAITING heading elements in agenda files:
+          (org-ql-select (org-agenda-files)
+            '(todo "WAITING")
+            :action 'element)
+          ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
+
+          ;; Since `element' is the default for ACTION, it may be omitted:
+          (org-ql-select (org-agenda-files)
+            '(todo "WAITING"))
+          ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
+
+  2. Function: ‘org-ql-query’
+
+     _Arguments:_ ‘(&key (select 'element-with-markers) from where
+     order-by narrow)’
+
+     Like ‘org-ql-select’, but arguments are named more like a ‘SQL’
+     query.
+
+        • ‘SELECT’ corresponds to the ‘org-ql-select’ argument ‘ACTION’.
+        • ‘FROM’ corresponds to the ‘org-ql-select’ argument
+          ‘BUFFERS-OR-FILES’.
+        • ‘WHERE’ corresponds to the ‘org-ql-select’ argument ‘QUERY’.
+        • ‘ORDER-BY’ corresponds to the ‘org-ql-select’ argument ‘SORT’,
+          which see.
+        • ‘NARROW’ corresponds to the ‘org-ql-select’ argument ‘NARROW’.
+
+     Examples:
+
+          ;; Return list of to-do headings in inbox file with tags and to-do keywords:
+          (org-ql-query
+            :select #'org-get-heading
+            :from "~/org/inbox.org"
+            :where '(todo))
+          ;; => ("TODO Practice leaping tall buildings in a single bound  :personal:" ...)
+
+          ;; Without tags and to-do keywords:
+          (org-ql-query
+            :select '(org-get-heading t t)
+            :from "~/org/inbox.org"
+            :where '(todo))
+          ;; => ("Practice leaping tall buildings in a single bound" ...)
+
+          ;; Return WAITING heading elements in agenda files:
+          (org-ql-query
+            :select 'element
+            :from (org-agenda-files)
+            :where '(todo "WAITING"))
+          ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
+
+          ;; Since `element' is the default for SELECT, it may be omitted:
+          (org-ql-query
+            :from (org-agenda-files)
+            :where '(todo "WAITING"))
+          ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
+
+  3. Macro: ‘org-ql’
+
+     _Arguments:_ ‘(buffers-or-files query &key sort narrow markers
+     action)’
+
+     Expands into a call to ‘org-ql-select’ with the same arguments.
+     For convenience, arguments should be unquoted.
+
+
+File: README.info,  Node: Changelog,  Next: Notes,  Prev: Usage,  Up: Top
+
+5 Changelog
+***********
+
+_Note:_ Breaking changes may be made before version 1.0, but in the
+event of major changes, attempts at backward compatibility will be made
+with obsolescence declarations, translation of arguments, etc.  Users
+who need stability guarantees before 1.0 may choose to use tagged stable
+releases.
+
+* Menu:
+
+* 0.4-pre: 04-pre. 
+* 0.3: 03. 
+* 0.2.3: 023. 
+* 0.2.2: 022. 
+* 0.2.1: 021. 
+* 0.2: 02. 
+* 0.1: 01. 
+
+
+File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
+
+5.1 0.4-pre
+===========
+
+*Added*
+   • Predicates outline-path (alias olp) and outline-path-segment (alias
+     olps).
+   • Info manual.
+
+   *Internal*
+   • Added generic node data cache to speed up recursive, tree-based
+     queries.
+
+
+File: README.info,  Node: 03,  Next: 023,  Prev: 04-pre,  Up: Changelog
+
+5.2 0.3
+=======
+
+*Added*
+   • Alternative, non-sexp query syntax for commands org-ql-search and
+     helm-org-ql.  See .
+   • Command helm-org-ql.
+   • Command org-ql-sparse-tree, like org-sparse-tree for org-ql
+     queries.  (Thanks to Akira Komamura (https://github.com/akirak).)
+   • Command org-ql-view-sidebar.
+   • Per-buffer, per-heading tag caching, which increases the speed of
+     tags-related queries by 6-7x.
+   • More tags-related predicates and aliases:
+        • For inherited tags: tags-inherited, inherited-tags, tags-i,
+          itags.
+        • For heading-local tags: tags-local, local-tags, tags-l, ltags.
+        • tags-all, tags&: Matches all given tags using boolean AND
+          (rather than boolean OR, which the tags predicate uses).
+   • Variable org-ql-block-header, which overrides the default header in
+     org-ql-block agenda blocks.
+   • Predicate (path).
+   • Option org-ql-views may now be customized in a guided, structured
+     way with the customization UI (e.g.
+     M-x customize-option RET org-ql-views RET, or press c in the
+     org-ql-view-sidebar buffer).
+   • Enable more Org Agenda commands in org-ql-view buffers (e.g.
+     setting deadlines and scheduling).  (Fixes #35
+     (https://github.com/alphapapa/org-ql/issues/35).  Thanks to Milan
+     Zamazal (https://github.com/mz-pdm) and Mikhail Skorzhinskii
+     (https://github.com/mskorzhinskiy).)
+   • Function org-ql-select’s buffers-files argument can be a function
+     which returns a list of buffers and/or files.
+
+   *Changed*
+   • Predicate heading now accepts multiple regexps, which are matched
+     with boolean AND.
+   • Predicate regexp now matches its regexp arguments with boolean AND.
+   • Package org-super-agenda is now a dependency.  This removes the
+     need for awkward code to handle the case where it’s not installed,
+     and makes grouping features always available.  Of course, the
+     global minor mode org-super-agenda-mode is not activated by org-ql,
+     so no behavior is changed in Org Agenda or org-ql; it only means
+     that commands like org-ql-search will always provide grouping when
+     called with the appropriate arguments.
+
+   *Removed*
+   • Macro org-ql-agenda.  Instead, use function org-ql-search.  See
+     also command org-ql-view, etc.
+
+   *Fixed*
+   • Predicate heading now matches only against heading text, i.e.  not
+     including tags at the end of the line, to-do keyword, etc.
+   • Predicate todo now matches case-sensitively, avoiding
+     non-todo-keyword matches (e.g.  a heading which begins Waiting on
+     will no longer match for a todo keyword WAITING).
+   • Interactive completion in org-ql-search.
+
+   *Internal*
+   • Refactored code from file org-ql-agenda.el into files
+     org-ql-search.el and org-ql-view.el.  Function and variable names
+     have been changed accordingly.
+
+
+File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
+
+5.3 0.2.3
+=========
+
+*Fixed*
+   • Priority queries could fail to match headings whose to-do keywords
+     had non-alphabetic characters, like TO-READ.
+
+
+File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
+
+5.4 0.2.2
+=========
+
+*Fixed*
+   • (deadline auto) selector matched entries whose deadlines had a
+     warning period that had not yet been entered
+     (org-deadline-warning-days too soon).
+
+
+File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
+
+5.5 0.2.1
+=========
+
+*Fixed*
+   • (descendants) selector matched against parent heading instead of
+     only descendants.
+
+
+File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
+
+5.6 0.2
+=======
+
+*Added*
+   • Function ‘org-ql-query’, like ‘org-ql-select’ but with arguments
+     named more like a SQL query.
+   • Bare strings like ‘"string"’ can be used in queries, which are
+     converted to ‘(regexp "string")’ automatically.
+   • Selector ‘(regexp)’ accepts multiple regexps to test.
+   • Macro ‘org-ql’ and functions ‘org-ql-query’ and ‘org-ql-select’ now
+     also accept a comparator function in their ‘:sort’ argument.
+   • Function ‘org-ql-block’, which works as an Org Agenda
+     series/composite/block command, usable in custom agenda commands
+     defined in variable ‘org-agenda-custom-commands’.  (Inspired by
+     Benson Chu’s config
+     (https://github.com/pestctrl/emacs-config/blob/84c557982a860e86d6f67976a82ea776a7bd2c7a/config-org-new.org#my-own-agenda-renderer).)
+   • Function ‘org-ql-agenda--agenda’ optionally takes a list of entries
+     as an argument.
+   • Selectors ‘ts-a’ and ‘ts-i’, aliases for ‘ts-active’ and
+     ‘ts-inactive’.
+   • Selector ‘ts’ now accepts a ‘:type’ argument.
+   • Face org-ql-agenda-due-date.
+   • Selectors ‘(children)’ and ‘(descendants)’.
+   • Function ‘org-ql-search’ and macro ‘org-ql-agenda’ accept a
+     ‘:title’ argument, which is displayed in the header.
+   • Command ‘org-ql-search’ offers global ‘org-super-agenda-groups’ in
+     completion.
+   • Customization group ‘org-ql’.
+   • Command ‘org-ql-view’, which displays views saved to variable
+     ‘org-ql-views’, which can be saved from ‘org-ql-search’ buffers
+     with command ‘org-ql-search-save’, which is bound to C-x C-s in
+     view buffers.
+   • Variable ‘org-ql-view-map’, active in view buffers displayed by
+     ‘org-ql-search’, ‘org-ql-agenda’, and ‘org-ql-view’.
+   • random sort method.
+   • Save position when refreshing search buffers.
+
+   *Changed*
+   • Function ‘org-ql-query’ renamed to ‘org-ql-select’.  ‘org-ql-query’
+     now refers to a new function.
+   • Macro ‘org-ql’ no longer accepts a ‘:markers’ argument.  Instead,
+     use argument ‘:action element-with-markers’.  See function
+     ‘org-ql-select’, which ‘org-ql’ calls.
+   • Selector ‘(todo)’ no longer matches "done" keywords when used
+     without arguments (i.e.  the ones in variable ‘org-done-keywords’).
+   • Overhauled date/time-based predicates.  See documentation for new
+     argument signatures.
+
+   *Removed*
+   • Selector ‘(date)’, replaced by ‘(ts)’.
+
+   *Fixed*
+   • Handle date ranges in date-based selectors.  (Thanks to Cody
+     Goodman (https://github.com/codygman), Samuel W. Flint
+     (https://github.com/swflint), and Vikas Rawal
+     (https://github.com/vikasrawal).)
+   • Don’t overwrite bindings in org-agenda-mode-map.
+   • Don’t search buffers without headings, and show a message if the
+     user attempts it.
+   • Don’t search hidden/special buffers.
+   • Properly accept arbitrary sort functions in org-ql-select, etc.
+     (Fixes #37 (https://github.com/alphapapa/org-ql/issues/37).  Thanks
+     to Milan Zamazal (https://github.com/mz-pdm).)
+   • Planning-line-related predicates searched too far into entries.
+   • Add autoloads.  (Fixes #36
+     (https://github.com/alphapapa/org-ql/pull/36/files#).  Thanks to
+     Akira Komamura (https://github.com/akirak).)
+
+   *Compatibility*
+   • Fixes for compatibility with Org 9.2.  (Thanks to Ataias Pereira
+     Reis (https://github.com/ataias) and Daniel Kraus
+     (https://github.com/dakra).)
+
+   *Internal*
+   • Optimizations for some query selectors, e.g.  regexp and todo.
+     These can provide a significant improvement for some queries.  See
+     benchmarks in notes.org (notes.org).
+   • Library ts (https://github.com/alphapapa/ts.el) is now used for
+     parsing and comparing timestamps.
+
+
+File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
+
+5.7 0.1
+=======
+
+First tagged release.
+
+
+File: README.info,  Node: Notes,  Next: License,  Prev: Changelog,  Up: Top
+
+6 Notes
+*******
+
+* Menu:
+
+* Comparison with Org Agenda searches::
+* org-sidebar::
+
+
+File: README.info,  Node: Comparison with Org Agenda searches,  Next: org-sidebar,  Up: Notes
+
+6.1 Comparison with Org Agenda searches
+=======================================
+
+Of course, queries like these can already be written with Org Agenda
+searches, but the syntax can be complex.  For example, this query would
+be difficult to write in a standard Org Agenda search, because it
+matches against a to-do keyword _and_ a plain-text search.  As described
+in the advanced searching tutorial
+(https://orgmode.org/worg/org-tutorials/advanced-searching.html#combining-metadata-and-full-text-queries),
+it would require using ‘org-search-view’ with a query with specific
+regular expression syntax, like this:
+
++lisp +{^\*+\s-+TO-READ\s-}
+
+   But with ‘org-ql-agenda’, you would write:
+
+     (org-ql-agenda
+       (and (regexp "lisp")
+            (todo "TO-READ")))
+
+
+File: README.info,  Node: org-sidebar,  Prev: Comparison with Org Agenda searches,  Up: Notes
+
+6.2 org-sidebar
+===============
+
+This package is used by org-sidebar
+(https://github.com/alphapapa/org-sidebar), which presents a
+customizable agenda-like view in a sidebar window.
+
+
+File: README.info,  Node: License,  Prev: Notes,  Up: Top
+
+7 License
+*********
+
+GPLv3
+
+
+
+Tag Table:
+Node: Top225
+Node: Contents1337
+Node: Screenshots1485
+Node: Installation1603
+Node: Quelpa2241
+Node: Usage2684
+Node: Commands3594
+Node: org-ql-search3823
+Node: helm-org-ql5416
+Node: org-ql-view5828
+Node: org-ql-view-sidebar6026
+Node: org-ql-view-recent-items6382
+Node: org-ql-sparse-tree6866
+Node: Queries7666
+Node: Non-sexp query syntax8508
+Node: Predicates10008
+Node: Date/time predicates14865
+Node: Functions / Macros17500
+Node: Agenda-like views17687
+Node: Listing / acting-on results19092
+Node: Changelog23694
+Node: 04-pre24201
+Node: 0324505
+Node: 02327481
+Node: 02227707
+Node: 02127973
+Node: 0228170
+Node: 0132203
+Node: Notes32302
+Node: Comparison with Org Agenda searches32464
+Node: org-sidebar33335
+Node: License33614
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:
