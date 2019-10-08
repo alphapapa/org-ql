@@ -698,6 +698,8 @@ File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
    • Function ‘helm-org-ql-source’, which returns a Helm source that
      searches given buffers/files with ‘helm-org-ql’.  It can be used
      for custom Helm commands that search certain files.
+   • Command ‘helm-org-ql-views’, which shows one of ‘org-ql-views’
+     selected with Helm.
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
@@ -967,16 +969,16 @@ Node: Agenda-like views17742
 Node: Listing / acting-on results19147
 Node: Changelog23749
 Node: 04-pre24256
-Node: 0325029
-Node: 02328005
-Node: 02228231
-Node: 02128497
-Node: 0228694
-Node: 0132727
-Node: Notes32826
-Node: Comparison with Org Agenda searches32988
-Node: org-sidebar33859
-Node: License34138
+Node: 0325132
+Node: 02328108
+Node: 02228334
+Node: 02128600
+Node: 0228797
+Node: 0132830
+Node: Notes32929
+Node: Comparison with Org Agenda searches33091
+Node: org-sidebar33962
+Node: License34241
 
 End Tag Table
 

@@ -66,6 +66,15 @@
   "Keymap for `helm-org-ql' sessions.
 Based on `helm-map'.")
 
+(defvar helm-source-org-ql-views
+  (helm-build-sync-source "Org QL Views"
+    :candidates (lambda ()
+                  (->> org-ql-views
+                       (-map #'car)
+                       (-sort #'string<)))
+    :action (list (cons "Show view" #'org-ql-view)))
+  "Helm source for `org-ql-views'.")
+
 (defvar-local helm-org-ql-buffers-files nil
   "Used for `helm-org-ql-save'.")
 
@@ -165,6 +174,12 @@ Is transformed into this query:
                          helm-org-ql-buffers-files))
         (query (org-ql--plain-query helm-pattern)))
     (helm-run-after-exit #'org-ql-search buffers-files query)))
+
+;;;###autoload
+(defun helm-org-ql-views ()
+  "Show an `org-ql' view selected with Helm."
+  (interactive)
+  (helm :sources helm-source-org-ql-views))
 
 ;;;; Functions
 
