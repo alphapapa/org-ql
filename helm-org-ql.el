@@ -197,6 +197,7 @@ Is transformed into this query:
     :match #'identity
     :fuzzy-match nil
     :multimatch nil
+    :nohighlight t
     :volatile t
     :keymap helm-org-ql-map
     :action helm-org-ql-actions))
