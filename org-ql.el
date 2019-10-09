@@ -591,6 +591,26 @@ Replaces bare strings with (regexp) selectors, and appropriate
                         (setf property (substring (symbol-name property) 1)))
                       (cons 'property (cons property value)))
 
+                     ;; Source blocks.
+                     (`(src . ,args)
+                      ;; Rewrite to use keyword args.
+                      (-let (regexps lang keyword-index)
+                        (cond ((plist-get args :lang)
+                               ;; Lang given first, or only lang given.
+                               (setf lang (plist-get args :lang)
+                                     regexps (seq-difference args (list :lang lang))))
+                              ((setf keyword-index (-find-index #'keywordp args))
+                               ;; Regexps and lang given.
+                               (setf lang (plist-get (cl-subseq args keyword-index) :lang)
+                                     regexps (cl-subseq args 0 keyword-index)))
+                              (t ;; Only regexps given.
+                               (setf regexps args)))
+                        (when regexps
+                          ;; This feels awkward and wrong, but we have to quote lists
+                          ;; and avoid quoting nil.  There must be a better way.
+                          (setf regexps `(',regexps)))
+                        `(src :lang ,lang :regexps ,@regexps)))
+
                      ;; Tags.
                      (`(,(or 'tags-all 'tags&) . ,tags) `(and ,@(--map `(tags ,it) tags)))
                      ;; MAYBE: -all versions for inherited and local.
@@ -747,8 +767,8 @@ replace the clause with a preamble."
                                 ;;  element)
 
                                 ;; Src blocks.
-                                (`(src ,lang . ,_)
-                                 (setq org-ql-preamble (org-ql--format-src-block-regexp lang))
+                                (`(src . ,args)
+                                 (setq org-ql-preamble (org-ql--format-src-block-regexp (plist-get args :lang)))
                                  ;; Always check contents with predicate.
                                  element)
 
@@ -795,7 +815,7 @@ replace the clause with a preamble."
   (rx-to-string `(seq bol (group (zero-or-more (any "	 ")))
                       "#+begin_src"
                       (one-or-more (any "	 "))
-                      ,lang
+                      ,(or lang `(1+ (not (any "	\n\f "))))
                       (zero-or-more (any "	 "))
                       (group (or (seq (zero-or-more (not (any "\n\":")))
                                       "\""
@@ -1130,9 +1150,10 @@ priority B)."
           ;; Check that PROPERTY has VALUE
           (string-equal value (org-entry-get (point) property 'selective)))))))
 
-(org-ql--defpred src (&optional lang &rest regexps)
+(org-ql--defpred src (&key regexps lang)
   "Return non-nil if current entry contains an Org source block matching all of REGEXPS.
-If LANG is non-nil, the block must be in that language."
+If keyword argument LANG is non-nil, the block must be in that
+language."
   (catch 'return
     (save-excursion
       (save-match-data

@@ -329,7 +329,7 @@ default, when multiple predicates are used, they are combined with
 boolean and.
 
 Sexp syntax                                         Non-sexp syntax
-------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------
 ‘(todo)’                                            ‘todo:’
 ‘(todo "SOMEDAY")’                                  ‘todo:SOMEDAY’
 ‘(todo "SOMEDAY" "WAITING")’                        ‘todo:SOMEDAY,WAITING’
@@ -338,6 +338,7 @@ Sexp syntax                                         Non-sexp syntax
 ‘(clocked :on -1)’                                  ‘clocked:on=-1’
 ‘(heading "quoted phrase" "word")’                  ‘heading:"quoted phrase",word’
 ‘(and (tags "book" "books") (priority "A"))’        ‘tags:book,books priority:A’
+‘(src :lang "elisp" :regexps ("defun"))’            ‘src:defun,lang=elisp’ or ‘src:lang=elisp,defun’
 ‘(priority >= B)’                                   ‘priority:A,B’
 
    Note that the priority predicate does not support comparators in the
@@ -411,7 +412,7 @@ Arguments are listed next to predicate names, where applicable.
      Return non-nil if current entry matches all of ‘REGEXPS’ (regexp
      strings).  Matches against entire entry, from beginning of its
      heading to the next heading.
-‘‘src (&optional lang regexps)’’
+‘‘src (&key lang regexps)’’
      Return non-nil if current entry contains an Org Babel source block.
      If ‘LANG’ is non-nil, match blocks of that language.  If ‘REGEXPS’
      is non-nil, require that block’s contents match all regexps.
@@ -979,24 +980,24 @@ Node: org-ql-view-recent-items6452
 Node: org-ql-sparse-tree6936
 Node: Queries7736
 Node: Non-sexp query syntax8578
-Node: Predicates10078
-Node: Date/time predicates15197
-Node: Functions / Macros17832
-Node: Agenda-like views18019
-Node: Listing / acting-on results19424
-Node: Changelog24026
-Node: 04-pre24548
-Node: 03125492
-Node: 0325690
-Node: 02328663
-Node: 02228889
-Node: 02129155
-Node: 0229352
-Node: 0133385
-Node: Notes33484
-Node: Comparison with Org Agenda searches33646
-Node: org-sidebar34517
-Node: License34796
+Node: Predicates10198
+Node: Date/time predicates15312
+Node: Functions / Macros17947
+Node: Agenda-like views18134
+Node: Listing / acting-on results19539
+Node: Changelog24141
+Node: 04-pre24663
+Node: 03125607
+Node: 0325805
+Node: 02328778
+Node: 02229004
+Node: 02129270
+Node: 0229467
+Node: 0133500
+Node: Notes33599
+Node: Comparison with Org Agenda searches33761
+Node: org-sidebar34632
+Node: License34911
 
 End Tag Table
 
