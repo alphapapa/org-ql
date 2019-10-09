@@ -747,6 +747,13 @@ replace the clause with a preamble."
                                 ;;  (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":" (1+ (not (or space ":"))) ":"
                                 ;;                                            (1+ space) (minimal-match (1+ not-newline)) eol)))
                                 ;;  element)
+
+                                ;; Src blocks.
+                                (`(src ,lang . ,_)
+                                 (setq org-ql-preamble (org-ql--format-src-block-regexp lang))
+                                 ;; Always check contents with predicate.
+                                 element)
+
                                 (`(scheduled . ,_)
                                  (setq org-ql-preamble org-scheduled-time-regexp)
                                  ;; Return element, because the predicate still needs testing.
@@ -780,6 +787,29 @@ replace the clause with a preamble."
                           t)
                          (query (-flatten-n 1 query))))
            (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold))))))
+
+(defun org-ql--format-src-block-regexp (&optional lang)
+  "Return regexp equivalent to `org-babel-src-block-regexp' with LANG filled in."
+  ;; I couldn't find a way to match block contents without the regexp
+  ;; also matching past the end of the block and into later blocks.  Even
+  ;; using `minimal-match' in several different combinations didn't work.
+  ;; So matching contents will have to be done with the predicate.
+  (rx-to-string `(seq bol (group (zero-or-more (any "	 ")))
+                      "#+begin_src"
+                      (one-or-more (any "	 "))
+                      ,lang
+                      (zero-or-more (any "	 "))
+                      (group (or (seq (zero-or-more (not (any "\n\":")))
+                                      "\""
+                                      (zero-or-more (not (any "\n\"*")))
+                                      "\""
+                                      (zero-or-more (not (any "\n\":"))))
+                                 (zero-or-more (not (any "\n\":")))))
+                      (group (zero-or-more (not (any "\n")))) "\n"
+                      (63 (group (*\? (not (any " "))) "\n"))
+                      (zero-or-more (any "	 "))
+                      "#+end_src")
+                t))
 
 (defmacro org-ql--from-to-on ()
   "For internal use.
@@ -1101,6 +1131,30 @@ priority B)."
          (_
           ;; Check that PROPERTY has VALUE
           (string-equal value (org-entry-get (point) property 'selective)))))))
+
+(org-ql--defpred src (&optional lang &rest regexps)
+  "Return non-nil if current entry contains an Org source block matching all of REGEXPS.
+If LANG is non-nil, the block must be in that language."
+  (catch 'return
+    (save-excursion
+      (save-match-data
+        (when (re-search-forward org-babel-src-block-regexp (org-entry-end-position) t)
+          (when lang
+            (unless (string= lang (match-string 2))
+              (throw 'return nil)))
+          (if regexps
+              (let ((contents-beg (progn
+                                    (goto-char (match-beginning 0))
+                                    (forward-line 1)
+                                    (point)))
+                    (contents-end (progn
+                                    (goto-char (match-end 0))
+                                    (point-at-bol))))
+                (cl-loop for re in regexps
+                         do (goto-char contents-beg)
+                         always (re-search-forward re contents-end t)))
+            ;; No regexps to check: return non-nil.
+            t))))))
 
 ;;;;;; Timestamps
 

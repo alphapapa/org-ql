@@ -656,6 +656,9 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ((scheduled :to today))
             '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
 
+    ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
+    ;; significant hassle.  Manual testing shows that the predicate appears to work properly.
+
     (describe "(todo)"
 
       (org-ql-it "without arguments"

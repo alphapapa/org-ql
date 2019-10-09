@@ -410,6 +410,10 @@ Arguments are listed next to predicate names, where applicable.
      Return non-nil if current entry matches all of ‘REGEXPS’ (regexp
      strings).  Matches against entire entry, from beginning of its
      heading to the next heading.
+‘‘src (&optional lang regexps)’’
+     Return non-nil if current entry contains an Org Babel source block.
+     If ‘LANG’ is non-nil, match blocks of that language.  If ‘REGEXPS’
+     is non-nil, require that block’s contents match all regexps.
 ‘tags (&optional tags)’
      Return non-nil if current heading has one or more of ‘TAGS’ (a list
      of strings).  Tests both inherited and local tags.
@@ -700,6 +704,7 @@ File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
      for custom Helm commands that search certain files.
    • Command ‘helm-org-ql-views’, which shows one of ‘org-ql-views’
      selected with Helm.
+   • Predicate ‘src’, which matches Org Babel source blocks.
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
@@ -963,22 +968,22 @@ Node: org-ql-sparse-tree6921
 Node: Queries7721
 Node: Non-sexp query syntax8563
 Node: Predicates10063
-Node: Date/time predicates14920
-Node: Functions / Macros17555
-Node: Agenda-like views17742
-Node: Listing / acting-on results19147
-Node: Changelog23749
-Node: 04-pre24256
-Node: 0325132
-Node: 02328108
-Node: 02228334
-Node: 02128600
-Node: 0228797
-Node: 0132830
-Node: Notes32929
-Node: Comparison with Org Agenda searches33091
-Node: org-sidebar33962
-Node: License34241
+Node: Date/time predicates15182
+Node: Functions / Macros17817
+Node: Agenda-like views18004
+Node: Listing / acting-on results19409
+Node: Changelog24011
+Node: 04-pre24518
+Node: 0325461
+Node: 02328437
+Node: 02228663
+Node: 02128929
+Node: 0229126
+Node: 0133159
+Node: Notes33258
+Node: Comparison with Org Agenda searches33420
+Node: org-sidebar34291
+Node: License34570
 
 End Tag Table
 
