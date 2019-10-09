@@ -147,7 +147,8 @@ necessary."
                        (pcase-exhaustive (completing-read "Buffers/Files: "
                                                           (list 'buffer 'agenda 'directory 'all)
                                                           nil nil (when org-ql-view-buffers-files
-                                                                    (prin1-to-string (cons 'list org-ql-view-buffers-files))))
+                                                                    (let ((print-length nil))
+                                                                      (prin1-to-string (cons 'list org-ql-view-buffers-files)))))
                          ((or "" "buffer") (current-buffer))
                          ("agenda" (org-agenda-files))
                          ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
