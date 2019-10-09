@@ -45,17 +45,6 @@
 (require 'map)
 (require 'ts)
 
-;;;; Compatibility
-
-(if (version< org-version "9.2")
-    (progn
-      (defalias 'org-timestamp-to-time #'org-timestamp--to-internal-time)
-      (defun org-ql--get-tags (&optional pos local)
-        (org-get-tags-at pos local)))
-  (defun org-ql--get-tags (&rest _ignore)
-    "Call `org-get-tags', ignoring arguments."
-    (org-get-tags)))
-
 ;;;; Constants
 
 ;; Note the use of the `rx' `blank' keyword, which matches "horizontal" whitespace.
@@ -76,6 +65,13 @@ match group.")
   (rx bol (0+ blank) (or "CLOSED" "DEADLINE" "SCHEDULED") ":" (1+ blank) (group (1+ not-newline)))
   "Regular expression matching Org \"planning\" lines.
 That is, \"CLOSED:\", \"DEADLINE:\", or \"SCHEDULED:\".")
+
+(defconst org-ql-tag-line-re
+  "^\\*+ \\(?:.*[ \t]\\)?\\(:\\([[:alnum:]_@#%:]+\\):\\)[ \t]*$"
+  ;; Copied from `org-tag-line-re' from org.el.
+  "Regexp matching tags in a headline.
+Tags are stored in match group 1.  Match group 2 stores the tags
+without the enclosing colons.")
 
 ;;;; Variables
 
@@ -391,7 +387,8 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
         ('org-ql-nil nil)
         (_ cached-result))
     ;; Not found in cache: get tags and cache them.
-    (let* ((local-tags (or (org-ql--get-tags position 'local)
+    (let* ((local-tags (or (when (looking-at org-ql-tag-line-re)
+                             (split-string (match-string-no-properties 2) ":" t))
                            'org-ql-nil))
            (inherited-tags (or (when org-use-tag-inheritance
                                  (save-excursion
