@@ -52,9 +52,8 @@
       (defalias 'org-timestamp-to-time #'org-timestamp--to-internal-time)
       (defun org-ql--get-tags (&optional pos local)
         (org-get-tags-at pos local)))
-  (defun org-ql--get-tags (&rest _ignore)
-    "Call `org-get-tags', ignoring arguments."
-    (org-get-tags)))
+  (defun org-ql--get-tags (&optional pos local)
+    (org-get-tags pos local)))
 
 ;;;; Constants
 
