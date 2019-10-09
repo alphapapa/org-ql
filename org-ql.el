@@ -42,6 +42,7 @@
 
 (require 'dash)
 (require 'dash-functional)
+(require 'map)
 (require 'ts)
 
 ;;;; Compatibility
