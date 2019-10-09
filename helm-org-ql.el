@@ -99,11 +99,24 @@ Based on `helm-map'.")
   :type '(alist :key-type (string :tag "Description")
                 :value-type (function :tag "Command")))
 
+(defcustom helm-org-ql-context nil
+  "Whether to show context around search terms in results."
+  :type 'boolean)
+
+(defcustom helm-org-ql-context-chars 25
+  "Number of characters around search terms to display as context."
+  :type 'integer)
+
+(defcustom helm-org-ql-context-max 10
+  "Maximum number of context strings around search terms to display."
+  :type 'integer)
+
 ;;;; Commands
 
 ;;;###autoload
 (cl-defun helm-org-ql (buffers-files
-                       &key (boolean 'and) (name "helm-org-ql"))
+                       &key (boolean 'and) (name "helm-org-ql")
+                       (context helm-org-ql-context))
   "Display results in BUFFERS-FILES for an `org-ql' non-sexp query using Helm.
 Interactively, search the current buffer.  Note that this command
 only accepts non-sexp, \"plain\" queries.
@@ -132,8 +145,11 @@ Is transformed into this query:
 
     (and \"something else\" (tags \"funny\"))"
   (interactive (list (current-buffer)))
-  (let ((boolean (if current-prefix-arg 'or boolean))
-        (helm-input-idle-delay helm-org-ql-input-idle-delay))
+  (let ((helm-org-ql-context (if current-prefix-arg
+                                 (not context)
+                               context))
+        (helm-input-idle-delay helm-org-ql-input-idle-delay)
+        (helm-candidate-separator " "))
     (helm :prompt (format "Query (boolean %s): " (-> boolean symbol-name upcase))
           :sources (helm-org-ql-source buffers-files :name name))))
 
@@ -189,10 +205,14 @@ Is transformed into this query:
   (helm-make-source name 'helm-source-sync
     :candidates (lambda nil
                   (let* ((query (org-ql--plain-query helm-pattern))
-                         (window-width (window-width (helm-window))))
+                         (window-width (window-width (helm-window)))
+                         strings context-re)
                     (when query
                       (with-current-buffer (helm-buffer-get)
                         (setq helm-org-ql-buffers-files buffers-files))
+                      (setf strings (org-ql--query-strings query)
+                            context-re (when helm-org-ql-context
+                                         (rx-to-string `(seq (or ,@strings)) t)))
                       (ignore-errors
                         ;; Ignore errors that might be caused by partially typed queries.
 
@@ -208,7 +228,8 @@ Is transformed into this query:
                         ;; where byte-compilation is actually done, but it might not be a good idea
                         ;; to always ignore such errors/warnings.
                         (org-ql-select buffers-files query
-                          :action (list 'helm-org-ql--heading window-width))))))
+                          :action `(helm-org-ql--entry-cons ,window-width ,context-re))))))
+    :multiline helm-org-ql-context
     :match #'identity
     :fuzzy-match nil
     :multimatch nil
@@ -217,16 +238,45 @@ Is transformed into this query:
     :keymap helm-org-ql-map
     :action helm-org-ql-actions))
 
-(defun helm-org-ql--heading (window-width)
-  "Return string for Helm for heading at point.
-WINDOW-WIDTH should be the width of the Helm window."
+(defun helm-org-ql--query-strings (query)
+  "Return list of plain strings in QUERY suitable for highlighting and context."
+  (cl-labels ((rec (sexp)
+                   (pcase sexp
+                     (`(,(or 'heading 'regexp) . ,strings)
+                      strings)
+                     ((and (pred listp) (guard sexp))
+                      (append (rec (car sexp))
+                              (rec (cdr sexp)))))))
+    (rec query)))
+
+(defun org-ql--entry-context (regexp)
+  "Return string showing context around REGEXP for current entry.
+Assumes point is on heading."
+  (let* ((beg (point))
+         (limit (org-entry-end-position))
+         (context-strings
+          (save-excursion
+            (forward-line 1)
+            (cl-loop for i to helm-org-ql-context-max
+                     while (re-search-forward regexp limit t)
+                     collect (s-trim (buffer-substring-no-properties
+                                      (max beg (- (match-beginning 0) helm-org-ql-context-chars))
+                                      (min limit (+ (match-end 0) helm-org-ql-context-chars))))))))
+    (when context-strings
+      (s-replace-regexp "\n+" " " (s-join "..." context-strings)))))
+
+(defun helm-org-ql--entry-cons (window-width &optional context-re)
+  "Return (DISPLAY . MARKER) pair for Helm for heading at point.
+WINDOW-WIDTH should be the width of the Helm window.  If
+CONTEXT-RE is non-nil, include entry text matching around it."
   (font-lock-ensure (point-at-bol) (point-at-eol))
   ;; TODO: It would be better to avoid calculating the prefix and width
   ;; at each heading, but there's no easy way to do that once in each
   ;; buffer, unless we manually called `org-ql' in each buffer, which
   ;; I'd prefer not to do.  Maybe I should add a feature to `org-ql' to
   ;; call a setup function in a buffer before running queries.
-  (let* ((prefix (concat (buffer-name) ":"))
+  (let* ((prefix (propertize (concat (buffer-name) ":")
+                             'face '(:weight bold)))
          (width (- window-width (length prefix)))
          (path (org-split-string (org-format-outline-path (org-get-outline-path)
                                                           width nil "")
@@ -234,8 +284,13 @@ WINDOW-WIDTH should be the width of the Helm window."
          (heading (org-get-heading t))
          (path (if helm-org-ql-reverse-paths
                    (concat heading "\\" (s-join "\\" (nreverse path)))
-                 (concat (s-join "/" path) "/" heading))))
-    (cons (concat prefix path) (point-marker))))
+                 (concat (s-join "/" path) "/" heading)))
+         (context (when context-re
+                    (org-ql--entry-context context-re)))
+         (display (if (s-present? context)
+                      (concat prefix path "\n" context)
+                    (concat prefix path))))
+    (cons display (point-marker))))
 
 ;;;; Footer
 
