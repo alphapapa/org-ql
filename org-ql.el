@@ -34,6 +34,7 @@
 ;;;; Requirements
 
 (require 'cl-lib)
+(require 'map)
 (require 'org)
 (require 'org-element)
 (require 'org-habit)
