@@ -1487,10 +1487,15 @@ Builds the PEG expression using predicates defined in
 Multiple predicates are combined with BOOLEAN."
          (unless (s-blank-str? input)
            (let* ((query (peg-parse-string
-                          ((query (+ (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
-                                         (and predicate-without-args `(pred -- (list (intern pred))))
-                                         (and plain-string `(s -- (list 'regexp s))))
+                          ((query (+ term
                                      (opt (+ (syntax-class whitespace) (any)))))
+                           (term (or (and negation (list positive-term)
+                                          ;; This is a bit confusing, but it seems to work.  There's probably a better way.
+                                          `(pred -- (list 'not (car pred))))
+                                     positive-term))
+                           (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
+                                              (and predicate-without-args `(pred -- (list (intern pred))))
+                                              (and plain-string `(s -- (list 'regexp s)))))
                            (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
                            (predicate-with-args (substring predicate) ":" args)
                            (predicate-without-args (substring predicate) ":")
@@ -1500,6 +1505,7 @@ Multiple predicates are combined with BOOLEAN."
                            (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
                            (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
                            (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
+                           (negation "!")
                            (separator "," ))
                           input 'noerror)))
              ;; Discard the t that `peg-parse-string' always returns as the first

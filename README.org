@@ -164,6 +164,7 @@ The command =org-ql-search= also accepts, and the command =helm-org-ql= only acc
 | ~(heading "quoted phrase" "word")~                | ~heading:"quoted phrase",word~                 |
 | ~(and (tags "book" "books") (priority "A"))~      | ~tags:book,books priority:A~                   |
 | ~(src :lang "elisp" :regexps ("defun"))~          | ~src:defun,lang=elisp~ or ~src:lang=elisp,defun~ |
+| ~(and (tags "space") (not (regexp "moon")))~      | ~tags:space !moon~                             |
 | ~(priority >= B)~                                 | ~priority:A,B~                                 |
 
 Note that the =priority= predicate does not support comparators in the non-sexp syntax, so multiple priorities should be passed instead, as seen in the last example.
@@ -375,6 +376,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 ** 0.4-pre
 
 *Added*
++  Negation of terms in plain queries using ~!~.  For example, ~tags:space !moon~ to exclude entries which contain ~moon~.
 +  Predicates =outline-path= (alias =olp=) and =outline-path-segment= (alias =olps=).
 +  Info manual.
 +  Command ~org-ql-search~ can search files in ~org-directory~; customization options are available in the ~org-ql-search~ group.

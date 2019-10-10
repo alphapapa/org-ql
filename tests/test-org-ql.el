@@ -231,6 +231,17 @@ RESULTS should be a list of strings as returned by
 
     ;; TODO: Other predicates.
 
+    (it "Negated terms"
+      (expect (org-ql--plain-query "todo: !todo:CHECK,SOMEDAY")
+              :to-equal '(and (todo) (not (todo "CHECK" "SOMEDAY"))))
+      (expect (org-ql--plain-query "!todo:CHECK,SOMEDAY todo:")
+              :to-equal '(and (not (todo "CHECK" "SOMEDAY")) (todo)))
+      (expect (org-ql--plain-query "tags:universe !moon")
+              :to-equal '(and (tags "universe") (not (regexp "moon"))))
+      (expect (org-ql--plain-query "!moon tags:universe")
+              :to-equal '(and (not (regexp "moon")) (tags "universe")))
+      (expect (org-ql--plain-query "mars !ts:on=today")
+              :to-equal '(and (regexp "mars") (not (ts :on "today")))))
     (it "Regexp predicates"
       (expect (org-ql--plain-query "scheduled")
               ;; No colon after keyword, so not a predicate query.
