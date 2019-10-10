@@ -282,6 +282,8 @@ One of the things in that branch is =org-ql-item=, which is a struct used to car
 
 Another idea for it is to simply store the element from =org-element-headline-parser= in one of its slots, and populate all of the other slots lazily, like =ts=.  It already does that for a couple of slots, but I think it makes sense to do it for all of them, to reduce the overhead of making the struct for every query result.
 
+[2019-10-09 Wed 19:17]  (re?)Discovered [[https://github.com/m2ym/direx-el][GitHub - m2ym/direx-el: Directory Explorer for GNU Emacs]], which uses EIEIO to implement expandable sections that look much like the ones in Magit, with depth-based indentation like in =magit-todos=.
+
 *** TODO Experiment with =widget=
 
 The code that powers the customization UI.  Has collapsible and customizable widgets.  Might be perfect.  Might even enable editing items in the list, with functions to make the changes in the source  buffers.
