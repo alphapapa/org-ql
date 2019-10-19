@@ -235,6 +235,8 @@ RESULTS should be a list of strings as returned by
       (expect (org-ql--plain-query "scheduled")
               ;; No colon after keyword, so not a predicate query.
               :to-equal '(regexp "scheduled"))
+      (expect (org-ql--plain-query "\"quoted phrase\"")
+              :to-equal '(regexp "quoted phrase"))
       (expect (org-ql--plain-query "regexp:word")
               :to-equal '(regexp "word"))
       (expect (org-ql--plain-query "regexp:\"quoted phrase\"")

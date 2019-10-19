@@ -1296,7 +1296,7 @@ Multiple predicates are combined with BOOLEAN."
                                          (and predicate-without-args `(pred -- (list (intern pred))))
                                          (and plain-string `(s -- (list 'regexp s))))
                                      (opt (+ (syntax-class whitespace) (any)))))
-                           (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
+                           (plain-string (or quoted-arg unquoted-arg))
                            (predicate-with-args (substring predicate) ":" args)
                            (predicate-without-args (substring predicate) ":")
                            (predicate (or ,@predicates))
