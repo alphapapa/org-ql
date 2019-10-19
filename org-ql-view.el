@@ -147,8 +147,13 @@ See info node `(elisp)Cyclic Window Ordering'."
         (cons "This week" (lambda ()
                             "Show items with an active timestamp during this calendar week."
                             (interactive)
-                            (let* ((beg-of-week (ts-adjust 'day (- (ts-dow (ts-now))) (ts-now)))
-                                   (end-of-week (ts-adjust 'day (- 6 (ts-dow (ts-now))) (ts-now))))
+                            (let* ((ts (ts-now))
+                                   (beg-of-week (->> ts
+                                                     (ts-adjust 'day (- (ts-dow (ts-now))))
+                                                     (ts-apply :hour 0 :minute 0 :second 0)))
+                                   (end-of-week (->> ts
+                                                     (ts-adjust 'day (- 6 (ts-dow (ts-now))))
+                                                     (ts-apply :hour 23 :minute 59 :second 59))))
                               (org-ql-search (org-agenda-files)
                                 `(ts-active :from ,beg-of-week
                                             :to ,end-of-week)
@@ -159,8 +164,12 @@ See info node `(elisp)Cyclic Window Ordering'."
                             "Show items with an active timestamp during the next calendar week."
                             (interactive)
                             (let* ((ts (ts-adjust 'day 7 (ts-now)))
-                                   (beg-of-week (ts-adjust 'day (- (ts-dow (ts-now))) ts))
-                                   (end-of-week (ts-adjust 'day (- 6 (ts-dow (ts-now))) ts)))
+                                   (beg-of-week (->> ts
+                                                     (ts-adjust 'day (- (ts-dow (ts-now))))
+                                                     (ts-apply :hour 0 :minute 0 :second 0)))
+                                   (end-of-week (->> ts
+                                                     (ts-adjust 'day (- 6 (ts-dow (ts-now))))
+                                                     (ts-apply :hour 23 :minute 59 :second 59))))
                               (org-ql-search (org-agenda-files)
                                 `(ts-active :from ,beg-of-week
                                             :to ,end-of-week)
