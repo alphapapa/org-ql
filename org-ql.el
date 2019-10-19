@@ -569,6 +569,11 @@ Replaces bare strings with (regexp) selectors, and appropriate
                                      (ts-apply :hour 23 :minute 59 :second 59))))
                         `(,pred :to ,to)))
 
+                     ;; Headings.
+                     (`(h . ,args)
+                      ;; "h" alias.
+                      `(heading ,@args))
+
                      ;; Outline paths.
                      (`(,(or 'outline-path 'olp) . ,strings)
                       ;; Regexp quote headings.
@@ -1132,7 +1137,7 @@ priority B)."
                always (save-excursion
                         (re-search-forward regexp end t))))))
 
-(org-ql--defpred heading (&rest regexps)
+(org-ql--defpred (heading h) (&rest regexps)
   "Return non-nil if current entry's heading matches all REGEXPS (regexp strings)."
   ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
   (let ((heading (org-get-heading 'no-tags 'no-todo)))

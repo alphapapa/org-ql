@@ -182,6 +182,7 @@ Arguments are listed next to predicate names, where applicable.
 +  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
 +  =habit= :: Return non-nil if entry is a habit.
 +  =heading (&rest regexps)= :: Return non-nil if current entry's heading matches all ~REGEXPS~ (regexp strings).
+     -  Aliases: =h=.
 +  =level (level-or-comparator &optional level)= :: Return non-nil if current heading's outline level matches arguments.  The following forms are accepted: ~(level NUMBER)~: Matches if heading level is ~NUMBER~.  ~(level NUMBER NUMBER)~: Matches if heading level is equal to or between NUMBERs.  ~(level COMPARATOR NUMBER)~: Matches if heading level compares to ~NUMBER~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.
 +  =outline-path (&rest strings)= :: Return non-nil if current node's outline path matches all of ~STRINGS~.  Each string may appear as a substring in any part of the node's outline path.  For example, the path =Food/Fruits/Grapes= would match ~(olp "Fruit" "Grape")~.
      -  Aliases: ~olp~.
@@ -384,6 +385,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Function ~helm-org-ql-source~, which returns a Helm source that searches given buffers/files with ~helm-org-ql~.  It can be used for custom Helm commands that search certain files.
 +  Command ~helm-org-ql-views~, which shows one of ~org-ql-views~ selected with Helm.
 +  Predicate ~src~, which matches Org Babel source blocks.
++  Alias =h= for =heading= predicate.
 
 *Internal*
 +  Added generic node data cache to speed up recursive, tree-based queries.
