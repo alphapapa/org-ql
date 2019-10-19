@@ -212,7 +212,9 @@ necessary."
            (org-ql-view-super-groups super-groups)
            (org-ql-view-title title))
       (when super-groups
-        (let ((org-super-agenda-groups super-groups))
+        (let ((org-super-agenda-groups (cl-etypecase super-groups
+                                         (symbol (symbol-value super-groups))
+                                         (list super-groups))))
           (setf strings (org-super-agenda--group-items strings))))
       (org-ql-view--display :buffer buffer :header header
         :string (s-join "\n" strings)))))
