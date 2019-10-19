@@ -367,6 +367,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 *Fixed*
 +  In =org-ql-search=, accept symbol as ~:super-groups~ argument.
++  In the =This week= and =Next week= default =org-ql-views= views, set timestamps for beginning-of-week to 00:00:00 and end-of-week to 23:59:59.
 
 ** 0.3.1
 
