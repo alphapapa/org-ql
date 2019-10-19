@@ -241,7 +241,9 @@ RESULTS should be a list of strings as returned by
       (expect (org-ql--plain-query "!moon tags:universe")
               :to-equal '(and (not (regexp "moon")) (tags "universe")))
       (expect (org-ql--plain-query "mars !ts:on=today")
-              :to-equal '(and (regexp "mars") (not (ts :on "today")))))
+              :to-equal '(and (regexp "mars") (not (ts :on "today"))))
+      (expect (org-ql--plain-query "!\"quoted phrase\"")
+              :to-equal '(not (regexp "quoted phrase"))))
     (it "Regexp predicates"
       (expect (org-ql--plain-query "scheduled")
               ;; No colon after keyword, so not a predicate query.
