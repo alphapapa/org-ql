@@ -882,6 +882,37 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 * References
 
 ** [[https://m00natic.github.io/lisp/manual-jit.html][Uniform Structured Syntax, Metaprogramming and Run-time Compilation]]
+
+** [[gnus:gmane.emacs.orgmode#CAJ51EToLCm5zDLKu8XeuqEWrLhHZF+OoNkviPSivZbFttzF8=A@mail.gmail.com][John Kitchin on rewriting the Org agenda code]]                 :Emacs:Org:
+
+[2019-10-28 Mon 08:28]  Originally from [[id:90a68535-2403-4ba9-a117-60be1862628f][this entry in my notes]].
+
+#+BEGIN_QUOTE
+From: John Kitchin <jkitchin@andrew.cmu.edu>
+Subject: Re: [Orgmode] Slow speed of week and month views
+Newsgroups: gmane.emacs.orgmode
+To: Karl Voit <news1142@karl-voit.at>
+Cc: "emacs-orgmode@gnu.org" <emacs-orgmode@gnu.org>
+Date: Sat, 5 Aug 2017 18:17:09 -0400 (4 hours, 11 minutes, 38 seconds ago)
+
+I can think of two possibilities for a future approach (besides a deep dive on profiling the current elisp to improve the speed there). They both involve some substantial coding though, and would probably add dependencies. I am curious what anyone things about these, or if there are other ideas.
+
+One is to use the new dynamic module capability to write an org parser in C, or a dedicated agenda function, which would presumably be faster than in elisp. This seems hard, and for me would certainly be a multiyear project I am sure! The downside of this is the need to compile the module. I don't know how easy it would be to make this work across platforms with the relatively easy install org-mode currently has. This could have a side benefit though of a c-lib that could be used by others to expand where org-mode is used.
+
+The other way that might work is to rely more heavily on a cached version of the files, perhaps in a different format than elisp, that is faster to work with.  The approach I have explored in this is to index org files into a sqlite database. The idea then would be to generate the agenda from a sql query. I use something like this already to "find stuff in orgmode anywhere". One of the reasons I wrote this is the org-agenda list of files isn't practical for me because my files are so scattered on my file system. I had a need to be able to find TODOs in research projects in a pretty wide range of locations.
+
+The code I use is at https://github.com/jkitchin/scimax/blob/master/org-db.el, and from one database I can find headlines, contacts, locations, TODO headlines across my file system, all the files that contain a particular link, and my own recent org files. This approach relies on emacsql, and a set of hook functions to update the database whenever a file is changed. It is not robust, e.g. the file could be out of sync with the db if it is modified outside emacs, but this works well enough for me so far. Updated files get reindexed whenever emacs is idle. It was a compromise on walking the file system all the time or daily, or trying to use inotify and you can always run a command to prune/sync all the files any time you want.
+
+sqlite is ok, but with emacsql you cannot put strings in it directly (at least when I wrote the org-db code), which has limited it for full-text search so far.  Also with text, the db got up to about 0.5 GB in size, and started slowing down. So it doesn't have text in it for now. It has all the other limitations of sqlite too, limited support for locking, single process....
+
+I am moderately motivated to switch from sqlite to MongoDB, but the support for Mongo in emacs is pretty crummy (I tried writing a few traditional interfaces, but the performance was not that good, and limited since Mongo uses bson, and it is just not the same as json!). Why Mongo? Mostly because the Mongo query language is basically json and easy to generate in Emacs, unlike sql. Also, it is flexible and easy to adapt to new things, e.g. indexing src-blocks or tables or whatever org-element you want. (And I want to use Mongo for something else too ;). Obviously these all add dependencies, and might not be suitable for the core org-mode distribution. But I do think it is important to think about ways to scale org-mode while maintaining compatibility with the core.
+
+The main point of the database was to get a query language, persistence and good performance. I have also used caches to speed up using bibtex files, and my org-contacts with reasonable performance. These have been all elisp, with no additional dependencies. Maybe one could do something similar to keep an agenda cache that is persistent and updated via hook functions.
+
+Thoughts?
+
+John
+#+END_QUOTE
 :PROPERTIES:
 :archive.is: http://archive.is/33R9M
 :END:
