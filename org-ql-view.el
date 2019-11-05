@@ -378,7 +378,7 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
       ;; Clear buffer, insert entries, etc.
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (insert string)
+        (insert string "\n")
         (pop-to-buffer (current-buffer) org-ql-view-display-buffer-action)
         (org-agenda-finalize)
         (goto-char (point-min))))))

@@ -63,6 +63,7 @@ Functions / Macros
 Changelog
 
 * 0.4-pre: 04-pre. 
+* 0.3.2: 032. 
 * 0.3.1: 031. 
 * 0.3: 03. 
 * 0.2.3: 023. 
@@ -372,6 +373,7 @@ Arguments are listed next to predicate names, where applicable.
 ‘heading (&rest regexps)’
      Return non-nil if current entry’s heading matches all ‘REGEXPS’
      (regexp strings).
+        • Aliases: h.
 ‘level (level-or-comparator &optional level)’
      Return non-nil if current heading’s outline level matches
      arguments.  The following forms are accepted: ‘(level NUMBER)’:
@@ -681,6 +683,7 @@ releases.
 * Menu:
 
 * 0.4-pre: 04-pre. 
+* 0.3.2: 032. 
 * 0.3.1: 031. 
 * 0.3: 03. 
 * 0.2.3: 023. 
@@ -690,7 +693,7 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 04-pre,  Next: 031,  Up: Changelog
+File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
 
 5.1 0.4-pre
 ===========
@@ -711,15 +714,31 @@ File: README.info,  Node: 04-pre,  Next: 031,  Up: Changelog
    • Command ‘helm-org-ql-views’, which shows one of ‘org-ql-views’
      selected with Helm.
    • Predicate ‘src’, which matches Org Babel source blocks.
+   • Alias h for heading predicate.
+   • Search/view buffers now always end with a newline, which prevents
+     side-scrolling of the window when calling end-of-buffer.
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
      queries.
 
 
-File: README.info,  Node: 031,  Next: 03,  Prev: 04-pre,  Up: Changelog
+File: README.info,  Node: 032,  Next: 031,  Prev: 04-pre,  Up: Changelog
 
-5.2 0.3.1
+5.2 0.3.2
+=========
+
+*Fixed*
+   • In org-ql-search, accept symbol as ‘:super-groups’ argument.
+   • In the This week and Next week default org-ql-views views, set
+     timestamps for beginning-of-week to 00:00:00 and end-of-week to
+     23:59:59.
+   • Plain quoted-phrases in non-sexp queries.
+
+
+File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
+
+5.3 0.3.1
 =========
 
 *Fixed*
@@ -729,7 +748,7 @@ File: README.info,  Node: 031,  Next: 03,  Prev: 04-pre,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
-5.3 0.3
+5.4 0.3
 =======
 
 *Added*
@@ -794,7 +813,7 @@ File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
 File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
-5.4 0.2.3
+5.5 0.2.3
 =========
 
 *Fixed*
@@ -804,7 +823,7 @@ File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
-5.5 0.2.2
+5.6 0.2.2
 =========
 
 *Fixed*
@@ -815,7 +834,7 @@ File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
-5.6 0.2.1
+5.7 0.2.1
 =========
 
 *Fixed*
@@ -825,7 +844,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-5.7 0.2
+5.8 0.2
 =======
 
 *Added*
@@ -908,7 +927,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-5.8 0.1
+5.9 0.1
 =======
 
 First tagged release.
@@ -969,38 +988,39 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1352
-Node: Screenshots1500
-Node: Installation1618
-Node: Quelpa2256
-Node: Usage2699
-Node: Commands3609
-Node: org-ql-search3838
-Node: helm-org-ql5486
-Node: org-ql-view5898
-Node: org-ql-view-sidebar6096
-Node: org-ql-view-recent-items6452
-Node: org-ql-sparse-tree6936
-Node: Queries7736
-Node: Non-sexp query syntax8578
-Node: Predicates10277
-Node: Date/time predicates15391
-Node: Functions / Macros18026
-Node: Agenda-like views18213
-Node: Listing / acting-on results19618
-Node: Changelog24220
-Node: 04-pre24742
-Node: 03125830
-Node: 0326028
-Node: 02329001
-Node: 02229227
-Node: 02129493
-Node: 0229690
-Node: 0133723
-Node: Notes33822
-Node: Comparison with Org Agenda searches33984
-Node: org-sidebar34855
-Node: License35134
+Node: Contents1367
+Node: Screenshots1515
+Node: Installation1633
+Node: Quelpa2271
+Node: Usage2714
+Node: Commands3624
+Node: org-ql-search3853
+Node: helm-org-ql5501
+Node: org-ql-view5913
+Node: org-ql-view-sidebar6111
+Node: org-ql-view-recent-items6467
+Node: org-ql-sparse-tree6951
+Node: Queries7751
+Node: Non-sexp query syntax8593
+Node: Predicates10292
+Node: Date/time predicates15430
+Node: Functions / Macros18065
+Node: Agenda-like views18252
+Node: Listing / acting-on results19657
+Node: Changelog24259
+Node: 04-pre24796
+Node: 03226057
+Node: 03126438
+Node: 0326633
+Node: 02329606
+Node: 02229832
+Node: 02130098
+Node: 0230295
+Node: 0134328
+Node: Notes34427
+Node: Comparison with Org Agenda searches34589
+Node: org-sidebar35460
+Node: License35739
 
 End Tag Table
 
