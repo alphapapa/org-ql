@@ -470,7 +470,8 @@ Values compared with `equal'."
             buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
       (unless (and buffer-cache buffer-unmodified-p)
         ;; Buffer-local node cache empty or invalid: make new one.
-        (setf position-cache (make-hash-table))
+        (setf position-cache (make-hash-table)
+              value-cache (gethash position position-cache))
         (puthash (current-buffer)
                  (cons (buffer-modified-tick) position-cache)
                  org-ql-node-value-cache))

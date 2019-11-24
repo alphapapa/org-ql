@@ -142,6 +142,25 @@ RESULTS should be a list of strings as returned by
                           (cl-loop while (re-search-forward org-heading-regexp nil t)
                                    sum 1)))))
 
+  (describe "Caching"
+    (it "Clears value cache after buffer changes"
+      ;; See <https://github.com/alphapapa/org-ql/issues/59>.
+      (with-temp-buffer
+        (org-mode)
+        (insert "* Heading 1
+* Heading 2")
+        ;; FIXME: `--value-at' does not actually move point, so we do it here.
+        (goto-char (point-min))
+        (expect (org-ql--value-at (point-min) #'org-get-heading)
+                :to-equal "Heading 1")
+        (erase-buffer)
+        ;; FIXME: See above.
+        (insert "* Heading 2")
+        (goto-char (point-min))
+        (org-ql--value-at (point-min) #'point)
+        (expect (org-ql--value-at (point-min) #'org-get-heading)
+                :to-equal "Heading 2"))))
+
   (describe "Query functions/macros"
 
     (it "org-ql"
