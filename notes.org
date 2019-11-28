@@ -447,14 +447,6 @@ To implement this with good performance probably needs an outline-path cache.  I
 
 [2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
 
-** UNDERWAY [#A] Helm command
-
-In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
-
-*** TODO Add
-
-*** TODO Demonstrate
-
 ** UNDERWAY [#B] Implement view with tabulated-list-mode or magit-section
 
 [2019-09-02 Mon 05:20]  Especially with some of the new packages that make =tabulated-list-mode= easier to use, like =navigel=.  However, it would probably break grouping, or require some kind of adapter or extension to do grouping, so I don't know if that would work.  Something like =magit-section= would be more flexible, and could be recursively grouped, like in =magit-todos=.
