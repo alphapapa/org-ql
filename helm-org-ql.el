@@ -67,7 +67,7 @@
 Based on `helm-map'.")
 
 (defvar helm-source-org-ql-views
-  (helm-build-sync-source "Org QL Views"
+  (helm-make-source "Org QL Views" 'helm-source-sync
     :candidates (lambda ()
                   (->> org-ql-views
                        (-map #'car)

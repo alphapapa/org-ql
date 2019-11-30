@@ -718,6 +718,13 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
    • Search/view buffers now always end with a newline, which prevents
      side-scrolling of the window when calling end-of-buffer.
 
+   *Fixed*
+   • Call helm-make-source directly instead of using
+     helm-build-sync-source macro.  (Fixes #60
+     (https://github.com/alphapapa/org-ql/issues/60).  Thanks to Matt
+     Huszagh (@matthuszagh (https://github.com/matthuszagh)) for
+     reporting.)
+
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
      queries.
@@ -1009,18 +1016,18 @@ Node: Agenda-like views18252
 Node: Listing / acting-on results19657
 Node: Changelog24259
 Node: 04-pre24796
-Node: 03226057
-Node: 03126438
-Node: 0326633
-Node: 02329606
-Node: 02229832
-Node: 02130098
-Node: 0230295
-Node: 0134328
-Node: Notes34427
-Node: Comparison with Org Agenda searches34589
-Node: org-sidebar35460
-Node: License35739
+Node: 03226323
+Node: 03126704
+Node: 0326899
+Node: 02329872
+Node: 02230098
+Node: 02130364
+Node: 0230561
+Node: 0134594
+Node: Notes34693
+Node: Comparison with Org Agenda searches34855
+Node: org-sidebar35726
+Node: License36005
 
 End Tag Table
 

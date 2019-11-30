@@ -388,6 +388,9 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Alias =h= for =heading= predicate.
 +  Search/view buffers now always end with a newline, which prevents side-scrolling of the window when calling =end-of-buffer=.
 
+*Fixed*
++  Call =helm-make-source= directly instead of using =helm-build-sync-source= macro.  (Fixes [[https://github.com/alphapapa/org-ql/issues/60][#60]].  Thanks to Matt Huszagh ([[https://github.com/matthuszagh][@matthuszagh]]) for reporting.)
+
 *Internal*
 +  Added generic node data cache to speed up recursive, tree-based queries.
 
