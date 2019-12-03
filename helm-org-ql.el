@@ -187,7 +187,7 @@ Is transformed into this query:
   "Return Helm source named NAME that searches BUFFERS-FILES with `helm-org-ql'."
   ;; Expansion of `helm-build-sync-source' macro.
   (helm-make-source name 'helm-source-sync
-    :candidates (lambda nil
+    :candidates (lambda ()
                   (let* ((query (org-ql--plain-query helm-pattern))
                          (window-width (window-width (helm-window))))
                     (when query
@@ -208,7 +208,7 @@ Is transformed into this query:
                         ;; where byte-compilation is actually done, but it might not be a good idea
                         ;; to always ignore such errors/warnings.
                         (org-ql-select buffers-files query
-                          :action (list 'helm-org-ql--heading window-width))))))
+                          :action `(helm-org-ql--heading ,window-width))))))
     :match #'identity
     :fuzzy-match nil
     :multimatch nil
@@ -228,9 +228,9 @@ WINDOW-WIDTH should be the width of the Helm window."
   ;; call a setup function in a buffer before running queries.
   (let* ((prefix (concat (buffer-name) ":"))
          (width (- window-width (length prefix)))
-         (path (org-split-string (org-format-outline-path (org-get-outline-path)
-                                                          width nil "")
-                                 ""))
+         (path (-> (org-get-outline-path)
+                   (org-format-outline-path width nil "")
+                   (org-split-string "")))
          (heading (org-get-heading t))
          (path (if helm-org-ql-reverse-paths
                    (concat heading "\\" (s-join "\\" (nreverse path)))
