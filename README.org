@@ -377,19 +377,21 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 ** 0.4-pre
 
 *Added*
-+  Negation of terms in plain queries using ~!~.  For example, ~tags:space !moon~ to exclude entries which contain ~moon~.
-+  Predicates =outline-path= (alias =olp=) and =outline-path-segment= (alias =olps=).
++  *Commands*
+     -  ~helm-org-ql-views~, which shows one of ~org-ql-views~ selected with Helm.
+     -  ~org-ql-search~ can search files in ~org-directory~; customization options are available in the ~org-ql-search~ group.
+     -  ~org-ql-view-refresh~ can be called with a prefix argument to adjust search parameters.
++  *Queries*
+     -  Negation of terms in plain queries using ~!~.  For example, ~tags:space !moon~ to exclude entries which contain ~moon~.
+     -  Predicates =outline-path= (alias =olp=) and =outline-path-segment= (alias =olps=).
+     -  Predicate ~src~, which matches Org Babel source blocks.
+     -  Alias =h= for =heading= predicate.
 +  Info manual.
-+  Command ~org-ql-search~ can search files in ~org-directory~; customization options are available in the ~org-ql-search~ group.
-+  Command ~org-ql-view-refresh~ can be called with a prefix argument to adjust search parameters.
 +  Function ~helm-org-ql-source~, which returns a Helm source that searches given buffers/files with ~helm-org-ql~.  It can be used for custom Helm commands that search certain files.
-+  Command ~helm-org-ql-views~, which shows one of ~org-ql-views~ selected with Helm.
-+  Predicate ~src~, which matches Org Babel source blocks.
-+  Alias =h= for =heading= predicate.
-+  Search/view buffers now always end with a newline, which prevents side-scrolling of the window when calling =end-of-buffer=.
 
 *Fixed*
-+  Call =helm-make-source= directly instead of using =helm-build-sync-source= macro.  (Fixes [[https://github.com/alphapapa/org-ql/issues/60][#60]].  Thanks to Matt Huszagh ([[https://github.com/matthuszagh][@matthuszagh]]) for reporting.)
++  Call =helm-make-source= directly instead of using =helm-build-sync-source= macro.  (Fixes [[https://github.com/alphapapa/org-ql/issues/60][#60]].  Thanks to [[https://github.com/matthuszagh][Matt Huszagh]] for reporting.)
++  Search/view buffers now always end with a newline, which prevents side-scrolling of the window when calling =end-of-buffer=.
 
 *Internal*
 +  Added generic node data cache to speed up recursive, tree-based queries.

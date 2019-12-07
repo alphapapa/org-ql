@@ -699,31 +699,33 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
 ===========
 
 *Added*
-   • Negation of terms in plain queries using ‘!’.  For example,
-     ‘tags:space !moon’ to exclude entries which contain ‘moon’.
-   • Predicates outline-path (alias olp) and outline-path-segment (alias
-     olps).
+   • *Commands*
+        • ‘helm-org-ql-views’, which shows one of ‘org-ql-views’
+          selected with Helm.
+        • ‘org-ql-search’ can search files in ‘org-directory’;
+          customization options are available in the ‘org-ql-search’
+          group.
+        • ‘org-ql-view-refresh’ can be called with a prefix argument to
+          adjust search parameters.
+   • *Queries*
+        • Negation of terms in plain queries using ‘!’.  For example,
+          ‘tags:space !moon’ to exclude entries which contain ‘moon’.
+        • Predicates outline-path (alias olp) and outline-path-segment
+          (alias olps).
+        • Predicate ‘src’, which matches Org Babel source blocks.
+        • Alias h for heading predicate.
    • Info manual.
-   • Command ‘org-ql-search’ can search files in ‘org-directory’;
-     customization options are available in the ‘org-ql-search’ group.
-   • Command ‘org-ql-view-refresh’ can be called with a prefix argument
-     to adjust search parameters.
    • Function ‘helm-org-ql-source’, which returns a Helm source that
      searches given buffers/files with ‘helm-org-ql’.  It can be used
      for custom Helm commands that search certain files.
-   • Command ‘helm-org-ql-views’, which shows one of ‘org-ql-views’
-     selected with Helm.
-   • Predicate ‘src’, which matches Org Babel source blocks.
-   • Alias h for heading predicate.
-   • Search/view buffers now always end with a newline, which prevents
-     side-scrolling of the window when calling end-of-buffer.
 
    *Fixed*
    • Call helm-make-source directly instead of using
      helm-build-sync-source macro.  (Fixes #60
      (https://github.com/alphapapa/org-ql/issues/60).  Thanks to Matt
-     Huszagh (@matthuszagh (https://github.com/matthuszagh)) for
-     reporting.)
+     Huszagh (https://github.com/matthuszagh) for reporting.)
+   • Search/view buffers now always end with a newline, which prevents
+     side-scrolling of the window when calling end-of-buffer.
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
@@ -1016,18 +1018,18 @@ Node: Agenda-like views18252
 Node: Listing / acting-on results19657
 Node: Changelog24259
 Node: 04-pre24796
-Node: 03226323
-Node: 03126704
-Node: 0326899
-Node: 02329872
-Node: 02230098
-Node: 02130364
-Node: 0230561
-Node: 0134594
-Node: Notes34693
-Node: Comparison with Org Agenda searches34855
-Node: org-sidebar35726
-Node: License36005
+Node: 03226384
+Node: 03126765
+Node: 0326960
+Node: 02329933
+Node: 02230159
+Node: 02130425
+Node: 0230622
+Node: 0134655
+Node: Notes34754
+Node: Comparison with Org Agenda searches34916
+Node: org-sidebar35787
+Node: License36066
 
 End Tag Table
 
