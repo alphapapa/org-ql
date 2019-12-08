@@ -696,6 +696,23 @@ replace the clause with a preamble."
                                                                      'no-group))
                                  element)
 
+                                ;; Heading regexp.
+                                ;; MAYBE: Adjust regexp to avoid matching in tag list.
+                                (`(heading-regexp ,regexp)
+                                 ;; Only one regexp: match with preamble, then let predicate confirm (because
+                                 ;; the match could be in e.g. the tags rather than the heading text).
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
+                                                                           (regexp ,regexp))
+                                                                     'no-group))
+                                 element)
+                                (`(heading-regexp . ,regexps)
+                                 ;; Multiple regexps: use preamble to match against first
+                                 ;; regexp, then let the predicate match the rest.
+                                 (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
+                                                                           (regexp ,(car regexps)))
+                                                                     'no-group))
+                                 element)
+
                                 ;; Heading levels.
                                 (`(level ,comparator-or-num ,num)
                                  (let ((repeat (pcase comparator-or-num
@@ -1144,6 +1161,12 @@ priority B)."
                         (re-search-forward regexp end t))))))
 
 (org-ql--defpred (heading h) (&rest regexps)
+  "Return non-nil if current entry's heading matches all REGEXPS (regexp strings)."
+  ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
+  (let ((heading (org-get-heading 'no-tags 'no-todo)))
+    (--all? (string-match it heading) regexps)))
+
+(org-ql--defpred heading-regexp (&rest regexps)
   "Return non-nil if current entry's heading matches all REGEXPS (regexp strings)."
   ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
   (let ((heading (org-get-heading 'no-tags 'no-todo)))
