@@ -685,14 +685,14 @@ replace the clause with a preamble."
                                  ;; Only one regexp: match with preamble, then let predicate confirm (because
                                  ;; the match could be in e.g. the tags rather than the heading text).
                                  (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
-                                                                           ,regexp)
+                                                                           (regexp ,regexp))
                                                                      'no-group))
                                  element)
                                 (`(heading . ,regexps)
                                  ;; Multiple regexps: use preamble to match against first
                                  ;; regexp, then let the predicate match the rest.
                                  (setq org-ql-preamble (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
-                                                                           ,(car regexps))
+                                                                           (regexp ,(car regexps)))
                                                                      'no-group))
                                  element)
 
