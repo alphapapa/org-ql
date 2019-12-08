@@ -109,6 +109,10 @@ the value returned by it at that node.")
   "Plist of predicates, their corresponding functions, and their docstrings.
 This list should not contain any duplicates.")
 
+
+(defvar org-ql-default-predicate 'regexp
+  "The default predicate used by `org-ql--plain-query'.")
+
 ;;;; Customization
 
 (defgroup org-ql nil
@@ -1495,7 +1499,8 @@ Builds the PEG expression using predicates defined in
                             (-sort (-on #'> #'length)))))
       `(cl-defun org-ql--plain-query (input &optional (boolean 'and))
          "Return query parsed from plain query string INPUT.
-Multiple predicates are combined with BOOLEAN."
+Multiple predicates are combined with BOOLEAN.
+If no predicates are found, `org-ql-default-predicate' will be used."
          (unless (s-blank-str? input)
            (let* ((query (peg-parse-string
                           ((query (+ term
@@ -1506,7 +1511,7 @@ Multiple predicates are combined with BOOLEAN."
                                      positive-term))
                            (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
                                               (and predicate-without-args `(pred -- (list (intern pred))))
-                                              (and plain-string `(s -- (list 'regexp s)))))
+                                              (and plain-string `(s -- (list org-ql-default-predicate s)))))
                            (plain-string (or quoted-arg unquoted-arg))
                            (predicate-with-args (substring predicate) ":" args)
                            (predicate-without-args (substring predicate) ":")
