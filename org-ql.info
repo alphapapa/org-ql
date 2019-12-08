@@ -415,6 +415,7 @@ Arguments are listed next to predicate names, where applicable.
      Return non-nil if current entry matches all of ‘REGEXPS’ (regexp
      strings).  Matches against entire entry, from beginning of its
      heading to the next heading.
+        • Aliases: r.
 ‘‘src (&key lang regexps)’’
      Return non-nil if current entry contains an Org Babel source block.
      If ‘LANG’ is non-nil, match blocks of that language.  If ‘REGEXPS’
@@ -714,6 +715,8 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
           (alias olps).
         • Predicate ‘src’, which matches Org Babel source blocks.
         • Alias h for heading predicate.
+        • Alias r for regexp predicate.  (Thanks to Feng Shu
+          (https://github.com/tumashu).)
    • Info manual.
    • Function ‘helm-org-ql-source’, which returns a Helm source that
      searches given buffers/files with ‘helm-org-ql’.  It can be used
@@ -1012,24 +1015,24 @@ Node: org-ql-sparse-tree6951
 Node: Queries7751
 Node: Non-sexp query syntax8593
 Node: Predicates10292
-Node: Date/time predicates15430
-Node: Functions / Macros18065
-Node: Agenda-like views18252
-Node: Listing / acting-on results19657
-Node: Changelog24259
-Node: 04-pre24796
-Node: 03226384
-Node: 03126765
-Node: 0326960
-Node: 02329933
-Node: 02230159
-Node: 02130425
-Node: 0230622
-Node: 0134655
-Node: Notes34754
-Node: Comparison with Org Agenda searches34916
-Node: org-sidebar35787
-Node: License36066
+Node: Date/time predicates15454
+Node: Functions / Macros18089
+Node: Agenda-like views18276
+Node: Listing / acting-on results19681
+Node: Changelog24283
+Node: 04-pre24820
+Node: 03226512
+Node: 03126893
+Node: 0327088
+Node: 02330061
+Node: 02230287
+Node: 02130553
+Node: 0230750
+Node: 0134783
+Node: Notes34882
+Node: Comparison with Org Agenda searches35044
+Node: org-sidebar35915
+Node: License36194
 
 End Tag Table
 

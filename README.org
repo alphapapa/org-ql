@@ -192,6 +192,7 @@ Arguments are listed next to predicate names, where applicable.
 +  =priority (&optional comparator-or-priority priority)= :: Return non-nil if current heading has a certain priority.  ~COMPARATOR-OR-PRIORITY~ should be either a comparator function, like ~<=~, or a priority string, like "A" (in which case (~=~ will be the comparator).  If ~COMPARATOR-OR-PRIORITY~ is a comparator, ~PRIORITY~ should be a priority string.  If both arguments are nil, return non-nil if heading has any defined priority.
 +  =property (property &optional value)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a custom predicate form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
 +  =regexp (&rest regexps)= :: Return non-nil if current entry matches all of ~REGEXPS~ (regexp strings).  Matches against entire entry, from beginning of its heading to the next heading.
+     -  Aliases: =r=.
 +  ~src (&key lang regexps)~ :: Return non-nil if current entry contains an Org Babel source block.  If ~LANG~ is non-nil, match blocks of that language.  If ~REGEXPS~ is non-nil, require that block's contents match all regexps.
 +  =tags (&optional tags)= :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
 +  =tags-inherited (&optional tags)= :: Return non-nil if current heading's inherited tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any inherited tags.
@@ -386,6 +387,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
      -  Predicates =outline-path= (alias =olp=) and =outline-path-segment= (alias =olps=).
      -  Predicate ~src~, which matches Org Babel source blocks.
      -  Alias =h= for =heading= predicate.
+     -  Alias =r= for =regexp= predicate.  (Thanks to [[https://github.com/tumashu][Feng Shu]].)
 +  Info manual.
 +  Function ~helm-org-ql-source~, which returns a Helm source that searches given buffers/files with ~helm-org-ql~.  It can be used for custom Helm commands that search certain files.
 

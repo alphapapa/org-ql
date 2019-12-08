@@ -575,6 +575,11 @@ Replaces bare strings with (regexp) selectors, and appropriate
                       ;; "h" alias.
                       `(heading ,@args))
 
+                     ;; Regexps.
+                     (`(r . ,args)
+                      ;; "r" alias.
+                      `(regexp ,@args))
+
                      ;; Outline paths.
                      (`(,(or 'outline-path 'olp) . ,strings)
                       ;; Regexp quote headings.
@@ -1127,7 +1132,7 @@ priority B)."
   "Return non-nil if entry is a habit."
   (org-is-habit-p))
 
-(org-ql--defpred regexp (&rest regexps)
+(org-ql--defpred (regexp r) (&rest regexps)
   "Return non-nil if current entry matches all of REGEXPS (regexp strings)."
   (let ((end (or (save-excursion
                    (outline-next-heading))
