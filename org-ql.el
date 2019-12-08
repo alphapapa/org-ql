@@ -109,6 +109,9 @@ the value returned by it at that node.")
   "Plist of predicates, their corresponding functions, and their docstrings.
 This list should not contain any duplicates.")
 
+(defvar org-ql-plain-string-predicate 'regexp
+  "Plain strings in queries are matched with this predicate.")
+
 ;;;; Customization
 
 (defgroup org-ql nil
@@ -521,8 +524,9 @@ Or, when possible, fix the problem."
 
 (defun org-ql--pre-process-query (query)
   "Return QUERY having been pre-processed.
-Replaces bare strings with (regexp) selectors, and appropriate
-`ts'-related selectors."
+Replaces bare strings with predicate set by
+`org-ql-plain-string-predicate' , and appropriate `ts'-related
+selectors."
   ;; This is unsophisticated, but it works.
   ;; TODO: Maybe query pre-processing should be done in one place,
   ;; rather than here and in --query-predicate.
@@ -538,7 +542,7 @@ Replaces bare strings with (regexp) selectors, and appropriate
                      (`(unless ,condition . ,clauses) `(unless ,(rec condition)
                                                          ,@(mapcar #'rec clauses)))
                      ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
-                     ((pred stringp) `(regexp ,element))
+                     ((pred stringp) `(,org-ql-plain-string-predicate ,element))
                      ;; Quote children queries so the user doesn't have to.
                      (`(children ,query) `(children ',query))
                      (`(children) '(children (lambda () t)))
@@ -1495,7 +1499,8 @@ Builds the PEG expression using predicates defined in
                             (-sort (-on #'> #'length)))))
       `(cl-defun org-ql--plain-query (input &optional (boolean 'and))
          "Return query parsed from plain query string INPUT.
-Multiple predicates are combined with BOOLEAN."
+Multiple predicates are combined with BOOLEAN.
+If no predicates are found, `org-ql-plain-string-predicate' will be used."
          (unless (s-blank-str? input)
            (let* ((query (peg-parse-string
                           ((query (+ term
@@ -1506,7 +1511,7 @@ Multiple predicates are combined with BOOLEAN."
                                      positive-term))
                            (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
                                               (and predicate-without-args `(pred -- (list (intern pred))))
-                                              (and plain-string `(s -- (list 'regexp s)))))
+                                              (and plain-string `(s -- (list org-ql-plain-string-predicate s)))))
                            (plain-string (or quoted-arg unquoted-arg))
                            (predicate-with-args (substring predicate) ":" args)
                            (predicate-without-args (substring predicate) ":")
