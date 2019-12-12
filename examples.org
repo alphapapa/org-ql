@@ -211,6 +211,20 @@ Saving org-ql search:
     (org-icalendar-export-to-ics))
 #+end_src
 
+* Get all in progress tasks for [[https://github.com/ahungry/org-jira][org-jira]] users
+
+For best results, inject it to bigger agenda view for your work items.
+
+#+begin_src emacs-lisp
+  (org-ql-search
+    (org-agenda-files)
+    '(and (tags "work")
+          (and (property "assignee" "your-jira-username")
+               (todo "PROG")))
+    :super-groups
+    '((:name "In progress" :order 1 :todo "PROG")))
+#+end_src
+
 * COMMENT Code                                                     :noexport:
 :PROPERTIES:
 :TOC:      ignore
