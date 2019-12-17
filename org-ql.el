@@ -548,6 +548,10 @@ Replaces bare strings with (regexp) selectors, and appropriate
                      (`(children) '(children (lambda () t)))
                      (`(descendants ,query) `(descendants ',query))
                      (`(descendants) '(descendants (lambda () t)))
+                     (`(parent ,query) `(parent ,(org-ql--query-predicate (rec query))))
+                     (`(parent) `(parent ,(org-ql--query-predicate (rec '(lambda () t)))))
+                     (`(ancestors ,query) `(ancestors ,(org-ql--query-predicate (rec query))))
+                     (`(ancestors) `(ancestors ,(org-ql--query-predicate (rec '(lambda () t)))))
                      ;; Timestamp-based predicates.  I think this is the way that makes the most sense:
                      ;; set the limit to N days in the future, adjusted to 23:59:59 (since Org doesn't
                      ;; support timestamps down to the second, anyway, there should be no need to adjust
@@ -931,38 +935,49 @@ Arguments STRING, POS, FILL, and LEVEL are according to
 
 (org-ql--defpred children (query)
   "Return non-nil if current entry has children matching QUERY."
-  (save-excursion
-    (save-restriction
-      (org-narrow-to-subtree)
-      (when (org-goto-first-child)
-        ;; Lisp makes this easy and elegant: all we do is modify the query,
-        ;; nesting it inside an (and), and it doesn't descend into grandchildren.
-        (let* ((level (org-current-level))
-               (query (cl-typecase query
-                        (byte-code-function `(and (level ,level)
-                                                  (funcall ,query)))
-                        (t `(and (level ,level)
-                                 ,query)))))
-          (catch 'found
-            (org-ql-select (current-buffer)
-              query
-              :narrow t
-              :action (lambda ()
-                        (throw 'found t)))))))))
+  (org-with-wide-buffer
+   ;; Widening is needed if inside an "ancestors" query
+   (org-narrow-to-subtree)
+   (when (org-goto-first-child)
+     ;; Lisp makes this easy and elegant: all we do is modify the query,
+     ;; nesting it inside an (and), and it doesn't descend into grandchildren.
+     (let* ((level (org-current-level))
+            (query (cl-typecase query
+                     (byte-code-function `(and (level ,level)
+                                               (funcall ,query)))
+                     (t `(and (level ,level)
+                              ,query)))))
+       (catch 'found
+         (org-ql-select (current-buffer)
+           query
+           :narrow t
+           :action (lambda ()
+                     (throw 'found t))))))))
+
+(org-ql--defpred parent (predicate)
+  "Return non-nil if the current entry's parent satisfies PREDICATE."
+  (org-with-wide-buffer
+   (when (org-up-heading-safe)
+     (org-ql--value-at (point) predicate))))
 
 (org-ql--defpred descendants (query)
   "Return non-nil if current entry has descendants matching QUERY."
-  (save-excursion
-    (save-restriction
-      (org-narrow-to-subtree)
-      (when (org-goto-first-child)
-        (narrow-to-region (point) (point-max))
-        (catch 'found
-          (org-ql-select (current-buffer)
-            query
-            :narrow t
-            :action (lambda ()
-                      (throw 'found t))))))))
+  (org-with-wide-buffer
+    (org-narrow-to-subtree)
+    (when (org-goto-first-child)
+      (narrow-to-region (point) (point-max))
+      (catch 'found
+        (org-ql-select (current-buffer)
+          query
+          :narrow t
+          :action (lambda ()
+                    (throw 'found t)))))))
+
+(org-ql--defpred ancestors (predicate)
+  "Return non-nil if any of current entry's ancestors satisfy PREDICATE."
+  (org-with-wide-buffer
+   (cl-loop while (org-up-heading-safe)
+            thereis (org-ql--value-at (point) predicate))))
 
 (org-ql--defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."

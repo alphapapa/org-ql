@@ -181,7 +181,9 @@ Arguments are listed next to predicate names, where applicable.
 
 +  =category (&optional categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
 +  =children (&optional query)= :: Return non-nil if current heading has direct child headings.  If ~QUERY~, test it against child headings.  This selector may be nested, e.g. to match grandchild headings.
++  =parent (&optional query)= :: Return non-nil if current heading has a direct parent heading.  If ~QUERY~, test it against the parent heading.  This selector may be nested, e.g. to match grandparent headings.
 +  =descendants (&optional query)= :: Return non-nil if current heading has descendant headings.  If ~QUERY~, test it against descendant headings.  This selector may be nested (if you can grok the nesting!).
++  =ancestors (&optional query)= :: Return non-nil if current heading has ancestor headings (which is true if it has a parent heading).  With ~QUERY~, return non-nil if some ancestor heading matches it. This selector may also be nested.
 +  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
 +  =habit= :: Return non-nil if entry is a habit.
 +  =heading (&rest regexps)= :: Return non-nil if current entry's heading matches all ~REGEXPS~ (regexp strings).
@@ -395,6 +397,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
      -  Negation of terms in plain queries using ~!~.  For example, ~tags:space !moon~ to exclude entries which contain ~moon~.
      -  Predicates =outline-path= (alias =olp=) and =outline-path-segment= (alias =olps=).
      -  Predicate ~src~, which matches Org Babel source blocks.
+     -  Predicates =parent= and =ancestors=.
      -  Alias =h= for =heading= predicate.
      -  Alias =r= for =regexp= predicate.  (Thanks to [[https://github.com/tumashu][Feng Shu]].)
 +  Info manual.
