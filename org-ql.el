@@ -2021,6 +2021,48 @@ If QUERY can't be converted to a string, return nil."
         (`(and . ,_) (format-and query))
         (_ (format-form query))))))
 
+;;;;; Helm/Ivy common functions
+
+(defun org-ql-show-marker (marker)
+  "Show heading at MARKER."
+  (interactive)
+  ;; This function is necessary because `helm-org-goto-marker' calls
+  ;; `re-search-backward' to go backward to the start of a heading,
+  ;; which, when the marker is already at the desired heading, causes
+  ;; it to go to the previous heading.  I don't know why it does that.
+  (switch-to-buffer (marker-buffer marker))
+  (goto-char marker)
+  (org-show-entry))
+
+(defun org-ql-show-marker-indirect (marker)
+  "Show heading at MARKER with `org-tree-to-indirect-buffer'."
+  (interactive)
+  (org-ql-show-marker marker)
+  (org-tree-to-indirect-buffer))
+
+(defun org-ql--heading-cons (window-width reverse-path)
+  "Return cons for heading at point, suitable for Helm/Ivy.
+The cons includes (OUTLINE-PATH-STRING . HEADING-MARKER).
+WINDOW-WIDTH should be the width of the Helm/Ivy window in
+characters.  If REVERSE-PATH is non-nil, the outline path is
+reversed."
+  (font-lock-ensure (point-at-bol) (point-at-eol))
+  ;; TODO: It would be better to avoid calculating the prefix and width
+  ;; at each heading, but there's no easy way to do that once in each
+  ;; buffer, unless we manually called `org-ql' in each buffer, which
+  ;; I'd prefer not to do.  Maybe I should add a feature to `org-ql' to
+  ;; call a setup function in a buffer before running queries.
+  (let* ((prefix (concat (buffer-name) ":"))
+         (width (- window-width (length prefix)))
+         (heading (org-get-heading t))
+         (path (-> (org-get-outline-path)
+                   (org-format-outline-path width nil "")
+                   (org-split-string "")))
+         (path (if helm-org-ql-reverse-paths
+                   (concat heading "\\" (s-join "\\" (nreverse path)))
+                 (concat (s-join "/" path) "/" heading))))
+    (cons (concat prefix path) (point-marker))))
+
 ;;;; Footer
 
 (provide 'org-ql)
