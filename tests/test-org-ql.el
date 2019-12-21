@@ -143,6 +143,7 @@ RESULTS should be a list of strings as returned by
                                    sum 1)))))
 
   (describe "Caching"
+
     (it "Clears value cache after buffer changes"
       ;; See <https://github.com/alphapapa/org-ql/issues/59>.
       (with-temp-buffer
@@ -159,7 +160,17 @@ RESULTS should be a list of strings as returned by
         (goto-char (point-min))
         (org-ql--value-at (point-min) #'point)
         (expect (org-ql--value-at (point-min) #'org-get-heading)
-                :to-equal "Heading 2"))))
+                :to-equal "Heading 2")))
+
+    (it "Returns nil when cache misses and function returns nil"
+      ;; See <https://github.com/alphapapa/org-ql/pull/78>.
+      (with-temp-buffer
+        (org-mode)
+        (insert "* Heading 1")
+        ;; FIXME: `--value-at' does not actually move point, so we do it here.
+        (goto-char (point-min))
+        (expect (org-ql--value-at (point-min) #'org-get-local-tags)
+                :to-be nil))))
 
   (describe "Query functions/macros"
 

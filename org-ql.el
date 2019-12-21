@@ -447,37 +447,38 @@ Values compared with `equal'."
   ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
   ;; bound in the else clause, so destructured variables that are non-nil,
   ;; like found caches, are not available in the else clause.
-  (if-let* ((buffer-cache (gethash (current-buffer) org-ql-node-value-cache))
-            (modified-tick (car buffer-cache))
-            (position-cache (cdr buffer-cache))
-            (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
-            (value-cache (gethash position position-cache))
-            (cached-value (alist-get fn value-cache nil nil #'equal)))
-      ;; Found in cache: return it.
-      (pcase cached-value
-        ('org-ql-nil nil)
-        (_ cached-value))
-    ;; Not found in cache: get value and cache it.
-    (let ((new-value (or (funcall fn) 'org-ql-nil)))
-      ;; Check caches again, because it may have been set now, e.g. by
-      ;; recursively going up an outline tree.
-      ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
-      (setf buffer-cache (gethash (current-buffer) org-ql-node-value-cache)
-            modified-tick (car buffer-cache)
-            position-cache (cdr buffer-cache)
-            value-cache (when position-cache
-                          (gethash position position-cache))
-            buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
-      (unless (and buffer-cache buffer-unmodified-p)
-        ;; Buffer-local node cache empty or invalid: make new one.
-        (setf position-cache (make-hash-table)
-              value-cache (gethash position position-cache))
-        (puthash (current-buffer)
-                 (cons (buffer-modified-tick) position-cache)
-                 org-ql-node-value-cache))
-      (map-put value-cache fn new-value)
-      (puthash position value-cache position-cache)
-      new-value)))
+  (pcase (if-let* ((buffer-cache (gethash (current-buffer) org-ql-node-value-cache))
+                   (modified-tick (car buffer-cache))
+                   (position-cache (cdr buffer-cache))
+                   (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                   (value-cache (gethash position position-cache))
+                   (cached-value (alist-get fn value-cache nil nil #'equal)))
+             ;; Found in cache: return it.
+             cached-value
+           ;; Not found in cache: call FN, cache and return its value.
+           (let ((new-value (or (funcall fn) 'org-ql-nil)))
+             ;; Check caches again, because it may have been set now, e.g. by
+             ;; recursively going up an outline tree.
+             ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
+             (setf buffer-cache (gethash (current-buffer) org-ql-node-value-cache)
+                   modified-tick (car buffer-cache)
+                   position-cache (cdr buffer-cache)
+                   value-cache (when position-cache
+                                 (gethash position position-cache))
+                   buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+             (unless (and buffer-cache buffer-unmodified-p)
+               ;; Buffer-local node cache empty or invalid: make new one.
+               (setf position-cache (make-hash-table)
+                     value-cache (gethash position position-cache))
+               (puthash (current-buffer)
+                        (cons (buffer-modified-tick) position-cache)
+                        org-ql-node-value-cache))
+             (map-put value-cache fn new-value)
+             (puthash position value-cache position-cache)
+             new-value))
+    ;; Return nil or the non-nil value.
+    ('org-ql-nil nil)
+    (else else)))
 
 (defun org-ql--add-markers (element)
   "Return ELEMENT with Org marker text properties added.
