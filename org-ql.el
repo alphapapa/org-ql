@@ -477,7 +477,9 @@ Values compared with `equal'."
                  org-ql-node-value-cache))
       (map-put value-cache fn new-value)
       (puthash position value-cache position-cache)
-      new-value)))
+      (pcase new-value
+        ('org-ql-nil nil)
+        (_ new-value)))))
 
 (defun org-ql--add-markers (element)
   "Return ELEMENT with Org marker text properties added.
