@@ -401,13 +401,12 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
                                                                  -non-nil -uniq))
                                                            ((listp inherited) inherited)
                                                            ((listp local) local)))))
-                                       (cl-typecase org-use-tag-inheritance
-                                         (list (setf tags (-intersection tags org-use-tag-inheritance)))
-                                         (string (setf tags (--select (string-match org-use-tag-inheritance it)
-                                                                      tags))))
-                                       (pcase org-tags-exclude-from-inheritance
-                                         ('nil tags)
-                                         (_ (-difference tags org-tags-exclude-from-inheritance)))))))
+                                       (org-ql--tags-apply-inheritance tags)))))
+                               ;; If org-use-tag-inheritance is non-nil we
+                               ;; here 'cause this is top-most item, so we
+                               ;; can collect file tags.
+                               (when org-use-tag-inheritance
+                                 (org-ql--tags-apply-inheritance org-file-tags))
                                'org-ql-nil))
            (all-tags (list inherited-tags local-tags)))
       ;; Check caches again, because they may have been set now.
@@ -438,6 +437,16 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
           (append (org-ql--value-at (point) #'org-ql--outline-path)
                   (list heading))
         (list heading)))))
+
+(defun org-ql--tags-apply-inheritance (tags)
+  "Apply inheritance settings on TAGS."
+  (cl-typecase org-use-tag-inheritance
+    (list (setf tags (-intersection tags org-use-tag-inheritance)))
+    (string (setf tags (--select (string-match org-use-tag-inheritance it)
+                                 tags))))
+  (pcase org-tags-exclude-from-inheritance
+    ('nil tags)
+    (_ (-difference tags org-tags-exclude-from-inheritance))))
 
 ;; TODO: Use --value-at for tags cache.
 
