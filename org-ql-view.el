@@ -43,6 +43,7 @@
 (require 's)
 (require 'org-super-agenda)
 (require 'ov)
+(require 'ts)
 
 ;;;; Compatibility
 
@@ -389,10 +390,10 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
                     (concat (propertize "View:" 'face 'org-agenda-structure)
                             title " ")
                   ""))
-         (query-formatted (format "%S" query))
-         (query-formatted (propertize (org-ql-view--font-lock-string 'emacs-lisp-mode query-formatted)
-                                      'help-echo query-formatted))
+         (query-formatted (org-ql-view--format-query query))
          (query-width (length query-formatted))
+         (query-propertized (propertize (org-ql-view--font-lock-string 'emacs-lisp-mode query-formatted)
+                                        'help-echo query-formatted))
          (available-width (max 0 (- (window-width)
                                     (length "In: ")
                                     (length "Query: ")
@@ -404,9 +405,21 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
                                               'help-echo buffers-files-formatted)))
     (concat title
             (propertize "Query:" 'face 'org-agenda-structure)
-            query-formatted "  "
+            query-propertized "  "
             (propertize "In:" 'face 'org-agenda-structure)
             buffers-files-formatted)))
+
+(defun org-ql-view--format-query (query)
+  "Return QUERY formatted as a string.
+Makes QUERY more readable, e.g. timestamp objects are replaced
+with human-readable strings."
+  (cl-labels ((rec (form)
+                   (cl-typecase form
+                     (ts (ts-format form))
+                     (cons (cons (rec (car form))
+                                 (rec (cdr form))))
+                     (otherwise form))))
+    (format "%S" (rec query))))
 
 (defun org-ql-view--font-lock-string (mode s)
   "Return string S font-locked according to MODE."
