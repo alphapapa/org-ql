@@ -260,7 +260,7 @@ automatically from the query."
       ;;  (org-agenda--insert-overriding-header (or org-ql-block-header (org-ql-agenda--header-line-format from query)))
       (insert (org-add-props (or org-ql-block-header (org-ql-view--header-line-format
                                                       :buffers-files from :query query))
-                  nil 'face 'org-agenda-structure) "\n")
+                  nil 'face 'org-agenda-structure 'org-agenda-type 'search) "\n")
       ;; Calling `org-agenda-finalize' should be unnecessary, because in a "series" agenda,
       ;; `org-agenda-multi' is bound non-nil, in which case `org-agenda-finalize' does nothing.
       ;; But we do call `org-agenda-finalize-entries', which allows `org-super-agenda' to work.
