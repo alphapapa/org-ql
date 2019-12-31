@@ -586,6 +586,10 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
               :action #'helm-org-goto-marker))))
 #+END_SRC
 
+** MAYBE Overlay-based caching inspired by org-num-mode
+
+[2019-12-30 Mon 22:42]  Newer versions of Org have =org-num-mode=, which uses =font-lock= and =after-change-functions= to update overlays in the buffer with outline numbering.  Maybe a similar approach could be used to cache arbitrary values for headings in a buffer without having to discard the whole buffer's cache when the buffer changes.
+
 ** MAYBE [#C] Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
