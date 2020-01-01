@@ -3,6 +3,7 @@
 ;; Copyright (C) 2019 Adam Porter
 
 ;; Author: Adam Porter <adam@alphapapa.net>
+;; Package-Requires: ((buttercup))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -66,6 +67,8 @@
 (defun org-ql-test--format-result--query-preamble (sexp)
   (-let* (((query preamble) (eval sexp))
           (preamble (when preamble
+                      ;; NOTE: `xr' is used here, but this function is only called by
+                      ;; interactive helper commands in this file, not when running tests.
                       (xr preamble 'brief))))
     (format "`(%S ,(rx %S))" query preamble)))
 
