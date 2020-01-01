@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# * Commit parameters
+# Unused now, but good for future reference.  See man 5 githooks.
+
+remote="$1"
+url="$2"
+
+read local_ref local_sha remote_ref remote_sha
+
+# * Run tests
+
+# Not using sandbox and auto-install, because "git push" shouldn't
+# cause remote code to be downloaded and executed (i.e. what would
+# happen by installing packages).  It can be done manually when needed.
+
+make test
