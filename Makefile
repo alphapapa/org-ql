@@ -25,5 +25,8 @@ endif
 
 # * Rules
 
+# TODO: Handle cases in which "test" or "tests" are called and a
+# directory by that name exists, which can confuse Make.
+
 %:
 	@./makem.sh $(VERBOSE) $(SANDBOX) $(AUTOINSTALL) $(@)

@@ -248,6 +248,23 @@ function files_args {
     done
 }
 
+function buttercup-tests-p {
+    # Return 0 if Buttercup tests are found.
+    debug "Checking for Buttercup tests..."
+
+    grep "(require 'buttercup)" $(project-test-files) &>/dev/null
+}
+
+function ert-tests-p {
+    # Return 0 if ERT tests are found.
+    debug "Checking for ERT tests..."
+
+    # We check for this rather than "(require 'ert)", because ERT may
+    # already be loaded in Emacs and might not be loaded with
+    # "require" in a test file.
+    grep "(ert-deftest" $(project-test-files) &>/dev/null
+}
+
 function dependencies {
     # Echo list of package dependencies.
     egrep '^;; Package-Requires: ' $(project-source-files) $(project-test-files) \
@@ -451,12 +468,14 @@ function lint-package {
 }
 
 function tests {
-    # Run tests.
+    verbose 1 "Running all tests..."
+
     test-ert
     test-buttercup
 }
 
 function test-buttercup {
+    buttercup-tests-p || return 0
     compile || die
 
     verbose 1 "Running Buttercup tests..."
@@ -473,6 +492,7 @@ function test-buttercup {
 }
 
 function test-ert {
+    ert-tests-p || return 0
     compile || die
 
     verbose 1 "Running ERT tests..."
@@ -578,9 +598,17 @@ debug "Remaining args: ${rest[@]}"
 
 trap cleanup EXIT INT TERM
 
+if ! [[ ${project_source_files[@]} ]]
+then
+    error "No files specified and not in a git repo."
+    exit 1
+fi
+
 if [[ $sandbox ]]
 then
     # Setup sandbox.
+    type emacs-sandbox.sh &>/dev/null || die "emacs-sandbox.sh not found."
+
     config_dir=$(mktemp -d) || die "Unable to make temp dir."
     temp_paths+=("$config_dir")
 
@@ -600,27 +628,20 @@ then
         done
     fi
 
-    # Initialize the sandbox (installs packages once rather than for
-    # every rule.
+    # Initialize the sandbox (installs packages once rather than for every rule).
     emacs_command="emacs-sandbox.sh ${sandbox_basic_args[@]} ${sandbox_install_packages_args[@]} -- "
     debug "Initializing sandbox..."
 
     run_emacs || die "Unable to initialize sandbox."
 
-    # After the sandbox is initialized and packages are installed, set
-    # the command to prevent the package lists from being refreshed on
-    # each invocation.
+    # After the sandbox is initialized and packages are installed, set the command
+    # to prevent the package lists from being refreshed on each invocation.
     emacs_command="emacs-sandbox.sh ${sandbox_basic_args[@]} --no-refresh-packages -- "
 
     debug "Sandbox initialized."
 fi
 
-if ! [[ ${project_source_files[@]} ]]
-then
-    error "No files specified and not in a git repo."
-    exit 1
-fi
-
+# Run rules.
 for rule in "${rest[@]}"
 do
     if type "$rule" 2>/dev/null | grep "$rule is a function" &>/dev/null
