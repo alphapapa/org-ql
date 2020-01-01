@@ -729,6 +729,8 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
      Huszagh (https://github.com/matthuszagh) for reporting.)
    • Search/view buffers now always end with a newline, which prevents
      side-scrolling of the window when calling end-of-buffer.
+   • Face for done to-do keywords in org-ql-view buffers.  (Thanks to
+     Yiming Chen (https://github.com/dsdshcym).)
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
@@ -1021,18 +1023,18 @@ Node: Agenda-like views18276
 Node: Listing / acting-on results19681
 Node: Changelog24283
 Node: 04-pre24820
-Node: 03226512
-Node: 03126893
-Node: 0327088
-Node: 02330061
-Node: 02230287
-Node: 02130553
-Node: 0230750
-Node: 0134783
-Node: Notes34882
-Node: Comparison with Org Agenda searches35044
-Node: org-sidebar35915
-Node: License36194
+Node: 03226633
+Node: 03127014
+Node: 0327209
+Node: 02330182
+Node: 02230408
+Node: 02130674
+Node: 0230871
+Node: 0134904
+Node: Notes35003
+Node: Comparison with Org Agenda searches35165
+Node: org-sidebar36036
+Node: License36315
 
 End Tag Table
 

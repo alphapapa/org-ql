@@ -634,7 +634,8 @@ property."
 
 (defun org-ql-view--add-todo-face (keyword)
   "Return KEYWORD with TODO face added."
-  (when-let ((face (org-get-todo-face keyword)))
+  (when-let* ((org-done-keywords org-done-keywords-for-agenda)
+              (face (org-get-todo-face keyword)))
     (org-add-props keyword nil 'face face)))
 
 ;;;; Footer
