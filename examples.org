@@ -68,7 +68,7 @@ Show entries that have any timestamp within the past week.  Group by date using 
     '(ts :from -7 :to today)
     :title "Recent Items"
     :sort '(date priority todo)
-    :groups '((:auto-ts t)))
+    :super-groups '((:auto-ts t)))
 #+END_SRC
 
 * Find entries matching a certain =CUSTOM_ID=
