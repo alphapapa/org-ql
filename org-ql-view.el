@@ -937,11 +937,16 @@ return an empty string."
                            (display-warning 'org-ql (format "No marker found for item: %s" title))
                            (org-element-property :tags element))
                        (org-element-property :tags element)))
-           (tag-string (when tag-list
-                         (--> tag-list
-                              (s-join ":" it)
-                              (s-wrap it ":")
-                              (org-add-props it nil 'face 'org-tag))))
+           (tags-to-show
+            (or (and org-agenda-hide-tags-regexp
+                     (--remove (string-match-p org-agenda-hide-tags-regexp it)
+                               tag-list))
+                tag-list))
+           (tag-string (when tags-to-show
+                         (--> tags-to-show
+                           (s-join ":" it)
+                           (s-wrap it ":")
+                           (org-add-props it nil 'face 'org-tag))))
            (category (or (org-element-property :CATEGORY element)
                          (when-let ((marker (or (org-element-property :org-hd-marker element)
                                                 (org-element-property :org-marker element))))
