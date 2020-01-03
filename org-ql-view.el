@@ -107,7 +107,7 @@ Based on `org-agenda-mode-map'.")
                  (const :tag "Right" right)))
 
 (defcustom org-ql-view-no-other-window nil
-  "Whether `other-window' commands should cycle through the `org-ql-views' sidebar window.
+  "Whether `other-window' commands should cycle through `org-ql-views' sidebar.
 See info node `(elisp)Cyclic Window Ordering'."
   :type 'boolean)
 
@@ -385,7 +385,8 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
         (goto-char (point-min))))))
 
 (defun org-ql-view--header-line-format (buffers-files query &optional title)
-  "Return header-line-format for BUFFERS-FILES and QUERY."
+  "Return `header-line-format' for BUFFERS-FILES and QUERY.
+If TITLE, prepend it to the header."
   (let* ((title (if title
                     (concat (propertize "View:" 'face 'org-agenda-structure)
                             title " ")
