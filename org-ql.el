@@ -784,10 +784,13 @@ replace the clause with a preamble."
                                  ;; Always check contents with predicate.
                                  element)
 
+                                ;; Scheduled.
                                 (`(scheduled . ,_)
                                  (setq org-ql-preamble org-scheduled-time-regexp)
                                  ;; Return element, because the predicate still needs testing.
                                  element)
+
+                                ;; Tags.
                                 (`((or 'tags-local 'local-tags 'tags-l 'ltags) . ,tags)
                                  ;; When searching for local, non-inherited tags, we can
                                  ;; search directly to headings containing one of the tags.
@@ -796,6 +799,8 @@ replace the clause with a preamble."
                                                                      t))
                                  ;; Return nil, because we don't need to test the predicate.
                                  nil)
+
+                                ;; Timestamps.
                                 (`(ts . ,rest)
                                  (setq org-ql-preamble (pcase (plist-get rest :type)
                                                          ((or 'nil 'both) org-tsr-regexp-both)
