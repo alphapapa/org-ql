@@ -216,10 +216,10 @@ WINDOW-WIDTH should be the width of the Helm window."
   ;; call a setup function in a buffer before running queries.
   (let* ((prefix (concat (buffer-name) ":"))
          (width (- window-width (length prefix)))
+         (heading (org-get-heading t))
          (path (-> (org-get-outline-path)
                    (org-format-outline-path width nil "")
                    (org-split-string "")))
-         (heading (org-get-heading t))
          (path (if helm-org-ql-reverse-paths
                    (concat heading "\\" (s-join "\\" (nreverse path)))
                  (concat (s-join "/" path) "/" heading))))
