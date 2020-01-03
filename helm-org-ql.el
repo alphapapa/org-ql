@@ -195,18 +195,6 @@ Is transformed into this query:
                         (setq helm-org-ql-buffers-files buffers-files))
                       (ignore-errors
                         ;; Ignore errors that might be caused by partially typed queries.
-
-                        ;; FIXME: This doesn't prevent warnings that are errors occurring during
-                        ;; byte-compilation due to partially typed values which can't be correctly
-                        ;; pre-processed, e.g. "ts:to=2019-01-0", which can't be parsed into a
-                        ;; timestamp.  A "*Compile-Log*" buffer is displayed with "Error: Wrong type
-                        ;; argument: integerp, nil".  With my Helm settings, it's hidden as soon as
-                        ;; the query is typed correctly, so it's tolerable, but I'd prefer to fix it.
-                        ;; I haven't found a way to ignore the error/warning; `with-no-warnings' has
-                        ;; no effect, and we're already using `ignore-errors'.  The only solution I
-                        ;; can think of would be to ignore the errors/warnings higher up the chain
-                        ;; where byte-compilation is actually done, but it might not be a good idea
-                        ;; to always ignore such errors/warnings.
                         (org-ql-select buffers-files query
                           :action `(helm-org-ql--heading ,window-width))))))
     :match #'identity

@@ -442,6 +442,7 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
 ;; TODO: Use --value-at for tags cache.
 
 (defun org-ql--value-at (position fn)
+  ;; TODO: Either rename to `value-at-point' and remove `position' arg, or move point.
   "Return FN's value at POSITION in current buffer.
 Values compared with `equal'."
   ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
