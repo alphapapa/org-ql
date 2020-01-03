@@ -2,12 +2,25 @@
 
 # For consistency, we use only var=val options, not hyphen-prefixed options.
 
-ifdef autoinstall
-	AUTOINSTALL = "--auto-install"
+# NOTE: I don't like duplicating the arguments here and in makem.sh,
+# but I haven't been able to find a way to pass arguments which
+# conflict with Make's own arguments through Make to the script.
+# Using -- doesn't seem to do it.
+
+ifdef auto-install
+	AUTO_INSTALL = "--auto-install"
 endif
 
 ifdef sandbox
 	SANDBOX = "--sandbox"
+endif
+
+ifdef sandbox-dir
+	SANDBOX_DIR = "--sandbox-dir" "$(sandbox-dir)"
+endif
+
+ifdef debug
+	DEBUG = "--debug"
 endif
 
 # ** Verbosity
@@ -29,4 +42,4 @@ endif
 # directory by that name exists, which can confuse Make.
 
 %:
-	@./makem.sh $(VERBOSE) $(SANDBOX) $(AUTOINSTALL) $(@)
+	@./makem.sh $(DEBUG) $(VERBOSE) $(SANDBOX) $(SANDBOX_DIR) $(AUTO_INSTALL) $(@)

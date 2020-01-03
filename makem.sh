@@ -44,63 +44,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# * Safety
+# * Functions
 
-# NOTE: These are disabled by default in this template but should be
-# enabled when feasible.  Documentation is from the Bash man page.
-
-# ** errexit
-
-# Exit immediately if a pipeline (which may consist of a single simple
-# command), a list, or a compound command (see SHELL GRAMMAR above),
-# exits with a non-zero status.  The shell does not exit if the
-# command that fails is part of the command list immediately following
-# a while or until keyword, part of the test following the if or elif
-# reserved words, part of any command executed in a && or || list
-# except the command follow‐ ing the final && or ||, any command in a
-# pipeline but the last, or if the command's return value is being
-# inverted with !.  If a compound command other than a subshell
-# returns a non-zero status because a command failed while -e was
-# being ignored, the shell does not exit.  A trap on ERR, if set, is
-# executed before the shell exits.  This option applies to the shell
-# environment and each subshell environment separately (see COMMAND
-# EXECUTION ENVIRONMENT above), and may cause subshells to exit before
-# executing all the commands in the subshell.
-
-# If a compound command or shell function executes in a context where
-# -e is being ignored, none of the commands executed within the
-# compound command or function body will be affected by the -e
-# setting, even if -e is set and a command returns a failure status.
-# If a compound command or shell function sets -e while executing in a
-# context where -e is ignored, that setting will not have any effect
-# until the compound command or the command containing the function
-# call completes.
-
-# set -o errexit
-
-# ** nounset
-
-# Treat unset variables and parameters other than the special
-# parameters "@" and "*" as an error when performing parameter
-# expansion.  If expansion is attempted on an unset variable or
-# parameter, the shell prints an error message, and, if not
-# interactive, exits with a non-zero status.
-
-# NOTE: When this is not enabled, individual variables can be required
-# to be set by using "${var:?}" parameter expansion syntax.
-
-# set -o nounset
-
-# ** pipefail
-
-# If set, the return value of a pipeline is the value of the last
-# (rightmost) command to exit with a non-zero status, or zero if all
-# commands in the pipeline exit successfully.  This option is disabled
-# by default.
-
-# set -o pipefail
-
-# * Elisp
+# ** Elisp
 
 # These functions return a path to an elisp file which can be loaded
 # by Emacs on the command line with -l or --load.
@@ -164,8 +110,6 @@ EOF
     echo $file
 }
 
-# * Functions
-
 # ** Emacs
 
 function run_emacs {
@@ -219,17 +163,27 @@ function project-elisp-files {
 
 function project-source-files {
     # Echo list of Elisp files that are not tests.
-    project-elisp-files | egrep -v '^tests?/test-?'
+    project-elisp-files | egrep -v "$test_files_regexp" | feature-files
 }
 
 function project-test-files {
     # Echo list of Elisp test files.
-    project-elisp-files | egrep '^tests?/test-?'
+    project-elisp-files | egrep "$test_files_regexp"
 }
 
 function exclude-files {
     # Filter out paths (STDIN) which should be excluded by default.
-    egrep -v "(/\.cask/|-autoloads.el)"
+    egrep -v "(/\.cask/|-autoloads.el|.dir-locals)"
+}
+
+function feature-files {
+    # Read paths on STDIN and echo ones that (provide 'a-feature).
+    while read path
+    do
+        debug "PATH: $path"
+        egrep "^\\(provide '" "$path" &>/dev/null \
+            && echo "$path"
+    done
 }
 
 function load-files-args {
@@ -248,30 +202,46 @@ function files_args {
     done
 }
 
+function test-files-p {
+    # Return 0 if $project_test_files is non-empty.
+    [[ "${project_test_files[@]}" ]]
+}
+
 function buttercup-tests-p {
     # Return 0 if Buttercup tests are found.
+    test-files-p || die "No tests found."
     debug "Checking for Buttercup tests..."
 
-    grep "(require 'buttercup)" $(project-test-files) &>/dev/null
+    grep "(require 'buttercup)" "${project_test_files[@]}" &>/dev/null
 }
 
 function ert-tests-p {
     # Return 0 if ERT tests are found.
+    test-files-p || die "No tests found."
     debug "Checking for ERT tests..."
 
     # We check for this rather than "(require 'ert)", because ERT may
     # already be loaded in Emacs and might not be loaded with
     # "require" in a test file.
-    grep "(ert-deftest" $(project-test-files) &>/dev/null
+    grep "(ert-deftest" "${project_test_files[@]}" &>/dev/null
 }
 
 function dependencies {
     # Echo list of package dependencies.
+
+    # Search package headers.
     egrep '^;; Package-Requires: ' $(project-source-files) $(project-test-files) \
         | egrep -o '\([^([:space:]][^)]*\)' \
         | egrep -o '^[^[:space:])]+' \
         | sed -r 's/\(//g' \
         | egrep -v '^emacs$'  # Ignore Emacs version requirement.
+
+    # Search Cask file.
+    if [[ -r Cask ]]
+    then
+        egrep '\(depends-on "[^"]+"' Cask \
+            | sed -r -e 's/\(depends-on "([^"]+)".*/\1/g'
+    fi
 }
 
 # ** Utility
@@ -390,7 +360,10 @@ Sandbox options:
   These require emacs-sandbox.sh to be on your PATH.  Find it at
   <https://github.com/alphapapa/emacs-sandbox.sh>.
 
-  --sandbox              Run Emacs with emacs-sandbox.sh.
+  -s, --sandbox          Run Emacs with emacs-sandbox.sh in a temporary
+                         directory (removing directory on exit).
+  -S, --sandbox-dir DIR  Use DIR for the sandbox directory (leaving it
+                         on exit).  Implies -s.
   --auto-install         Automatically install package dependencies.
   -i, --install PACKAGE  Install PACKAGE before running rules.
 
@@ -398,7 +371,7 @@ Source files are automatically discovered from git, or may be
 specified with options.
 
 Package dependencies are discovered from "Package-Requires" headers in
-source files.
+source files and from a Cask file.
 EOF
 }
 
@@ -507,23 +480,37 @@ function test-ert {
 
 # * Defaults
 
+test_files_regexp='^(tests?|t)/'
 emacs_command="emacs"
-
-# TODO: Disable color if not outputting to a terminal.
-color=true
 errors=0
 verbose=0
-
 compile=true
+
+# MAYBE: Disable color if not outputting to a terminal.  (OTOH, the
+# colorized output is helpful in CI logs, and I don't know if,
+# e.g. GitHub Actions logging pretends to be a terminal.)
+color=true
+
+# TODO: Using the current directory (i.e. a package's repo root directory) in
+# load-path can cause weird errors in case of--you guessed it--stale .ELC files,
+# the zombie problem that just won't die.  It's incredible how many different ways
+# this problem presents itself.  In this latest example, an old .ELC file, for a
+# .EL file that had since been renamed, was present on my local system, which meant
+# that an example .EL file that hadn't been updated was able to "require" that .ELC
+# file's feature without error.  But on another system (in this case, trying to
+# setup CI using GitHub Actions), the old .ELC was not present, so the example .EL
+# file was not able to load the feature, which caused a byte-compilation error.
+
+# In this case, I will prevent such example files from being compiled.  But in
+# general, this can cause weird problems that are tedious to debug.  I guess
+# the best way to fix it would be to actually install the repo's code as a
+# package into the sandbox, but doing that would require additional tooling,
+# pulling in something like Quelpa or package-build--and if the default recipe
+# weren't being used, the actual recipe would have to be fetched off MELPA or
+# something, which seems like getting too smart for our own good.
+
+# TODO: Emit a warning if .ELC files that don't match any .EL files are detected.
 load_path="."
-
-# TODO: Option to not byte-compile test files.
-project_byte_compile_files=($(project-elisp-files))
-project_source_files=($(project-source-files))
-project_test_files=($(project-test-files))
-
-package_initialize_file="$(elisp-package-initialize-file)"
-temp_paths+=("$package_initialize_file")
 
 # ** Colors
 
@@ -537,9 +524,24 @@ COLOR_purple='\e[0;35m'
 COLOR_cyan='\e[0;36m'
 COLOR_white='\e[0;37m'
 
+# * Project files
+
+# MAYBE: Option to not byte-compile test files.  (OTOH, byte-compiling reveals many
+# errors that would otherwise go unnoticed, so it's worth it to fix the warnings.)
+project_source_files=($(project-source-files))
+project_test_files=($(project-test-files))
+project_byte_compile_files=("${project_source_files[@]}" "${project_test_files[@]}")
+
+package_initialize_file="$(elisp-package-initialize-file)"
+temp_paths+=("$package_initialize_file")
+
 # * Args
 
-args=$(getopt -n "$0" -o dhi:svf:C -l auto-install,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,sandbox -- "$@") || { usage; exit 1; }
+args=$(getopt -n "$0" \
+              -o dhi:sS:vf:C \
+              -l auto-install,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,sandbox,sandbox-dir: \
+              -- "$@") \
+    || { usage; exit 1; }
 eval set -- "$args"
 
 while true
@@ -565,6 +567,11 @@ do
             ;;
         -s|--sandbox)
             sandbox=true
+            ;;
+        -S|--sandbox-dir)
+            shift
+            sandbox=true
+            sandbox_dir="$1"
             ;;
         -v|--verbose)
             ((verbose++))
@@ -609,16 +616,21 @@ then
     # Setup sandbox.
     type emacs-sandbox.sh &>/dev/null || die "emacs-sandbox.sh not found."
 
-    config_dir=$(mktemp -d) || die "Unable to make temp dir."
-    temp_paths+=("$config_dir")
+    if ! [[ $sandbox_dir ]]
+    then
+        # No sandbox dir specified: make temp dir and remove it on exit.
+        sandbox_dir=$(mktemp -d) || die "Unable to make temp dir."
+        temp_paths+=("$sandbox_dir")
+    fi
 
     sandbox_basic_args=(
-        -d "$config_dir"
+        -d "$sandbox_dir"
     )
     [[ $debug ]] && sandbox_basic_args+=(--debug)
 
     if [[ $auto_install ]]
     then
+        # Add dependencies to package install list.
         deps=($(dependencies))
         debug "Installing dependencies: ${deps[@]}"
 
@@ -628,11 +640,14 @@ then
         done
     fi
 
-    # Initialize the sandbox (installs packages once rather than for every rule).
-    emacs_command="emacs-sandbox.sh ${sandbox_basic_args[@]} ${sandbox_install_packages_args[@]} -- "
-    debug "Initializing sandbox..."
+    if [[ ${sandbox_install_packages_args[@]} ]]
+    then
+        # Initialize the sandbox (installs packages once rather than for every rule).
+        emacs_command="emacs-sandbox.sh ${sandbox_basic_args[@]} ${sandbox_install_packages_args[@]} -- "
+        debug "Initializing sandbox..."
 
-    run_emacs || die "Unable to initialize sandbox."
+        run_emacs || die "Unable to initialize sandbox."
+    fi
 
     # After the sandbox is initialized and packages are installed, set the command
     # to prevent the package lists from being refreshed on each invocation.
