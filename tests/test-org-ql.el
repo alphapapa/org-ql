@@ -59,9 +59,11 @@
 
 (defun org-ql-test--format-result--ql (sexp)
   (let* ((value (eval sexp))
-         (prefix (if (and value (listp value))
-                     "'"
-                   "")))
+         ;; FIXME: Not sure why this is currently unused.  Commenting out for now.
+         ;; (prefix (if (and value (listp value))
+         ;;             "'"
+         ;;           ""))
+         )
     (format "%S" value)))
 
 (defun org-ql-test--format-result--query-preamble (sexp)
