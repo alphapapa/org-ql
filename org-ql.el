@@ -676,9 +676,7 @@ replace the clause with a preamble."
                                  ;; Return nil, don't test the predicate.
                                  nil)
                                 (`(habit)
-                                 ;; TODO: Move regexp to const.
-                                 (setq org-ql-preamble (rx-to-string `(seq bol (0+ space) ":STYLE:" (1+ space)
-                                                                           "habit" (0+ space) eol)))
+                                 (setq org-ql-preamble (rx bol (0+ space) ":STYLE:" (1+ space) "habit" (0+ space) eol))
                                  nil)
 
                                 ;; Heading text.
