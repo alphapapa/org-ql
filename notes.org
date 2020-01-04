@@ -991,6 +991,10 @@ John
 
 + [[https://github.com/m00natic/cl-fdbq][GitHub - m00natic/cl-fdbq: SQL-like operations over fixed field DBs]]
 
+** Nicolas Goaziou's =org-element= cache implementation
+
+[2020-01-04 Sat 08:31]  https://code.orgmode.org/bzg/org-mode/src/master/lisp/org-element.el#L4817  I guess I haven't been keeping up, because I'm not sure when exactly he made or committed this, or what his plans for it are.  It's currently disabled by default.
+
 * Examples / testing
 
 #+BEGIN_SRC elisp
