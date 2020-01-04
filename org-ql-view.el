@@ -87,6 +87,7 @@ Based on `org-agenda-mode-map'.")
 (defvar-local org-ql-view-query nil)
 (defvar-local org-ql-view-sort nil)
 (defvar-local org-ql-view-narrow nil)
+(defvar-local org-ql-view-skip-subtrees nil)
 (defvar-local org-ql-view-super-groups nil)
 (defvar-local org-ql-view-title nil)
 
@@ -218,12 +219,13 @@ Interactively, prompt for NAME."
       (select-window window))
     (cl-typecase view
       (function (call-interactively view))
-      (list (-let* (((&plist :buffers-files :query :sort :narrow :super-groups :title) view)
+      (list (-let* (((&plist :buffers-files :query :sort :narrow :super-groups :title :skip-subtrees) view)
                     (super-groups (cl-typecase super-groups
                                     (symbol (symbol-value super-groups))
                                     (list super-groups))))
               (org-ql-search buffers-files query
                 :super-groups super-groups :narrow narrow :sort sort :title title
+                :skip-subtrees skip-subtrees
                 :buffer org-ql-view-buffer))))))
 
 ;;;###autoload
@@ -287,6 +289,7 @@ update search arguments."
                          :sort org-ql-view-sort
                          :narrow org-ql-view-narrow
                          :super-groups org-ql-view-super-groups
+                         :skip-subtrees org-ql-view-skip-subtrees
                          :title org-ql-view-title))
          (org-ql-view-buffer (current-buffer)))
     (if prompt
@@ -309,6 +312,7 @@ update search arguments."
                       :query org-ql-view-query
                       :sort org-ql-view-sort
                       :narrow org-ql-view-narrow
+                      :skip-subtrees org-ql-view-skip-subtrees
                       :super-groups org-ql-view-super-groups
                       :title name)))
     (map-put org-ql-views name plist #'equal)

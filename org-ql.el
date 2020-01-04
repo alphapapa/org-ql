@@ -142,7 +142,7 @@ match."
        (cl-defun ,fn-name ,args ,docstring ,@body))))
 
 ;;;###autoload
-(cl-defmacro org-ql (buffers-or-files query &key sort narrow action)
+(cl-defmacro org-ql (buffers-or-files query &key sort narrow action skip-subtrees)
   "Expands into a call to `org-ql-select' with the same arguments.
 For convenience, arguments should be unquoted."
   (declare (indent defun))
@@ -150,7 +150,8 @@ For convenience, arguments should be unquoted."
      ',query
      :action ',action
      :narrow ,narrow
-     :sort ',sort))
+     :sort ',sort
+     :skip-subtrees ,skip-subtrees))
 
 ;;;; Functions
 
@@ -160,7 +161,7 @@ For convenience, arguments should be unquoted."
                                                     (sxhash-equal (prin1-to-string args))))
 
 ;;;###autoload
-(cl-defun org-ql-select (buffers-or-files query &key action narrow sort)
+(cl-defun org-ql-select (buffers-or-files query &key action narrow sort skip-subtrees)
   "Return items matching QUERY in BUFFERS-OR-FILES.
 
 BUFFERS-OR-FILES is a file or buffer, a list of files and/or
@@ -191,7 +192,9 @@ SORT is either nil, in which case items are not sorted; or one or
 a list of defined `org-ql' sorting methods (`date', `deadline',
 `scheduled', `todo', `priority', or `random'); or a user-defined
 comparator function that accepts two items as arguments and
-returns nil or non-nil."
+returns nil or non-nil.
+
+If SKIP-SUBTREES is non-nil, subtrees of matching entries are skipped."
   (declare (indent defun))
   (-let* ((buffers (->> (cl-typecase buffers-or-files
                           (null (list (current-buffer)))
@@ -235,8 +238,10 @@ returns nil or non-nil."
                       (--map (with-current-buffer it
                                (unless (derived-mode-p 'org-mode)
                                  (user-error "Not an Org buffer: %s" (buffer-name)))
-                               (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                      :predicate predicate :action action :narrow narrow)))
+                               (org-ql--select-cached :query query :preamble preamble
+                                                      :preamble-case-fold preamble-case-fold
+                                                      :predicate predicate :action action
+                                                      :narrow narrow :skip-subtrees skip-subtrees)))
                       (-flatten-n 1))))
     ;; Sort items
     (pcase sort
@@ -251,7 +256,7 @@ returns nil or non-nil."
       (_ (user-error "SORT must be either nil, one or a list of the defined sorting methods (see documentation), or a comparison function of two arguments")))))
 
 ;;;###autoload
-(cl-defun org-ql-query (&key (select 'element-with-markers) from where narrow order-by)
+(cl-defun org-ql-query (&key (select 'element-with-markers) from where narrow order-by skip-subtrees)
   "Like `org-ql-select', but arguments are named more like a SQL query.
 
 SELECT corresponds to the `org-ql-select' argument ACTION.  It is
@@ -279,22 +284,26 @@ should be an `org-ql' query sexp.
 ORDER-BY corresponds to the `org-ql-select' argument SORT, which
 see.
 
-NARROW corresponds to the `org-ql-select' argument NARROW."
+NARROW corresponds to the `org-ql-select' argument NARROW.
+
+SKIP-SUBTREES corresponds to the `org-ql-select' argument
+SKIP-SUBTREES."
   (declare (indent 0))
   (org-ql-select from where
     :action select
     :narrow narrow
-    :sort order-by))
+    :sort order-by
+    :skip-subtrees skip-subtrees))
 
 (defun org-ql--select-cached (&rest args)
   "Return results for ARGS and current buffer using cache."
   ;; MAYBE: Timeout cached queries.  Probably not necessarily since they will be removed when a
   ;; buffer is closed, or when a query is run after modifying a buffer.
-  (-let* (((&plist :query :preamble :action :narrow :preamble-case-fold) args)
+  (-let* (((&plist :query :preamble :action :narrow :preamble-case-fold :skip-subtrees) args)
           (query-cache-key
            ;; The key must include the preamble, because some queries are replaced by
            ;; the preamble, leaving a nil query, which would make the key ambiguous.
-           (list :query query :preamble preamble :action action :preamble-case-fold preamble-case-fold
+           (list :query query :preamble preamble :action action :preamble-case-fold preamble-case-fold :skip-subtrees skip-subtrees
                  (if narrow
                      ;; Use bounds of narrowed portion of buffer.
                      (cons (point-min) (point-max))
@@ -319,10 +328,11 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
               (t (puthash query-cache-key (or new-result 'org-ql-nil) query-cache)))
         new-result))))
 
-(cl-defun org-ql--select (&key preamble preamble-case-fold predicate action narrow
+(cl-defun org-ql--select (&key preamble preamble-case-fold predicate action narrow skip-subtrees
                                &allow-other-keys)
   "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
-If NARROW is non-nil, buffer will not be widened."
+If NARROW is non-nil, buffer will not be widened.
+If SKIP-SUBTREES is non-nil, subtrees of matching entries are skipped."
   ;; Since the mappings are stored in the variable `org-ql-predicates', macros like `flet'
   ;; can't be used, so we do it manually (this is same as the equivalent `flet' expansion).
   ;; Mappings are stored in the variable because it allows predicates to be defined with a
@@ -361,9 +371,13 @@ If NARROW is non-nil, buffer will not be widened."
                                            do (outline-back-to-heading 'invisible-ok)
                                            when (funcall predicate)
                                            collect (funcall action)
+                                           when skip-subtrees
+                                           do (org-end-of-subtree)
                                            do (outline-next-heading))))
                       (t (cl-loop when (funcall predicate)
                                   collect (funcall action)
+                                  when skip-subtrees
+                                  do (org-end-of-subtree)
                                   while (outline-next-heading))))))))
       (--each orig-fns
         ;; Restore original function mappings.
