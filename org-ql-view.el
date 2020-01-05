@@ -323,7 +323,97 @@ update search arguments."
     (customize-option 'org-ql-views)
     (search-forward (concat "Name: " key))))
 
+(defun org-ql-view-excerpt (&optional hide-p)
+  "Toggle an excerpt of item at point.
+If HIDE-P is non-nil (interactively, with prefix), hide it."
+  (interactive (list current-prefix-arg))
+  (if-let* ((existing-ov (--first (member 'org-ql-view-excerpt (overlay-properties it))
+                                  (overlays-at (1- (line-end-position))))))
+      ;; Excerpt already displayed: delete it.
+      (delete-overlay existing-ov)
+    ;; Display new excerpt.
+    (unless hide-p
+      (let ((ov (make-overlay (1- (line-end-position)) (line-end-position)))
+            (excerpt (concat "\n" (org-ql-view--fill-excerpt
+                                   (org-ql-view--excerpt
+                                    (or (get-text-property (point-at-bol) 'org-marker)
+                                        (get-text-property (point-at-bol) 'org-hd-marker)))))))
+        (add-face-text-property 0 (length excerpt) 'org-ql-view-excerpt 'append excerpt)
+        (overlay-put ov 'org-ql-view-excerpt t)
+        (overlay-put ov 'after-string excerpt))))
+  )
+
+(defun org-ql-view-excerpt-all (&optional hide-all-p)
+  "Toggle all excerpts.
+If HIDE-ALL-P is non-nil (interactively, with prefix), hide all
+excerpts."
+  (interactive (list current-prefix-arg))
+  (save-excursion
+    (goto-char (point-min))
+    (cl-loop do (progn
+                  (when (or (get-text-property (point-at-bol) 'org-marker)
+                            (get-text-property (point-at-bol) 'org-hd-marker))
+                    (org-ql-view-excerpt hide-all-p))
+                  (forward-line 1))
+             until (eobp))))
+
+(defface org-ql-view-excerpt
+  '((t (:height 0.8)))
+  "Face for excerpts."
+  :group 'org-ql)
+
 ;;;; Functions
+
+(defcustom org-ql-view-excerpt-size 200
+  "Maximum size in characters of displayed excerpts."
+  :type 'integer)
+
+(defun org-ql-view--fill-excerpt (excerpt)
+  "Return EXCERPT filled and wrapped for the current window."
+  (with-temp-buffer
+    (insert excerpt)
+    (let ((fill-column (- (window-width) 4)))
+      (goto-char (point-min))
+      (cl-loop do (progn
+                    (fill-paragraph)
+                    (forward-paragraph 1))
+               until (eobp)))
+    (goto-char (point-min))
+    (cl-loop do (progn
+                  (insert "    ")
+                  (forward-line 1))
+             until (eobp))
+    (buffer-string)))
+
+(defun org-ql-view--excerpt (marker)
+  "Return an excerpt for item at MARKER.
+MARKER should be on an Org heading."
+  (org-with-point-at marker
+    (org-save-outline-visibility nil
+      (org-show-context 'local)
+      (org-ql-view--forward-to-entry-content)
+      (let* ((entry-end (org-entry-end-position))
+             (limit (min (+ (point) org-ql-view-excerpt-size)
+                         entry-end))
+             (ellipsis (when (> entry-end limit)
+                         "...")))
+        (font-lock-ensure (point) limit)
+        (concat (string-trim (buffer-substring (point) limit))
+                ellipsis)))))
+
+(defun org-ql-view--forward-to-entry-content (&optional unsafe)
+  "Skip headline, planning line, and all drawers in current entry.
+If UNSAFE is non-nil, assume point is on headline."
+  ;; TODO: Propose this for inclusion in Org.
+  (unless unsafe
+    ;; To improve performance in loops (e.g. with `org-map-entries')
+    (org-back-to-heading))
+  (cl-loop for element = (org-element-at-point)
+           for pos = (pcase element
+                       (`(headline . ,_) (org-element-property :contents-begin element))
+                       (`(,(or 'planning 'property-drawer 'drawer) . ,_) (org-element-property :end element)))
+           while pos
+           do (goto-char pos)))
 
 (defun org-ql-view--list-buffer ()
   "Return view list buffer."
