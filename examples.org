@@ -173,6 +173,58 @@ With this =org-ql-block= agenda view, like:
                           ((org-ql-block-header "Stuck Projects")))))))
 #+END_SRC
 
+* Exporting timetable to icalendar format
+
+Exporting all available appointments to icalendar format for further upload. More insight [[https://www.reddit.com/r/orgmode/comments/e8q0iw/question_display_duration_as_block_in_the_agenda/][here]].
+
+Saving org-ql search:
+ #+begin_src emacs-lisp
+   (let ((file "~/org/export/timetable.org")
+         (buffer-name "*org-ql-view-exporting*"))
+     (org-ql-search
+       (org-agenda-files)
+       '(and (not (done))
+             ;; Only active time stamps
+             (ts-active)
+             ;; Only appointments (i.e. with hour\time specification)
+             (regexp org-scheduled-time-hour-regexp))
+       :super-groups '((:auto-ts t))
+       :buffer buffer-name)
+     (org-agenda-write file nil t buffer-name))
+ #+end_src
+
+ Converting org-mode file to icalendar file:
+#+begin_src emacs-lisp
+  (let (;; With alarm on event start
+        (org-icalendar-alarm-time 1)
+        ;; Export tags
+        (org-icalendar-categories (quote (local-tags category)))
+        ;; Don't include body to ICS event
+        (org-icalendar-include-body nil)
+        ;; Use all headins avaialable
+        (org-icalendar-use-deadline (quote (event-if-not-todo event-if-todo todo-start)))
+        (org-icalendar-use-scheduled (quote (event-if-not-todo event-if-todo todo-start)))
+        (org-icalendar-with-timestamps nil)
+        ;; Item duration for headlines without duration
+        (org-agenda-default-appointment-duration 0))
+    (find-file "~/org/export/timetable.org")
+    (org-icalendar-export-to-ics))
+#+end_src
+
+* Get all in progress tasks for [[https://github.com/ahungry/org-jira][org-jira]] users
+
+For best results, inject it to bigger agenda view for your work items.
+
+#+begin_src emacs-lisp
+  (org-ql-search
+    (org-agenda-files)
+    '(and (tags "work")
+          (and (property "assignee" "your-jira-username")
+               (todo "PROG")))
+    :super-groups
+    '((:name "In progress" :order 1 :todo "PROG")))
+#+end_src
+
 * COMMENT Code                                                     :noexport:
 :PROPERTIES:
 :TOC:      ignore
