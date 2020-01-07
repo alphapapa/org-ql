@@ -594,6 +594,10 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
 
+** MAYBE Use Bovine or Wisent to parse non-sexp syntax
+
+They're both built-in to Emacs, so we could drop the =peg= dependency.
+
 ** DONE [#A] Helm command
 
 In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
