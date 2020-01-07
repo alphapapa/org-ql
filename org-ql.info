@@ -748,6 +748,8 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
    • Make view buffers read-only.  (Fixes #72
      (https://github.com/alphapapa/org-ql/issues/72).  Thanks to xeijin
      (https://github.com/xeijin).)
+   • Sorting with single sorter specified as an atom.  (Thanks to Jeff
+     Filipovits (https://github.com/legalnonsense).)
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
@@ -1040,18 +1042,18 @@ Node: Agenda-like views18025
 Node: Listing / acting-on results19430
 Node: Changelog24032
 Node: 04-pre24569
-Node: 03227288
-Node: 03127669
-Node: 0327864
-Node: 02330837
-Node: 02231063
-Node: 02131329
-Node: 0231526
-Node: 0135559
-Node: Notes35658
-Node: Comparison with Org Agenda searches35820
-Node: org-sidebar36691
-Node: License36970
+Node: 03227414
+Node: 03127795
+Node: 0327990
+Node: 02330963
+Node: 02231189
+Node: 02131455
+Node: 0231652
+Node: 0135685
+Node: Notes35784
+Node: Comparison with Org Agenda searches35946
+Node: org-sidebar36817
+Node: License37096
 
 End Tag Table
 
