@@ -312,7 +312,7 @@ update search arguments."
                       :narrow org-ql-view-narrow
                       :super-groups org-ql-view-super-groups
                       :title name)))
-    (map-put org-ql-views name plist #'equal)
+    (setf (map-elt org-ql-views name nil #'equal) plist)
     (customize-set-variable 'org-ql-views org-ql-views)
     (customize-mark-to-save 'org-ql-views)))
 

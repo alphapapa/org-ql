@@ -477,7 +477,7 @@ Values compared with `equal'."
                (puthash (current-buffer)
                         (cons (buffer-modified-tick) position-cache)
                         org-ql-node-value-cache))
-             (map-put value-cache fn new-value)
+             (setf (alist-get fn value-cache nil nil #'equal) new-value)
              (puthash position value-cache position-cache)
              new-value))
     ;; Return nil or the non-nil value.
