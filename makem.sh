@@ -46,6 +46,60 @@
 
 # * Functions
 
+function usage {
+    cat <<EOF
+$0 [OPTIONS] RULES...
+
+Rules:
+  all      Run all lints and tests.
+  compile  Byte-compile source files.
+
+  lint           Run all lints.
+  lint-checkdoc  Run checkdoc.
+  lint-compile   Byte-compile source files with warnings as errors.
+  lint-package   Run package-lint.
+
+  test, tests     Run all tests.
+  test-buttercup  Run Buttercup tests.
+  test-ert        Run ERT tests.
+
+  These are especially useful with --sandbox:
+
+    batch        Run Emacs in batch mode, loading project source and test files
+                 automatically, with remaining args (after "--") passed to Emacs.
+    interactive  Run Emacs interactively, loading project source and test files
+                 automatically.
+
+Options:
+  -d, --debug    Print debug info.
+  -h, --help     I need somebody!
+  -v, --verbose  Increase verbosity, up to -vv.
+  --debug-load-path  Print load-path.
+
+  -f FILE, --file FILE  Check FILE in addition to discovered files.
+
+  --no-color        Disable color output.
+  -C, --no-compile  Don't compile files automatically.
+
+Sandbox options:
+  These require emacs-sandbox.sh to be on your PATH.  Find it at
+  <https://github.com/alphapapa/emacs-sandbox.sh>.
+
+  -s, --sandbox          Run Emacs with emacs-sandbox.sh in a temporary
+                         directory (removing directory on exit).
+  -S, --sandbox-dir DIR  Use DIR for the sandbox directory (leaving it
+                         on exit).  Implies -s.
+  --auto-install         Automatically install package dependencies.
+  -i, --install PACKAGE  Install PACKAGE before running rules.
+
+Source files are automatically discovered from git, or may be
+specified with options.
+
+Package dependencies are discovered from "Package-Requires" headers in
+source files and from a Cask file.
+EOF
+}
+
 # ** Elisp
 
 # These functions return a path to an elisp file which can be loaded
@@ -113,10 +167,10 @@ EOF
 # ** Emacs
 
 function run_emacs {
-    debug "run_emacs: $emacs_command -Q --batch --load=$package_initialize_file -L \"$load_path\" $@"
+    debug "run_emacs: $emacs_command -Q $batch_arg --load=$package_initialize_file -L \"$load_path\" $@"
     if [[ $debug_load_path ]]
     then
-        debug $($emacs_command -Q --batch \
+        debug $($emacs_command -Q $batch_arg \
                                --load=$package_initialize_file \
                                -L "$load_path" \
                                --eval "(message \"LOAD-PATH: %s\" load-path)" \
@@ -124,7 +178,7 @@ function run_emacs {
     fi
 
     output_file=$(mktemp)
-    $emacs_command -Q --batch  \
+    $emacs_command -Q $batch_arg \
                    --load=$package_initialize_file \
                    -L "$load_path" \
                    "$@" \
@@ -328,53 +382,6 @@ function ts {
     date "+%Y-%m-%d %H:%M:%S"
 }
 
-function usage {
-    cat <<EOF
-$0 [OPTIONS] RULES...
-
-Rules:
-  all      Run all lints and tests.
-  compile  Byte-compile source files.
-
-  lint           Run all lints.
-  lint-checkdoc  Run checkdoc.
-  lint-compile   Byte-compile source files with warnings as errors.
-  lint-package   Run package-lint.
-
-  test, tests     Run all tests.
-  test-buttercup  Run Buttercup tests.
-  test-ert        Run ERT tests.
-
-Options:
-  -d, --debug    Print debug info.
-  -h, --help     I need somebody!
-  -v, --verbose  Increase verbosity, up to -vv.
-  --debug-load-path  Print load-path.
-
-  -f FILE, --file FILE  Check FILE in addition to discovered files.
-
-  --no-color        Disable color output.
-  -C, --no-compile  Don't compile files automatically.
-
-Sandbox options:
-  These require emacs-sandbox.sh to be on your PATH.  Find it at
-  <https://github.com/alphapapa/emacs-sandbox.sh>.
-
-  -s, --sandbox          Run Emacs with emacs-sandbox.sh in a temporary
-                         directory (removing directory on exit).
-  -S, --sandbox-dir DIR  Use DIR for the sandbox directory (leaving it
-                         on exit).  Implies -s.
-  --auto-install         Automatically install package dependencies.
-  -i, --install PACKAGE  Install PACKAGE before running rules.
-
-Source files are automatically discovered from git, or may be
-specified with options.
-
-Package dependencies are discovered from "Package-Requires" headers in
-source files and from a Cask file.
-EOF
-}
-
 # * Rules
 
 # These functions are intended to be called as rules, like a Makefile.
@@ -396,6 +403,23 @@ function compile {
     batch-byte-compile "${project_byte_compile_files[@]}" \
         && success "Compiling finished without errors." \
             || error "Compilation failed."
+}
+
+function batch {
+    # Run Emacs with $batch_args and with project source and test files loaded.
+    verbose 1 "Executing Emacs with arguments: ${batch_args[@]}"
+
+    run_emacs \
+        $(load-files-args "${project_source_files[@]}" "${project_test_files[@]}") \
+        "${batch_args[@]}"
+}
+
+function interactive {
+    # Run Emacs interactively.  Most useful with --sandbox and --auto-install.
+    unset batch_arg
+    run_emacs \
+        $(load-files-args "${project_source_files[@]}" "${project_test_files[@]}")
+    batch_arg="--batch"
 }
 
 function lint {
@@ -485,6 +509,7 @@ emacs_command="emacs"
 errors=0
 verbose=0
 compile=true
+batch_arg="--batch"
 
 # MAYBE: Disable color if not outputting to a terminal.  (OTOH, the
 # colorized output is helpful in CI logs, and I don't know if,
@@ -659,7 +684,16 @@ fi
 # Run rules.
 for rule in "${rest[@]}"
 do
-    if type "$rule" 2>/dev/null | grep "$rule is a function" &>/dev/null
+    if [[ $batch ]]
+    then
+        debug "Adding batch argument: $rule"
+        batch_args+=("$rule")
+
+    elif [[ $rule = batch ]]
+    then
+        # Remaining arguments are passed to Emacs.
+        batch=true
+    elif type "$rule" 2>/dev/null | grep "$rule is a function" &>/dev/null
     then
         $rule
     elif [[ $rule = test ]]
@@ -671,6 +705,9 @@ do
         error "Invalid rule: $rule"
     fi
 done
+
+# The batch rule.
+[[ $batch ]] && batch
 
 if [[ $errors -gt 0 ]]
 then

@@ -1,3 +1,7 @@
+# * makem.sh/Makefile --- Script to aid building and testing Emacs Lisp packages
+
+# This Makefile is from the makem.sh repo: <https://github.com/alphapapa/makem.sh>.
+
 # * Arguments
 
 # For consistency, we use only var=val options, not hyphen-prefixed options.
