@@ -45,7 +45,7 @@
                               ('org-ql--pre-process-query t)
                               (_ nil)))
             (result (pcase sexp
-                      (`(org-ql-expect ,args) (org-ql-test--format-result--ql `(org-ql test-buffer
+                      (`(org-ql-expect ,args) (org-ql-test--format-result--ql `(org-ql org-ql-test-buffer
                                                                                  ,@args
                                                                                  :action (org-ql-test-org-get-heading))))
                       (`(org-ql . _) (org-ql-test--format-result--ql sexp))
@@ -80,7 +80,7 @@
   (if-let* ((sexp (elisp--preceding-sexp))
             (sexp (pcase sexp
                     (`(org-ql . ,_) (setf (car sexp) 'org-ql-agenda))
-                    (`(org-ql-expect ,ql-args . ,_) (setf sexp `(org-ql-select test-buffer
+                    (`(org-ql-expect ,ql-args . ,_) (setf sexp `(org-ql-select org-ql-test-buffer
                                                                   ',@ql-args)))
                     (_ nil))))
 
@@ -110,7 +110,7 @@ Based on Buttercup macro `it'."
 RESULTS should be a list of strings as returned by
 `org-ql-test-org-get-heading'."
   (declare (indent defun))
-  `(expect (org-ql test-buffer
+  `(expect (org-ql org-ql-test-buffer
              ,@ql-args
              :action (org-ql-test-org-get-heading))
            :to-equal ,results))
@@ -138,14 +138,16 @@ RESULTS should be a list of strings as returned by
         ;; For Org 9.1.9.
         (substring-no-properties (org-get-heading t t t t))))
 
-    (setq test-buffer (find-file-noselect (concat default-directory "tests/data.org"))
+    (setq org-ql-test-buffer (->> (locate-dominating-file default-directory ".git")
+                                  (expand-file-name "tests/data.org")
+                                  find-file-noselect)
           ;; For manual testing:
-          ;; test-buffer (find-file-noselect "data.org")
-          num-headings (with-current-buffer test-buffer
-                         (org-with-wide-buffer
-                          (goto-char (point-min))
-                          (cl-loop while (re-search-forward org-heading-regexp nil t)
-                                   sum 1)))))
+          ;; org-ql-test-buffer (find-file-noselect "data.org")
+          org-ql-test-num-headings (with-current-buffer org-ql-test-buffer
+                                     (org-with-wide-buffer
+                                      (goto-char (point-min))
+                                      (cl-loop while (re-search-forward org-heading-regexp nil t)
+                                               sum 1)))))
 
   (describe "Caching"
 
@@ -180,21 +182,21 @@ RESULTS should be a list of strings as returned by
   (describe "Query functions/macros"
 
     (it "org-ql"
-      (expect (length (org-ql test-buffer
+      (expect (length (org-ql org-ql-test-buffer
                         (category)
                         :sort deadline))
-              :to-equal num-headings))
+              :to-equal org-ql-test-num-headings))
     (it "org-ql-select"
-      (expect (length (org-ql-select test-buffer
+      (expect (length (org-ql-select org-ql-test-buffer
                         '(category)
                         :sort 'deadline))
-              :to-equal num-headings))
+              :to-equal org-ql-test-num-headings))
     (it "org-ql-query"
       (expect (length (org-ql-query :select 'element
-                                    :from test-buffer
+                                    :from org-ql-test-buffer
                                     :where '(category)
                                     :order-by 'date))
-              :to-equal num-headings)))
+              :to-equal org-ql-test-num-headings)))
 
   (it "Query pre-processing"
     (expect (org-ql--pre-process-query '(and "string1" "string2"))
@@ -330,9 +332,9 @@ RESULTS should be a list of strings as returned by
     (describe "(category)"
 
       (org-ql-it "without arguments"
-        (expect (length (org-ql test-buffer
+        (expect (length (org-ql org-ql-test-buffer
                           (category)))
-                :to-equal num-headings))
+                :to-equal org-ql-test-num-headings))
 
       (org-ql-it "with a category"
         (org-ql-expect ((category "ambition"))
