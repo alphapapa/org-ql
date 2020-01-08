@@ -32,6 +32,9 @@
 
 ;;;; Variables
 
+(defvar org-ql-test-buffer nil
+  "Buffer used for running test queries.")
+
 ;;;; Functions
 
 (defun org-ql-test-insert-result ()
@@ -45,9 +48,14 @@
                               ('org-ql--pre-process-query t)
                               (_ nil)))
             (result (pcase sexp
-                      (`(org-ql-expect ,args) (org-ql-test--format-result--ql `(org-ql org-ql-test-buffer
-                                                                                 ,@args
-                                                                                 :action (org-ql-test-org-get-heading))))
+                      (`(org-ql-expect ,args)
+                       (org-ql-test--format-result--ql `(org-ql org-ql-test-buffer
+                                                          ,@args
+                                                          :action (org-ql-test-org-get-heading))))
+                      (`(org-ql-expect ,args ,_ :buffer ,buffer)
+                       (org-ql-test--format-result--ql `(org-ql ,buffer
+                                                          ,@args
+                                                          :action (org-ql-test-org-get-heading))))
                       (`(org-ql . _) (org-ql-test--format-result--ql sexp))
                       (`(org-ql--query-preamble  . _) (org-ql-test--format-result--query-preamble sexp))
                       (`(org-ql--pre-process-query . _) (format "'%S" (eval sexp)))
@@ -87,6 +95,14 @@
       (eval sexp)
     (user-error "Point must be after an `org-ql' form")))
 
+(defun org-ql-test-data-buffer (filename)
+  "Return buffer visiting FILENAME.
+FILENAME should be a file in the \"tests\" directory."
+  (->> (locate-dominating-file default-directory ".git")
+       (expand-file-name "tests")
+       (expand-file-name filename)
+       find-file-noselect))
+
 ;;;; Macros
 
 (defmacro org-ql-it (description &rest body)
@@ -105,12 +121,12 @@ Based on Buttercup macro `it'."
                            ,@body))))
     `(buttercup-xit ,description)))
 
-(defmacro org-ql-expect (ql-args results)
+(cl-defmacro org-ql-expect (ql-args results &key (buffer 'org-ql-test-buffer))
   "Expand to `expect' test form that expects QL-ARGS to equal RESULTS.
 RESULTS should be a list of strings as returned by
 `org-ql-test-org-get-heading'."
   (declare (indent defun))
-  `(expect (org-ql org-ql-test-buffer
+  `(expect (org-ql ,buffer
              ,@ql-args
              :action (org-ql-test-org-get-heading))
            :to-equal ,results))
@@ -138,9 +154,7 @@ RESULTS should be a list of strings as returned by
         ;; For Org 9.1.9.
         (substring-no-properties (org-get-heading t t t t))))
 
-    (setq org-ql-test-buffer (->> (locate-dominating-file default-directory ".git")
-                                  (expand-file-name "tests/data.org")
-                                  find-file-noselect)
+    (setq org-ql-test-buffer (org-ql-test-data-buffer "data.org")
           ;; For manual testing:
           ;; org-ql-test-buffer (find-file-noselect "data.org")
           org-ql-test-num-headings (with-current-buffer org-ql-test-buffer
