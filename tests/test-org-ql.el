@@ -35,6 +35,10 @@
 (defvar org-ql-test-buffer nil
   "Buffer used for running test queries.")
 
+(defvar org-ql-test-num-headings nil
+  "Total number of headings in main test data buffer.
+Set at runtime by test suite.")
+
 ;;;; Functions
 
 (defun org-ql-test-insert-result ()
