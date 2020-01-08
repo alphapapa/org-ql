@@ -760,7 +760,15 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((tags "Emacs" "space"))
           '("Visit Mars" "Visit the moon" "/r/emacs" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ((not (tags "Emacs" "space")))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony"))))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
+
+      (org-ql-it "with file tags"
+        (org-ql-expect ((tags "food"))
+          '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+          :buffer (org-ql-test-data-buffer "data2.org"))
+        (org-ql-expect ((tags "fruit"))
+          '("Fruit" "Blueberry" "Strawberry")
+          :buffer (org-ql-test-data-buffer "data2.org"))))
 
     (describe "(tags-inherited)"
 
@@ -783,7 +791,15 @@ RESULTS should be a list of strings as returned by
           '("Skype with president of Antarctica"))
         (org-ql-expect ((not (tags-inherited "personal" "world")))
           ;; Note that this correctly includes the task "Practice leaping...", which has the LOCAL tag "personal".
-          '("Take over the universe" "Take over the world" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
+          '("Take over the universe" "Take over the world" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+
+      (org-ql-it "with file tags"
+        (org-ql-expect ((tags-inherited "food"))
+          '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+          :buffer (org-ql-test-data-buffer "data2.org"))
+        (org-ql-expect ((tags-inherited "fruit"))
+          '("Blueberry" "Strawberry")
+          :buffer (org-ql-test-data-buffer "data2.org"))))
 
     (describe "(tags-local)"
 
@@ -805,7 +821,15 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((ltags "personal" "world"))
           '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Get haircut"))
         (org-ql-expect ((not (tags-local "personal" "world")))
-          '("Take over the universe" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
+          '("Take over the universe" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+
+      (org-ql-it "with file tags"
+        (org-ql-expect ((tags-local "food"))
+          nil
+          :buffer (org-ql-test-data-buffer "data2.org"))
+        (org-ql-expect ((tags-local "fruit"))
+          '("Fruit")
+          :buffer (org-ql-test-data-buffer "data2.org"))))
 
     (describe "(tags-all), (tags&)"
 
@@ -813,7 +837,12 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ((tags-all "universe" "personal"))
           '("Practice leaping tall buildings in a single bound"))
         (org-ql-expect ((tags& "ambition" "space"))
-          '("Visit Mars" "Visit the moon"))))
+          '("Visit Mars" "Visit the moon")))
+
+      (org-ql-it "with file tags"
+        (org-ql-expect ((tags-all "food" "fruit"))
+          '("Fruit" "Blueberry" "Strawberry")
+          :buffer (org-ql-test-data-buffer "data2.org"))))
 
     (describe "(ts)"
 

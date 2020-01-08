@@ -723,6 +723,9 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
      for custom Helm commands that search certain files.
 
    *Fixed*
+   • Inherit file tags when org-tag-inheritance is enabled.  (Fixes #55
+     (https://github.com/alphapapa/org-ql/issues/55).  Thanks to Mikhail
+     Skorzhinskiy (https://github.com/mskorzhinskiy).)
    • Call helm-make-source directly instead of using
      helm-build-sync-source macro.  (Fixes #60
      (https://github.com/alphapapa/org-ql/issues/60).  Thanks to Matt
@@ -1023,18 +1026,18 @@ Node: Agenda-like views18276
 Node: Listing / acting-on results19681
 Node: Changelog24283
 Node: 04-pre24820
-Node: 03226633
-Node: 03127014
-Node: 0327209
-Node: 02330182
-Node: 02230408
-Node: 02130674
-Node: 0230871
-Node: 0134904
-Node: Notes35003
-Node: Comparison with Org Agenda searches35165
-Node: org-sidebar36036
-Node: License36315
+Node: 03226835
+Node: 03127216
+Node: 0327411
+Node: 02330384
+Node: 02230610
+Node: 02130876
+Node: 0231073
+Node: 0135106
+Node: Notes35205
+Node: Comparison with Org Agenda searches35367
+Node: org-sidebar36238
+Node: License36517
 
 End Tag Table
 

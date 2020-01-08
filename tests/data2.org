@@ -1,0 +1,16 @@
+# This file is currently used to test org-file-tags.
+
+#+FILETAGS: :food:
+
+* Fruit                                                               :fruit:
+
+** Blueberry
+
+** Strawberry
+
+* Vegetable                                                       :vegetable:
+
+** Broccoli
+
+** Potato
+
