@@ -27,6 +27,7 @@ name: "CI"
 on:
   pull_request:
   push:
+    # Comment out this section to enable testing of all branches.
     # branches:
     #   - master
 
@@ -46,16 +47,11 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - name: Install sandbox script
-      run: |
-        curl -o $GITHUB_WORKSPACE/emacs-sandbox.sh \
-          https://raw.githubusercontent.com/alphapapa/emacs-sandbox.sh/master/emacs-sandbox.sh
-        chmod +x $GITHUB_WORKSPACE/emacs-sandbox.sh
-        echo ::add-path::$GITHUB_WORKSPACE
-        echo ::set-env name=SANDBOX_DIR::$(mktemp -d)
-
     - name: Initialize sandbox
-      run: ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR --auto-install --install package-lint
+      run: |
+        SANDBOX_DIR=$(mktemp -d) || exit 1
+        echo ::set-env name=SANDBOX_DIR::$SANDBOX_DIR
+        ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR --auto-install --install package-lint
 
     # The "all" rule is not used, because it treats compilation warnings
     # as failures, so linting and testing are run as separate steps.
