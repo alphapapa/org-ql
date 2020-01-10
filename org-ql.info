@@ -93,7 +93,8 @@ File: README.info,  Node: Contents,  Next: Screenshots,  Prev: Top,  Up: Top
 **********
 
    • • • 
-        • • • • • 
+        • • 
+             • • • • • • 
 
 File: README.info,  Node: Screenshots,  Next: Installation,  Prev: Contents,  Up: Top
 
@@ -145,22 +146,7 @@ File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
 4 Usage
 *******
 
-These commands and functions are included:
-
-   • *Showing an agenda-like view:*
-        • ‘org-ql-search’ (command)
-        • ‘org-ql-view’ (command)
-        • ‘org-ql-view-sidebar’ (command)
-        • ‘org-ql-block’ (agenda block function)
-   • *Showing a tree in a buffer:*
-        • ‘org-ql-sparse-tree’ (command)
-   • *Showing results with Helm*:
-        • ‘helm-org-ql’ (command)
-   • *Returning a list of matches or acting on them:*
-        • ‘org-ql’ (macro)
-        • ‘org-ql-select’ (function)
-        • ‘org-ql-query’ (function)
-
+   • • • 
    Feedback on these APIs is welcome.  Eventually, after being tested
 and polished, they will be considered stable.
 
@@ -177,6 +163,16 @@ File: README.info,  Node: Commands,  Next: Queries,  Up: Usage
 
 4.1 Commands
 ============
+
+   • *Showing an agenda-like view:*
+        • (command)
+        • (command)
+        • (command)
+        • (command)
+   • *Showing a tree in a buffer:*
+        • (command)
+   • *Showing results with Helm*:
+        • (command)
 
 * Menu:
 
@@ -298,10 +294,11 @@ File: README.info,  Node: Queries,  Next: Functions / Macros,  Prev: Commands,  
 4.2 Queries
 ===========
 
-An org-ql query is a lisp form which may contain arbitrary lisp forms,
-as well as certain built-in predicates.  It is byte-compiled into a
-predicate function which is tested with point on each heading in an Org
-buffer; when it returns non-nil, the heading matches the query.
+   • • • 
+   An org-ql query is a lisp form which may contain arbitrary lisp
+forms, as well as certain built-in predicates.  It is byte-compiled into
+a predicate function which is tested with point on each heading in an
+Org buffer; when it returns non-nil, the heading matches the query.
 
    *Notes:*
    • Bare strings like ‘"string"’ are automatically converted to
@@ -511,6 +508,9 @@ File: README.info,  Node: Functions / Macros,  Prev: Queries,  Up: Usage
 4.3 Functions / Macros
 ======================
 
+   • 
+        • • 
+        • • • 
 * Menu:
 
 * Agenda-like views::
@@ -1006,38 +1006,38 @@ GPLv3
 Tag Table:
 Node: Top225
 Node: Contents1367
-Node: Screenshots1515
-Node: Installation1633
-Node: Quelpa2271
-Node: Usage2714
-Node: Commands3624
-Node: org-ql-search3853
-Node: helm-org-ql5501
-Node: org-ql-view5913
-Node: org-ql-view-sidebar6111
-Node: org-ql-view-recent-items6467
-Node: org-ql-sparse-tree6951
-Node: Queries7751
-Node: Non-sexp query syntax8593
-Node: Predicates10292
-Node: Date/time predicates15454
-Node: Functions / Macros18089
-Node: Agenda-like views18276
-Node: Listing / acting-on results19681
-Node: Changelog24283
-Node: 04-pre24820
-Node: 03226835
-Node: 03127216
-Node: 0327411
-Node: 02330384
-Node: 02230610
-Node: 02130876
-Node: 0231073
-Node: 0135106
-Node: Notes35205
-Node: Comparison with Org Agenda searches35367
-Node: org-sidebar36238
-Node: License36517
+Node: Screenshots1541
+Node: Installation1659
+Node: Quelpa2297
+Node: Usage2740
+Node: Commands3064
+Node: org-ql-search3537
+Node: helm-org-ql5185
+Node: org-ql-view5597
+Node: org-ql-view-sidebar5795
+Node: org-ql-view-recent-items6151
+Node: org-ql-sparse-tree6635
+Node: Queries7435
+Node: Non-sexp query syntax8296
+Node: Predicates9995
+Node: Date/time predicates15157
+Node: Functions / Macros17792
+Node: Agenda-like views18025
+Node: Listing / acting-on results19430
+Node: Changelog24032
+Node: 04-pre24569
+Node: 03226584
+Node: 03126965
+Node: 0327160
+Node: 02330133
+Node: 02230359
+Node: 02130625
+Node: 0230822
+Node: 0134855
+Node: Notes34954
+Node: Comparison with Org Agenda searches35116
+Node: org-sidebar35987
+Node: License36266
 
 End Tag Table
 
