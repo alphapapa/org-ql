@@ -347,6 +347,24 @@ RESULTS should be a list of strings as returned by
 
     ;; TODO: Other predicates.
 
+    (describe "(ancestors)"
+      (org-ql-it "without sub-query"
+        (org-ql-expect ((ancestors))
+          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+
+      (org-ql-it "with sub-query"
+        (org-ql-expect ((ancestors (heading "universe")))
+          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
+
+    (describe "(parent)"
+      (org-ql-it "without sub-query"
+        (org-ql-expect ((parent))
+          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+
+      (org-ql-it "with sub-query"
+        (org-ql-expect ((parent (and (todo) (priority "A"))))
+          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
+
     (describe "(category)"
 
       (org-ql-it "without arguments"
