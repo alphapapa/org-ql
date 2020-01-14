@@ -92,7 +92,7 @@ Set at runtime by test suite.")
   (if-let* ((sexp (elisp--preceding-sexp))
             (sexp (pcase sexp
                     (`(org-ql . ,_) (setf (car sexp) 'org-ql-agenda))
-                    (`(org-ql-expect ,ql-args . ,_) (setf sexp `(org-ql-select org-ql-test-buffer
+                    (`(org-ql-expect ,ql-args . ,_) (setf sexp `(org-ql-search org-ql-test-buffer
                                                                   ',@ql-args)))
                     (_ nil))))
 
