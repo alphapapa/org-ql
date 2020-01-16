@@ -465,6 +465,14 @@ Another idea for it is to simply store the element from =org-element-headline-pa
 
 The code that powers the customization UI.  Has collapsible and customizable widgets.  Might be perfect.  Might even enable editing items in the list, with functions to make the changes in the source  buffers.
 
+*** Prior art
+
+**** magit-section
+
+**** [[https://github.com/m2ym/direx-el][GitHub - m2ym/direx-el: Directory Explorer for GNU Emacs]]
+
+Appears to be another implementation of magit-section-like expandable sections.  Not sure which came first.  Its code seems like it may be helpful.
+
 *** Code idea
 
 Inserting items into a view could look something like this:
