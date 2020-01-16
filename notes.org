@@ -6,6 +6,10 @@
 
 Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
 
+** TODO [#A] Org block to insert results of queries with links to entries
+
+[2020-01-16 Thu 06:20]  This idea just came to me when I was thinking about using the search-based paradigm vs. outline-based.  This would allow both, e.g. some kind of =#+BEGIN_QUERY= block that would update when =C-c C-c= is pressed on it.
+
 ** TODO [#A] Outline path in buffers-files arg
 :PROPERTIES:
 :ID:       6935361a-9e1d-48ec-8d17-876a90b90f50
