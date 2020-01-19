@@ -723,6 +723,8 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
      for custom Helm commands that search certain files.
    • Display a message when views are refreshed.  (Thanks to xeijin
      (https://github.com/xeijin).)
+   • Respect Org Agenda restriction in org-ql-block.  (Thanks to Ihor
+     Radchenko (https://github.com/yantar92) for reporting.)
 
    *Fixed*
    • Inherit file tags when org-tag-inheritance is enabled.  (Fixes #55
@@ -1028,18 +1030,18 @@ Node: Agenda-like views18025
 Node: Listing / acting-on results19430
 Node: Changelog24032
 Node: 04-pre24569
-Node: 03226689
-Node: 03127070
-Node: 0327265
-Node: 02330238
-Node: 02230464
-Node: 02130730
-Node: 0230927
-Node: 0134960
-Node: Notes35059
-Node: Comparison with Org Agenda searches35221
-Node: org-sidebar36092
-Node: License36371
+Node: 03226822
+Node: 03127203
+Node: 0327398
+Node: 02330371
+Node: 02230597
+Node: 02130863
+Node: 0231060
+Node: 0135093
+Node: Notes35192
+Node: Comparison with Org Agenda searches35354
+Node: org-sidebar36225
+Node: License36504
 
 End Tag Table
 

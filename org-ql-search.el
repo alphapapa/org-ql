@@ -231,24 +231,38 @@ function `org-agenda-files'.  Inserts a newline after the block.
 If `org-ql-block-header' is non-nil, it is used as the header
 string for the block, otherwise a the header is formed
 automatically from the query."
-  (when-let* ((from (org-agenda-files nil 'ifmode))
-              (items (org-ql-select from query
-                       :action 'element-with-markers)))
-    ;; Not sure if calling the prepare function is necessary, but let's follow the pattern.
-    (org-agenda-prepare)
-    ;; FIXME: `org-agenda--insert-overriding-header' is from an Org version newer than
-    ;; I'm using.  Should probably declare it as a minimum Org version after upgrading.
-    ;;  (org-agenda--insert-overriding-header (or org-ql-block-header (org-ql-agenda--header-line-format from query)))
-    (insert (org-add-props (or org-ql-block-header (org-ql-view--header-line-format from query))
-		nil 'face 'org-agenda-structure) "\n")
-    ;; Calling `org-agenda-finalize' should be unnecessary, because in a "series" agenda,
-    ;; `org-agenda-multi' is bound non-nil, in which case `org-agenda-finalize' does nothing.
-    ;; But we do call `org-agenda-finalize-entries', which allows `org-super-agenda' to work.
-    (->> items
-         (-map #'org-ql-view--format-element)
-         org-agenda-finalize-entries
-         insert)
-    (insert "\n")))
+  (let (narrow-p old-beg old-end)
+    (when-let* ((from (pcase org-agenda-overriding-restriction
+                        ('nil (org-agenda-files nil 'ifmode))
+                        ('file (get 'org-agenda-files 'org-restrict))
+                        ('subtree (prog1 org-agenda-restrict
+                                    (with-current-buffer org-agenda-restrict
+                                      ;; Narrow the buffer; remember to widen it later.
+                                      (setf old-beg (point-min) old-end (point-max)
+                                            narrow-p t)
+                                      (narrow-to-region org-agenda-restrict-begin org-agenda-restrict-end))))))
+                (items (org-ql-select from query
+                         :action 'element-with-markers
+                         :narrow narrow-p)))
+      (when narrow-p
+        ;; Restore buffer's previous restrictions.
+        (with-current-buffer from
+          (narrow-to-region old-beg old-end)))
+      ;; Not sure if calling the prepare function is necessary, but let's follow the pattern.
+      (org-agenda-prepare)
+      ;; FIXME: `org-agenda--insert-overriding-header' is from an Org version newer than
+      ;; I'm using.  Should probably declare it as a minimum Org version after upgrading.
+      ;;  (org-agenda--insert-overriding-header (or org-ql-block-header (org-ql-agenda--header-line-format from query)))
+      (insert (org-add-props (or org-ql-block-header (org-ql-view--header-line-format from query))
+                  nil 'face 'org-agenda-structure) "\n")
+      ;; Calling `org-agenda-finalize' should be unnecessary, because in a "series" agenda,
+      ;; `org-agenda-multi' is bound non-nil, in which case `org-agenda-finalize' does nothing.
+      ;; But we do call `org-agenda-finalize-entries', which allows `org-super-agenda' to work.
+      (->> items
+           (-map #'org-ql-view--format-element)
+           org-agenda-finalize-entries
+           insert)
+      (insert "\n"))))
 
 ;;;###autoload
 (defalias 'org-ql-block 'org-ql-search-block)

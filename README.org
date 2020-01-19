@@ -398,6 +398,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Info manual.
 +  Function ~helm-org-ql-source~, which returns a Helm source that searches given buffers/files with ~helm-org-ql~.  It can be used for custom Helm commands that search certain files.
 +  Display a message when views are refreshed.  (Thanks to [[https://github.com/xeijin][xeijin]].)
++  Respect Org Agenda restriction in =org-ql-block=.  (Thanks to [[https://github.com/yantar92][Ihor Radchenko]] for reporting.)
 
 *Fixed*
 +  Inherit file tags when =org-tag-inheritance= is enabled.  (Fixes [[https://github.com/alphapapa/org-ql/issues/55][#55]].  Thanks to [[https://github.com/mskorzhinskiy][Mikhail Skorzhinskiy]].)
