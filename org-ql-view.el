@@ -439,7 +439,8 @@ If NAME is non-nil, return buffer by that name instead of using
 default buffer."
   (with-current-buffer (get-buffer-create (or name (concat org-ql-view-buffer-name-prefix "*")))
     (unless (eq major-mode 'org-agenda-mode)
-      (org-agenda-mode))
+      (org-agenda-mode)
+      (setf buffer-read-only t))
     (current-buffer)))
 
 (defun org-ql-view--format-relative-date (difference)

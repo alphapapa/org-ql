@@ -738,6 +738,9 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
      side-scrolling of the window when calling end-of-buffer.
    • Face for done to-do keywords in org-ql-view buffers.  (Thanks to
      Yiming Chen (https://github.com/dsdshcym).)
+   • Make view buffers read-only.  (Fixes #72
+     (https://github.com/alphapapa/org-ql/issues/72).  Thanks to xeijin
+     (https://github.com/xeijin).)
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
@@ -1030,18 +1033,18 @@ Node: Agenda-like views18025
 Node: Listing / acting-on results19430
 Node: Changelog24032
 Node: 04-pre24569
-Node: 03226822
-Node: 03127203
-Node: 0327398
-Node: 02330371
-Node: 02230597
-Node: 02130863
-Node: 0231060
-Node: 0135093
-Node: Notes35192
-Node: Comparison with Org Agenda searches35354
-Node: org-sidebar36225
-Node: License36504
+Node: 03226977
+Node: 03127358
+Node: 0327553
+Node: 02330526
+Node: 02230752
+Node: 02131018
+Node: 0231215
+Node: 0135248
+Node: Notes35347
+Node: Comparison with Org Agenda searches35509
+Node: org-sidebar36380
+Node: License36659
 
 End Tag Table
 
