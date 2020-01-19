@@ -300,7 +300,8 @@ update search arguments."
     (goto-char (point-min))
     (or (when (search-forward current-line nil t)
           (beginning-of-line))
-        (goto-char old-pos))))
+        (goto-char old-pos))
+    (message "View refreshed")))
 
 (defun org-ql-view-save ()
   "Save current `org-ql-search' buffer to `org-ql-views'."

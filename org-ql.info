@@ -721,6 +721,8 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
    • Function ‘helm-org-ql-source’, which returns a Helm source that
      searches given buffers/files with ‘helm-org-ql’.  It can be used
      for custom Helm commands that search certain files.
+   • Display a message when views are refreshed.  (Thanks to xeijin
+     (https://github.com/xeijin).)
 
    *Fixed*
    • Inherit file tags when org-tag-inheritance is enabled.  (Fixes #55
@@ -1026,18 +1028,18 @@ Node: Agenda-like views18025
 Node: Listing / acting-on results19430
 Node: Changelog24032
 Node: 04-pre24569
-Node: 03226584
-Node: 03126965
-Node: 0327160
-Node: 02330133
-Node: 02230359
-Node: 02130625
-Node: 0230822
-Node: 0134855
-Node: Notes34954
-Node: Comparison with Org Agenda searches35116
-Node: org-sidebar35987
-Node: License36266
+Node: 03226689
+Node: 03127070
+Node: 0327265
+Node: 02330238
+Node: 02230464
+Node: 02130730
+Node: 0230927
+Node: 0134960
+Node: Notes35059
+Node: Comparison with Org Agenda searches35221
+Node: org-sidebar36092
+Node: License36371
 
 End Tag Table
 
