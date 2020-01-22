@@ -241,9 +241,8 @@ returns nil or non-nil."
     ;; Sort items
     (pcase sort
       (`nil items)
-      ((or 'date 'deadline 'scheduled 'todo 'priority 'random
-           (guard (cl-loop for elem in (-list sort)
-                           always (memq elem '(date deadline scheduled todo priority random)))))
+      ((guard (cl-loop for elem in (-list sort)
+                       always (memq elem '(date deadline scheduled todo priority random))))
        ;; Default sorting functions
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
