@@ -120,67 +120,82 @@ See info node `(elisp)Cyclic Window Ordering'."
   :type 'boolean)
 
 (defcustom org-ql-views
-  (list (cons "Recent entries" #'org-ql-view-recent-items)
-        (cons "Review (to-do keyword without timestamp in past 2 weeks)"
+  (list (cons "Overview: Agenda-like"
+              (list :buffers-files #'org-agenda-files
+                    :query '(and (not (done))
+                                 (or (habit)
+                                     (deadline auto)
+                                     (scheduled :to today)
+                                     (ts-active :on today)))
+                    :sort '(date priority todo)
+                    :super-groups 'org-super-agenda-groups
+                    :title "Agenda-like"))
+        (cons "Overview: NEXT tasks"
+              (list :buffers-files #'org-agenda-files
+                    :query '(todo "NEXT")
+                    :sort '(priority date)
+                    :super-groups 'org-super-agenda-groups
+                    :title "Overview: NEXT tasks"))
+        (cons "Calendar: Today"
+              (list :buffers-files #'org-agenda-files
+                    :query '(ts-active :on today)
+                    :title "Today"
+                    :super-groups 'org-super-agenda-groups
+                    :sort '(priority)))
+        (cons "Calendar: This week"
+              (lambda ()
+                "Show items with an active timestamp during this calendar week."
+                (interactive)
+                (let* ((ts (ts-now))
+                       (beg-of-week (->> ts
+                                         (ts-adjust 'day (- (ts-dow (ts-now))))
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
+                       (end-of-week (->> ts
+                                         (ts-adjust 'day (- 6 (ts-dow (ts-now))))
+                                         (ts-apply :hour 23 :minute 59 :second 59))))
+                  (org-ql-search (org-agenda-files)
+                    `(ts-active :from ,beg-of-week
+                                :to ,end-of-week)
+                    :title "This week"
+                    :super-groups 'org-super-agenda-groups
+                    :sort '(priority)))))
+        (cons "Calendar: Next week"
+              (lambda ()
+                "Show items with an active timestamp during the next calendar week."
+                (interactive)
+                (let* ((ts (ts-adjust 'day 7 (ts-now)))
+                       (beg-of-week (->> ts
+                                         (ts-adjust 'day (- (ts-dow (ts-now))))
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
+                       (end-of-week (->> ts
+                                         (ts-adjust 'day (- 6 (ts-dow (ts-now))))
+                                         (ts-apply :hour 23 :minute 59 :second 59))))
+                  (org-ql-search (org-agenda-files)
+                    `(ts-active :from ,beg-of-week
+                                :to ,end-of-week)
+                    :title "Next week"
+                    :super-groups 'org-super-agenda-groups
+                    :sort '(priority)))))
+        (cons "Review: Recently timestamped" #'org-ql-view-recent-items)
+        (cons (propertize "Review: Stale tasks"
+                          'help-echo "Tasks without a timestamp in the past 2 weeks")
               (list :buffers-files #'org-agenda-files
                     :query '(and (todo)
                                  (not (ts :from -14)))
-                    :title "Review"
+                    :title (propertize "Review: Stale tasks"
+                                       'help-echo "Tasks without a timestamp in the past 2 weeks")
                     :sort '(date priority todo)
                     :super-groups '((:auto-parent t))))
-        (cons "Stuck Projects" (list :buffers-files #'org-agenda-files
-                                     :query '(and (todo)
-                                                  (children)
-                                                  (not (children (todo "NEXT"))))
-                                     :title "Stuck Projects"
-                                     :sort '(priority date)
-                                     :super-groups 'org-super-agenda-groups))
-        (cons "Agenda-like" (list :buffers-files #'org-agenda-files
-                                  :query '(and (not (done))
-                                               (or (habit)
-                                                   (deadline auto)
-                                                   (scheduled :to today)
-                                                   (ts-active :on today)))
-                                  :sort '(date priority todo)
-                                  :super-groups 'org-super-agenda-groups
-                                  :title "Agenda-like"))
-        (cons "Today" (list :buffers-files #'org-agenda-files
-                            :query '(ts-active :on today)
-                            :title "Today"
-                            :super-groups 'org-super-agenda-groups
-                            :sort '(priority)))
-        (cons "This week" (lambda ()
-                            "Show items with an active timestamp during this calendar week."
-                            (interactive)
-                            (let* ((ts (ts-now))
-                                   (beg-of-week (->> ts
-                                                     (ts-adjust 'day (- (ts-dow (ts-now))))
-                                                     (ts-apply :hour 0 :minute 0 :second 0)))
-                                   (end-of-week (->> ts
-                                                     (ts-adjust 'day (- 6 (ts-dow (ts-now))))
-                                                     (ts-apply :hour 23 :minute 59 :second 59))))
-                              (org-ql-search (org-agenda-files)
-                                `(ts-active :from ,beg-of-week
-                                            :to ,end-of-week)
-                                :title "This week"
-                                :super-groups 'org-super-agenda-groups
-                                :sort '(priority)))))
-        (cons "Next week" (lambda ()
-                            "Show items with an active timestamp during the next calendar week."
-                            (interactive)
-                            (let* ((ts (ts-adjust 'day 7 (ts-now)))
-                                   (beg-of-week (->> ts
-                                                     (ts-adjust 'day (- (ts-dow (ts-now))))
-                                                     (ts-apply :hour 0 :minute 0 :second 0)))
-                                   (end-of-week (->> ts
-                                                     (ts-adjust 'day (- 6 (ts-dow (ts-now))))
-                                                     (ts-apply :hour 23 :minute 59 :second 59))))
-                              (org-ql-search (org-agenda-files)
-                                `(ts-active :from ,beg-of-week
-                                            :to ,end-of-week)
-                                :title "Next week"
-                                :super-groups 'org-super-agenda-groups
-                                :sort '(priority))))))
+        (cons (propertize "Review: Stuck projects"
+                          'help-echo "Tasks with sub-tasks but no NEXT sub-tasks")
+              (list :buffers-files #'org-agenda-files
+                    :query '(and (todo)
+                                 (children)
+                                 (not (children (todo "NEXT"))))
+                    :title (propertize "Review: Stuck projects"
+                                       'help-echo "Tasks with sub-tasks but no NEXT sub-tasks")
+                    :sort '(priority date)
+                    :super-groups 'org-super-agenda-groups)))
   "Alist of `org-ql-view' commands."
   :type
   '(alist
