@@ -395,13 +395,15 @@ Arguments are listed next to predicate names, where applicable.
      Return non-nil if current heading’s buffer’s filename path matches
      any of ‘REGEXPS’ (regexp strings).  Without arguments, return
      non-nil if buffer is file-backed.
-‘priority (&optional comparator-or-priority priority)’
-     Return non-nil if current heading has a certain priority.
-     ‘COMPARATOR-OR-PRIORITY’ should be either a comparator function,
-     like ‘<=’, or a priority string, like "A" (in which case (‘=’ will
-     be the comparator).  If ‘COMPARATOR-OR-PRIORITY’ is a comparator,
-     ‘PRIORITY’ should be a priority string.  If both arguments are nil,
-     return non-nil if heading has any defined priority.
+‘priority (&rest args)’
+     Return non-nil if current heading has a certain priority.  ‘ARGS’
+     may be either a list of one or more priority letters as strings, or
+     a comparator function symbol followed by a priority letter string.
+     For example: ‘(priority "A") (priority "A" "B") (priority '>= "B")’
+     Note that items without a priority cookie never match this
+     predicate (while Org itself considers items without a cookie to
+     have the default priority, which, by default, is equal to priority
+     ‘B’).
 ‘property (property &optional value)’
      Return non-nil if current entry has ‘PROPERTY’ (a string), and
      optionally ‘VALUE’ (a string).  Note that property inheritance is
@@ -1042,24 +1044,24 @@ Node: org-ql-sparse-tree6635
 Node: Queries7435
 Node: Non-sexp query syntax8296
 Node: Predicates9995
-Node: Date/time predicates15157
-Node: Functions / Macros17792
-Node: Agenda-like views18025
-Node: Listing / acting-on results19430
-Node: Changelog24032
-Node: 04-pre24569
-Node: 03227742
-Node: 03128123
-Node: 0328318
-Node: 02331291
-Node: 02231517
-Node: 02131783
-Node: 0231980
-Node: 0136013
-Node: Notes36112
-Node: Comparison with Org Agenda searches36274
-Node: org-sidebar37145
-Node: License37424
+Node: Date/time predicates15217
+Node: Functions / Macros17852
+Node: Agenda-like views18085
+Node: Listing / acting-on results19490
+Node: Changelog24092
+Node: 04-pre24629
+Node: 03227802
+Node: 03128183
+Node: 0328378
+Node: 02331351
+Node: 02231577
+Node: 02131843
+Node: 0232040
+Node: 0136073
+Node: Notes36172
+Node: Comparison with Org Agenda searches36334
+Node: org-sidebar37205
+Node: License37484
 
 End Tag Table
 
