@@ -699,7 +699,13 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
 5.1 0.4-pre
 ===========
 
-*Added*
+_Note:_ The next release, 0.5, may include changes which will require
+minor updates to written queries (e.g.  a few predicates may be
+renamed).  Users who wish to avoid those changes happening unexpectedly
+in their configs should avoid upgrading org-ql automatically, as they
+will be pushed to the master branch when ready.
+
+   *Added*
    • *Commands*
         • ‘helm-org-ql-views’, which shows one of ‘org-ql-views’
           selected with Helm.
@@ -1042,18 +1048,18 @@ Node: Agenda-like views18025
 Node: Listing / acting-on results19430
 Node: Changelog24032
 Node: 04-pre24569
-Node: 03227414
-Node: 03127795
-Node: 0327990
-Node: 02330963
-Node: 02231189
-Node: 02131455
-Node: 0231652
-Node: 0135685
-Node: Notes35784
-Node: Comparison with Org Agenda searches35946
-Node: org-sidebar36817
-Node: License37096
+Node: 03227742
+Node: 03128123
+Node: 0328318
+Node: 02331291
+Node: 02231517
+Node: 02131783
+Node: 0231980
+Node: 0136013
+Node: Notes36112
+Node: Comparison with Org Agenda searches36274
+Node: org-sidebar37145
+Node: License37424
 
 End Tag Table
 
