@@ -219,6 +219,7 @@ necessary."
       (org-ql-view--display :buffer buffer :header header
         :string (s-join "\n" strings)))))
 
+;;;###autoload
 (defun org-ql-search-block (query)
   "Insert items for QUERY into current buffer.
 QUERY should be an `org-ql' query form.  Intended to be used as a

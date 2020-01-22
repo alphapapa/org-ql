@@ -414,6 +414,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  Face for done to-do keywords in =org-ql-view= buffers.  (Thanks to [[https://github.com/dsdshcym][Yiming Chen]].)
 +  Make view buffers read-only.  (Fixes [[https://github.com/alphapapa/org-ql/issues/72][#72]].  Thanks to [[https://github.com/xeijin][xeijin]].)
 +  Sorting with single sorter specified as an atom.  (Thanks to [[https://github.com/legalnonsense][Jeff Filipovits]].)
++  Autoload for =org-ql-block= agenda block.  (Fixes [[https://github.com/alphapapa/org-ql/issues/53][#53]].  Thanks to reports from [[https://github.com/gcantieni][Gus Cantieni]], [[https://github.com/novoid][Karl Voit]], [[https://github.com/rieje][rieje]], and [[https://github.com/jakejx][Jake | Junxuan]].)
 
 *Internal*
 +  Added generic node data cache to speed up recursive, tree-based queries.

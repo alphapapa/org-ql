@@ -758,6 +758,11 @@ will be pushed to the master branch when ready.
      (https://github.com/xeijin).)
    • Sorting with single sorter specified as an atom.  (Thanks to Jeff
      Filipovits (https://github.com/legalnonsense).)
+   • Autoload for org-ql-block agenda block.  (Fixes #53
+     (https://github.com/alphapapa/org-ql/issues/53).  Thanks to reports
+     from Gus Cantieni (https://github.com/gcantieni), Karl Voit
+     (https://github.com/novoid), rieje (https://github.com/rieje), and
+     Jake | Junxuan (https://github.com/jakejx).)
 
    *Internal*
    • Added generic node data cache to speed up recursive, tree-based
@@ -1050,18 +1055,18 @@ Node: Agenda-like views18085
 Node: Listing / acting-on results19490
 Node: Changelog24092
 Node: 04-pre24629
-Node: 03227802
-Node: 03128183
-Node: 0328378
-Node: 02331351
-Node: 02231577
-Node: 02131843
-Node: 0232040
-Node: 0136073
-Node: Notes36172
-Node: Comparison with Org Agenda searches36334
-Node: org-sidebar37205
-Node: License37484
+Node: 03228121
+Node: 03128502
+Node: 0328697
+Node: 02331670
+Node: 02231896
+Node: 02132162
+Node: 0232359
+Node: 0136392
+Node: Notes36491
+Node: Comparison with Org Agenda searches36653
+Node: org-sidebar37524
+Node: License37803
 
 End Tag Table
 
