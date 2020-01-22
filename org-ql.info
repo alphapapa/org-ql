@@ -725,6 +725,7 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
      (https://github.com/xeijin).)
    • Respect Org Agenda restriction in org-ql-block.  (Thanks to Ihor
      Radchenko (https://github.com/yantar92) for reporting.)
+   • Option org-ql-view-sidebar-sort-views.
 
    *Fixed*
    • Inherit file tags when org-tag-inheritance is enabled.  (Fixes #55
@@ -1033,18 +1034,18 @@ Node: Agenda-like views18025
 Node: Listing / acting-on results19430
 Node: Changelog24032
 Node: 04-pre24569
-Node: 03226977
-Node: 03127358
-Node: 0327553
-Node: 02330526
-Node: 02230752
-Node: 02131018
-Node: 0231215
-Node: 0135248
-Node: Notes35347
-Node: Comparison with Org Agenda searches35509
-Node: org-sidebar36380
-Node: License36659
+Node: 03227023
+Node: 03127404
+Node: 0327599
+Node: 02330572
+Node: 02230798
+Node: 02131064
+Node: 0231261
+Node: 0135294
+Node: Notes35393
+Node: Comparison with Org Agenda searches35555
+Node: org-sidebar36426
+Node: License36705
 
 End Tag Table
 

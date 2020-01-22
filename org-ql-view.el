@@ -115,6 +115,10 @@ See info node `(elisp)Cyclic Window Ordering'."
   "Side-window slot for Org QL Views list buffer."
   :type 'integer)
 
+(defcustom org-ql-view-sidebar-sort-views nil
+  "Sort `org-ql-views' in `org-ql-view-sidebar'."
+  :type 'boolean)
+
 (defcustom org-ql-views
   (list (cons "Recent entries" #'org-ql-view-recent-items)
         (cons "Review (to-do keyword without timestamp in past 2 weeks)"
@@ -338,7 +342,9 @@ update search arguments."
       (erase-buffer)
       (->> org-ql-views
            (-map #'car)
-           (-sort #'string<)
+           (-sort (if org-ql-view-sidebar-sort-views
+                      #'string<
+                    #'ignore))
            (s-join "\n")
            insert))
     (current-buffer)))
