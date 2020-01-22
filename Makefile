@@ -11,8 +11,11 @@
 # conflict with Make's own arguments through Make to the script.
 # Using -- doesn't seem to do it.
 
-ifdef auto-install
-	AUTO_INSTALL = "--auto-install"
+ifdef install-deps
+	INSTALL_DEPS = "--install-deps"
+endif
+ifdef install-linters
+	INSTALL_LINTERS = "--install-linters"
 endif
 
 ifdef sandbox
@@ -46,4 +49,4 @@ endif
 # directory by that name exists, which can confuse Make.
 
 %:
-	@./makem.sh $(DEBUG) $(VERBOSE) $(SANDBOX) $(SANDBOX_DIR) $(AUTO_INSTALL) $(@)
+	@./makem.sh $(DEBUG) $(VERBOSE) $(SANDBOX) $(SANDBOX_DIR) $(INSTALL_DEPS) $(INSTALL_LINTERS) $(@)

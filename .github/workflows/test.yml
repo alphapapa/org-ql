@@ -28,8 +28,8 @@ on:
   pull_request:
   push:
     # Comment out this section to enable testing of all branches.
-    # branches:
-    #   - master
+    branches:
+      - master
 
 jobs:
   build:
@@ -51,13 +51,15 @@ jobs:
       run: |
         SANDBOX_DIR=$(mktemp -d) || exit 1
         echo ::set-env name=SANDBOX_DIR::$SANDBOX_DIR
-        ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR --auto-install --install package-lint
+        ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR --install-deps --install-linters
 
     # The "all" rule is not used, because it treats compilation warnings
     # as failures, so linting and testing are run as separate steps.
 
     - name: Lint
-      continue-on-error: true
+      # NOTE: Uncomment this line to treat lint failures as passing
+      #       so the job doesn't show failure.
+      # continue-on-error: true
       run: ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR lint
 
     - name: Test

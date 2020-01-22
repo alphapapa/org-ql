@@ -48,16 +48,21 @@ function usage {
     cat <<EOF
 $0 [OPTIONS] RULES...
 
+Linter- and test-specific rules will error when their linters or tests
+are not found.  With -vv, rules that run multiple rules will show a
+message for unavailable linters or tests.
+
 Rules:
   all      Run all lints and tests.
   compile  Byte-compile source files.
 
-  lint           Run all lints.
+  lint           Run all linters, ignoring unavailable ones.
   lint-checkdoc  Run checkdoc.
   lint-compile   Byte-compile source files with warnings as errors.
+  lint-indent    Run indent-lint.
   lint-package   Run package-lint.
 
-  test, tests     Run all tests.
+  test, tests     Run all tests, ignoring missing test types.
   test-buttercup  Run Buttercup tests.
   test-ert        Run ERT tests.
 
@@ -83,7 +88,8 @@ Sandbox options:
                          directory (removing directory on exit).
   -S, --sandbox-dir DIR  Use DIR for the sandbox directory (leaving it
                          on exit).  Implies -s.
-  --auto-install         Automatically install package dependencies.
+  --install-deps         Automatically install package dependencies.
+  --install-linters      Automatically install linters.
   -i, --install PACKAGE  Install PACKAGE before running rules.
 
 Source files are automatically discovered from git, or may be
@@ -322,7 +328,7 @@ function sandbox {
     )
 
     # Add package-install arguments for dependencies.
-    if [[ $auto_install ]]
+    if [[ $install_deps ]]
     then
         local deps=($(dependencies))
         debug "Installing dependencies: ${deps[@]}"
@@ -368,6 +374,52 @@ function cleanup {
     done
 }
 
+function echo-unset-p {
+    # Echo 0 if $1 is set, otherwise 1.  IOW, this returns the exit
+    # code of [[ $1 ]] as STDOUT.
+    [[ $1 ]]
+    echo $?
+}
+
+function ensure-package-available {
+    # If package $1 is available, return 0.  Otherwise, return 1, and
+    # if $2 is set, give error otherwise verbose.  Outputting messages
+    # here avoids repetition in callers.
+    local package=$1
+    local direct_p=$2
+
+    if ! run_emacs --load $package &>/dev/null
+    then
+        if [[ $direct_p ]]
+        then
+            error "$package not available."
+        else
+            verbose 2 "$package not available."
+        fi
+        return 1
+    fi
+}
+
+function ensure-tests-available {
+    # If tests of type $1 (like "ERT") are available, return 0.  Otherwise, if
+    # $2 is set, give an error and return 1; otherwise give verbose message.  $1
+    # should have a corresponding predicate command, like ert-tests-p for ERT.
+    local test_name=$1
+    local test_command="${test_name,,}-tests-p"  # Converts name to lowercase.
+    local direct_p=$2
+
+    if ! $test_command
+    then
+        if [[ $direct_p ]]
+        then
+            error "$test_name tests not found."
+        else
+            verbose 2 "$test_name tests not found."
+        fi
+        return 1
+    fi
+}
+
 function echo_color {
     # This allows bold, italic, etc. without needing a function for
     # each variation.
@@ -407,9 +459,9 @@ function log {
     echo "LOG ($(ts)): $@" >&2
 }
 function log_color {
-    local color=$1
+    local color_name=$1
     shift
-    echo_color $color "LOG ($(ts)): $@" >&2
+    echo_color $color_name "LOG ($(ts)): $@" >&2
 }
 function success {
     if [[ $verbose -ge 2 ]]
@@ -421,11 +473,11 @@ function verbose {
     # $1 is the verbosity level, rest are echoed when appropriate.
     if [[ $verbose -ge $1 ]]
     then
-        [[ $1 -eq 1 ]] && local color=blue
-        [[ $1 -ge 2 ]] && local color=cyan
+        [[ $1 -eq 1 ]] && local color_name=blue
+        [[ $1 -ge 2 ]] && local color_name=cyan
 
         shift
-        log_color $color "$@" >&2
+        log_color $color_name "$@" >&2
     fi
 }
 
@@ -436,6 +488,9 @@ function ts {
 # * Rules
 
 # These functions are intended to be called as rules, like a Makefile.
+# Some rules test $1 to determine whether the rule is being called
+# directly or from a meta-rule; if directly, an error is given if the
+# rule can't be run, otherwise it's skipped.
 
 function all {
     verbose 1 "Running all rules..."
@@ -466,7 +521,7 @@ function batch {
 }
 
 function interactive {
-    # Run Emacs interactively.  Most useful with --sandbox and --auto-install.
+    # Run Emacs interactively.  Most useful with --sandbox and --install-deps.
     unset arg_batch
     run_emacs \
         $(args-load-files "${files_project_source[@]}" "${files_project_test[@]}")
@@ -478,6 +533,7 @@ function lint {
 
     lint-checkdoc
     lint-compile
+    lint-indent
     lint-package
 }
 
@@ -504,7 +560,36 @@ function lint-compile {
     unset compile_error_on_warn
 }
 
+function lint-indent {
+    ensure-package-available indent-lint $1 || return $(echo-unset-p $1)
+
+    verbose 1 "Linting indentation..."
+
+    # FIXME: indent-lint outputs a summary line like:
+    #    Diff finished (has differences).  Fri Jan 17 10:30:34 2020
+    # which is unnecessary for our use and clutters output.
+
+    # We load project source files as well, because they may contain
+    # macros with (declare (indent)) rules which must be loaded to set
+    # indentation.  However...
+
+    # FIXME: This doesn't appear to actually work: macros that set
+    # indentation and are correctly indented in the source files are
+    # reported as having wrong indentation.  Not sure if bug in
+    # indent-lint or here.
+
+    run_emacs \
+        --load indent-lint \
+        $(args-load-files "${files_project_source[@]}" "${files_project_test[@]}") \
+        --funcall indent-lint-batch \
+        "${files_project_source[@]}" "${files_project_test[@]}" \
+        && success "Linting indentation finished without errors." \
+            || error "Linting indentation failed."
+}
+
 function lint-package {
+    ensure-package-available package-lint $1 || return $(echo-unset-p $1)
+
     verbose 1 "Linting package..."
 
     run_emacs \
@@ -523,7 +608,7 @@ function tests {
 }
 
 function test-buttercup {
-    buttercup-tests-p || return 0
+    ensure-tests-available Buttercup $1 || return $(echo-unset-p $1)
     compile || die
 
     verbose 1 "Running Buttercup tests..."
@@ -540,7 +625,7 @@ function test-buttercup {
 }
 
 function test-ert {
-    ert-tests-p || return 0
+    ensure-tests-available ERT $1 || return $(echo-unset-p $1)
     compile || die
 
     verbose 1 "Running ERT tests..."
@@ -555,7 +640,7 @@ function test-ert {
 
 # * Defaults
 
-test_files_regexp='^(tests?|t)/'
+test_files_regexp='^((tests?|t)/)|-test.el$|^test-'
 
 emacs_command=("emacs")
 errors=0
@@ -630,7 +715,7 @@ files_project_byte_compile=("${files_project_source[@]}" "${files_project_test[@
 
 args=$(getopt -n "$0" \
               -o dhi:sS:vf:CO \
-              -l auto-install,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,no-org-repo,sandbox,sandbox-dir: \
+              -l install-deps,install-linters,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,no-org-repo,sandbox,sandbox-dir: \
               -- "$@") \
     || { usage; exit 1; }
 eval set -- "$args"
@@ -638,8 +723,12 @@ eval set -- "$args"
 while true
 do
     case "$1" in
-        --auto-install)
-            auto_install=true
+        --install-deps)
+            install_deps=true
+            ;;
+        --install-linters)
+            args_sandbox_package_install+=(--eval "(package-install 'indent-lint)"
+                                           --eval "(package-install 'package-lint)")
             ;;
         -d|--debug)
             debug=true
@@ -726,7 +815,9 @@ do
         batch=true
     elif type -t "$rule" 2>/dev/null | grep function &>/dev/null
     then
-        $rule
+        # Pass called-directly as $1 to indicate that the rule is
+        # being called directly rather than from a meta-rule.
+        $rule called-directly
     elif [[ $rule = test ]]
     then
         # Allow the "tests" rule to be called as "test".  Since "test"
