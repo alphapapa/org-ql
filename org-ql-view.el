@@ -190,8 +190,8 @@ See info node `(elisp)Cyclic Window Ordering'."
                           'help-echo "Tasks with sub-tasks but no NEXT sub-tasks")
               (list :buffers-files #'org-agenda-files
                     :query '(and (todo)
-                                 (children)
-                                 (not (children (todo "NEXT"))))
+                                 (descendants (todo))
+                                 (not (descendants (todo "NEXT"))))
                     :title (propertize "Review: Stuck projects"
                                        'help-echo "Tasks with sub-tasks but no NEXT sub-tasks")
                     :sort '(priority date)

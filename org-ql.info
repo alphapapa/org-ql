@@ -737,9 +737,12 @@ will be pushed to the master branch when ready.
    • Mouseover help-echo text for org-ql-views default view names.
 
    *Changed*
-   • Rename some default org-ql-views views.  (Users who have modified
-     org-ql-views from the default will not see the new names unless
-     they copy them into their config.)
+   • Some default org-ql-view views (users who have modified
+     org-ql-views from the default will not see the new views unless
+     they copy them into their config):
+        • Rename some views.
+        • "Stuck projects" view (now uses descendants instead of
+          children, which is more useful.
 
    *Fixed*
    • Inherit file tags when org-tag-inheritance is enabled.  (Fixes #55
@@ -1055,18 +1058,18 @@ Node: Agenda-like views18085
 Node: Listing / acting-on results19490
 Node: Changelog24092
 Node: 04-pre24629
-Node: 03228121
-Node: 03128502
-Node: 0328697
-Node: 02331670
-Node: 02231896
-Node: 02132162
-Node: 0232359
-Node: 0136392
-Node: Notes36491
-Node: Comparison with Org Agenda searches36653
-Node: org-sidebar37524
-Node: License37803
+Node: 03228251
+Node: 03128632
+Node: 0328827
+Node: 02331800
+Node: 02232026
+Node: 02132292
+Node: 0232489
+Node: 0136522
+Node: Notes36621
+Node: Comparison with Org Agenda searches36783
+Node: org-sidebar37654
+Node: License37933
 
 End Tag Table
 
