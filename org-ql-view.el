@@ -177,6 +177,15 @@ See info node `(elisp)Cyclic Window Ordering'."
                     :super-groups 'org-super-agenda-groups
                     :sort '(priority)))))
         (cons "Review: Recently timestamped" #'org-ql-view-recent-items)
+        (cons (propertize "Review: Dangling tasks"
+                          'help-echo "Tasks whose ancestor is done")
+              (list :buffers-files #'org-agenda-files
+                    :query '(and (todo)
+                                 (ancestors (done)))
+                    :title (propertize "Review: Dangling tasks"
+                                       'help-echo "Tasks whose ancestor is done")
+                    :sort '(date priority todo)
+                    :super-groups '((:auto-parent t))))
         (cons (propertize "Review: Stale tasks"
                           'help-echo "Tasks without a timestamp in the past 2 weeks")
               (list :buffers-files #'org-agenda-files
