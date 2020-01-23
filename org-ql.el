@@ -933,57 +933,6 @@ Arguments STRING, POS, FILL, and LEVEL are according to
 
 ;;;;; Predicates
 
-(org-ql--defpred children (query)
-  "Return non-nil if current entry has children matching QUERY."
-  (org-with-wide-buffer
-   ;; Widening is needed if inside an "ancestors" query
-   (org-narrow-to-subtree)
-   (when (org-goto-first-child)
-     ;; Lisp makes this easy and elegant: all we do is modify the query,
-     ;; nesting it inside an (and), and it doesn't descend into grandchildren.
-
-     ;; TODO: However, this could probably be rewritten like the `ancestors' predicate,
-     ;; which avoids calling `org-ql-select' recursively and its associated overhead.
-     (let* ((level (org-current-level))
-            (query (cl-typecase query
-                     (byte-code-function `(and (level ,level)
-                                               (funcall ,query)))
-                     (t `(and (level ,level)
-                              ,query)))))
-       (catch 'found
-         (org-ql-select (current-buffer)
-           query
-           :narrow t
-           :action (lambda ()
-                     (throw 'found t))))))))
-
-(org-ql--defpred parent (predicate)
-  "Return non-nil if the current entry's parent satisfies PREDICATE."
-  (org-with-wide-buffer
-   (when (org-up-heading-safe)
-     (org-ql--value-at (point) predicate))))
-
-(org-ql--defpred descendants (query)
-  "Return non-nil if current entry has descendants matching QUERY."
-  ;; TODO: This could probably be rewritten like the `ancestors' predicate,
-  ;; which avoids calling `org-ql-select' recursively and its associated overhead.
-  (org-with-wide-buffer
-    (org-narrow-to-subtree)
-    (when (org-goto-first-child)
-      (narrow-to-region (point) (point-max))
-      (catch 'found
-        (org-ql-select (current-buffer)
-          query
-          :narrow t
-          :action (lambda ()
-                    (throw 'found t)))))))
-
-(org-ql--defpred ancestors (predicate)
-  "Return non-nil if any of current entry's ancestors satisfy PREDICATE."
-  (org-with-wide-buffer
-   (cl-loop while (org-up-heading-safe)
-            thereis (org-ql--value-at (point) predicate))))
-
 (org-ql--defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
   (when-let ((category (org-get-category (point))))
@@ -1212,6 +1161,74 @@ language."
                          always (re-search-forward re contents-end t)))
             ;; No regexps to check: return non-nil.
             t))))))
+
+;;;;;; Ancestor/descendant
+
+;; These predicates search ancestor and descendant headings for sub-queries.
+
+;; Note that the implementations of the upward-searching, ancestor/parent predicates differ
+;; from that of the downward-searching, descendants/children predicates in that the former
+;; take a predicate function as their argument and test it on each heading (the predicate
+;; being created by the `--query-pre-process' function, which see), while the latter take an
+;; `org-ql' query form as their argument and execute another `org-ql-select' query inside of
+;; the currently running query.  This "split" implementation seems like the most generally
+;; efficient one, because searching descendants searches potentially many more headings than
+;; searching ancestors, so executing a full query in that case can be faster due to use of
+;; the "preambles" provided by running a full query.  However, see note below.
+
+(org-ql--defpred parent (predicate)
+  "Return non-nil if the current entry's parent satisfies PREDICATE."
+  (org-with-wide-buffer
+   (when (org-up-heading-safe)
+     (org-ql--value-at (point) predicate))))
+
+(org-ql--defpred ancestors (predicate)
+  "Return non-nil if any of current entry's ancestors satisfy PREDICATE."
+  (org-with-wide-buffer
+   (cl-loop while (org-up-heading-safe)
+            thereis (org-ql--value-at (point) predicate))))
+
+;; MAYBE: The `children' and `descendants' predicates could probably be rewritten like
+;; the `ancestors' predicate, which avoids calling `org-ql-select' recursively and its
+;; associated overhead.  However, that would preclude the use of preambles, so depending
+;; on the Org file being searched and the sub-query, performance could be better or
+;; worse.  It should be benchmarked extensively before so changing the implementation.
+
+(org-ql--defpred children (query)
+  "Return non-nil if current entry has children matching QUERY."
+  (org-with-wide-buffer
+   ;; Widening is needed if inside an "ancestors" query
+   (org-narrow-to-subtree)
+   (when (org-goto-first-child)
+     ;; Lisp makes this easy and elegant: all we do is modify the query,
+     ;; nesting it inside an (and), and it doesn't descend into grandchildren.
+     (let* ((level (org-current-level))
+            (query (cl-typecase query
+                     (byte-code-function `(and (level ,level)
+                                               (funcall ,query)))
+                     (t `(and (level ,level)
+                              ,query)))))
+       (catch 'found
+         (org-ql-select (current-buffer)
+           query
+           :narrow t
+           :action (lambda ()
+                     (throw 'found t))))))))
+
+(org-ql--defpred descendants (query)
+  "Return non-nil if current entry has descendants matching QUERY."
+  ;; TODO: This could probably be rewritten like the `ancestors' predicate,
+  ;; which avoids calling `org-ql-select' recursively and its associated overhead.
+  (org-with-wide-buffer
+   (org-narrow-to-subtree)
+   (when (org-goto-first-child)
+     (narrow-to-region (point) (point-max))
+     (catch 'found
+       (org-ql-select (current-buffer)
+         query
+         :narrow t
+         :action (lambda ()
+                   (throw 'found t)))))))
 
 ;;;;;; Timestamps
 
