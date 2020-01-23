@@ -63,7 +63,7 @@ Functions / Macros
 
 Changelog
 
-* 0.4-pre: 04-pre. 
+* 0.4: 04. 
 * 0.3.2: 032. 
 * 0.3.1: 031. 
 * 0.3: 03. 
@@ -703,7 +703,7 @@ releases.
 
 * Menu:
 
-* 0.4-pre: 04-pre. 
+* 0.4: 04. 
 * 0.3.2: 032. 
 * 0.3.1: 031. 
 * 0.3: 03. 
@@ -714,10 +714,10 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
+File: README.info,  Node: 04,  Next: 032,  Up: Changelog
 
-5.1 0.4-pre
-===========
+5.1 0.4
+=======
 
 _Note:_ The next release, 0.5, may include changes which will require
 minor updates to written queries (e.g.  a few predicates may be
@@ -795,7 +795,7 @@ as they will be pushed to the master branch when ready.
      queries.
 
 
-File: README.info,  Node: 032,  Next: 031,  Prev: 04-pre,  Up: Changelog
+File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
 5.2 0.3.2
 =========
@@ -1060,40 +1060,40 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1410
-Node: Screenshots1584
-Node: Installation1702
-Node: Quelpa2340
-Node: Usage2783
-Node: Commands3132
-Node: org-ql-search3605
-Node: helm-org-ql5253
-Node: org-ql-view5665
-Node: org-ql-view-sidebar5863
-Node: org-ql-view-recent-items6219
-Node: org-ql-sparse-tree6703
-Node: Queries7503
-Node: Non-sexp query syntax8411
-Node: General predicates10118
-Node: Ancestor/descendant predicates14925
-Node: Date/time predicates16053
-Node: Functions / Macros18708
-Node: Agenda-like views18941
-Node: Listing / acting-on results20346
-Node: Changelog24948
-Node: 04-pre25485
-Node: 03229416
-Node: 03129797
-Node: 0329992
-Node: 02332965
-Node: 02233191
-Node: 02133457
-Node: 0233654
-Node: 0137687
-Node: Notes37786
-Node: Comparison with Org Agenda searches37948
-Node: org-sidebar38819
-Node: License39098
+Node: Contents1402
+Node: Screenshots1576
+Node: Installation1694
+Node: Quelpa2332
+Node: Usage2775
+Node: Commands3124
+Node: org-ql-search3597
+Node: helm-org-ql5245
+Node: org-ql-view5657
+Node: org-ql-view-sidebar5855
+Node: org-ql-view-recent-items6211
+Node: org-ql-sparse-tree6695
+Node: Queries7495
+Node: Non-sexp query syntax8403
+Node: General predicates10110
+Node: Ancestor/descendant predicates14917
+Node: Date/time predicates16045
+Node: Functions / Macros18700
+Node: Agenda-like views18933
+Node: Listing / acting-on results20338
+Node: Changelog24940
+Node: 0425469
+Node: 03229388
+Node: 03129765
+Node: 0329960
+Node: 02332933
+Node: 02233159
+Node: 02133425
+Node: 0233622
+Node: 0137655
+Node: Notes37754
+Node: Comparison with Org Agenda searches37916
+Node: org-sidebar38787
+Node: License39066
 
 End Tag Table
 
