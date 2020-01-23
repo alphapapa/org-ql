@@ -400,7 +400,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 ** 0.4-pre
 
-/Note:/ The next release, 0.5, may include changes which will require minor updates to written queries (e.g. a few predicates may be renamed).  Users who wish to avoid those changes happening unexpectedly in their configs should avoid upgrading =org-ql= automatically, as they will be pushed to the =master= branch when ready.
+/Note:/ The next release, 0.5, may include changes which will require minor updates to written queries (e.g. a few predicates may be renamed).  Users who wish to avoid those changes happening unexpectedly in their configs should avoid upgrading =org-ql= beyond 0.4 automatically, as they will be pushed to the =master= branch when ready.
 
 *Added*
 +  *Commands*

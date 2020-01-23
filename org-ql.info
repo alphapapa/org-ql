@@ -722,8 +722,8 @@ File: README.info,  Node: 04-pre,  Next: 032,  Up: Changelog
 _Note:_ The next release, 0.5, may include changes which will require
 minor updates to written queries (e.g.  a few predicates may be
 renamed).  Users who wish to avoid those changes happening unexpectedly
-in their configs should avoid upgrading org-ql automatically, as they
-will be pushed to the master branch when ready.
+in their configs should avoid upgrading org-ql beyond 0.4 automatically,
+as they will be pushed to the master branch when ready.
 
    *Added*
    • *Commands*
@@ -1082,18 +1082,18 @@ Node: Agenda-like views18941
 Node: Listing / acting-on results20346
 Node: Changelog24948
 Node: 04-pre25485
-Node: 03229405
-Node: 03129786
-Node: 0329981
-Node: 02332954
-Node: 02233180
-Node: 02133446
-Node: 0233643
-Node: 0137676
-Node: Notes37775
-Node: Comparison with Org Agenda searches37937
-Node: org-sidebar38808
-Node: License39087
+Node: 03229416
+Node: 03129797
+Node: 0329992
+Node: 02332965
+Node: 02233191
+Node: 02133457
+Node: 0233654
+Node: 0137687
+Node: Notes37786
+Node: Comparison with Org Agenda searches37948
+Node: org-sidebar38819
+Node: License39098
 
 End Tag Table
 
