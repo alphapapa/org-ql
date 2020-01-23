@@ -28,8 +28,8 @@ on:
   pull_request:
   push:
     # Comment out this section to enable testing of all branches.
-    branches:
-      - master
+    # branches:
+    #   - master
 
 jobs:
   build:
@@ -57,9 +57,7 @@ jobs:
     # as failures, so linting and testing are run as separate steps.
 
     - name: Lint
-      # NOTE: Uncomment this line to treat lint failures as passing
-      #       so the job doesn't show failure.
-      # continue-on-error: true
+      continue-on-error: true
       run: ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR lint
 
     - name: Test
