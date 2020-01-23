@@ -755,6 +755,9 @@ will be pushed to the master branch when ready.
      Radchenko (https://github.com/yantar92) for reporting.)
    • Option org-ql-view-sidebar-sort-views.
    • Mouseover help-echo text for org-ql-views default view names.
+   • "Dangling tasks" default view in org-ql-views.  (Users who have
+     modified org-ql-views from the default will not see the new view
+     unless they copy it into their config.)
 
    *Changed*
    • Some default org-ql-view views (users who have modified
@@ -1079,18 +1082,18 @@ Node: Agenda-like views18941
 Node: Listing / acting-on results20346
 Node: Changelog24948
 Node: 04-pre25485
-Node: 03229219
-Node: 03129600
-Node: 0329795
-Node: 02332768
-Node: 02232994
-Node: 02133260
-Node: 0233457
-Node: 0137490
-Node: Notes37589
-Node: Comparison with Org Agenda searches37751
-Node: org-sidebar38622
-Node: License38901
+Node: 03229405
+Node: 03129786
+Node: 0329981
+Node: 02332954
+Node: 02233180
+Node: 02133446
+Node: 0233643
+Node: 0137676
+Node: Notes37775
+Node: Comparison with Org Agenda searches37937
+Node: org-sidebar38808
+Node: License39087
 
 End Tag Table
 
