@@ -941,6 +941,9 @@ Arguments STRING, POS, FILL, and LEVEL are according to
    (when (org-goto-first-child)
      ;; Lisp makes this easy and elegant: all we do is modify the query,
      ;; nesting it inside an (and), and it doesn't descend into grandchildren.
+
+     ;; TODO: However, this could probably be rewritten like the `ancestors' predicate,
+     ;; which avoids calling `org-ql-select' recursively and its associated overhead.
      (let* ((level (org-current-level))
             (query (cl-typecase query
                      (byte-code-function `(and (level ,level)
@@ -962,6 +965,8 @@ Arguments STRING, POS, FILL, and LEVEL are according to
 
 (org-ql--defpred descendants (query)
   "Return non-nil if current entry has descendants matching QUERY."
+  ;; TODO: This could probably be rewritten like the `ancestors' predicate,
+  ;; which avoids calling `org-ql-select' recursively and its associated overhead.
   (org-with-wide-buffer
     (org-narrow-to-subtree)
     (when (org-goto-first-child)
