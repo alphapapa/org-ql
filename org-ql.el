@@ -549,9 +549,9 @@ Replaces bare strings with (regexp) selectors, and appropriate
                      (`(descendants ,query) `(descendants ',query))
                      (`(descendants) '(descendants (lambda () t)))
                      (`(parent ,query) `(parent ,(org-ql--query-predicate (rec query))))
-                     (`(parent) `(parent ,(org-ql--query-predicate (rec '(lambda () t)))))
+                     (`(parent) '(parent (lambda () t)))
                      (`(ancestors ,query) `(ancestors ,(org-ql--query-predicate (rec query))))
-                     (`(ancestors) `(ancestors ,(org-ql--query-predicate (rec '(lambda () t)))))
+                     (`(ancestors) '(ancestors (lambda () t)))
                      ;; Timestamp-based predicates.  I think this is the way that makes the most sense:
                      ;; set the limit to N days in the future, adjusted to 23:59:59 (since Org doesn't
                      ;; support timestamps down to the second, anyway, there should be no need to adjust
