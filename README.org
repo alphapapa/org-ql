@@ -404,7 +404,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
      -  Negation of terms in plain queries using ~!~.  For example, ~tags:space !moon~ to exclude entries which contain ~moon~.
      -  Predicates =outline-path= (alias =olp=) and =outline-path-segment= (alias =olps=).
      -  Predicate ~src~, which matches Org Babel source blocks.
-     -  Predicates =parent= and =ancestors=.
+     -  Predicates =parent= and =ancestors=.  (Thanks to [[https://github.com/mm--][Josh Moller-Mara]].)
      -  Alias =h= for =heading= predicate.
      -  Alias =r= for =regexp= predicate.  (Thanks to [[https://github.com/tumashu][Feng Shu]].)
 +  Info manual.
