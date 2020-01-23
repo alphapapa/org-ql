@@ -1169,24 +1169,28 @@ language."
 ;; Note that the implementations of the upward-searching, ancestor/parent predicates differ
 ;; from that of the downward-searching, descendants/children predicates in that the former
 ;; take a predicate function as their argument and test it on each heading (the predicate
-;; being created by the `--query-pre-process' function, which see), while the latter take an
+;; being created by the `--pre-process-query' function, which see), while the latter take an
 ;; `org-ql' query form as their argument and execute another `org-ql-select' query inside of
 ;; the currently running query.  This "split" implementation seems like the most generally
 ;; efficient one, because searching descendants searches potentially many more headings than
 ;; searching ancestors, so executing a full query in that case can be faster due to use of
 ;; the "preambles" provided by running a full query.  However, see note below.
 
-(org-ql--defpred parent (predicate)
-  "Return non-nil if the current entry's parent satisfies PREDICATE."
-  (org-with-wide-buffer
-   (when (org-up-heading-safe)
-     (org-ql--value-at (point) predicate))))
+;; NOTE: The ancestors and parent predicates' docstrings are developer-facing
+;; rather than user-facing, since their arguments are predicates provided
+;; automatically by `--pre-process-query'.
 
 (org-ql--defpred ancestors (predicate)
   "Return non-nil if any of current entry's ancestors satisfy PREDICATE."
   (org-with-wide-buffer
    (cl-loop while (org-up-heading-safe)
             thereis (org-ql--value-at (point) predicate))))
+
+(org-ql--defpred parent (predicate)
+  "Return non-nil if the current entry's parent satisfies PREDICATE."
+  (org-with-wide-buffer
+   (when (org-up-heading-safe)
+     (org-ql--value-at (point) predicate))))
 
 ;; MAYBE: The `children' and `descendants' predicates could probably be rewritten like
 ;; the `ancestors' predicate, which avoids calling `org-ql-select' recursively and its

@@ -143,10 +143,14 @@ Show a sparse tree for ~QUERY~ in ~BUFFER~ and return number of results.  The tr
 ~QUERY~ is an ~org-ql~ query sexp (quoted, since this is a function).  ~BUFFER~ defaults to the current buffer.  When ~KEEP-PREVIOUS~ is non-nil (interactively, with prefix), the outline is not reset to the overview state before finding matches, which allows stacking calls to this command.  Runs ~org-occur-hook~ after making the sparse tree.
 
 ** Queries
+:PROPERTIES:
+:TOC:      :include descendants :depth 1
+:END:
 :CONTENTS:
--  [[#non-sexp-query-syntax][Non-sexp query syntax]]
--  [[#predicates][Predicates]]
--  [[#datetime-predicates][Date/time predicates]]
+- [[#non-sexp-query-syntax][Non-sexp query syntax]]
+- [[#general-predicates][General predicates]]
+- [[#ancestordescendant-predicates][Ancestor/descendant predicates]]
+- [[#datetime-predicates][Date/time predicates]]
 :END:
 
 An =org-ql= query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.
@@ -175,15 +179,11 @@ The command =org-ql-search= also accepts, and the command =helm-org-ql= only acc
 
 Note that the =priority= predicate does not support comparators in the non-sexp syntax, so multiple priorities should be passed instead, as seen in the last example.
 
-*** Predicates
+*** General predicates
 
 Arguments are listed next to predicate names, where applicable.
 
 +  =category (&optional categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
-+  =children (&optional query)= :: Return non-nil if current heading has direct child headings.  If ~QUERY~, test it against child headings.  This selector may be nested, e.g. to match grandchild headings.
-+  =parent (&optional query)= :: Return non-nil if current heading has a direct parent heading.  If ~QUERY~, test it against the parent heading.  This selector may be nested, e.g. to match grandparent headings.
-+  =descendants (&optional query)= :: Return non-nil if current heading has descendant headings.  If ~QUERY~, test it against descendant headings.  This selector may be nested (if you can grok the nesting!).
-+  =ancestors (&optional query)= :: Return non-nil if current heading has ancestor headings (which is true if it has a parent heading).  With ~QUERY~, return non-nil if some ancestor heading matches it. This selector may also be nested.
 +  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
 +  =habit= :: Return non-nil if entry is a habit.
 +  =heading (&rest regexps)= :: Return non-nil if current entry's heading matches all ~REGEXPS~ (regexp strings).
@@ -207,6 +207,13 @@ Arguments are listed next to predicate names, where applicable.
 +  =tags-all (tags)= :: Return non-nil if current heading includes all of ~TAGS~.  Tests both inherited and local tags.
      -  Aliases: ~tags&~.
 +  =todo (&optional keywords)= :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
+
+*** Ancestor/descendant predicates
+
++  =ancestors (&optional query)= :: Return non-nil if current heading has ancestor headings.  If ~QUERY~, return non-nil if an ancestor heading matches it.  This selector may be nested.
++  =children (&optional query)= :: Return non-nil if current heading has direct child headings.  If ~QUERY~, return non-nil if a child heading matches it.  This selector may be nested, e.g. to match grandchild headings.
++  =descendants (&optional query)= :: Return non-nil if current heading has descendant headings.  If ~QUERY~, return non-nil if a descendant heading matches it.  This selector may be nested (if you can grok the nesting!).
++  =parent (&optional query)= :: Return non-nil if current heading has a direct parent heading.  If ~QUERY~, return non-nil if the parent heading matches it.  This selector may be nested, e.g. to match grandparent headings.
 
 *** Date/time predicates
 
