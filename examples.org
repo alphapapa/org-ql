@@ -2,17 +2,20 @@
 
 * Contents
 :PROPERTIES:
-:TOC:      this
+:TOC:      :include siblings :ignore this
 :END:
-  -  [[#agenda-like-view][Agenda-like view]]
-  -  [[#entries-from-the-past-week][Entries from the past week]]
-  -  [[#find-entries-matching-a-certain-custom_id][Find entries matching a certain CUSTOM_ID]]
-  -  [[#listing-bills-coming-due][Listing bills coming due]]
-  -  [[#music-database][Music database]]
-  -  [[#return-org-elements][Return Org elements]]
-  -  [[#set-tags-on-certain-entries][Set tags on certain entries]]
-  -  [[#show-entries-with-recent-timestamps][Show entries with recent timestamps]]
-  -  [[#stuck-projects-block-agenda][Stuck projects block agenda]]
+:CONTENTS:
+- [[#agenda-like-view][Agenda-like view]]
+- [[#entries-from-the-past-week][Entries from the past week]]
+- [[#find-entries-matching-a-certain-custom_id][Find entries matching a certain CUSTOM_ID]]
+- [[#listing-bills-coming-due][Listing bills coming due]]
+- [[#music-database][Music database]]
+- [[#return-org-elements][Return Org elements]]
+- [[#set-tags-on-certain-entries][Set tags on certain entries]]
+- [[#show-entries-with-recent-timestamps][Show entries with recent timestamps]]
+- [[#stuck-projects-block-agenda][Stuck projects block agenda]]
+- [[#subproject-and-subtask-queries][Subproject and subtask queries]]
+:END:
 
 * Agenda-like view
 
@@ -173,9 +176,67 @@ With this =org-ql-block= agenda view, like:
                           ((org-ql-block-header "Stuck Projects")))))))
 #+END_SRC
 
+* Subproject and subtask queries
+
+#+BEGIN_SRC elisp
+  ;; Search for subprojects.
+  (org-ql-search (org-agenda-files)
+    '(and (todo "PROJECT")
+          (ancestors (todo "PROJECT"))))
+
+  ;; Search for all subtasks of projects, grouped by parent heading.
+  (org-ql-search (org-agenda-files)
+    '(and (todo)
+          (ancestors (todo "PROJECT")))
+    :super-groups '((:auto-parent t)))
+
+  ;; Search for direct top-level tasks of projects.
+  (org-ql-search (org-agenda-files)
+    '(and (todo)
+          (parent (todo "PROJECT")))
+    :super-groups '((:auto-parent t)))
+#+END_SRC
+
+Of course, all of those presume using a =PROJECT= keyword to define projects. If one defines a project as any task which has an ancestor task, one could use queries like:
+
+#+BEGIN_SRC elisp
+  ;; Search for all subtasks of top-level projects, grouped by parent heading.
+  (org-ql-search (org-agenda-files)
+    '(and (todo)
+          (ancestors
+           (and (todo)
+                (not (parent)))))
+    :super-groups '((:auto-parent t)))
+
+  ;; Search for all subtasks of all projects, including subprojects, grouped by project.
+  (org-ql-search (org-agenda-files)
+    '(and (todo)
+          (ancestors (todo)))
+    :super-groups '((:auto-parent t)))
+#+END_SRC
+
+Other interesting queries:
+
+#+BEGIN_SRC elisp
+  ;; Subtasks of upcoming deadline items.
+  (org-ql-search (org-agenda-files)
+    '(and (todo)
+          (ancestors
+           (and (not (done))
+                (deadline auto))))
+    :super-groups '((:auto-parent t)))
+
+  ;; TODO items whose ancestor is already DONE, and should therefore be
+  ;; either marked DONE or CANCELLED.
+  (org-ql-search (org-agenda-files)
+    '(and (todo)
+          (ancestors (done)))
+    :super-groups '((:auto-parent t)))
+#+END_SRC
+
 * COMMENT Code                                                     :noexport:
 :PROPERTIES:
-:TOC:      ignore
+:TOC:      :ignore (this descendants)
 :END:
 
 ** File-local variables
