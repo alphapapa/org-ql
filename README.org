@@ -60,10 +60,17 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 #+END_SRC
 
 * Usage
+:PROPERTIES:
+:TOC:      :include descendants :depth 1
+:END:
 :CONTENTS:
--  [[#commands][Commands]]
--  [[#queries][Queries]]
--  [[#functions--macros][Functions / Macros]]
+- [[#commands][Commands]]
+- [[#queries][Queries]]
+  - [[#non-sexp-query-syntax][Non-sexp query syntax]]
+  - [[#general-predicates][General predicates]]
+  - [[#ancestordescendant-predicates][Ancestor/descendant predicates]]
+  - [[#datetime-predicates][Date/time predicates]]
+- [[#functions--macros][Functions / Macros]]
 :END:
 
 # These links work on GitHub's Org renderer but not in Org.
