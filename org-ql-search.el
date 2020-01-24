@@ -105,7 +105,7 @@ Runs `org-occur-hook' after making the sparse tree."
       num-results)))
 
 ;;;###autoload
-(cl-defun org-ql-search (buffers-files query &key narrow super-groups sort title
+(cl-defun org-ql-search (buffers-files query &key narrow super-groups sort title skip-subtrees
                                        (buffer org-ql-view-buffer))
   "Search for QUERY with `org-ql'.
 Interactively, prompt for these variables:
@@ -134,6 +134,8 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
 
 TITLE: An optional string displayed in the header.
 
+SKIP-SUBTREES: Skip subtrees in matching entries.
+
 BUFFER: Optionally, a buffer or name of a buffer in which to
 display the results.  By default, the value of
 `org-ql-view-buffer' is used, and a new buffer is created if
@@ -159,6 +161,7 @@ necessary."
                      (read-string "Query: " (when org-ql-view-query
                                               (format "%S" org-ql-view-query)))
                      :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
+                     :skip-subtrees (yes-or-no-p "Skip subtrees?")
                      :super-groups (when (bound-and-true-p org-super-agenda-auto-selector-keywords)
                                      (let ((keywords (cl-loop for type in org-super-agenda-auto-selector-keywords
                                                               collect (substring (symbol-name type) 6))))
@@ -200,7 +203,8 @@ necessary."
            (results (org-ql-select buffers-files query
                       :action 'element-with-markers
                       :narrow narrow
-                      :sort sort))
+                      :sort sort
+                      :skip-subtrees skip-subtrees))
            (strings (-map #'org-ql-view--format-element results))
            (buffer (or buffer (format "%s %s*" org-ql-view-buffer-name-prefix (or title query))))
            (header (org-ql-view--header-line-format buffers-files query title))
