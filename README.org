@@ -30,7 +30,6 @@ It includes three libraries: The =org-ql= library is flexible and may be used as
 
 [[images/org-ql-search.gif]]
 
-[[images/org-ql-search-snippet.png]]
 
 [[images/helm-org-ql.gif]]
 

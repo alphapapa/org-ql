@@ -15,6 +15,7 @@
 - [[#show-entries-with-recent-timestamps][Show entries with recent timestamps]]
 - [[#stuck-projects-block-agenda][Stuck projects block agenda]]
 - [[#subproject-and-subtask-queries][Subproject and subtask queries]]
+- [[#task-list-for-files-in-subdirectories][Task list for files in subdirectories]]
 :END:
 
 * Agenda-like view
@@ -233,6 +234,10 @@ Other interesting queries:
           (ancestors (done)))
     :super-groups '((:auto-parent t)))
 #+END_SRC
+
+* Task list for files in subdirectories
+
+[[images/org-ql-search-snippet.png]]
 
 * COMMENT Code                                                     :noexport:
 :PROPERTIES:
