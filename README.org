@@ -12,19 +12,15 @@ It includes three libraries: The =org-ql= library is flexible and may be used as
 
 * Contents
 :PROPERTIES:
-:TOC:      this
+:TOC:      :include siblings :depth 0 :ignore this :force depth
 :END:
--  [[#screenshots][Screenshots]]
--  [[#installation][Installation]]
--  [[#usage][Usage]]
-  -  [[#commands][Commands]]
-  -  [[#queries][Queries]]
-    -  [[#non-sexp-query-syntax][Non-sexp query syntax]]
-    -  [[#predicates][Predicates]]
-    -  [[#datetime-predicates][Date/time predicates]]
-  -  [[#functions--macros][Functions / Macros]]
--  [[#changelog][Changelog]]
--  [[#notes][Notes]]
+:CONTENTS:
+- [[#screenshots][Screenshots]]
+- [[#installation][Installation]]
+- [[#usage][Usage]]
+- [[#changelog][Changelog]]
+:END:
+
 
 * Screenshots
 
@@ -558,7 +554,7 @@ First tagged release.
 
 * Notes
 :PROPERTIES:
-:TOC:      ignore-children
+:TOC:      :ignore this
 :END:
 
 ** Comparison with Org Agenda searches
@@ -577,14 +573,14 @@ This package is used by [[https://github.com/alphapapa/org-sidebar][org-sidebar]
 
 * License
 :PROPERTIES:
-:TOC:      ignore
+:TOC:      :ignore this
 :END:
 
 GPLv3
 
 * COMMENT Code                                                     :noexport:
 :PROPERTIES:
-:TOC:      ignore
+:TOC:      :ignore this
 :END:
 
 # The COMMENT keyword prevents GitHub's renderer from showing this entry.
@@ -646,7 +642,7 @@ If ~org-ql~ is loaded byte-compiled, the argument lists are not named properly (
 
 * COMMENT Export setup                                             :noexport:
 :PROPERTIES:
-:TOC:      ignore
+:TOC:      :ignore this
 :END:
 
 # Copied from org-super-agenda's readme, in which much was borrowed from Org's =org-manual.org=.
