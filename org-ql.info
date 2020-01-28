@@ -63,6 +63,7 @@ Functions / Macros
 
 Changelog
 
+* 0.5-pre: 05-pre. 
 * 0.4: 04. 
 * 0.3.2: 032. 
 * 0.3.1: 031. 
@@ -93,9 +94,7 @@ File: README.info,  Node: Contents,  Next: Screenshots,  Prev: Top,  Up: Top
 1 Contents
 **********
 
-   • • • 
-        • • 
-             • • • • • • 
+   • • • • 
 
 File: README.info,  Node: Screenshots,  Next: Installation,  Prev: Contents,  Up: Top
 
@@ -216,8 +215,9 @@ Interactively, with prefix, leave narrowed.
 ‘priority’.
 
    *Bindings:* Keys bound in results buffer.
-   • g: Refresh results.  With prefix, prompt to adjust search
+   • r: Refresh results.  With prefix, prompt to adjust search
      parameters.
+   • v: Show transient view dispatcher (like Magit’s popups).
    • C-x C-s: Save query to variable ‘org-ql-views’ (accessible with
      command ‘org-ql-view’).
 
@@ -250,6 +250,13 @@ File: README.info,  Node: org-ql-view,  Next: org-ql-view-sidebar,  Prev: helm-o
 -----------------
 
 Choose and display a view stored in ‘org-ql-views’.
+
+   *Bindings:* Keys bound in view buffer.
+   • r: Refresh results.  With prefix, prompt to adjust search
+     parameters.
+   • v: Show transient view dispatcher (like Magit’s popups).
+   • C-x C-s: Save query to variable ‘org-ql-views’ (accessible with
+     command ‘org-ql-view’).
 
 
 File: README.info,  Node: org-ql-view-sidebar,  Next: org-ql-view-recent-items,  Prev: org-ql-view,  Up: Commands
@@ -703,6 +710,7 @@ releases.
 
 * Menu:
 
+* 0.5-pre: 05-pre. 
 * 0.4: 04. 
 * 0.3.2: 032. 
 * 0.3.1: 031. 
@@ -714,9 +722,22 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 04,  Next: 032,  Up: Changelog
+File: README.info,  Node: 05-pre,  Next: 04,  Up: Changelog
 
-5.1 0.4
+5.1 0.5-pre
+===========
+
+*Added*
+   • View dispatcher using transient.el (like Magit), bound to v in
+     search/view buffers.
+
+   *Changed*
+   • Binding to refresh search/view buffers changed to r.
+
+
+File: README.info,  Node: 04,  Next: 032,  Prev: 05-pre,  Up: Changelog
+
+5.2 0.4
 =======
 
 _Note:_ The next release, 0.5, may include changes which will require
@@ -797,7 +818,7 @@ as they will be pushed to the master branch when ready.
 
 File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
-5.2 0.3.2
+5.3 0.3.2
 =========
 
 *Fixed*
@@ -810,7 +831,7 @@ File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
-5.3 0.3.1
+5.4 0.3.1
 =========
 
 *Fixed*
@@ -820,7 +841,7 @@ File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
-5.4 0.3
+5.5 0.3
 =======
 
 *Added*
@@ -885,7 +906,7 @@ File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
 File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
-5.5 0.2.3
+5.6 0.2.3
 =========
 
 *Fixed*
@@ -895,7 +916,7 @@ File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
-5.6 0.2.2
+5.7 0.2.2
 =========
 
 *Fixed*
@@ -906,7 +927,7 @@ File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
-5.7 0.2.1
+5.8 0.2.1
 =========
 
 *Fixed*
@@ -916,7 +937,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-5.8 0.2
+5.9 0.2
 =======
 
 *Added*
@@ -999,8 +1020,8 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-5.9 0.1
-=======
+5.10 0.1
+========
 
 First tagged release.
 
@@ -1057,40 +1078,41 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1402
-Node: Screenshots1576
-Node: Installation1694
-Node: Quelpa2332
-Node: Usage2775
-Node: Commands3124
-Node: org-ql-search3597
-Node: helm-org-ql5245
-Node: org-ql-view5657
-Node: org-ql-view-sidebar5855
-Node: org-ql-view-recent-items6211
-Node: org-ql-sparse-tree6695
-Node: Queries7495
-Node: Non-sexp query syntax8403
-Node: General predicates10110
-Node: Ancestor/descendant predicates14917
-Node: Date/time predicates16045
-Node: Functions / Macros18700
-Node: Agenda-like views18933
-Node: Listing / acting-on results20338
-Node: Changelog24940
-Node: 0425469
-Node: 03229388
-Node: 03129765
-Node: 0329960
-Node: 02332933
-Node: 02233159
-Node: 02133425
-Node: 0233622
-Node: 0137655
-Node: Notes37754
-Node: Comparison with Org Agenda searches37916
-Node: org-sidebar38788
-Node: License39067
+Node: Contents1422
+Node: Screenshots1545
+Node: Installation1663
+Node: Quelpa2301
+Node: Usage2744
+Node: Commands3093
+Node: org-ql-search3566
+Node: helm-org-ql5280
+Node: org-ql-view5692
+Node: org-ql-view-sidebar6189
+Node: org-ql-view-recent-items6545
+Node: org-ql-sparse-tree7029
+Node: Queries7829
+Node: Non-sexp query syntax8737
+Node: General predicates10444
+Node: Ancestor/descendant predicates15251
+Node: Date/time predicates16379
+Node: Functions / Macros19034
+Node: Agenda-like views19267
+Node: Listing / acting-on results20672
+Node: Changelog25274
+Node: 05-pre25823
+Node: 0426090
+Node: 03230024
+Node: 03130401
+Node: 0330596
+Node: 02333569
+Node: 02233795
+Node: 02134061
+Node: 0234258
+Node: 0138291
+Node: Notes38392
+Node: Comparison with Org Agenda searches38554
+Node: org-sidebar39426
+Node: License39705
 
 End Tag Table
 

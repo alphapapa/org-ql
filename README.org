@@ -26,6 +26,7 @@ It includes three libraries: The =org-ql= library is flexible and may be used as
 
 [[images/org-ql-search.gif]]
 
+[[images/org-ql-view-dispatch.gif]]
 
 [[images/helm-org-ql.gif]]
 
@@ -111,7 +112,8 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 ~SORT~: One or a list of ~org-ql~ sorting functions, like ~date~ or ~priority~.
 
 *Bindings:* Keys bound in results buffer.
-+  =g=: Refresh results.  With prefix, prompt to adjust search parameters.
++  =r=: Refresh results.  With prefix, prompt to adjust search parameters.
++  =v=: Show =transient= view dispatcher (like Magit's popups).
 +  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 
 *Note:* The view buffer is currently put in ~org-agenda-mode~, which means that /some/ Org Agenda commands work, such as jumping to entries and changing item priorities (without necessarily updating the view).  This feature is experimental and not guaranteed to work correctly with all commands.  (It works to the extent it does because the appropriate text properties are placed on each item, imitating an Agenda buffer.)
@@ -127,6 +129,11 @@ This command displays matches with Helm.  *Note:* Helm is not a package dependen
 *** org-ql-view
 
 Choose and display a view stored in ~org-ql-views~.
+
+*Bindings:* Keys bound in view buffer.
++  =r=: Refresh results.  With prefix, prompt to adjust search parameters.
++  =v=: Show =transient= view dispatcher (like Magit's popups).
++  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 
 *** org-ql-view-sidebar
 
@@ -395,7 +402,11 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 ** 0.5-pre
 
-Nothing new yet.
+*Added*
++  View dispatcher using =transient.el= (like Magit), bound to =v= in search/view buffers.
+
+*Changed*
++  Binding to refresh search/view buffers changed to =r=.
 
 ** 0.4
 

@@ -2,6 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
+;; Package-Requires: ((transient))
 
 ;;; Commentary:
 
@@ -69,7 +70,8 @@ down a chain of function calls would be awkward.")
 
 (defvar org-ql-view-map
   (let ((map (copy-keymap org-agenda-mode-map)))
-    (define-key map "g" #'org-ql-view-refresh)
+    (define-key map "r" #'org-ql-view-refresh)
+    (define-key map "v" #'org-ql-view-dispatch)
     (define-key map (kbd "C-x C-s") #'org-ql-view-save)
     map)
   "Keymap for `org-ql-view', `org-ql-search', and `org-ql-views' views.
@@ -334,14 +336,26 @@ update search arguments."
 (defun org-ql-view-save ()
   "Save current `org-ql-search' buffer to `org-ql-views'."
   (interactive)
-  (let* ((name (read-string "Save view as: "))
+  (let* ((name (read-string "Save view as: " org-ql-view-title))
          (plist (list :buffers-files org-ql-view-buffers-files
                       :query org-ql-view-query
                       :sort org-ql-view-sort
                       :narrow org-ql-view-narrow
                       :super-groups org-ql-view-super-groups
                       :title name)))
-    (setf (map-elt org-ql-views name nil #'equal) plist)
+    (when (or (not (map-elt org-ql-views name nil #'equal))
+              (yes-or-no-p (format "Overwrite view \"%s\"?" name)))
+      (setf (map-elt org-ql-views name nil #'equal) plist)
+      (customize-set-variable 'org-ql-views org-ql-views)
+      (customize-mark-to-save 'org-ql-views))))
+
+(defun org-ql-view-delete ()
+  "Delete current view (with confirmation)."
+  (interactive)
+  (when (yes-or-no-p (format "Delete view \"%s\"?" org-ql-view-title))
+    (setf org-ql-views
+          (--remove (equal (car it) org-ql-view-title)
+                    org-ql-views))
     (customize-set-variable 'org-ql-views org-ql-views)
     (customize-mark-to-save 'org-ql-views)))
 
@@ -419,7 +433,7 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
   "Return `header-line-format' for BUFFERS-FILES and QUERY.
 If TITLE, prepend it to the header."
   (let* ((title (if title
-                    (concat (propertize "View:" 'face 'org-agenda-structure)
+                    (concat (propertize "View:" 'face 'transient-argument)
                             title " ")
                   ""))
          (query-formatted (org-ql-view--format-query query))
@@ -436,9 +450,9 @@ If TITLE, prepend it to the header."
                                                    (s-truncate available-width))
                                               'help-echo buffers-files-formatted)))
     (concat title
-            (propertize "Query:" 'face 'org-agenda-structure)
+            (propertize "Query:" 'face 'transient-argument)
             query-propertized "  "
-            (propertize "In:" 'face 'org-agenda-structure)
+            (propertize "In:" 'face 'transient-argument)
             buffers-files-formatted)))
 
 (defun org-ql-view--format-query (query)
@@ -483,6 +497,128 @@ dates in the past, and negative for dates in the future."
         ((< difference 0)
          (format "in %sd" (* -1 difference)))
         (t "today")))
+
+;;;; Transient
+
+;; This section uses `transient' to allow the user to easily modify
+;; and refresh views.
+
+;; NOTE: I don't really know what I'm doing here.  Even though the
+;; Transient manual is written very well, not everything is covered in
+;; it, so I'm having to try to imitate examples from `magit-transient'.
+
+(require 'transient)
+
+(defclass org-ql-view--variable (transient-variable)
+  ;; FIXME: We don't need :scope, but maybe a slot has to be defined.
+  ((scope       :initarg :scope)))
+
+(cl-defmethod transient-infix-set ((obj org-ql-view--variable) value)
+  "Set Org QL View variable defined by OBJ to VALUE."
+  (let ((variable (oref obj variable)))
+    (oset obj value value)
+    (set (make-local-variable (oref obj variable)) value)
+    (unless (or value transient--prefix)
+      (message "Unset %s" variable))))
+
+(define-transient-command org-ql-view-dispatch ()
+  "Show Org QL View dispatcher."
+  [["Edit"
+    ("t" org-ql-view--transient-title)
+    ("q" org-ql-view--transient-query)
+    ("i" org-ql-view--transient-in)
+    ("s" org-ql-view--transient-sort)
+    ("g" org-ql-view--transient-super-groups)]]
+  [["View"
+    ("r" "Refresh" org-ql-view-refresh)
+    ("v" "Select" org-ql-view)]
+   [""
+    ("C-s" "Save" org-ql-view-save)
+    ("C-k" "Delete" org-ql-view-delete)]])
+
+(defun org-ql-view--format-transient-key-value (key value)
+  "Return KEY and VALUE formatted for display in Transient."
+  ;; `window-width' minus 15 is about right.  I think there's no way
+  ;; to determine it automatically, because we can't know which column
+  ;; Transient is starting at.
+  (let ((max-width (- (window-width) 15)))
+    (format "%s: %s" (propertize key 'face 'transient-argument)
+            (s-truncate max-width (format "%s" value)))))
+
+(defun org-ql-view--format-transient-lisp-argument (key value)
+  "Return KEY and VALUE (a Lisp object) formatted for display in Transient."
+  ;; `window-width' minus 15 is about right.  I think there's no way
+  ;; to determine it automatically, because we can't know which column
+  ;; Transient is starting at.
+  (s-truncate (- (window-width) 15)
+              (concat (propertize key 'face 'transient-argument) ": "
+                      (->> value
+                           org-ql-view--format-query
+                           (org-ql-view--font-lock-string 'emacs-lisp-mode)))))
+
+(define-infix-command org-ql-view--transient-title ()
+  ;; TODO: Add an asterisk or something when the view has been modified but not saved.
+  :description (lambda () (org-ql-view--format-transient-key-value "Title" org-ql-view-title))
+  :class 'org-ql-view--variable
+  :argument ""
+  :variable 'org-ql-view-title
+  :prompt "Title: "
+  :reader (lambda (prompt _initial-input history)
+            ;; FIXME: Figure out how to integrate initial-input.
+            (read-string prompt (when org-ql-view-title
+                                  (format "%s" org-ql-view-title))
+                         history)))
+
+(define-infix-command org-ql-view--transient-query ()
+  :description (lambda () (org-ql-view--format-transient-lisp-argument "Query" org-ql-view-query))
+  :class 'org-ql-view--variable
+  :argument ""
+  :variable 'org-ql-view-query
+  :prompt "Query: "
+  :reader (lambda (prompt _initial-input history)
+            ;; FIXME: Figure out how to integrate initial-input.
+            (let ((query (read-string prompt (when org-ql-view-query
+                                               (format "%S" org-ql-view-query))
+                                      history)))
+              (if (or (string-prefix-p "(" query)
+                      (string-prefix-p "\"" query))
+                  ;; Read sexp query.
+                  (read query)
+                ;; Parse non-sexp query into sexp query.
+                (org-ql--plain-query query)))))
+
+(define-infix-command org-ql-view--transient-in ()
+  :description (lambda () (org-ql-view--format-transient-lisp-argument "In buffers/files" org-ql-view-buffers-files))
+  :class 'org-ql-view--variable
+  :argument ""
+  :variable 'org-ql-view-buffers-files
+  :prompt "Buffers/files: "
+  :reader (lambda (_prompt _initial-input _history)
+            ;; FIXME: Figure out how to integrate initial-input and history.
+            (org-ql-view--complete-buffers-files)))
+
+(define-infix-command org-ql-view--transient-super-groups ()
+  :description (lambda ()
+                 (org-ql-view--format-transient-lisp-argument "Group by" org-ql-view-super-groups))
+  :class 'org-ql-view--variable
+  :argument ""
+  :variable 'org-ql-view-super-groups
+  :prompt "Group by: "
+  :reader (lambda (_prompt _initial-input _history)
+            ;; FIXME: Figure out how to integrate initial-input and history.
+            (org-ql-view--complete-super-groups)))
+
+(define-infix-command org-ql-view--transient-sort ()
+  :description
+  (lambda ()
+    (org-ql-view--format-transient-lisp-argument "Sort by" (or org-ql-view-sort 'buffer-order)))
+  :class 'org-ql-view--variable
+  :argument ""
+  :variable 'org-ql-view-sort
+  :prompt "Sort: "
+  :reader (lambda (_prompt _initial-input _history)
+            ;; FIXME: Figure out how to integrate initial-input and history.
+            (org-ql-view--complete-sort)))
 
 ;;;; Faces/properties
 
@@ -670,6 +806,65 @@ property."
   (when-let* ((org-done-keywords org-done-keywords-for-agenda)
               (face (org-get-todo-face keyword)))
     (org-add-props keyword nil 'face face)))
+
+;;;;; Completion
+
+(defun org-ql-view--complete-buffers-files ()
+  "Return value for `org-ql-view-buffers-files' using completion."
+  (if (and org-ql-view-buffers-files
+           (bufferp org-ql-view-buffers-files))
+      ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
+      ;; TODO: Find a way to fix this.
+      org-ql-view-buffers-files
+    (pcase-exhaustive (completing-read "Buffers/Files: "
+                                       (list 'buffer 'agenda 'directory 'all)
+                                       nil nil (when org-ql-view-buffers-files
+                                                 (let ((print-length nil))
+                                                   (prin1-to-string (cons 'list org-ql-view-buffers-files)))))
+      ((or "" "buffer") (current-buffer))
+      ("agenda" (org-agenda-files))
+      ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                       (buffer-list)))
+      ("directory" (org-ql-search-directories-files))
+      ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
+      (else (s-split (rx (1+ space)) else)))))
+
+(defun org-ql-view--complete-super-groups ()
+  "Return value for `org-ql-view-super-groups' using completion."
+  (when (bound-and-true-p org-super-agenda-auto-selector-keywords)
+    (let ((keywords (cl-loop for type in org-super-agenda-auto-selector-keywords
+                             collect (substring (symbol-name type) 6))))
+      (pcase (completing-read "Group by: "
+                              (append (list "Don't group"
+                                            "Global super-groups")
+                                      keywords)
+                              nil nil (when org-ql-view-super-groups
+                                        (format "%S" org-ql-view-super-groups)))
+        ("Global super-groups" org-super-agenda-groups)
+        ((or "" "Don't group") nil)
+        ((and keyword (guard (member keyword keywords)))
+         (list (list (intern (concat ":auto-" keyword)))))
+        (else (read else))))))
+
+(defun org-ql-view--complete-sort ()
+  "Return value for `org-ql-view-sort' using completion."
+  (let ((input (->> (completing-read-multiple "Sort by: "
+                                              (list "buffer-order"
+                                                    "date"
+                                                    "deadline"
+                                                    "priority"
+                                                    "scheduled"
+                                                    "todo")
+                                              nil nil (when org-ql-view-sort
+                                                        (prin1-to-string org-ql-view-sort)))
+                    (--remove (equal "buffer-order" it)))))
+    (pcase input
+      ('nil nil)
+      ((and (pred listp) sort)
+       ;; Multiple sorters.
+       (mapcar #'intern sort))
+      (sort ;; One sorter.
+       (intern sort)))))
 
 ;;;; Footer
 
