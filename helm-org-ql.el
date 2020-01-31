@@ -55,7 +55,7 @@
   "Keymap for `helm-org-ql' sessions.
 Based on `helm-map'.")
 
-(defvar helm-source-org-ql-views
+(defvar helm-org-ql-views-source
   (helm-make-source "Org QL Views" 'helm-source-sync
     :candidates (lambda ()
                   (->> org-ql-views
@@ -170,7 +170,7 @@ Is transformed into this query:
 (defun helm-org-ql-views ()
   "Show an `org-ql' view selected with Helm."
   (interactive)
-  (helm :sources helm-source-org-ql-views))
+  (helm :sources helm-org-ql-views-source))
 
 ;;;; Functions
 
