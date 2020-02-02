@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Package-Requires: ((transient))
+;; Package-Requires: ((transient) (map "2.0"))
 
 ;;; Commentary:
 
@@ -343,7 +343,7 @@ update search arguments."
                       :narrow org-ql-view-narrow
                       :super-groups org-ql-view-super-groups
                       :title name)))
-    (when (or (not (map-elt org-ql-views name nil #'equal))
+    (when (or (not (map-elt org-ql-views name nil))
               (yes-or-no-p (format "Overwrite view \"%s\"?" name)))
       (setf (map-elt org-ql-views name nil #'equal) plist)
       (customize-set-variable 'org-ql-views org-ql-views)
