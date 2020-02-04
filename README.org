@@ -566,13 +566,7 @@ Of course, queries like these can already be written with Org Agenda searches, b
   +lisp +{^\*+\s-+TO-READ\s-}
 #+END_EXAMPLE
 
-But with ~org-ql-agenda~, you would write:
-
-#+BEGIN_SRC elisp
-  (org-ql-agenda
-    (and (regexp "lisp")
-         (todo "TO-READ")))
-#+END_SRC
+But with =org-ql-search=, you would write a query like =lisp todo:TO-READ=, or in Lisp syntax, ~(and "lisp" (todo "TO-READ"))~.
 
 ** org-sidebar
 

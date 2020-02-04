@@ -1032,11 +1032,8 @@ regular expression syntax, like this:
 
 +lisp +{^\*+\s-+TO-READ\s-}
 
-   But with ‘org-ql-agenda’, you would write:
-
-     (org-ql-agenda
-       (and (regexp "lisp")
-            (todo "TO-READ")))
+   But with org-ql-search, you would write a query like
+lisp todo:TO-READ, or in Lisp syntax, ‘(and "lisp" (todo "TO-READ"))’.
 
 
 File: README.info,  Node: org-sidebar,  Prev: Comparison with Org Agenda searches,  Up: Notes
@@ -1092,8 +1089,8 @@ Node: 0233622
 Node: 0137655
 Node: Notes37754
 Node: Comparison with Org Agenda searches37916
-Node: org-sidebar38787
-Node: License39066
+Node: org-sidebar38788
+Node: License39067
 
 End Tag Table
 
