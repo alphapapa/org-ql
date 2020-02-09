@@ -598,6 +598,10 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
               :action #'helm-org-goto-marker))))
 #+END_SRC
 
+** MAYBE Fancier plain query syntax for tags and properties
+
+e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse_trees_in_emacs_and_organice.html][Organice has now]].
+
 ** MAYBE Overlay-based caching inspired by org-num-mode
 
 [2019-12-30 Mon 22:42]  Newer versions of Org have =org-num-mode=, which uses =font-lock= and =after-change-functions= to update overlays in the buffer with outline numbering.  Maybe a similar approach could be used to cache arbitrary values for headings in a buffer without having to discard the whole buffer's cache when the buffer changes.
