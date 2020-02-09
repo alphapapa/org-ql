@@ -19,11 +19,11 @@ ifdef install-linters
 endif
 
 ifdef sandbox
-	SANDBOX = "--sandbox"
-endif
-
-ifdef sandbox-dir
-	SANDBOX_DIR = "--sandbox-dir" "$(sandbox-dir)"
+	ifeq ($(sandbox), t)
+		SANDBOX = --sandbox
+	else
+		SANDBOX = --sandbox $(sandbox)
+	endif
 endif
 
 ifdef debug
@@ -49,4 +49,8 @@ endif
 # directory by that name exists, which can confuse Make.
 
 %:
-	@./makem.sh $(DEBUG) $(VERBOSE) $(SANDBOX) $(SANDBOX_DIR) $(INSTALL_DEPS) $(INSTALL_LINTERS) $(@)
+	@./makem.sh $(DEBUG) $(VERBOSE) $(SANDBOX) $(INSTALL_DEPS) $(INSTALL_LINTERS) $(@)
+
+.DEFAULT: init
+init:
+	@./makem.sh $(DEBUG) $(VERBOSE) $(SANDBOX) $(INSTALL_DEPS) $(INSTALL_LINTERS)

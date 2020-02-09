@@ -14,4 +14,4 @@ read local_ref local_sha remote_ref remote_sha
 # cause remote code to be downloaded and executed (i.e. what would
 # happen by installing packages).  It can be done manually when needed.
 
-make test
+make sandbox=.sandbox test
