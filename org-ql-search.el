@@ -139,51 +139,12 @@ display the results.  By default, the value of
 `org-ql-view-buffer' is used, and a new buffer is created if
 necessary."
   (declare (indent defun))
-  (interactive (list (if (and org-ql-view-buffers-files
-                              (bufferp org-ql-view-buffers-files))
-                         ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
-                         ;; TODO: Find a way to fix this.
-                         org-ql-view-buffers-files
-                       (pcase-exhaustive (completing-read "Buffers/Files: "
-                                                          (list 'buffer 'agenda 'directory 'all)
-                                                          nil nil (when org-ql-view-buffers-files
-                                                                    (let ((print-length nil))
-                                                                      (prin1-to-string (cons 'list org-ql-view-buffers-files)))))
-                         ((or "" "buffer") (current-buffer))
-                         ("agenda" (org-agenda-files))
-                         ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                                          (buffer-list)))
-                         ("directory" (org-ql-search-directories-files))
-                         ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
-                         (else (s-split (rx (1+ space)) else))))
+  (interactive (list (org-ql-view--complete-buffers-files)
                      (read-string "Query: " (when org-ql-view-query
                                               (format "%S" org-ql-view-query)))
                      :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
-                     :super-groups (when (bound-and-true-p org-super-agenda-auto-selector-keywords)
-                                     (let ((keywords (cl-loop for type in org-super-agenda-auto-selector-keywords
-                                                              collect (substring (symbol-name type) 6))))
-                                       (pcase (completing-read "Group by: "
-                                                               (append (list "Don't group"
-                                                                             "Global super-groups")
-                                                                       keywords)
-                                                               nil nil (when org-ql-view-super-groups
-                                                                         (format "%S" org-ql-view-super-groups)))
-                                         ("Global super-groups" org-super-agenda-groups)
-                                         ((or "" "Don't group") nil)
-                                         ((and keyword (guard (member keyword keywords)))
-                                          (list (list (intern (concat ":auto-" keyword)))))
-                                         (else (read else)))))
-                     :sort (pcase (completing-read "Sort by: "
-                                                   (list "Don't sort"
-                                                         "date"
-                                                         "deadline"
-                                                         "priority"
-                                                         "scheduled"
-                                                         "todo")
-                                                   nil t (when org-ql-view-sort
-                                                           (prin1-to-string org-ql-view-sort)))
-                             ((or "" "Don't sort") nil)
-                             (sort (intern sort)))))
+                     :super-groups (org-ql-view--complete-super-groups)
+                     :sort (org-ql-view--complete-sort)))
   ;; NOTE: Using `with-temp-buffer' is a hack to work around the fact that `make-local-variable'
   ;; does not work reliably from inside a `let' form when the target buffer is current on entry
   ;; to or exit from the `let', even though `make-local-variable' is actually done in
