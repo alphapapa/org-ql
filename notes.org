@@ -602,6 +602,17 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
 
 e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse_trees_in_emacs_and_organice.html][Organice has now]].
 
+[2020-02-13 Thu 00:42]  Something is needed to help search property values by partial matches.  For example:
+
+#+BEGIN_SRC org
+  ,* [[https://github.com/fniessen/org-html-themes][org-html-themes: Framework including two themes, Bigblow and ReadTheOrg]]
+    :PROPERTIES:
+    :author:   Fabrice Niessen
+    :END:
+#+END_SRC
+
+Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
+
 ** MAYBE Overlay-based caching inspired by org-num-mode
 
 [2019-12-30 Mon 22:42]  Newer versions of Org have =org-num-mode=, which uses =font-lock= and =after-change-functions= to update overlays in the buffer with outline numbering.  Maybe a similar approach could be used to cache arbitrary values for headings in a buffer without having to discard the whole buffer's cache when the buffer changes.
