@@ -90,14 +90,14 @@ Options:
   -C, --no-compile  Don't compile files automatically.
 
 Sandbox options:
-  -s, --sandbox [DIR]    Run Emacs with an empty config in a sandbox DIR.
-                         If DIR does not exist, make it.  If DIR is not
-                         specified, use a temporary sandbox directory and
-                         delete it afterward, implying --install-deps and
-                         --install-linters.
-  --install-deps         Automatically install package dependencies.
-  --install-linters      Automatically install linters.
-  -i, --install PACKAGE  Install PACKAGE before running rules.
+  -s[DIR], --sandbox[=DIR]  Run Emacs with an empty config in a sandbox DIR.
+                            If DIR does not exist, make it.  If DIR is not
+                            specified, use a temporary sandbox directory and
+                            delete it afterward, implying --install-deps and
+                            --install-linters.
+  --install-deps            Automatically install package dependencies.
+  --install-linters         Automatically install linters.
+  -i, --install PACKAGE     Install PACKAGE before running rules.
 
   An Emacs version-specific subdirectory is automatically made inside
   the sandbox, allowing testing with multiple Emacs versions.  When
@@ -400,7 +400,7 @@ function dependencies {
     # Echo list of package dependencies.
 
     # Search package headers.
-    egrep '^;; Package-Requires: ' $(files-project-feature) $(files-project-test) \
+    egrep -i '^;; Package-Requires: ' $(files-project-feature) $(files-project-test) \
         | egrep -o '\([^([:space:]][^)]*\)' \
         | egrep -o '^[^[:space:])]+' \
         | sed -r 's/\(//g' \
@@ -423,9 +423,11 @@ function dependencies {
 # ** Sandbox
 
 function sandbox {
-    # Initialize sandbox.
+    verbose 2 "Initializing sandbox..."
 
     # *** Sandbox arguments
+
+    # MAYBE: Optionally use branch-specific sandbox?
 
     # Check or make user-emacs-directory.
     if [[ $sandbox_dir ]]
@@ -451,15 +453,12 @@ function sandbox {
 
     # Make argument to load init file if it exists.
     init_file="$sandbox_dir/init.el"
-    [[ -r $init_file ]] \
-        && local args_load_init_file=(--load "$init_file")
 
     # Set sandbox args.  This is a global variable used by the run_emacs function.
     args_sandbox=(
         --title "makem.sh: $(basename $(pwd)) (sandbox: $sandbox_dir)"
         --eval "(setq user-emacs-directory (file-truename \"$sandbox_dir\"))"
         --eval "(setq user-init-file (file-truename \"$init_file\"))"
-        "${args_load_init_file[@]}"
     )
 
     # Add package-install arguments for dependencies.
@@ -488,15 +487,16 @@ function sandbox {
     if [[ ${args_sandbox_package_install[@]} ]]
     then
         # Initialize the sandbox (installs packages once rather than for every rule).
-        debug "Initializing sandbox..."
+        verbose 1 "Installing packages into sandbox..."
 
         run_emacs \
             --eval "(package-refresh-contents)" \
             "${args_sandbox_package_install[@]}" \
-            || die "Unable to initialize sandbox."
+            && success "Packages installed." \
+                || die "Unable to initialize sandbox."
     fi
 
-    debug "Sandbox initialized."
+    verbose 2 "Sandbox initialized."
 }
 
 # ** Utility
@@ -684,6 +684,7 @@ function interactive {
     unset arg_batch
     run_emacs \
         $(args-load-files "${files_project_feature[@]}" "${files_project_test[@]}") \
+        --eval "(load user-init-file)" \
         "${args_batch_interactive[@]}"
     arg_batch="--batch"
 }
@@ -827,7 +828,7 @@ function test-ert {
 
 # * Defaults
 
-test_files_regexp='^((tests?|t)/)|-test.el$|^test-'
+test_files_regexp='^((tests?|t)/)|-tests?.el$|^test-'
 
 emacs_command=("emacs")
 errors=0
@@ -892,8 +893,8 @@ elisp_org_package_archive="(add-to-list 'package-archives '(\"org\" . \"https://
 # * Args
 
 args=$(getopt -n "$0" \
-              -o dhe:E:i:s:vf:CO \
-              -l exclude:,emacs:,install-deps,install-linters,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,no-org-repo,sandbox: \
+              -o dhe:E:i:s::vf:CO \
+              -l exclude:,emacs:,install-deps,install-linters,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,no-org-repo,sandbox:: \
               -- "$@") \
     || { usage; exit 1; }
 eval set -- "$args"
@@ -930,32 +931,15 @@ do
             ;;
         -s|--sandbox)
             sandbox=true
-            # Check whether next argument is an option, rule, or a sandbox directory.
-            if [[ $2 ]] && ! [[ $2 =~ ^-- ]] \
-                   && ! rule-p "$2"
+            shift
+            sandbox_dir="$1"
+
+            if ! [[ $sandbox_dir ]]
             then
-                debug "Sandbox dir: $1"
-                shift
-                sandbox_dir="$1"
-            else
                 debug "No sandbox dir: installing dependencies."
                 install_deps=true
-                # HACK: Next argument is another option, so prepend blank arg to the
-                # argument list so it will be processed by next loop iteration.  getopts
-                # doesn't allow options to have optional arguments, so we do this manually.
-                if [[ $2 =~ ^- ]]
-                then
-                    # Next argument is an option: process it next.
-                    new_args=("" "$@")
-                else
-                    # Next argument is not an option: put it on the end.
-                    new_arg="$2"
-                    shift
-                    shift
-                    new_args=("" "$@" "$new_arg")
-                fi
-                debug "Setting new args: ${new_args[@]}"
-                set -- "${new_args[@]}"
+            else
+                debug "Sandbox dir: $1"
             fi
             ;;
         -v|--verbose)

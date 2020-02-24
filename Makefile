@@ -22,7 +22,7 @@ ifdef sandbox
 	ifeq ($(sandbox), t)
 		SANDBOX = --sandbox
 	else
-		SANDBOX = --sandbox $(sandbox)
+		SANDBOX = --sandbox=$(sandbox)
 	endif
 endif
 
