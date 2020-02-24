@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 ;; Version: 0.5-pre
-;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (org "9.0") (org-super-agenda "1.2-pre") (ov "1.0.6") (peg "0.6") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
+;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2-pre") (ov "1.0.6") (peg "0.6") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -72,6 +72,25 @@ That is, \"CLOSED:\", \"DEADLINE:\", or \"SCHEDULED:\".")
   "Regexp matching tags in a headline.
 Tags are stored in match group 1.  Match group 2 stores the tags
 without the enclosing colons.")
+
+(defconst org-ql-link-regexp
+  (if (bound-and-true-p org-link-bracket-re)
+      org-link-bracket-re
+    org-bracket-link-regexp)
+  "Regexp used to match Org bracket links.
+Necessary because of changes in Org 9.something.")
+
+(defconst org-ql-link-description-group
+  (if (bound-and-true-p org-link-bracket-re)
+      2
+    3)
+  ;; I wish Org would not introduce backward-incompatible changes like this in
+  ;; minor releases.  It requires awkward workarounds to be maintained for years.
+  "Regexp match group used to extract description from Org bracket links.
+Necessary because of backward-incompatible changes in Org
+9.something: when `org-link-bracket-re' was added,
+`org-bracket-link-regexp' was marked as an obsolete alias for it,
+but the match groups were changed, so they are not compatible.")
 
 ;;;; Variables
 
@@ -727,6 +746,40 @@ replace the clause with a preamble."
                                  (setq org-ql-preamble (rx-to-string `(seq bol (repeat ,num "*") " ") t))
                                  nil)
 
+                                ;; Links.  Always return nil, because we
+                                ;; shouldn't need to test the predicate.
+                                (`(link)
+                                 (setq org-ql-preamble
+                                       ;; Match a link with a target and optionally a description.
+                                       (rx (or bol (1+ blank))
+                                           "[[" (1+ (not (any "]"))) "]"
+                                           (optional (seq "[" (0+ (not (any "]"))) "]"))
+                                           "]"
+                                           (or eol blank)))
+                                 nil)
+                                ;; NOTE: I would use the form "(map :regexp-p)", or at least
+                                ;; "(map (:regexp-p regexp))" but they require map versions from
+                                ;; ELPA.  That would be fine, except that I can't automatically
+                                ;; install those versions with makem.sh into a sandbox, because
+                                ;; `package-install' doesn't accept a version argument.  So I
+                                ;; have to use `plist-get' here for now.  Maybe when we drop
+                                ;; support for Emacs <28...
+                                (`(link ,(and description-or-target
+                                              (guard (not (keywordp description-or-target)))))
+                                 (setq org-ql-preamble
+                                       (org-ql--link-regexp :description-or-target
+                                                            (regexp-quote description-or-target)))
+                                 nil)
+                                (`(link . ,plist)
+                                 (setq org-ql-preamble
+                                       (org-ql--link-regexp
+                                        :description
+                                        (when (plist-get plist :description)
+                                          (regexp-quote (plist-get plist :description)))
+                                        :target (when (plist-get plist :target)
+                                                  (regexp-quote (plist-get plist :target)))))
+                                 nil)
+
                                 ;; Planning lines.
                                 (`(planning . ,_)
                                  (setq org-ql-preamble org-ql-planning-regexp)
@@ -837,6 +890,47 @@ replace the clause with a preamble."
                           t)
                          (query (-flatten-n 1 query))))
            (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold))))))
+
+(cl-defun org-ql--link-regexp (&key description-or-target description target)
+  "Return a regexp matching Org links according to arguments.
+Each argument is treated as a regexp (so non-regexp strings
+should be quoted before being passed to this function).  If
+DESCRIPTION-OR-TARGET, match it in either description or target.
+If DESCRIPTION, match it in the description.  If TARGET, match it
+in the target.  If both DESCRIPTION and TARGET, match both,
+respectively."
+  (cl-labels
+      ((no-desc
+        (match) (rx-to-string `(seq (or bol (1+ blank))
+                                    "[[" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
+                                    "]]")))
+       (match-both
+        (description target)
+        (rx-to-string `(seq (or bol (1+ blank))
+                            "[[" (0+ (not (any "]"))) (regexp ,target) (0+ (not (any "]")))
+                            "][" (0+ (not (any "]"))) (regexp ,description) (0+ (not (any "]")))
+                            "]]")))
+       ;; Note that these actually allow empty descriptions
+       ;; or targets, depending on what they are matching.
+       (match-desc
+        (match) (rx-to-string `(seq (or bol (1+ blank))
+                                    "[[" (0+ (not (any "]")))
+                                    "][" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
+                                    "]]")))
+       (match-target
+        (match) (rx-to-string `(seq (or bol (1+ blank))
+                                    "[[" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
+                                    "][" (0+ (not (any "]")))
+                                    "]]"))))
+    (cond (description-or-target
+           (rx-to-string `(or (regexp ,(no-desc description-or-target))
+                              (regexp ,(match-desc description-or-target))
+                              (regexp ,(match-target description-or-target)))))
+          ((and description target)
+           (match-both description target))
+          (description (match-desc description))
+          (target (rx-to-string `(or (regexp ,(no-desc target))
+                                     (regexp ,(match-target target))))))))
 
 (defun org-ql--format-src-block-regexp (&optional lang)
   "Return regexp equivalent to `org-babel-src-block-regexp' with LANG filled in."
@@ -1072,6 +1166,51 @@ COMPARATOR may be `<', `<=', `>', or `>='."
                          (>= level-or-comparator outline-level level))))
       ((pred symbolp) ;; Compare with function
        (funcall level-or-comparator outline-level level)))))
+
+(org-ql--defpred link (&rest args)
+  ;; User-facing argument form: (&optional description-or-target &key description target regexp-p).
+  "Return non-nil if current heading contains a link matching arguments.
+DESCRIPTION-OR-TARGET is matched against the link's description
+and target.  Alternatively, one or both of DESCRIPTION and TARGET
+may be matched separately.  Without arguments, return non-nil if
+any link is found."
+  ;; NOTE: It would be preferable to avoid this manual argument parsing every time the predicate
+  ;; is called, but pre-processing it to a normal form gets complicated with the preamble and
+  ;; pre-processing, because we don't want to display a query like "(link :description-or-target
+  ;; "FOO")" in the view header, which would be ugly.  So, since preambles are expected to be
+  ;; enabled nearly all of the time, in which case this function won't be called anyway, it's
+  ;; probably not worth rewriting code all over the place to fix this.
+  (let* (plist description-or-target description target regexp-p)
+    (if (not (keywordp (car args)))
+        (setf description-or-target (car args)
+              plist (cdr args))
+      (setf plist args))
+    (setf description (plist-get plist :description)
+          target (plist-get plist :description)
+          regexp-p (plist-get plist :regexp-p))
+    (unless regexp-p
+      ;; NOTE: It would also be preferable to avoid regexp-quoting every time this predicate
+      ;; is called.  Ideally that would be handled in the query pre-processing step.  However,
+      ;; handling that properly, in combination with preparing the query preamble and whether
+      ;; REGEXP-P is enabled, is also complicated, so let's not.
+      (when description-or-target
+        (setf description-or-target (regexp-quote description-or-target)))
+      (when description
+        (setf description (regexp-quote description)))
+      (when target
+        (setf target (regexp-quote target))))
+    (when (re-search-forward org-ql-link-regexp (org-entry-end-position) t)
+      (pcase description-or-target
+        ('nil (and (or (null target)
+                       (string-match-p target (match-string 1)))
+                   (or (null description)
+                       (string-match-p description (match-string org-ql-link-description-group)))))
+        (_ (if (and description target)
+               (and (string-match-p target (match-string 1))
+                    (string-match-p description (match-string org-ql-link-description-group)))
+             (or (string-match-p description-or-target (match-string 1))
+                 (string-match-p description-or-target
+                                 (match-string org-ql-link-description-group)))))))))
 
 (org-ql--defpred priority (&rest args)
   "Return non-nil if current heading has a certain priority.

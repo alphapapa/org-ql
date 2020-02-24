@@ -198,6 +198,7 @@ Arguments are listed next to predicate names, where applicable.
 +  =heading (&rest regexps)= :: Return non-nil if current entry's heading matches all ~REGEXPS~ (regexp strings).
      -  Aliases: =h=.
 +  =level (level-or-comparator &optional level)= :: Return non-nil if current heading's outline level matches arguments.  The following forms are accepted: ~(level NUMBER)~: Matches if heading level is ~NUMBER~.  ~(level NUMBER NUMBER)~: Matches if heading level is equal to or between NUMBERs.  ~(level COMPARATOR NUMBER)~: Matches if heading level compares to ~NUMBER~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.
++  =link (&optional description-or-target &key description target regexp-p)= :: Return non-nil if current heading contains a link matching arguments. ~DESCRIPTION-OR-TARGET~ is matched against the link's description and target.  Alternatively, one or both of ~DESCRIPTION~ and ~TARGET~ may be matched separately.  Without arguments, return non-nil if any link is found.
 +  =outline-path (&rest strings)= :: Return non-nil if current node's outline path matches all of ~STRINGS~.  Each string may appear as a substring in any part of the node's outline path.  For example, the path =Food/Fruits/Grapes= would match ~(olp "Fruit" "Grape")~.
      -  Aliases: ~olp~.
 +  =outline-path-segment (&rest strings)= :: Return non-nil if current node's outline path matches ~STRINGS~.  Matches ~STRINGS~ as a contiguous segment of the outline path.  Each string is compared as a substring.  For example the path ~Food/Fruits/Grapes~ would match ~(olps "Fruit" "Grape")~ but not ~(olps "Food" "Grape")~.
@@ -404,6 +405,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 *Added*
 +  View dispatcher using =transient.el= (like Magit), bound to =v= in search/view buffers.
++  Predicate =link=, which matches descriptions and targets in Org links.
 
 *Changed*
 +  Binding to refresh search/view buffers changed to =r=.

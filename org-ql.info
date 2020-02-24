@@ -381,6 +381,12 @@ Arguments are listed next to predicate names, where applicable.
      Matches if heading level is equal to or between NUMBERs.  ‘(level
      COMPARATOR NUMBER)’: Matches if heading level compares to ‘NUMBER’
      with ‘COMPARATOR’.  ‘COMPARATOR’ may be ‘<’, ‘<=’, ‘>’, or ‘>=’.
+‘link (&optional description-or-target &key description target regexp-p)’
+     Return non-nil if current heading contains a link matching
+     arguments.  ‘DESCRIPTION-OR-TARGET’ is matched against the link’s
+     description and target.  Alternatively, one or both of
+     ‘DESCRIPTION’ and ‘TARGET’ may be matched separately.  Without
+     arguments, return non-nil if any link is found.
 ‘outline-path (&rest strings)’
      Return non-nil if current node’s outline path matches all of
      ‘STRINGS’.  Each string may appear as a substring in any part of
@@ -732,6 +738,8 @@ File: README.info,  Node: 05-pre,  Next: 041,  Up: Changelog
 *Added*
    • View dispatcher using transient.el (like Magit), bound to v in
      search/view buffers.
+   • Predicate link, which matches descriptions and targets in Org
+     links.
 
    *Changed*
    • Binding to refresh search/view buffers changed to r.
@@ -1105,27 +1113,27 @@ Node: org-ql-sparse-tree7044
 Node: Queries7844
 Node: Non-sexp query syntax8752
 Node: General predicates10459
-Node: Ancestor/descendant predicates15266
-Node: Date/time predicates16394
-Node: Functions / Macros19049
-Node: Agenda-like views19282
-Node: Listing / acting-on results20687
-Node: Changelog25289
-Node: 05-pre25853
-Node: 04126121
-Node: 0426363
-Node: 03230294
-Node: 03130671
-Node: 0330866
-Node: 02333839
-Node: 02234065
-Node: 02134331
-Node: 0234528
-Node: 0138563
-Node: Notes38664
-Node: Comparison with Org Agenda searches38826
-Node: org-sidebar39698
-Node: License39977
+Node: Ancestor/descendant predicates15674
+Node: Date/time predicates16802
+Node: Functions / Macros19457
+Node: Agenda-like views19690
+Node: Listing / acting-on results21095
+Node: Changelog25697
+Node: 05-pre26261
+Node: 04126610
+Node: 0426852
+Node: 03230783
+Node: 03131160
+Node: 0331355
+Node: 02334328
+Node: 02234554
+Node: 02134820
+Node: 0235017
+Node: 0139052
+Node: Notes39153
+Node: Comparison with Org Agenda searches39315
+Node: org-sidebar40187
+Node: License40466
 
 End Tag Table
 

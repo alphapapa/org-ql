@@ -217,6 +217,7 @@ RESULTS should be a list of strings as returned by
               :to-equal org-ql-test-num-headings)))
 
   (describe "Query pre-processing"
+
     (it "level:"
       (expect (org-ql--pre-process-query '(level "1"))
               :to-equal '(level 1))
@@ -224,6 +225,19 @@ RESULTS should be a list of strings as returned by
               :to-equal '(level 1 2))
       (expect (org-ql--pre-process-query '(level ">" "1"))
               :to-equal '(level > 1)))
+
+    (describe "(link)"
+      (it "with one argument"
+        (expect (org-ql--pre-process-query '(link "DESC-OR-TARGET"))
+                :to-equal '(link "DESC-OR-TARGET")))
+      (it "with one argument and :regexp-p"
+        (expect (org-ql--pre-process-query '(link "DESC-OR-TARGET" :regexp-p t))
+                :to-equal '(link "DESC-OR-TARGET" :regexp-p t)))
+      (it "with keyword arguments"
+        (expect (org-ql--pre-process-query '(link :description "DESCRIPTION" :target "TARGET"
+                                                  :regexp-p t))
+                :to-equal '(link :description "DESCRIPTION" :target "TARGET"
+                                 :regexp-p t))))
 
     (expect (org-ql--pre-process-query '(and "string1" "string2"))
             :to-equal '(and (regexp "string1") (regexp "string2")))
@@ -574,6 +588,23 @@ RESULTS should be a list of strings as returned by
       (org-ql-it "with two arguments"
         (org-ql-expect ((heading "Take over" "world"))
           '("Take over the world"))))
+
+    (describe "(link)"
+      (org-ql-it "without arguments"
+        (org-ql-expect ((link))
+          '("/r/emacs")))
+      (org-ql-it "with description-or-target"
+        (org-ql-expect ((link "emacs"))
+          '("/r/emacs")))
+      (org-ql-it "with :description"
+        (org-ql-expect ((link :description "emacs"))
+          '("/r/emacs")))
+      (org-ql-it "with :target"
+        (org-ql-expect ((link :target "reddit.com"))
+          '("/r/emacs")))
+      (org-ql-it "with :description and :target"
+        (org-ql-expect ((link :description "emacs" :target "reddit.com"))
+          '("/r/emacs"))))
 
     (describe "(outline-path)"
       (org-ql-it "with one argument"
