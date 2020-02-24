@@ -583,6 +583,16 @@ Replaces bare strings with (regexp) selectors, and appropriate
                       ;; "h" alias.
                       `(heading ,@args))
 
+                     ;; Outline level.
+                     (`(level . ,args)
+                      ;; Arguments could be given as strings (e.g. from a non-Lisp query).
+                      `(level ,@(--map (pcase it
+                                         ((or "<" "<=" ">" ">=" "=")
+                                          (intern it))
+                                         ((pred stringp) (string-to-number it))
+                                         (_ it))
+                                       args)))
+
                      ;; Regexps.
                      (`(r . ,args)
                       ;; "r" alias.

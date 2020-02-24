@@ -64,6 +64,7 @@ Functions / Macros
 Changelog
 
 * 0.5-pre: 05-pre. 
+* 0.4.1: 041. 
 * 0.4: 04. 
 * 0.3.2: 032. 
 * 0.3.1: 031. 
@@ -711,6 +712,7 @@ releases.
 * Menu:
 
 * 0.5-pre: 05-pre. 
+* 0.4.1: 041. 
 * 0.4: 04. 
 * 0.3.2: 032. 
 * 0.3.1: 031. 
@@ -722,7 +724,7 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 05-pre,  Next: 04,  Up: Changelog
+File: README.info,  Node: 05-pre,  Next: 041,  Up: Changelog
 
 5.1 0.5-pre
 ===========
@@ -735,9 +737,19 @@ File: README.info,  Node: 05-pre,  Next: 04,  Up: Changelog
    • Binding to refresh search/view buffers changed to r.
 
 
-File: README.info,  Node: 04,  Next: 032,  Prev: 05-pre,  Up: Changelog
+File: README.info,  Node: 041,  Next: 04,  Prev: 05-pre,  Up: Changelog
 
-5.2 0.4
+5.2 0.4.1
+=========
+
+*Fixed*
+   • level predicate used with arguments in plain queries.  (Thanks to
+     Akira Komamura (https://github.com/akirak) for reporting.)
+
+
+File: README.info,  Node: 04,  Next: 032,  Prev: 041,  Up: Changelog
+
+5.3 0.4
 =======
 
 _Note:_ The next release, 0.5, may include changes which will require
@@ -818,7 +830,7 @@ as they will be pushed to the master branch when ready.
 
 File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
-5.3 0.3.2
+5.4 0.3.2
 =========
 
 *Fixed*
@@ -831,7 +843,7 @@ File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
-5.4 0.3.1
+5.5 0.3.1
 =========
 
 *Fixed*
@@ -841,7 +853,7 @@ File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
-5.5 0.3
+5.6 0.3
 =======
 
 *Added*
@@ -906,7 +918,7 @@ File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
 File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
-5.6 0.2.3
+5.7 0.2.3
 =========
 
 *Fixed*
@@ -916,7 +928,7 @@ File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
-5.7 0.2.2
+5.8 0.2.2
 =========
 
 *Fixed*
@@ -927,7 +939,7 @@ File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
-5.8 0.2.1
+5.9 0.2.1
 =========
 
 *Fixed*
@@ -937,8 +949,8 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-5.9 0.2
-=======
+5.10 0.2
+========
 
 *Added*
    • Function ‘org-ql-query’, like ‘org-ql-select’ but with arguments
@@ -1020,7 +1032,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-5.10 0.1
+5.11 0.1
 ========
 
 First tagged release.
@@ -1078,41 +1090,42 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1422
-Node: Screenshots1545
-Node: Installation1663
-Node: Quelpa2301
-Node: Usage2744
-Node: Commands3093
-Node: org-ql-search3566
-Node: helm-org-ql5280
-Node: org-ql-view5692
-Node: org-ql-view-sidebar6189
-Node: org-ql-view-recent-items6545
-Node: org-ql-sparse-tree7029
-Node: Queries7829
-Node: Non-sexp query syntax8737
-Node: General predicates10444
-Node: Ancestor/descendant predicates15251
-Node: Date/time predicates16379
-Node: Functions / Macros19034
-Node: Agenda-like views19267
-Node: Listing / acting-on results20672
-Node: Changelog25274
-Node: 05-pre25823
-Node: 0426090
-Node: 03230024
-Node: 03130401
-Node: 0330596
-Node: 02333569
-Node: 02233795
-Node: 02134061
-Node: 0234258
-Node: 0138291
-Node: Notes38392
-Node: Comparison with Org Agenda searches38554
-Node: org-sidebar39426
-Node: License39705
+Node: Contents1437
+Node: Screenshots1560
+Node: Installation1678
+Node: Quelpa2316
+Node: Usage2759
+Node: Commands3108
+Node: org-ql-search3581
+Node: helm-org-ql5295
+Node: org-ql-view5707
+Node: org-ql-view-sidebar6204
+Node: org-ql-view-recent-items6560
+Node: org-ql-sparse-tree7044
+Node: Queries7844
+Node: Non-sexp query syntax8752
+Node: General predicates10459
+Node: Ancestor/descendant predicates15266
+Node: Date/time predicates16394
+Node: Functions / Macros19049
+Node: Agenda-like views19282
+Node: Listing / acting-on results20687
+Node: Changelog25289
+Node: 05-pre25853
+Node: 04126121
+Node: 0426363
+Node: 03230294
+Node: 03130671
+Node: 0330866
+Node: 02333839
+Node: 02234065
+Node: 02134331
+Node: 0234528
+Node: 0138563
+Node: Notes38664
+Node: Comparison with Org Agenda searches38826
+Node: org-sidebar39698
+Node: License39977
 
 End Tag Table
 

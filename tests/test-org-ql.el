@@ -216,7 +216,15 @@ RESULTS should be a list of strings as returned by
                                     :order-by 'date))
               :to-equal org-ql-test-num-headings)))
 
-  (it "Query pre-processing"
+  (describe "Query pre-processing"
+    (it "level:"
+      (expect (org-ql--pre-process-query '(level "1"))
+              :to-equal '(level 1))
+      (expect (org-ql--pre-process-query '(level "1" "2"))
+              :to-equal '(level 1 2))
+      (expect (org-ql--pre-process-query '(level ">" "1"))
+              :to-equal '(level > 1)))
+
     (expect (org-ql--pre-process-query '(and "string1" "string2"))
             :to-equal '(and (regexp "string1") (regexp "string2")))
     (expect (org-ql--pre-process-query '(or "string1" "string2"))

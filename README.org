@@ -408,6 +408,11 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 *Changed*
 +  Binding to refresh search/view buffers changed to =r=.
 
+** 0.4.1
+
+*Fixed*
++  =level= predicate used with arguments in plain queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]] for reporting.)
+
 ** 0.4
 
 /Note:/ The next release, 0.5, may include changes which will require minor updates to written queries (e.g. a few predicates may be renamed).  Users who wish to avoid those changes happening unexpectedly in their configs should avoid upgrading =org-ql= beyond 0.4 automatically, as they will be pushed to the =master= branch when ready.
