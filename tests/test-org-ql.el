@@ -218,13 +218,16 @@ RESULTS should be a list of strings as returned by
 
   (describe "Query pre-processing"
 
-    (it "level:"
-      (expect (org-ql--pre-process-query '(level "1"))
-              :to-equal '(level 1))
-      (expect (org-ql--pre-process-query '(level "1" "2"))
-              :to-equal '(level 1 2))
-      (expect (org-ql--pre-process-query '(level ">" "1"))
-              :to-equal '(level > 1)))
+    (describe "(level)"
+      (it "with one level"
+        (expect (org-ql--pre-process-query '(level "1"))
+                :to-equal '(level 1)))
+      (it "with two levels"
+        (expect (org-ql--pre-process-query '(level "1" "2"))
+                :to-equal '(level 1 2)))
+      (it "with a comparator and a level"
+        (expect (org-ql--pre-process-query '(level ">" "1"))
+                :to-equal '(level > 1))))
 
     (describe "(link)"
       (it "with one argument"
