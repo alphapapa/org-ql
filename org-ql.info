@@ -63,6 +63,7 @@ Functions / Macros
 
 Changelog
 
+* 0.4.1: 041. 
 * 0.4: 04. 
 * 0.3.2: 032. 
 * 0.3.1: 031. 
@@ -703,6 +704,7 @@ releases.
 
 * Menu:
 
+* 0.4.1: 041. 
 * 0.4: 04. 
 * 0.3.2: 032. 
 * 0.3.1: 031. 
@@ -714,9 +716,19 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 04,  Next: 032,  Up: Changelog
+File: README.info,  Node: 041,  Next: 04,  Up: Changelog
 
-5.1 0.4
+5.1 0.4.1
+=========
+
+*Fixed*
+   • level predicate used with arguments in plain queries.  (Thanks to
+     Akira Komamura (https://github.com/akirak) for reporting.)
+
+
+File: README.info,  Node: 04,  Next: 032,  Prev: 041,  Up: Changelog
+
+5.2 0.4
 =======
 
 _Note:_ The next release, 0.5, may include changes which will require
@@ -797,7 +809,7 @@ as they will be pushed to the master branch when ready.
 
 File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
-5.2 0.3.2
+5.3 0.3.2
 =========
 
 *Fixed*
@@ -810,7 +822,7 @@ File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
-5.3 0.3.1
+5.4 0.3.1
 =========
 
 *Fixed*
@@ -820,7 +832,7 @@ File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
-5.4 0.3
+5.5 0.3
 =======
 
 *Added*
@@ -885,7 +897,7 @@ File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
 File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
-5.5 0.2.3
+5.6 0.2.3
 =========
 
 *Fixed*
@@ -895,7 +907,7 @@ File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
-5.6 0.2.2
+5.7 0.2.2
 =========
 
 *Fixed*
@@ -906,7 +918,7 @@ File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
-5.7 0.2.1
+5.8 0.2.1
 =========
 
 *Fixed*
@@ -916,7 +928,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-5.8 0.2
+5.9 0.2
 =======
 
 *Added*
@@ -999,8 +1011,8 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-5.9 0.1
-=======
+5.10 0.1
+========
 
 First tagged release.
 
@@ -1060,40 +1072,41 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1402
-Node: Screenshots1576
-Node: Installation1694
-Node: Quelpa2332
-Node: Usage2775
-Node: Commands3124
-Node: org-ql-search3597
-Node: helm-org-ql5245
-Node: org-ql-view5657
-Node: org-ql-view-sidebar5855
-Node: org-ql-view-recent-items6211
-Node: org-ql-sparse-tree6695
-Node: Queries7495
-Node: Non-sexp query syntax8403
-Node: General predicates10110
-Node: Ancestor/descendant predicates14917
-Node: Date/time predicates16045
-Node: Functions / Macros18700
-Node: Agenda-like views18933
-Node: Listing / acting-on results20338
-Node: Changelog24940
-Node: 0425469
-Node: 03229388
-Node: 03129765
-Node: 0329960
-Node: 02332933
-Node: 02233159
-Node: 02133425
-Node: 0233622
-Node: 0137655
-Node: Notes37754
-Node: Comparison with Org Agenda searches37916
-Node: org-sidebar38787
-Node: License39066
+Node: Contents1417
+Node: Screenshots1591
+Node: Installation1709
+Node: Quelpa2347
+Node: Usage2790
+Node: Commands3139
+Node: org-ql-search3612
+Node: helm-org-ql5260
+Node: org-ql-view5672
+Node: org-ql-view-sidebar5870
+Node: org-ql-view-recent-items6226
+Node: org-ql-sparse-tree6710
+Node: Queries7510
+Node: Non-sexp query syntax8418
+Node: General predicates10125
+Node: Ancestor/descendant predicates14932
+Node: Date/time predicates16060
+Node: Functions / Macros18715
+Node: Agenda-like views18948
+Node: Listing / acting-on results20353
+Node: Changelog24955
+Node: 04125499
+Node: 0425726
+Node: 03229657
+Node: 03130034
+Node: 0330229
+Node: 02333202
+Node: 02233428
+Node: 02133694
+Node: 0233891
+Node: 0137924
+Node: Notes38025
+Node: Comparison with Org Agenda searches38187
+Node: org-sidebar39058
+Node: License39337
 
 End Tag Table
 

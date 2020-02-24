@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.4
+;; Version: 0.4.1
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (org "9.0") (org-super-agenda "1.2-pre") (ov "1.0.6") (peg "0.6") (s "1.12.0") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -582,6 +582,16 @@ Replaces bare strings with (regexp) selectors, and appropriate
                      (`(h . ,args)
                       ;; "h" alias.
                       `(heading ,@args))
+
+                     ;; Outline level.
+                     (`(level . ,args)
+                      ;; Arguments could be given as strings (e.g. from a non-Lisp query).
+                      `(level ,@(--map (pcase it
+                                         ((or "<" "<=" ">" ">=" "=")
+                                          (intern it))
+                                         ((pred stringp) (string-to-number it))
+                                         (_ it))
+                                       args)))
 
                      ;; Regexps.
                      (`(r . ,args)
