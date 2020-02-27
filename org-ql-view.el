@@ -850,16 +850,21 @@ property."
 
 (defun org-ql-view--complete-sort ()
   "Return value for `org-ql-view-sort' using completion."
-  (let ((input (->> (completing-read-multiple "Sort by: "
-                                              (list "buffer-order"
-                                                    "date"
-                                                    "deadline"
-                                                    "priority"
-                                                    "scheduled"
-                                                    "todo")
-                                              nil nil (when org-ql-view-sort
-                                                        (prin1-to-string org-ql-view-sort)))
-                    (--remove (equal "buffer-order" it)))))
+  ;; Use space to separate sorting predicates, not comma.
+  (let* ((crm-separator (rx space))
+         (crm-local-completion-map (let ((map (copy-keymap crm-local-completion-map)))
+                                     (define-key map (kbd "SPC") nil)
+                                     map))
+         (input (->> (completing-read-multiple "Sort by: "
+                                               (list "buffer-order"
+                                                     "date"
+                                                     "deadline"
+                                                     "priority"
+                                                     "scheduled"
+                                                     "todo")
+                                               nil nil (when org-ql-view-sort
+                                                         (prin1-to-string org-ql-view-sort)))
+                     (--remove (equal "buffer-order" it)))))
     (pcase input
       ('nil nil)
       ((and (pred listp) sort)
