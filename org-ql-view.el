@@ -444,7 +444,7 @@ If TITLE, prepend it to the header."
                                     (length "In: ")
                                     (length "Query: ")
                                     query-width 4)))
-         (buffers-files-formatted (format "%S" buffers-files))
+         (buffers-files-formatted (format "%s" (org-ql-view--contract-buffers-files buffers-files)))
          (buffers-files-formatted (propertize (->> buffers-files-formatted
                                                    (org-ql-view--font-lock-string 'emacs-lisp-mode)
                                                    (s-truncate available-width))
@@ -594,7 +594,8 @@ dates in the past, and negative for dates in the future."
   :variable 'org-ql-view-buffers-files
   :prompt "Buffers/files: "
   :reader (lambda (_prompt _initial-input _history)
-            ;; FIXME: Figure out how to integrate initial-input and history.
+            ;; This doesn't use the Transient `initial-input'
+            ;; argument, but it gives the same result.
             (org-ql-view--complete-buffers-files)))
 
 (define-infix-command org-ql-view--transient-super-groups ()
@@ -811,25 +812,53 @@ property."
 
 ;;;;; Completion
 
+(defun org-ql-view--contract-buffers-files (buffers-files)
+  "Return BUFFERS-FILES in its \"contracted\" form.
+The contracted form is \"org-agenda-files\" if BUFFERS-FILES
+matches the value of `org-agenda-files' (either the function or
+the variable), \"org-directory\" if it matches the value of
+`org-ql-search-directories-files', or \"buffer\" if it is the
+current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
+  ;; Used in `org-ql-view--complete-buffers-files' and
+  ;; `org-ql-view--header-line-format'.
+  (cl-labels ((expand-files
+               (list) (--map (cl-typecase it
+                               (string (expand-file-name it))
+                               (otherwise it))
+                             list)))
+    (pcase (expand-files buffers-files)
+      ((or (pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
+           (pred (seq-set-equal-p (mapcar #'expand-file-name org-agenda-files))))
+       "org-agenda-files")
+      ((pred (seq-set-equal-p (org-ql-search-directories-files)))
+       "org-directory")
+      ((pred (equal (current-buffer)))
+       "buffer")
+      (_ (let ((print-length nil))
+           (concat "'" (prin1-to-string buffers-files)))))))
+
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion."
-  (if (and org-ql-view-buffers-files
-           (bufferp org-ql-view-buffers-files))
-      ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
-      ;; TODO: Find a way to fix this.
-      org-ql-view-buffers-files
-    (pcase-exhaustive (completing-read "Buffers/Files: "
-                                       (list 'buffer 'agenda 'directory 'all)
-                                       nil nil (when org-ql-view-buffers-files
-                                                 (let ((print-length nil))
-                                                   (prin1-to-string (cons 'list org-ql-view-buffers-files)))))
-      ((or "" "buffer") (current-buffer))
-      ("agenda" (org-agenda-files))
-      ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                       (buffer-list)))
-      ("directory" (org-ql-search-directories-files))
-      ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
-      (else (s-split (rx (1+ space)) else)))))
+  (cl-labels ((initial-input
+               () (when org-ql-view-buffers-files
+                    (org-ql-view--contract-buffers-files
+                     org-ql-view-buffers-files))))
+    (if (and org-ql-view-buffers-files
+             (bufferp org-ql-view-buffers-files))
+        ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
+        ;; TODO: Find a way to fix this.
+        org-ql-view-buffers-files
+      (pcase-exhaustive
+          (completing-read "Buffers/Files: "
+                           (list 'buffer 'org-agenda-files 'org-directory 'all)
+                           nil nil (initial-input))
+        ((or "" "buffer") (current-buffer))
+        ("org-agenda-files" (org-agenda-files))
+        ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                         (buffer-list)))
+        ("org-directory" (org-ql-search-directories-files))
+        ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
+        (else (s-split (rx (1+ space)) else))))))
 
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."
