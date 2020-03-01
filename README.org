@@ -1,7 +1,8 @@
 #+TITLE: org-ql
 
 # NOTE: Using =BEGIN_HTML= for this causes TeX/info export to fail, but this HTML block works.
-#+HTML: <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
+# #+HTML: <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
+#+HTML: <img src="images/dog.png" align="right">
 
 # NOTE: To avoid having this in the info manual, we use HTML rather than Org syntax; it still appears with the GitHub renderer.
 #+HTML: <a href="https://melpa.org/#/org-ql"><img src="https://melpa.org/packages/org-ql-badge.svg"></a> <a href="https://stable.melpa.org/#/org-ql"><img src="https://stable.melpa.org/packages/org-ql-badge.svg"></a>
@@ -406,6 +407,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 *Added*
 +  View dispatcher using =transient.el= (like Magit), bound to =v= in search/view buffers.
 +  Predicate =link=, which matches descriptions and targets in Org links.
++  Mascot.
 
 *Changed*
 +  Binding to refresh search/view buffers changed to =r=.

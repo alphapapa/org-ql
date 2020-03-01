@@ -742,6 +742,7 @@ File: README.info,  Node: 05-pre,  Next: 042,  Up: Changelog
      search/view buffers.
    • Predicate link, which matches descriptions and targets in Org
      links.
+   • Mascot.
 
    *Changed*
    • Binding to refresh search/view buffers changed to r.
@@ -1131,21 +1132,21 @@ Node: Agenda-like views19705
 Node: Listing / acting-on results21110
 Node: Changelog25712
 Node: 05-pre26291
-Node: 04226640
-Node: 04126802
-Node: 0427041
-Node: 03230972
-Node: 03131349
-Node: 0331544
-Node: 02334517
-Node: 02234743
-Node: 02135009
-Node: 0235208
-Node: 0139243
-Node: Notes39344
-Node: Comparison with Org Agenda searches39506
-Node: org-sidebar40378
-Node: License40657
+Node: 04226655
+Node: 04126817
+Node: 0427056
+Node: 03230987
+Node: 03131364
+Node: 0331559
+Node: 02334532
+Node: 02234758
+Node: 02135024
+Node: 0235223
+Node: 0139258
+Node: Notes39359
+Node: Comparison with Org Agenda searches39521
+Node: org-sidebar40393
+Node: License40672
 
 End Tag Table
 
