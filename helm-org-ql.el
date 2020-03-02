@@ -56,13 +56,13 @@
 ;;;; Variables
 
 (defvar helm-org-ql-map
-  (let ((map (copy-keymap helm-map))
+  (let ((map (make-sparse-keymap))
         (mappings '(
                     "C-x C-s" helm-org-ql-save
                     )))
     (cl-loop for (key fn) on mappings by #'cddr
              do (define-key map (kbd key) fn))
-    map)
+    (make-composed-keymap map helm-map))
   "Keymap for `helm-org-ql' sessions.
 Based on `helm-map'.")
 
