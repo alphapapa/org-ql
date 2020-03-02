@@ -827,16 +827,20 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
                                (string (expand-file-name it))
                                (otherwise it))
                              list)))
-    (pcase (expand-files buffers-files)
-      ((or (pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
-           (pred (seq-set-equal-p (mapcar #'expand-file-name org-agenda-files))))
-       "org-agenda-files")
-      ((pred (seq-set-equal-p (org-ql-search-directories-files)))
-       "org-directory")
+    ;; TODO: Test this more exhaustively.
+    (pcase buffers-files
+      ((pred listp) (pcase (expand-files buffers-files)
+                      ((or (pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
+                           (pred (seq-set-equal-p (mapcar #'expand-file-name org-agenda-files))))
+                       "org-agenda-files")
+                      ((pred (seq-set-equal-p (org-ql-search-directories-files)))
+                       "org-directory")
+                      (_ (let ((print-length nil))
+                           (concat "'" (prin1-to-string buffers-files))))))
       ((pred (equal (current-buffer)))
        "buffer")
       (_ (let ((print-length nil))
-           (concat "'" (prin1-to-string buffers-files)))))))
+           (prin1-to-string buffers-files))))))
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion."
