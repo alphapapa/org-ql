@@ -30,6 +30,7 @@
 ;;;; Requirements
 
 (require 'cl-lib)
+(require 'crm)
 (require 'map)
 (require 'org)
 (require 'org-element)
