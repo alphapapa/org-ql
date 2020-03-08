@@ -132,7 +132,7 @@ This command displays matches with Helm.  *Note:* Helm is not a package dependen
 Choose and display a view stored in ~org-ql-views~.
 
 *Bindings:* Keys bound in view buffer.
-+  =r=: Refresh results.  With prefix, prompt to adjust search parameters.
++  =g=, =r=: Refresh results.  With prefix, prompt to adjust search parameters.
 +  =v=: Show =transient= view dispatcher (like Magit's popups).
 +  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 

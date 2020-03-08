@@ -254,7 +254,7 @@ File: README.info,  Node: org-ql-view,  Next: org-ql-view-sidebar,  Prev: helm-o
 Choose and display a view stored in ‘org-ql-views’.
 
    *Bindings:* Keys bound in view buffer.
-   • r: Refresh results.  With prefix, prompt to adjust search
+   • g, r: Refresh results.  With prefix, prompt to adjust search
      parameters.
    • v: Show transient view dispatcher (like Magit’s popups).
    • C-x C-s: Save query to variable ‘org-ql-views’ (accessible with
@@ -1119,34 +1119,34 @@ Node: Commands3123
 Node: org-ql-search3596
 Node: helm-org-ql5310
 Node: org-ql-view5722
-Node: org-ql-view-sidebar6219
-Node: org-ql-view-recent-items6575
-Node: org-ql-sparse-tree7059
-Node: Queries7859
-Node: Non-sexp query syntax8767
-Node: General predicates10474
-Node: Ancestor/descendant predicates15689
-Node: Date/time predicates16817
-Node: Functions / Macros19472
-Node: Agenda-like views19705
-Node: Listing / acting-on results21110
-Node: Changelog25712
-Node: 05-pre26291
-Node: 04226655
-Node: 04126817
-Node: 0427056
-Node: 03230987
-Node: 03131364
-Node: 0331559
-Node: 02334532
-Node: 02234758
-Node: 02135024
-Node: 0235223
-Node: 0139258
-Node: Notes39359
-Node: Comparison with Org Agenda searches39521
-Node: org-sidebar40393
-Node: License40672
+Node: org-ql-view-sidebar6222
+Node: org-ql-view-recent-items6578
+Node: org-ql-sparse-tree7062
+Node: Queries7862
+Node: Non-sexp query syntax8770
+Node: General predicates10477
+Node: Ancestor/descendant predicates15692
+Node: Date/time predicates16820
+Node: Functions / Macros19475
+Node: Agenda-like views19708
+Node: Listing / acting-on results21113
+Node: Changelog25715
+Node: 05-pre26294
+Node: 04226658
+Node: 04126820
+Node: 0427059
+Node: 03230990
+Node: 03131367
+Node: 0331562
+Node: 02334535
+Node: 02234761
+Node: 02135027
+Node: 0235226
+Node: 0139261
+Node: Notes39362
+Node: Comparison with Org Agenda searches39524
+Node: org-sidebar40396
+Node: License40675
 
 End Tag Table
 
