@@ -841,6 +841,8 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
                            (concat "'" (prin1-to-string buffers-files))))))
       ((pred (equal (current-buffer)))
        "buffer")
+      ((or 'org-agenda-files '(function org-agenda-files))
+       "org-agenda-files")
       (_ (let ((print-length nil))
            (prin1-to-string buffers-files))))))
 
