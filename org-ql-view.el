@@ -70,7 +70,8 @@ Includes `org-ql-search'.  Helpful when passing a buffer argument
 down a chain of function calls would be awkward.")
 
 (defvar org-ql-view-map
-  (let ((map (copy-keymap org-agenda-mode-map)))
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map org-agenda-mode-map)
     (define-key map "r" #'org-ql-view-refresh)
     (define-key map "v" #'org-ql-view-dispatch)
     (define-key map (kbd "C-x C-s") #'org-ql-view-save)
