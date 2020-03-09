@@ -164,7 +164,8 @@ necessary."
                       :sort sort))
            (strings (-map #'org-ql-view--format-element results))
            (buffer (or buffer (format "%s %s*" org-ql-view-buffer-name-prefix (or title query))))
-           (header (org-ql-view--header-line-format buffers-files query title))
+           (header (org-ql-view--header-line-format
+                    :buffers-files buffers-files :query query :title title))
            ;; Bind variables for `org-ql-view--display' to set.
            (org-ql-view-buffers-files buffers-files)
            (org-ql-view-query query)
@@ -215,7 +216,8 @@ automatically from the query."
       ;; FIXME: `org-agenda--insert-overriding-header' is from an Org version newer than
       ;; I'm using.  Should probably declare it as a minimum Org version after upgrading.
       ;;  (org-agenda--insert-overriding-header (or org-ql-block-header (org-ql-agenda--header-line-format from query)))
-      (insert (org-add-props (or org-ql-block-header (org-ql-view--header-line-format from query))
+      (insert (org-add-props (or org-ql-block-header (org-ql-view--header-line-format
+                                                      :buffers-files from :query query))
                   nil 'face 'org-agenda-structure) "\n")
       ;; Calling `org-agenda-finalize' should be unnecessary, because in a "series" agenda,
       ;; `org-agenda-multi' is bound non-nil, in which case `org-agenda-finalize' does nothing.

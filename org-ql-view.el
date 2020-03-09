@@ -433,31 +433,38 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
         (org-agenda-finalize)
         (goto-char (point-min))))))
 
-(defun org-ql-view--header-line-format (buffers-files query &optional title)
+(cl-defun org-ql-view--header-line-format (&key buffers-files query title)
   "Return `header-line-format' for BUFFERS-FILES and QUERY.
 If TITLE, prepend it to the header."
   (let* ((title (if title
                     (concat (propertize "View:" 'face 'transient-argument)
                             title " ")
                   ""))
-         (query-formatted (org-ql-view--format-query query))
-         (query-width (length query-formatted))
-         (query-propertized (propertize (org-ql-view--font-lock-string 'emacs-lisp-mode query-formatted)
-                                        'help-echo query-formatted))
-         (available-width (max 0 (- (window-width)
-                                    (length "In: ")
-                                    (length "Query: ")
-                                    query-width 4)))
-         (buffers-files-formatted (format "%s" (org-ql-view--contract-buffers-files buffers-files)))
-         (buffers-files-formatted (propertize (->> buffers-files-formatted
-                                                   (org-ql-view--font-lock-string 'emacs-lisp-mode)
-                                                   (s-truncate available-width))
-                                              'help-echo buffers-files-formatted)))
+         (query-formatted (when query
+                            (org-ql-view--format-query query)))
+         (query-width (when query-formatted
+                        (length query-formatted)))
+         (query-propertized (when query-formatted
+                              (propertize (org-ql-view--font-lock-string 'emacs-lisp-mode query-formatted)
+                                          'help-echo query-formatted)))
+         (available-width (max 0 (- (window-width) (length "In: ")
+                                    (length "Query: ") (or query-width 0)
+                                    4)))
+         (buffers-files-formatted (when buffers-files
+                                    (format "%s" (org-ql-view--contract-buffers-files buffers-files))))
+         (buffers-files-formatted (when buffers-files-formatted
+                                    (propertize (->> buffers-files-formatted
+                                                     (org-ql-view--font-lock-string 'emacs-lisp-mode)
+                                                     (s-truncate available-width))
+                                                'help-echo buffers-files-formatted))))
     (concat title
-            (propertize "Query:" 'face 'transient-argument)
-            query-propertized "  "
-            (propertize "In:" 'face 'transient-argument)
-            buffers-files-formatted)))
+            (when query (propertize "Query:" 'face 'transient-argument))
+            (when query query-propertized)
+            (when query "  ")
+            (when buffers-files
+              (propertize "In:" 'face 'transient-argument))
+            (when buffers-files-formatted
+              buffers-files-formatted))))
 
 (defun org-ql-view--format-query (query)
   "Return QUERY formatted as a string.
