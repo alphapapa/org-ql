@@ -133,6 +133,7 @@ This list should not contain any duplicates.")
 (defgroup org-ql nil
   "Customization for `org-ql'."
   :group 'org
+  ;; TODO: Add info manual link.
   :link '(url-link "https://github.com/alphapapa/org-ql"))
 
 ;;;; Macros
@@ -160,6 +161,7 @@ match."
        (push (list :name ',pred-name :aliases ',aliases :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates)
        (cl-defun ,fn-name ,args ,docstring ,@body))))
 
+;; TODO: Mark as obsolete/deprecated.
 ;;;###autoload
 (cl-defmacro org-ql (buffers-or-files query &key sort narrow action)
   "Expands into a call to `org-ql-select' with the same arguments.
