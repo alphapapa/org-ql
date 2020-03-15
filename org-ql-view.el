@@ -309,7 +309,7 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
 If PROMPT is non-nil (interactively, with prefix), prompt to
 update search arguments."
   (interactive "P")
-  (unless (eq major-mode 'org-ql-view-mode)
+  (unless org-ql-view-buffers-files
     (user-error "Not an Org QL View buffer"))
   (let* ((current-line (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
          (old-pos (point))
@@ -355,10 +355,6 @@ update search arguments."
     (search-forward (concat "Name: " key))))
 
 ;;;; Functions
-
-(define-derived-mode org-ql-view-mode org-agenda-mode "Org QL View"
-  "Major mode for `org-ql-view' buffers."
-  (setf buffer-read-only t))
 
 (defun org-ql-view--list-buffer ()
   "Return view list buffer."
@@ -474,8 +470,9 @@ with human-readable strings."
 If NAME is non-nil, return buffer by that name instead of using
 default buffer."
   (with-current-buffer (get-buffer-create (or name (concat org-ql-view-buffer-name-prefix "*")))
-    (unless (eq major-mode 'org-ql-view-mode)
-      (org-ql-view-mode))
+    (unless (eq major-mode 'org-agenda-mode)
+      (org-agenda-mode)
+      (setf buffer-read-only t))
     (current-buffer)))
 
 (defun org-ql-view--format-relative-date (difference)

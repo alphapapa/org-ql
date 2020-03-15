@@ -63,6 +63,7 @@ Functions / Macros
 
 Changelog
 
+* 0.4.4: 044. 
 * 0.4.3: 043. 
 * 0.4.2: 042. 
 * 0.4.1: 041. 
@@ -96,7 +97,9 @@ File: README.info,  Node: Contents,  Next: Screenshots,  Prev: Top,  Up: Top
 1 Contents
 **********
 
-   • • • • • 
+   • • • 
+        • • 
+             • • • • • • 
 
 File: README.info,  Node: Screenshots,  Next: Installation,  Prev: Contents,  Up: Top
 
@@ -148,8 +151,7 @@ File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
 4 Usage
 *******
 
-   • • 
-        • • • • • 
+   • • • • 
    Feedback on these APIs is welcome.  Eventually, after being tested
 and polished, they will be considered stable.
 
@@ -704,6 +706,7 @@ releases.
 
 * Menu:
 
+* 0.4.4: 044. 
 * 0.4.3: 043. 
 * 0.4.2: 042. 
 * 0.4.1: 041. 
@@ -718,9 +721,21 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 043,  Next: 042,  Up: Changelog
+File: README.info,  Node: 044,  Next: 043,  Up: Changelog
 
-5.1 0.4.3
+5.1 0.4.4
+=========
+
+*Fixed*
+   • Compatibility with Org Agenda remote editing commands (some of
+     which were broken by 0.4.3).  (Fixes #102
+     (https://github.com/alphapapa/org-ql/issues/102).  Thanks to Alois
+     Janíček (https://github.com/AloisJanicek) for reporting.)
+
+
+File: README.info,  Node: 043,  Next: 042,  Prev: 044,  Up: Changelog
+
+5.2 0.4.3
 =========
 
 *Fixed*
@@ -730,7 +745,7 @@ File: README.info,  Node: 043,  Next: 042,  Up: Changelog
 
 File: README.info,  Node: 042,  Next: 041,  Prev: 043,  Up: Changelog
 
-5.2 0.4.2
+5.3 0.4.2
 =========
 
 *Fixed*
@@ -739,7 +754,7 @@ File: README.info,  Node: 042,  Next: 041,  Prev: 043,  Up: Changelog
 
 File: README.info,  Node: 041,  Next: 04,  Prev: 042,  Up: Changelog
 
-5.3 0.4.1
+5.4 0.4.1
 =========
 
 *Fixed*
@@ -749,7 +764,7 @@ File: README.info,  Node: 041,  Next: 04,  Prev: 042,  Up: Changelog
 
 File: README.info,  Node: 04,  Next: 032,  Prev: 041,  Up: Changelog
 
-5.4 0.4
+5.5 0.4
 =======
 
 _Note:_ The next release, 0.5, may include changes which will require
@@ -830,7 +845,7 @@ as they will be pushed to the master branch when ready.
 
 File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
-5.5 0.3.2
+5.6 0.3.2
 =========
 
 *Fixed*
@@ -843,7 +858,7 @@ File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
-5.6 0.3.1
+5.7 0.3.1
 =========
 
 *Fixed*
@@ -853,7 +868,7 @@ File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
-5.7 0.3
+5.8 0.3
 =======
 
 *Added*
@@ -918,7 +933,7 @@ File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
 File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
-5.8 0.2.3
+5.9 0.2.3
 =========
 
 *Fixed*
@@ -928,8 +943,8 @@ File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
-5.9 0.2.2
-=========
+5.10 0.2.2
+==========
 
 *Fixed*
    • (deadline auto) selector matched entries whose deadlines had a
@@ -939,7 +954,7 @@ File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
-5.10 0.2.1
+5.11 0.2.1
 ==========
 
 *Fixed*
@@ -949,7 +964,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-5.11 0.2
+5.12 0.2
 ========
 
 *Added*
@@ -1032,7 +1047,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-5.12 0.1
+5.13 0.1
 ========
 
 First tagged release.
@@ -1093,43 +1108,44 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1447
-Node: Screenshots1574
-Node: Installation1692
-Node: Quelpa2330
-Node: Usage2773
-Node: Commands3122
-Node: org-ql-search3595
-Node: helm-org-ql5243
-Node: org-ql-view5655
-Node: org-ql-view-sidebar5853
-Node: org-ql-view-recent-items6209
-Node: org-ql-sparse-tree6693
-Node: Queries7493
-Node: Non-sexp query syntax8401
-Node: General predicates10108
-Node: Ancestor/descendant predicates14915
-Node: Date/time predicates16043
-Node: Functions / Macros18698
-Node: Agenda-like views18931
-Node: Listing / acting-on results20336
-Node: Changelog24938
-Node: 04325512
-Node: 04225695
-Node: 04125854
-Node: 0426093
-Node: 03230024
-Node: 03130401
-Node: 0330596
-Node: 02333569
-Node: 02233795
-Node: 02134061
-Node: 0234260
-Node: 0138295
-Node: Notes38396
-Node: Comparison with Org Agenda searches38558
-Node: org-sidebar39429
-Node: License39708
+Node: Contents1462
+Node: Screenshots1636
+Node: Installation1754
+Node: Quelpa2392
+Node: Usage2835
+Node: Commands3163
+Node: org-ql-search3636
+Node: helm-org-ql5284
+Node: org-ql-view5696
+Node: org-ql-view-sidebar5894
+Node: org-ql-view-recent-items6250
+Node: org-ql-sparse-tree6734
+Node: Queries7534
+Node: Non-sexp query syntax8442
+Node: General predicates10149
+Node: Ancestor/descendant predicates14956
+Node: Date/time predicates16084
+Node: Functions / Macros18739
+Node: Agenda-like views18972
+Node: Listing / acting-on results20377
+Node: Changelog24979
+Node: 04425568
+Node: 04325913
+Node: 04226108
+Node: 04126267
+Node: 0426506
+Node: 03230437
+Node: 03130814
+Node: 0331009
+Node: 02333982
+Node: 02234208
+Node: 02134476
+Node: 0234675
+Node: 0138710
+Node: Notes38811
+Node: Comparison with Org Agenda searches38973
+Node: org-sidebar39844
+Node: License40123
 
 End Tag Table
 
