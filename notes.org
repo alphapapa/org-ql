@@ -525,6 +525,10 @@ e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-or
 
 e.g. doesn't currently show the =View= header.
 
+** TODO Dynamic blocks
+
+For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
+
 ** UNDERWAY [#B] "Node" caching
 
 [2019-09-05 Thu 12:30]  At each node checked by a predicate, make a struct that stores attributes we can query for, as well as parent node position.  This would let us speed up ancestor-based queries, like =(ancestor (todo "WAITING"))=.  Ideally it would also serve as the tag hierarchy cache.
