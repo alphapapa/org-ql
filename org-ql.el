@@ -123,10 +123,11 @@ tick, and another hash table keyed on buffer position, whose
 values are alists in which the key is a function and the value is
 the value returned by it at that node.")
 
-(defvar org-ql-predicates
-  (list (list :name 'org-back-to-heading :fn (symbol-function 'org-back-to-heading)))
-  "Plist of predicates, their corresponding functions, and their docstrings.
-This list should not contain any duplicates.")
+(eval-and-compile
+  (defvar org-ql-predicates
+    (list (list :name 'org-back-to-heading :fn (symbol-function 'org-back-to-heading)))
+    "Plist of predicates, their corresponding functions, and their docstrings.
+This list should not contain any duplicates."))
 
 ;;;; Customization
 
