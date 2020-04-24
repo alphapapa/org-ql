@@ -685,11 +685,16 @@ return an empty string."
                            (warn "No marker found for item: %s" title)
                            (org-element-property :tags element))
                        (org-element-property :tags element)))
-           (tag-string (when tag-list
-                         (--> tag-list
-                              (s-join ":" it)
-                              (s-wrap it ":")
-                              (org-add-props it nil 'face 'org-tag))))
+           (tag-string (when-let
+			   ((tag-list (if (not org-agenda-hide-tags-regexp)
+					  tag-list
+					(cl-remove-if
+					 (lambda (tag) (string-match-p org-agenda-hide-tags-regexp tag))
+					 tag-list))))
+			 (--> tag-list
+			      (s-join ":" it)
+			      (s-wrap it ":")
+			      (org-add-props it nil 'face 'org-tag))))
            ;;  (category (org-element-property :category element))
            (priority-string (-some->> (org-element-property :priority element)
                                       (char-to-string)
