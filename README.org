@@ -412,6 +412,11 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 *Changed*
 +  Binding to refresh search/view buffers changed to =r=.
 
+** 0.4.5
+
+*Fixed*
++  Non-case-folding predicates like ~(todo)~ unnecessarily disabled case-folding for other predicates.  ([[https://github.com/alphapapa/org-ql/issues/114][Issue #114]].  Thanks to [[https://github.com/bitclick][@bitclick]] for reporting.)
+
 ** 0.4.4
 
 *Fixed*
