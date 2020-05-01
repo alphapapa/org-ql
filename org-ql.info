@@ -63,6 +63,7 @@ Functions / Macros
 
 Changelog
 
+* 0.4.5: 045. 
 * 0.4.4: 044. 
 * 0.4.3: 043. 
 * 0.4.2: 042. 
@@ -151,7 +152,8 @@ File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
 4 Usage
 *******
 
-   • • • • 
+   • • 
+        • • • • • 
    Feedback on these APIs is welcome.  Eventually, after being tested
 and polished, they will be considered stable.
 
@@ -706,6 +708,7 @@ releases.
 
 * Menu:
 
+* 0.4.5: 045. 
 * 0.4.4: 044. 
 * 0.4.3: 043. 
 * 0.4.2: 042. 
@@ -721,9 +724,21 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 044,  Next: 043,  Up: Changelog
+File: README.info,  Node: 045,  Next: 044,  Up: Changelog
 
-5.1 0.4.4
+5.1 0.4.5
+=========
+
+*Fixed*
+   • Non-case-folding predicates like ‘(todo)’ unnecessarily disabled
+     case-folding for other predicates.  (Issue #114
+     (https://github.com/alphapapa/org-ql/issues/114).  Thanks to
+     @bitclick (https://github.com/bitclick) for reporting.)
+
+
+File: README.info,  Node: 044,  Next: 043,  Prev: 045,  Up: Changelog
+
+5.2 0.4.4
 =========
 
 *Fixed*
@@ -735,7 +750,7 @@ File: README.info,  Node: 044,  Next: 043,  Up: Changelog
 
 File: README.info,  Node: 043,  Next: 042,  Prev: 044,  Up: Changelog
 
-5.2 0.4.3
+5.3 0.4.3
 =========
 
 *Fixed*
@@ -745,7 +760,7 @@ File: README.info,  Node: 043,  Next: 042,  Prev: 044,  Up: Changelog
 
 File: README.info,  Node: 042,  Next: 041,  Prev: 043,  Up: Changelog
 
-5.3 0.4.2
+5.4 0.4.2
 =========
 
 *Fixed*
@@ -754,7 +769,7 @@ File: README.info,  Node: 042,  Next: 041,  Prev: 043,  Up: Changelog
 
 File: README.info,  Node: 041,  Next: 04,  Prev: 042,  Up: Changelog
 
-5.4 0.4.1
+5.5 0.4.1
 =========
 
 *Fixed*
@@ -764,7 +779,7 @@ File: README.info,  Node: 041,  Next: 04,  Prev: 042,  Up: Changelog
 
 File: README.info,  Node: 04,  Next: 032,  Prev: 041,  Up: Changelog
 
-5.5 0.4
+5.6 0.4
 =======
 
 _Note:_ The next release, 0.5, may include changes which will require
@@ -845,7 +860,7 @@ as they will be pushed to the master branch when ready.
 
 File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
-5.6 0.3.2
+5.7 0.3.2
 =========
 
 *Fixed*
@@ -858,7 +873,7 @@ File: README.info,  Node: 032,  Next: 031,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
-5.7 0.3.1
+5.8 0.3.1
 =========
 
 *Fixed*
@@ -868,7 +883,7 @@ File: README.info,  Node: 031,  Next: 03,  Prev: 032,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
-5.8 0.3
+5.9 0.3
 =======
 
 *Added*
@@ -933,8 +948,8 @@ File: README.info,  Node: 03,  Next: 023,  Prev: 031,  Up: Changelog
 
 File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
-5.9 0.2.3
-=========
+5.10 0.2.3
+==========
 
 *Fixed*
    • Priority queries could fail to match headings whose to-do keywords
@@ -943,7 +958,7 @@ File: README.info,  Node: 023,  Next: 022,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
-5.10 0.2.2
+5.11 0.2.2
 ==========
 
 *Fixed*
@@ -954,7 +969,7 @@ File: README.info,  Node: 022,  Next: 021,  Prev: 023,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
-5.11 0.2.1
+5.12 0.2.1
 ==========
 
 *Fixed*
@@ -964,7 +979,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 022,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-5.12 0.2
+5.13 0.2
 ========
 
 *Added*
@@ -1047,7 +1062,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-5.13 0.1
+5.14 0.1
 ========
 
 First tagged release.
@@ -1108,44 +1123,45 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1462
-Node: Screenshots1636
-Node: Installation1754
-Node: Quelpa2392
-Node: Usage2835
-Node: Commands3163
-Node: org-ql-search3636
-Node: helm-org-ql5284
-Node: org-ql-view5696
-Node: org-ql-view-sidebar5894
-Node: org-ql-view-recent-items6250
-Node: org-ql-sparse-tree6734
-Node: Queries7534
-Node: Non-sexp query syntax8442
-Node: General predicates10149
-Node: Ancestor/descendant predicates14956
-Node: Date/time predicates16084
-Node: Functions / Macros18739
-Node: Agenda-like views18972
-Node: Listing / acting-on results20377
-Node: Changelog24979
-Node: 04425568
-Node: 04325913
-Node: 04226108
-Node: 04126267
-Node: 0426506
-Node: 03230437
-Node: 03130814
-Node: 0331009
-Node: 02333982
-Node: 02234208
-Node: 02134476
-Node: 0234675
-Node: 0138710
-Node: Notes38811
-Node: Comparison with Org Agenda searches38973
-Node: org-sidebar39844
-Node: License40123
+Node: Contents1477
+Node: Screenshots1651
+Node: Installation1769
+Node: Quelpa2407
+Node: Usage2850
+Node: Commands3199
+Node: org-ql-search3672
+Node: helm-org-ql5320
+Node: org-ql-view5732
+Node: org-ql-view-sidebar5930
+Node: org-ql-view-recent-items6286
+Node: org-ql-sparse-tree6770
+Node: Queries7570
+Node: Non-sexp query syntax8478
+Node: General predicates10185
+Node: Ancestor/descendant predicates14992
+Node: Date/time predicates16120
+Node: Functions / Macros18775
+Node: Agenda-like views19008
+Node: Listing / acting-on results20413
+Node: Changelog25015
+Node: 04525619
+Node: 04425966
+Node: 04326323
+Node: 04226518
+Node: 04126677
+Node: 0426916
+Node: 03230847
+Node: 03131224
+Node: 0331419
+Node: 02334392
+Node: 02234620
+Node: 02134888
+Node: 0235087
+Node: 0139122
+Node: Notes39223
+Node: Comparison with Org Agenda searches39385
+Node: org-sidebar40256
+Node: License40535
 
 End Tag Table
 

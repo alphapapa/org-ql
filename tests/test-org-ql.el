@@ -707,6 +707,13 @@ RESULTS should be a list of strings as returned by
       (org-ql-it "with two plain strings in an OR"
         (org-ql-expect ((or "Take over" "universe")
                         :sort todo)
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+
+      (org-ql-it "case-folding predicate with non-case-folding preamble"
+        ;; e.g. the (todo) predicate disables case-folding in its preamble, but that
+        ;; should not prevent case-folding in this and other predicates (issue #114).
+        (org-ql-expect ((and (todo "TODO") (regexp "take over"))
+                        :sort todo)
           '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut"))))
 
     (describe "(scheduled)"

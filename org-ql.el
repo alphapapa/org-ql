@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.4.4
+;; Version: 0.4.5
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (org "9.0") (org-super-agenda "1.2-pre") (ov "1.0.6") (peg "0.6") (s "1.12.0") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -355,12 +355,12 @@ If NARROW is non-nil, buffer will not be widened."
                       (message "org-ql: No headings in buffer: %s" (current-buffer)))
                     nil)
                 ;; Find matching entries.
-                (cond (preamble (let ((case-fold-search preamble-case-fold))
-                                  (cl-loop while (re-search-forward preamble nil t)
-                                           do (outline-back-to-heading 'invisible-ok)
-                                           when (funcall predicate)
-                                           collect (funcall action)
-                                           do (outline-next-heading))))
+                (cond (preamble (cl-loop while (let ((case-fold-search preamble-case-fold))
+                                                 (re-search-forward preamble nil t))
+                                         do (outline-back-to-heading 'invisible-ok)
+                                         when (funcall predicate)
+                                         collect (funcall action)
+                                         do (outline-next-heading)))
                       (t (cl-loop when (funcall predicate)
                                   collect (funcall action)
                                   while (outline-next-heading))))))))
