@@ -67,6 +67,7 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
   - [[#general-predicates][General predicates]]
   - [[#ancestordescendant-predicates][Ancestor/descendant predicates]]
   - [[#datetime-predicates][Date/time predicates]]
+  - [[#custom-predicates][Custom predicates]]
 - [[#functions--macros][Functions / Macros]]
 :END:
 
@@ -160,7 +161,8 @@ Show a sparse tree for ~QUERY~ in ~BUFFER~ and return number of results.  The tr
 - [[#non-sexp-query-syntax][Non-sexp query syntax]]
 - [[#general-predicates][General predicates]]
 - [[#ancestordescendant-predicates][Ancestor/descendant predicates]]
-- [[#datetime-predicates][Date/time predicates]]
+  - [[#datetime-predicates][Date/time predicates]]
+  - [[#custom-predicates][Custom predicates]]
 :END:
 
 An =org-ql= query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.
@@ -206,7 +208,7 @@ Arguments are listed next to predicate names, where applicable.
      -  Aliases: ~olps~.
 +  =path (&rest regexps)= :: Return non-nil if current heading's buffer's filename path matches any of ~REGEXPS~ (regexp strings).  Without arguments, return non-nil if buffer is file-backed.
 +  =priority (&rest args)= :: Return non-nil if current heading has a certain priority.  ~ARGS~ may be either a list of one or more priority letters as strings, or a comparator function symbol followed by a priority letter string.  For example:  ~(priority "A") (priority "A" "B") (priority '>= "B")~ Note that items without a priority cookie never match this predicate (while Org itself considers items without a cookie to have the default priority, which, by default, is equal to priority ~B~).
-+  =property (property &optional value)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a custom predicate form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
++  =property (property &optional value)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a [[#custom-predicates][custom predicate]] form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
 +  =regexp (&rest regexps)= :: Return non-nil if current entry matches all of ~REGEXPS~ (regexp strings).  Matches against entire entry, from beginning of its heading to the next heading.
      -  Aliases: =r=.
 +  ~src (&key lang regexps)~ :: Return non-nil if current entry contains an Org Babel source block.  If ~LANG~ is non-nil, match blocks of that language.  If ~REGEXPS~ is non-nil, require that block's contents match all regexps.
@@ -251,6 +253,20 @@ The following predicates, in addition to the keyword arguments, can also take a 
      -  =deadline= :: Return non-nil if current entry has deadline in given period.  If argument is =auto=, return non-nil if entry has deadline within =org-deadline-warning-days=.  If no arguments are specified, return non-nil if entry has any deadline.
      -  =planning= :: Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).  If no arguments are specified, return non-nil if entry is scheduled at any time.
      -  =scheduled= :: Return non-nil if current entry is scheduled in given period.  If no arguments are specified, return non-nil if entry is scheduled at any time.
+
+*** Custom predicates
+:PROPERTIES:
+:CUSTOM_ID: custom-predicates
+:END:
+Custom predicates can be passed as arbitrary lisp forms.  The form will be run with the point located within each entry.
+
+For example, the following code enables inheritance when matching based on the value of an entry's property:
+
+#+BEGIN_SRC elisp
+  (org-ql-select
+    (org-agenda-files)
+    '(equal (org-entry-get (point) "EXAMPLE-PROPERTY" t) "EXAMPLE-VALUE"))
+#+END_SRC
 
 ** Functions / Macros
 :PROPERTIES:
