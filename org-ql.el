@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.4.5
+;; Version: 0.4.6
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (org "9.0") (org-super-agenda "1.2-pre") (ov "1.0.6") (peg "0.6") (s "1.12.0") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -1529,6 +1529,21 @@ element should be a regexp string."
 (defvar peg-errors nil)
 (defvar peg-stack nil)
 
+(defmacro org-ql--peg-parse-string (rules string &optional noerror)
+  "Parse STRING according to RULES.
+If NOERROR is non-nil, push nil resp. t if the parse failed
+resp. succeded instead of signaling an error."
+  ;; Unfortunately, this macro was moved to peg-tests.el, so we copy it here.
+  `(with-temp-buffer
+     (insert ,string)
+     (goto-char (point-min))
+     ,(if noerror
+	  (let ((entry (make-symbol "entry"))
+		(start (caar rules)))
+	    `(peg-parse (entry (or (and ,start `(-- t)) ""))
+			. ,rules))
+	`(peg-parse . ,rules))))
+
 (cl-eval-when (compile load eval)
   ;; This `eval-when' is necessary, otherwise the macro does not define
   ;; the function correctly, apparently because `org-ql-predicates'
@@ -1555,7 +1570,7 @@ Builds the PEG expression using predicates defined in
          "Return query parsed from plain query string INPUT.
 Multiple predicates are combined with BOOLEAN."
          (unless (s-blank-str? input)
-           (let* ((query (peg-parse-string
+           (let* ((query (org-ql--peg-parse-string
                           ((query (+ term
                                      (opt (+ (syntax-class whitespace) (any)))))
                            (term (or (and negation (list positive-term)
