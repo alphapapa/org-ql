@@ -377,12 +377,12 @@ If NARROW is non-nil, buffer will not be widened."
                       (message "org-ql: No headings in buffer: %s" (current-buffer)))
                     nil)
                 ;; Find matching entries.
-                (cond (preamble (let ((case-fold-search preamble-case-fold))
-                                  (cl-loop while (re-search-forward preamble nil t)
-                                           do (outline-back-to-heading 'invisible-ok)
-                                           when (funcall predicate)
-                                           collect (funcall action)
-                                           do (outline-next-heading))))
+                (cond (preamble (cl-loop while (let ((case-fold-search preamble-case-fold))
+                                                 (re-search-forward preamble nil t))
+                                         do (outline-back-to-heading 'invisible-ok)
+                                         when (funcall predicate)
+                                         collect (funcall action)
+                                         do (outline-next-heading)))
                       (t (cl-loop when (funcall predicate)
                                   collect (funcall action)
                                   while (outline-next-heading))))))))
@@ -1671,6 +1671,21 @@ element should be a regexp string."
 (defvar peg-errors nil)
 (defvar peg-stack nil)
 
+(defmacro org-ql--peg-parse-string (rules string &optional noerror)
+  "Parse STRING according to RULES.
+If NOERROR is non-nil, push nil resp. t if the parse failed
+resp. succeded instead of signaling an error."
+  ;; Unfortunately, this macro was moved to peg-tests.el, so we copy it here.
+  `(with-temp-buffer
+     (insert ,string)
+     (goto-char (point-min))
+     ,(if noerror
+	  (let ((entry (make-symbol "entry"))
+		(start (caar rules)))
+	    `(peg-parse (entry (or (and ,start `(-- t)) ""))
+			. ,rules))
+	`(peg-parse . ,rules))))
+
 (cl-eval-when (compile load eval)
   ;; This `eval-when' is necessary, otherwise the macro does not define
   ;; the function correctly, apparently because `org-ql-predicates'
@@ -1697,7 +1712,7 @@ Builds the PEG expression using predicates defined in
          "Return query parsed from plain query string INPUT.
 Multiple predicates are combined with BOOLEAN."
          (unless (s-blank-str? input)
-           (let* ((query (peg-parse-string
+           (let* ((query (org-ql--peg-parse-string
                           ((query (+ term
                                      (opt (+ (syntax-class whitespace) (any)))))
                            (term (or (and negation (list positive-term)
