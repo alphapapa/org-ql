@@ -1598,7 +1598,7 @@ PREDICATES is a list of one or more sorting methods, including:
                                                                              ;; Put at end of list if not found
                                                                              (1+ (length org-todo-keywords-1)))))))
                                      (-flatten-n 1 (-map #'cdr sorted-groups)))))
-    (cl-loop for pred in (nreverse predicates)
+    (cl-loop for pred in (reverse predicates)
              do (setq items (if (eq pred 'todo)
                                 (sort-by-todo-keyword items)
                               (-sort (sorter pred) items)))
