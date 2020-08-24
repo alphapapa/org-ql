@@ -240,7 +240,8 @@ automatically from the query."
 When RECURSE is non-nil, recurse into subdirectories.  When
 REGEXP is non-nil, only return files that match REGEXP."
   (let ((files (->> directories
-                    (--map (f-files it nil recurse))
+                    (--map (if (f-exists-p it)
+                               (f-files it nil recurse)))
                     -flatten)))
     (if regexp
         (--select (string-match regexp it)
