@@ -869,7 +869,7 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
         org-ql-view-buffers-files
       (pcase-exhaustive
           (completing-read "Buffers/Files: "
-                           (list 'buffer 'org-agenda-files 'org-directory 'all)
+                           (list 'buffer 'org-agenda-files 'org-agenda-text-search-extra-files 'org-directory 'all)
                            nil nil (initial-input))
         ((or "" "buffer") (current-buffer))
         ("org-agenda-files" (org-agenda-files))
