@@ -875,7 +875,11 @@ return an empty string."
                            (s-join ":" it)
                            (s-wrap it ":")
                            (org-add-props it nil 'face 'org-tag))))
-           ;;  (category (org-element-property :category element))
+           (category (if-let ((marker (or (org-element-property :org-hd-marker element)
+                                          (org-element-property :org-marker element))))
+                             (with-current-buffer (marker-buffer marker)
+                                (org-get-category marker))
+                           (warn "No marker found for item: %s" title)))
            (priority-string (-some->> (org-element-property :priority element)
                               (char-to-string)
                               (format "[#%s]")
@@ -896,6 +900,7 @@ return an empty string."
           'org-agenda-type 'search
           'todo-state todo-keyword
           'tags tag-list
+          'org-category category
           'org-habit-p habit-property)))))
 
 (defun org-ql-view--add-faces (element)
