@@ -2,6 +2,10 @@
 
 * Tasks
 
+** TODO [#B] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]
+
+[2020-10-19 Mon 00:23]  Should try to use this instead of whatever bespoke code is currently used.
+
 ** TODO [#A] Add ~:auto~ keyword to ~(planning)~ predicate
 
 It should act like ~(or (deadline auto) (scheduled :to today))~.
