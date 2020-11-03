@@ -428,6 +428,7 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
                    (null (org-ql-view--buffer buffer))
                    (buffer buffer))))
     (with-current-buffer buffer
+      (setq-local bookmark-make-record-function #'org-ql-view--bookmark-make-record)
       (use-local-map org-ql-view-map)
       ;; Prepare buffer, saving data for refreshing.
       (cl-loop for symbol in vars
@@ -518,6 +519,40 @@ dates in the past, and negative for dates in the future."
         ((< difference 0)
          (format "in %sd" (* -1 difference)))
         (t "today")))
+
+;;;; Bookmarks
+
+;; Support for Emacs bookmarks.
+
+(eval-when-compile
+  (require 'bookmark))
+
+(defun org-ql-view--bookmark-make-record ()
+  "Return a bookmark record for the current Org QL View buffer."
+  (list (concat "Org QL View: " org-ql-view-title)
+        (cons 'org-ql-view-plist (org-ql-view--plist (current-buffer)))
+        (cons 'handler #'org-ql-view--bookmark-handler)
+        (cons 'position (point))))
+
+;;;###autoload
+(defun org-ql-view--bookmark-handler (bookmark)
+  "Show Org QL View BOOKMARK in current buffer."
+  (pcase-let* (((map org-ql-view-plist) (bookmark-get-bookmark-record bookmark))
+               ((map :buffers-files :query :super-groups :narrow :sort :title)
+                org-ql-view-plist)
+               (super-groups (cl-etypecase super-groups
+                               (symbol (symbol-value super-groups))
+                               (list super-groups))))
+    (org-ql-search buffers-files query
+      :super-groups super-groups :narrow narrow :sort sort :title title)
+    ;; HACK: `bookmark--jump-via' expects that, when the handler returns, the current buffer
+    ;; (not merely the selected window's buffer) is the one to be displayed.  However,
+    ;; `org-ql-view--display' uses `with-current-buffer', which resets the current buffer to
+    ;; the one that was active when the bookmark was jumped to.  So we set the buffer before
+    ;; returning.  It might be better to refactor `org-ql-view--display' into a function that
+    ;; returns a buffer which can be displayed by the calling function.  But that would be
+    ;; more complicated and might introduce bugs elsewhere, so we'll just do this for now.
+    (set-buffer (window-buffer (selected-window)))))
 
 ;;;; Transient
 

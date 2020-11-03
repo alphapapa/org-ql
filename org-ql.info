@@ -750,6 +750,10 @@ File: README.info,  Node: 05-pre,  Next: 046,  Up: Changelog
      search/view buffers.
    • Predicate link, which matches descriptions and targets in Org
      links.
+   • Emacs bookmark support: Org QL View buffers can be bookmarked with,
+     e.g.  C-x r m and shown with, e.g.  C-x r b.  (This also enables
+     view restoration with Burly
+     (https://github.com/alphapapa/burly.el).)
    • Mascot.
 
    *Changed*
@@ -1187,25 +1191,25 @@ Node: Agenda-like views19768
 Node: Listing / acting-on results21173
 Node: Changelog25775
 Node: 05-pre26414
-Node: 04626778
-Node: 04527181
-Node: 04427540
-Node: 04327897
-Node: 04228092
-Node: 04128251
-Node: 0428490
-Node: 03232421
-Node: 03132798
-Node: 0332995
-Node: 02335970
-Node: 02236198
-Node: 02136466
-Node: 0236665
-Node: 0140700
-Node: Notes40801
-Node: Comparison with Org Agenda searches40963
-Node: org-sidebar41835
-Node: License42114
+Node: 04627003
+Node: 04527406
+Node: 04427765
+Node: 04328122
+Node: 04228317
+Node: 04128476
+Node: 0428715
+Node: 03232646
+Node: 03133023
+Node: 0333220
+Node: 02336195
+Node: 02236423
+Node: 02136691
+Node: 0236890
+Node: 0140925
+Node: Notes41026
+Node: Comparison with Org Agenda searches41188
+Node: org-sidebar42060
+Node: License42339
 
 End Tag Table
 

@@ -407,6 +407,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 *Added*
 +  View dispatcher using =transient.el= (like Magit), bound to =v= in search/view buffers.
 +  Predicate =link=, which matches descriptions and targets in Org links.
++  Emacs bookmark support: Org QL View buffers can be bookmarked with, e.g. =C-x r m= and shown with, e.g. =C-x r b=.  (This also enables view restoration with [[https://github.com/alphapapa/burly.el][Burly]].)
 +  Mascot.
 
 *Changed*
