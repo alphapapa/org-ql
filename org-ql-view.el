@@ -529,10 +529,24 @@ dates in the past, and negative for dates in the future."
 
 (defun org-ql-view--bookmark-make-record ()
   "Return a bookmark record for the current Org QL View buffer."
-  (list (concat "Org QL View: " org-ql-view-title)
-        (cons 'org-ql-view-plist (org-ql-view--plist (current-buffer)))
-        (cons 'handler #'org-ql-view--bookmark-handler)
-        (cons 'position (point))))
+  (cl-labels ((file-nameize
+               (b-f) (or (buffer-file-name b-f)
+                         (when (buffer-base-buffer b-f)
+                           (buffer-file-name (buffer-base-buffer b-f)))
+                         (user-error "Only file-backed buffers can be bookmarked by Org QL View: %s" b-f))))
+    (pcase-let* ((plist (org-ql-view--plist (current-buffer)))
+                 ((map :buffers-files) plist))
+      ;; Replace buffers with their filenames, and signal error if any are not file-backed.
+      (setf plist (plist-put plist :buffers-files
+                             (cl-etypecase buffers-files
+                               (string buffers-files)
+                               (buffer (file-nameize buffers-files))
+                               (list (cl-loop for b-f in buffers-files
+                                              collect (file-nameize b-f))))))
+      (list (concat "Org QL View: " org-ql-view-title)
+            (cons 'org-ql-view-plist plist)
+            (cons 'handler #'org-ql-view--bookmark-handler)
+            (cons 'position (point))))))
 
 ;;;###autoload
 (defun org-ql-view--bookmark-handler (bookmark)
