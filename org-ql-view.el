@@ -343,12 +343,10 @@ update search arguments."
   "Save current `org-ql-search' buffer to `org-ql-views'."
   (interactive)
   (let* ((name (read-string "Save view as: " org-ql-view-title))
-         (plist (list :buffers-files org-ql-view-buffers-files
-                      :query org-ql-view-query
-                      :sort org-ql-view-sort
-                      :narrow org-ql-view-narrow
-                      :super-groups org-ql-view-super-groups
-                      :title name)))
+         ;; Bind `org-ql-view-title' to the name that was read, in case
+         ;; it's different, which `org-ql-view--plist' will pick up.
+         (org-ql-view-title name)
+         (plist (org-ql-view--plist (current-buffer))))
     (when (or (not (map-elt org-ql-views name nil))
               (yes-or-no-p (format "Overwrite view \"%s\"?" name)))
       (setf (map-elt org-ql-views name nil #'equal) plist)
@@ -373,6 +371,16 @@ update search arguments."
     (search-forward (concat "Name: " key))))
 
 ;;;; Functions
+
+(defun org-ql-view--plist (buffer)
+  "Return plist describing Org QL View in BUFFER."
+  (with-current-buffer buffer
+    (list :buffers-files org-ql-view-buffers-files
+          :query org-ql-view-query
+          :sort org-ql-view-sort
+          :narrow org-ql-view-narrow
+          :super-groups org-ql-view-super-groups
+          :title org-ql-view-title)))
 
 (defun org-ql-view--list-buffer ()
   "Return view list buffer."
