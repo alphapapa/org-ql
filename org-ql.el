@@ -1682,7 +1682,7 @@ resp. succeded instead of signaling an error."
      ,(if noerror
 	  (let ((entry (make-symbol "entry"))
 		(start (caar rules)))
-	    `(peg-parse (entry (or (and ,start `(-- t)) ""))
+	    `(peg-parse (,entry (or (and ,start `(-- t)) ""))
 			. ,rules))
 	`(peg-parse . ,rules))))
 
