@@ -332,7 +332,9 @@ update search arguments."
     ;; Now in the results buffer.
     (rename-buffer (format "%s %s*"
                            org-ql-view-buffer-name-prefix
-                           (or org-ql-view-title org-ql-view-query)))
+                           (or org-ql-view-title org-ql-view-query))
+                   ;; Avoid any errors in case a buffer by this name already exists.
+                   'unique)
     (goto-char (point-min))
     (or (when (search-forward current-line nil t)
           (beginning-of-line))
