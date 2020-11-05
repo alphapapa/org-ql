@@ -35,6 +35,7 @@ Usage
 * Commands::
 * Queries::
 * Functions / Macros::
+* Tips::
 
 Commands
 
@@ -153,7 +154,7 @@ File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
 *******
 
    • • 
-        • • • • • 
+        • • • • • • 
    Feedback on these APIs is welcome.  Eventually, after being tested
 and polished, they will be considered stable.
 
@@ -164,6 +165,7 @@ and polished, they will be considered stable.
 * Commands::
 * Queries::
 * Functions / Macros::
+* Tips::
 
 
 File: README.info,  Node: Commands,  Next: Queries,  Up: Usage
@@ -542,7 +544,7 @@ number of days.  The number can be negative to invert the direction.
           scheduled at any time.
 
 
-File: README.info,  Node: Functions / Macros,  Prev: Queries,  Up: Usage
+File: README.info,  Node: Functions / Macros,  Next: Tips,  Prev: Queries,  Up: Usage
 
 4.3 Functions / Macros
 ======================
@@ -707,6 +709,17 @@ File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,
 
      Expands into a call to ‘org-ql-select’ with the same arguments.
      For convenience, arguments should be unquoted.
+
+
+File: README.info,  Node: Tips,  Prev: Functions / Macros,  Up: Usage
+
+4.4 Tips
+========
+
+   • Org QL View buffers can be bookmarked with Emacs bookmark commands,
+     e.g.  C-x r m.  This also integrates with org-sidebar
+     (https://github.com/alphapapa/org-sidebar) and Burly
+     (https://github.com/alphapapa/burly.el).
 
 
 File: README.info,  Node: Changelog,  Next: Notes,  Prev: Usage,  Up: Top
@@ -1169,47 +1182,48 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1512
-Node: Screenshots1635
-Node: Installation1753
-Node: Quelpa2391
-Node: Usage2834
-Node: Commands3183
-Node: org-ql-search3656
-Node: helm-org-ql5370
-Node: org-ql-view5782
-Node: org-ql-view-sidebar6282
-Node: org-ql-view-recent-items6638
-Node: org-ql-sparse-tree7122
-Node: Queries7922
-Node: Non-sexp query syntax8830
-Node: General predicates10537
-Node: Ancestor/descendant predicates15752
-Node: Date/time predicates16880
-Node: Functions / Macros19535
-Node: Agenda-like views19768
-Node: Listing / acting-on results21173
-Node: Changelog25775
-Node: 05-pre26414
-Node: 04627003
-Node: 04527406
-Node: 04427765
-Node: 04328122
-Node: 04228317
-Node: 04128476
-Node: 0428715
-Node: 03232646
-Node: 03133023
-Node: 0333220
-Node: 02336195
-Node: 02236423
-Node: 02136691
-Node: 0236890
-Node: 0140925
-Node: Notes41026
-Node: Comparison with Org Agenda searches41188
-Node: org-sidebar42060
-Node: License42339
+Node: Contents1521
+Node: Screenshots1644
+Node: Installation1762
+Node: Quelpa2400
+Node: Usage2843
+Node: Commands3205
+Node: org-ql-search3678
+Node: helm-org-ql5392
+Node: org-ql-view5804
+Node: org-ql-view-sidebar6304
+Node: org-ql-view-recent-items6660
+Node: org-ql-sparse-tree7144
+Node: Queries7944
+Node: Non-sexp query syntax8852
+Node: General predicates10559
+Node: Ancestor/descendant predicates15774
+Node: Date/time predicates16902
+Node: Functions / Macros19557
+Node: Agenda-like views19803
+Node: Listing / acting-on results21208
+Node: Tips25810
+Node: Changelog26141
+Node: 05-pre26780
+Node: 04627369
+Node: 04527772
+Node: 04428131
+Node: 04328488
+Node: 04228683
+Node: 04128842
+Node: 0429081
+Node: 03233012
+Node: 03133389
+Node: 0333586
+Node: 02336561
+Node: 02236789
+Node: 02137057
+Node: 0237256
+Node: 0141291
+Node: Notes41392
+Node: Comparison with Org Agenda searches41554
+Node: org-sidebar42426
+Node: License42705
 
 End Tag Table
 
