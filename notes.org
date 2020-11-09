@@ -27,7 +27,7 @@
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
 - [[#default-sort][Default sort]]
 - [[#dynamic-blocks][Dynamic blocks]]
-- [[#fancier-plain-query-syntax-for-tags-and-properties][Fancier plain query syntax for tags and properties]]
+- [[#partial-match-for-property-queries][Partial match for property queries]]
 - [[#new-transient-transient-lisp-variable-class][New Transient transient-lisp-variable class]]
 - [[#normalize-queries][Normalize queries]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
@@ -41,9 +41,8 @@
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#node-caching]["Node" caching]]
 - [[#implement-view-with-tabulated-list-mode-or-magit-section][Implement view with tabulated-list-mode or magit-section]]
-- [[#consider-using-parsec-for-parsing-queries][Consider using parsec for parsing queries]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
-- [[#use-bovine-or-wisent-to-parse-non-sexp-syntax][Use Bovine or Wisent to parse non-sexp syntax]]
+- [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#helm-command][Helm command]]
 - [[#byte-compile-lambdas][Byte-compile lambdas]]
@@ -65,7 +64,11 @@ Note that the built-in sorting only works on Org elements, which is the default 
 
 [2020-01-16 Thu 06:20]  This idea just came to me when I was thinking about using the search-based paradigm vs. outline-based.  This would allow both, e.g. some kind of =#+BEGIN_QUERY= block that would update when =C-c C-c= is pressed on it.
 
-** TODO [#A] Outline path in buffers-files arg
+** TODO [#A] Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~
+
+For consistency, because plain ~auto~ looks like a variable, and even though it's in a quoted form, it could be confusing.
+
+** TODO [#B] Outline path in buffers-files arg
 :PROPERTIES:
 :ID:       6935361a-9e1d-48ec-8d17-876a90b90f50
 :END:
@@ -84,19 +87,11 @@ Also, should support an ~id~ one.
 +  [ ] =category=
 +  [ ] Any date :: e.g. it would search for timestamps (active/inactive?) anywhere in an entry
 
-** TODO [#B] Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~
-
-For consistency, because plain ~auto~ looks like a variable, and even though it's in a quoted form, it could be confusing.
-
 ** TODO [#B] Default sort
 
 Would probably be useful to have a default sort option.
 
-** TODO Dynamic blocks
-
-For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
-
-** TODO [#B] Fancier plain query syntax for tags and properties
+** TODO [#B] Partial match for property queries
 
 e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse_trees_in_emacs_and_organice.html][Organice has now]].
 
@@ -112,11 +107,15 @@ e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse
 
 Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
 
-** TODO [#B] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]
+** TODO [#C] Dynamic blocks
+
+For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
+
+** TODO [#C] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]
 
 [2020-10-19 Mon 00:23]  Should try to use this instead of whatever bespoke code is currently used.
 
-** TODO [#B] Normalize queries
+** TODO [#C] Normalize queries
 
 [2019-07-16 Tue 11:49]  This serves two purposes:
 
@@ -125,11 +124,157 @@ Searching that with a query like =property:author=Fabrice= returns nothing; the 
 
 So the second purpose might actually be a drawback, because it would prevent users from optimizing their queries with knowledge of their data.  Maybe there should be an option to not normalize queries, so advanced users can order their selectors manually.
 
-** TODO [#B] Quickly change sorting/grouping in search views
+** TODO [#C] Update view screenshots
 
-With caching, the search doesn't need to be repeated, so resorting/regrouping can be very fast.
+e.g. doesn't currently show the =View= header.
 
-** TODO [#B] Recursive queries
+** TODO [#C] ~org-agenda-skip-function~
+
+As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
+
+#+BEGIN_SRC elisp
+  ;;; lima-0ac22.el --- -*- lexical-binding: t; -*-
+
+  (defun org-ql-skip-function (query)
+    "Return a function for `org-agenda-skip-function' for QUERY.
+  Compared to using QUERY in `org-ql', this effectively turns QUERY
+  into (not QUERY)."
+    (let* ((predicate (org-ql--query-predicate '(regexp "ryo-modal"))))
+      (lambda ()
+        ;; This duplicates the functionality of `org-ql--select'.
+        (let (orig-fns)
+          (--each org-ql-predicates
+            ;; Save original function mappings.
+            (let ((name (plist-get it :name)))
+              (push (list :name name :fn (symbol-function name)) orig-fns)))
+          (unwind-protect
+              (progn
+                (--each org-ql-predicates
+                  ;; Set predicate functions.
+                  (fset (plist-get it :name) (plist-get it :fn)))
+                ;; Run query.
+                ;; FIXME: "If this function returns nil, the current match should not be skipped.
+                ;; Otherwise, the function must return a position from where the search
+                ;; should be continued."
+                (funcall predicate))
+            (--each orig-fns
+              ;; Restore original function mappings.
+              (fset (plist-get it :name) (plist-get it :fn))))))))
+
+  (let ((org-agenda-custom-commands
+         '(("z" "Z"
+            ((tags-todo "PRIORITY=\"A\"+Emacs/!SOMEDAY"))
+            ((org-agenda-skip-function (org-ql-skip-function '(regexp "ryo-modal")))))
+           ((org-agenda-files ("~/org/inbox.org"))))))
+    (org-agenda nil "z"))
+#+END_SRC
+
+I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
+
+** TODO [#C] Test caching
+
+See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
+
+** TODO [#C] Update commentary
+
+** UNDERWAY [#A] Tools for saving queries and accessing them [3/4]
+
++ Added example to =examples.org=.
+
+*** UNDERWAY [#A] Org link types
+:PROPERTIES:
+:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
+:END:
+
+This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
+
+[2020-11-08 Sun 22:59]  Let's try a very simple implementation so I could write a link like this to search the current buffer:
+
+#+BEGIN_SRC org
+  [[org-ql-search:property:author="AUTHOR"]]
+#+END_SRC
+
+[2020-11-08 Sun 23:22]  Seems to work!
+
+#+BEGIN_SRC elisp
+  ;;;; Org link type
+
+  ;; This section adds a custom link type to Org.  See info:org#Adding hyperlink types.
+
+  (org-link-set-parameters "org-ql-search"
+                           :follow #'org-ql-search--link-open
+                           :store #'org-ql-search--link-store)
+
+  (defun org-ql-search--link-open (query)
+    "Open Org QL QUERY for current buffer."
+    (org-ql-search (current-buffer) query))
+
+  (defun org-ql-search--link-store ()
+    "Store a link to current Org QL query."
+    ;; TODO: When we have an org-ql-view-mode, test it here instead of org-ql-view-query.
+    (when org-ql-view-query
+      (org-store-link-props :type "org-ql-search"
+                            :link (concat "org-ql-search:" (org-ql-view--format-query org-ql-view-query))
+                            :description org-ql-view-title)
+      t))
+#+END_SRC
+
+Tested on these queries:
+
+#+BEGIN_SRC org
+  +  [[org-ql-search:(property%20:author%20"Chris%20Wellons")][org-ql-search:(property :author "Chris Wellons")]]
+  +  [[org-ql-search:(link%20"nullprogram")][org-ql-search:(link "nullprogram")]]
+  +  [[org-ql-search:link:nullprogram]]
+#+END_SRC
+
+**** TODO For all parameters
+
+**** TODO For saved queries
+
+*** DONE Bookmarks
+
+[2020-11-08 Sun 23:25]  Already done in =e5b4cd106558790563af26a8e32ec9508f904855=.
+
+*** DONE Access saved query from saved query list
+
+*** DONE Save query from ql-agenda buffer
+
+** UNDERWAY [#A] Outline path predicate
+
+[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
+
+#+BEGIN_SRC org
+  ,* Food
+
+  ,** Fruits
+
+  ,*** Blueberries
+
+  ,*** Grapes
+
+  ,** Vegetables
+
+  ,*** Carrots
+
+  ,*** Potatoes
+#+END_SRC
+
+Matching could work like this:
+
++  ~(outline "Food")~ :: Would return all nodes.
++  ~(outline "Fruits")~ :: Would return all fruits.
+
+Matching at a specific path would be something like:
+
++  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
+
+I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
+
+To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
+
+[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
+
+** UNDERWAY [#B] Recursive queries
 
 For lack of a better term.  A way to query for certain headings, and then gather results of a different query at each result of the first query, displaying all results in a single view.  
 
@@ -205,7 +350,7 @@ This works pretty well.  It needs polishing, and some refactoring so items can b
              -non-nil))))
 #+END_SRC
 
-** TODO [#B] Timeline view
+** UNDERWAY [#B] Timeline view
 :PROPERTIES:
 :ID:       00573552-ffe9-4608-8904-7f6c73246b6d
 :END:
@@ -356,156 +501,6 @@ Another, more up-to-date implementation:
 
 [2019-09-26 Thu 21:28]  Would probably make sense to implement this using the view-sections someday.
 
-** TODO [#B] Update view screenshots
-
-e.g. doesn't currently show the =View= header.
-
-** TODO [#C] ~org-agenda-skip-function~
-
-As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
-
-#+BEGIN_SRC elisp
-  ;;; lima-0ac22.el --- -*- lexical-binding: t; -*-
-
-  (defun org-ql-skip-function (query)
-    "Return a function for `org-agenda-skip-function' for QUERY.
-  Compared to using QUERY in `org-ql', this effectively turns QUERY
-  into (not QUERY)."
-    (let* ((predicate (org-ql--query-predicate '(regexp "ryo-modal"))))
-      (lambda ()
-        ;; This duplicates the functionality of `org-ql--select'.
-        (let (orig-fns)
-          (--each org-ql-predicates
-            ;; Save original function mappings.
-            (let ((name (plist-get it :name)))
-              (push (list :name name :fn (symbol-function name)) orig-fns)))
-          (unwind-protect
-              (progn
-                (--each org-ql-predicates
-                  ;; Set predicate functions.
-                  (fset (plist-get it :name) (plist-get it :fn)))
-                ;; Run query.
-                ;; FIXME: "If this function returns nil, the current match should not be skipped.
-                ;; Otherwise, the function must return a position from where the search
-                ;; should be continued."
-                (funcall predicate))
-            (--each orig-fns
-              ;; Restore original function mappings.
-              (fset (plist-get it :name) (plist-get it :fn))))))))
-
-  (let ((org-agenda-custom-commands
-         '(("z" "Z"
-            ((tags-todo "PRIORITY=\"A\"+Emacs/!SOMEDAY"))
-            ((org-agenda-skip-function (org-ql-skip-function '(regexp "ryo-modal")))))
-           ((org-agenda-files ("~/org/inbox.org"))))))
-    (org-agenda nil "z"))
-#+END_SRC
-
-I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
-
-** TODO [#C] Test caching
-
-See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
-
-** TODO [#C] Update commentary
-
-** UNDERWAY [#A] Tools for saving queries and accessing them [3/4]
-
-+ Added example to =examples.org=.
-
-*** UNDERWAY [#A] Org link types
-:PROPERTIES:
-:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
-:END:
-
-This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
-
-[2020-11-08 Sun 22:59]  Let's try a very simple implementation so I could write a link like this to search the current buffer:
-
-#+BEGIN_SRC org
-  [[org-ql-search:property:author="AUTHOR"]]
-#+END_SRC
-
-[2020-11-08 Sun 23:22]  Seems to work!
-
-#+BEGIN_SRC elisp
-  ;;;; Org link type
-
-  ;; This section adds a custom link type to Org.  See info:org#Adding hyperlink types.
-
-  (org-link-set-parameters "org-ql-search"
-                           :follow #'org-ql-search--link-open
-                           :store #'org-ql-search--link-store)
-
-  (defun org-ql-search--link-open (query)
-    "Open Org QL QUERY for current buffer."
-    (org-ql-search (current-buffer) query))
-
-  (defun org-ql-search--link-store ()
-    "Store a link to current Org QL query."
-    ;; TODO: When we have an org-ql-view-mode, test it here instead of org-ql-view-query.
-    (when org-ql-view-query
-      (org-store-link-props :type "org-ql-search"
-                            :link (concat "org-ql-search:" (org-ql-view--format-query org-ql-view-query))
-                            :description org-ql-view-title)
-      t))
-#+END_SRC
-
-Tested on these queries:
-
-#+BEGIN_SRC org
-  +  [[org-ql-search:(property%20:author%20"Chris%20Wellons")][org-ql-search:(property :author "Chris Wellons")]]
-  +  [[org-ql-search:(link%20"nullprogram")][org-ql-search:(link "nullprogram")]]
-  +  [[org-ql-search:link:nullprogram]]
-#+END_SRC
-
-**** TODO For all parameters
-
-**** TODO For saved queries
-
-*** DONE Bookmarks
-
-[2020-11-08 Sun 23:25]  Already done in =e5b4cd106558790563af26a8e32ec9508f904855=.
-
-*** DONE Access saved query from saved query list
-
-*** DONE Save query from ql-agenda buffer
-
-** UNDERWAY [#A] Outline path predicate
-
-[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
-
-#+BEGIN_SRC org
-  ,* Food
-
-  ,** Fruits
-
-  ,*** Blueberries
-
-  ,*** Grapes
-
-  ,** Vegetables
-
-  ,*** Carrots
-
-  ,*** Potatoes
-#+END_SRC
-
-Matching could work like this:
-
-+  ~(outline "Food")~ :: Would return all nodes.
-+  ~(outline "Fruits")~ :: Would return all fruits.
-
-Matching at a specific path would be something like:
-
-+  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
-
-I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
-
-To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
-
-[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
-
 ** UNDERWAY [#B] "Node" caching
 
 [2019-09-05 Thu 12:30]  At each node checked by a predicate, make a struct that stores attributes we can query for, as well as parent node position.  This would let us speed up ancestor-based queries, like =(ancestor (todo "WAITING"))=.  Ideally it would also serve as the tag hierarchy cache.
@@ -620,7 +615,7 @@ One of the things in that branch is =org-ql-item=, which is a struct used to car
 
 Another idea for it is to simply store the element from =org-element-headline-parser= in one of its slots, and populate all of the other slots lazily, like =ts=.  It already does that for a couple of slots, but I think it makes sense to do it for all of them, to reduce the overhead of making the struct for every query result.
 
-*** TODO Experiment with =widget=
+*** MAYBE [#C] Experiment with =widget=
 
 The code that powers the customization UI.  Has collapsible and customizable widgets.  Might be perfect.  Might even enable editing items in the list, with functions to make the changes in the source  buffers.
 
@@ -653,17 +648,18 @@ Appears to be another implementation of magit-section-like expandable sections. 
 
 **** magit-section
 
-** MAYBE Consider using [[https://github.com/cute-jumper/parsec.el][parsec]] for parsing queries
-
-=peg= is a bit older and perhaps unmaintained now.
-
-** MAYBE Overlay-based caching inspired by org-num-mode
+** MAYBE [#C] Overlay-based caching inspired by org-num-mode
 
 [2019-12-30 Mon 22:42]  Newer versions of Org have =org-num-mode=, which uses =font-lock= and =after-change-functions= to update overlays in the buffer with outline numbering.  Maybe a similar approach could be used to cache arbitrary values for headings in a buffer without having to discard the whole buffer's cache when the buffer changes.
 
-** MAYBE Use Bovine or Wisent to parse non-sexp syntax
+[2020-11-09 Mon 01:51]  I feel like that's probably unlikely to work well.  I imagine it would require storing the query at every heading, which would be very wasteful.  As well, adding more overlays to an Org buffer is probably not a good idea, because there are already enough of those.
 
-They're both built-in to Emacs, so we could drop the =peg= dependency.
+However, there might still be a useful idea here somewhere...
+
+** MAYBE [#C] Alternative parsing libraries
+
++  e.g. Bovine and Wisent come with Emacs, which would allow us to drop the =peg= dependency (which doesn't use lexical binding).
++  [[https://github.com/cute-jumper/parsec.el][parsec]] is third-party, but looks powerful
 
 ** MAYBE [#C] Fancier searching for inherited tags
 
@@ -787,6 +783,10 @@ Well, a bit of fiddling (lots of trial-and-error required) produced this:
 #+END_SRC
 
 That seems pretty usable!
+
+** DONE [#B] Quickly change sorting/grouping in search views
+
+With caching, the search doesn't need to be repeated, so resorting/regrouping can be very fast.
 
 ** DONE Byte-compile lambdas
 CLOSED: [2018-05-09 Wed 17:30]
