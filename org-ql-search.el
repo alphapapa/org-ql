@@ -92,6 +92,7 @@ Runs `org-occur-hook' after making the sparse tree."
       (org-remove-occur-highlights nil nil t)
       (org-overview))
     (let ((num-results 0))
+      ;; FIXME: Accept plain queries as well.
       (org-ql-select buffer query
         :action (lambda ()
                   (org-show-context 'occur-tree)
