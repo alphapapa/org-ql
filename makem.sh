@@ -397,6 +397,27 @@ function ert-tests-p {
     grep "(ert-deftest" "${files_project_test[@]}" &>/dev/null
 }
 
+function package-main-file {
+    # Echo the package's main file.  Helpful for setting package-lint-main-file.
+
+    file_pkg=$(git ls-files ./*-pkg.el 2>/dev/null)
+
+    if [[ $file_pkg ]]
+    then
+        # Use *-pkg.el file if it exists.
+        echo "$file_pkg"
+    else
+        # Use shortest filename (a sloppy heuristic that will do for now).
+        for file in "${files_project_feature[@]}"
+        do
+            echo ${#file} "$file"
+        done \
+            | sort -h \
+            | head -n1 \
+            | sed -r 's/^[[:digit:]]+ //'
+    fi
+}
+
 function dependencies {
     # Echo list of package dependencies.
 
@@ -781,6 +802,7 @@ function lint-package {
 
     run_emacs \
         --load package-lint \
+        --eval "(setq package-lint-main-file \"$(package-main-file)\")" \
         --funcall package-lint-batch-and-exit \
         "${files_project_feature[@]}" \
         && success "Linting package finished without errors." \
@@ -1022,6 +1044,7 @@ debug "EXCLUDING FILES: ${files_exclude[@]}"
 debug "FEATURE FILES: ${files_project_feature[@]}"
 debug "TEST FILES: ${files_project_test[@]}"
 debug "BYTE-COMPILE FILES: ${files_project_byte_compile[@]}"
+debug "PACKAGE-MAIN-FILE: $(package-main-file)"
 
 if ! [[ ${files_project_feature[@]} ]]
 then
