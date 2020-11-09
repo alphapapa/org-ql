@@ -20,6 +20,7 @@
 :END:
 :CONTENTS:
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
+- [[#consider-using-parsec-for-parsing-queries][Consider using parsec for parsing queries]]
 - [[#document-sorters][Document sorters]]
 - [[#org-block-to-insert-results-of-queries-with-links-to-entries][Org block to insert results of queries with links to entries]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
@@ -610,6 +611,10 @@ Not sure if it should automatically add the number of items to the header, or if
 Appears to be another implementation of magit-section-like expandable sections.  Not sure which came first.  Its code seems like it may be helpful.
 
 **** magit-section
+
+** MAYBE Consider using [[https://github.com/cute-jumper/parsec.el][parsec]] for parsing queries
+
+=peg= is a bit older and perhaps unmaintained now.
 
 ** MAYBE Overlay-based caching inspired by org-num-mode
 
