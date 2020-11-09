@@ -1,10 +1,56 @@
 #+PROPERTY: LOGGING nil
 
-* Tasks
+* [#A] Contents
+:PROPERTIES:
+:TOC:      :include siblings :depth 1 :ignore this :force depth
+:END:
+:CONTENTS:
+- [[#tasks][Tasks]]
+- [[#examples--testing][Examples / testing]]
+- [[#in-the-wild][In the wild]]
+- [[#profiling][Profiling]]
+- [[#references][References]]
+- [[#testing][Testing]]
+:END:
 
-** TODO [#B] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]
 
-[2020-10-19 Mon 00:23]  Should try to use this instead of whatever bespoke code is currently used.
+* [#A] Tasks
+:PROPERTIES:
+:TOC:      :include descendants :depth 1
+:END:
+:CONTENTS:
+- [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
+- [[#document-sorters][Document sorters]]
+- [[#org-block-to-insert-results-of-queries-with-links-to-entries][Org block to insert results of queries with links to entries]]
+- [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
+- [[#tools-for-saving-queries-and-accessing-them-24][Tools for saving queries and accessing them {2/4}]]
+- [[#add-more-sorters][Add more sorters?]]
+- [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
+- [[#default-sort][Default sort]]
+- [[#dynamic-blocks][Dynamic blocks]]
+- [[#fancier-plain-query-syntax-for-tags-and-properties][Fancier plain query syntax for tags and properties]]
+- [[#new-transient-transient-lisp-variable-class][New Transient transient-lisp-variable class]]
+- [[#normalize-queries][Normalize queries]]
+- [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
+- [[#recursive-queries][Recursive queries]]
+- [[#timeline-view][Timeline view]]
+- [[#update-view-screenshots][Update view screenshots]]
+- [[#org-agenda-skip-function][org-agenda-skip-function]]
+- [[#test-caching][Test caching]]
+- [[#update-commentary][Update commentary]]
+- [[#outline-path-predicate][Outline path predicate]]
+- [[#node-caching]["Node" caching]]
+- [[#implement-view-with-tabulated-list-mode-or-magit-section][Implement view with tabulated-list-mode or magit-section]]
+- [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
+- [[#use-bovine-or-wisent-to-parse-non-sexp-syntax][Use Bovine or Wisent to parse non-sexp syntax]]
+- [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
+- [[#helm-command][Helm command]]
+- [[#byte-compile-lambdas][Byte-compile lambdas]]
+- [[#documentfigure-out-tag-inheritance][Document/figure out tag inheritance]]
+- [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
+- [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
+- [[#use-macros-for-date][Use macros for date]]
+:END:
 
 ** TODO [#A] Add ~:auto~ keyword to ~(planning)~ predicate
 
@@ -53,160 +99,6 @@ This would be useful for having a menu of saved queries as Org links, or even bo
 
 *** DONE Save query from ql-agenda buffer
 
-** UNDERWAY [#A] Outline path predicate
-
-[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
-
-#+BEGIN_SRC org
-  ,* Food
-
-  ,** Fruits
-
-  ,*** Blueberries
-
-  ,*** Grapes
-
-  ,** Vegetables
-
-  ,*** Carrots
-
-  ,*** Potatoes
-#+END_SRC
-
-Matching could work like this:
-
-+  ~(outline "Food")~ :: Would return all nodes.
-+  ~(outline "Fruits")~ :: Would return all fruits.
-
-Matching at a specific path would be something like:
-
-+  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
-
-I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
-
-To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
-
-[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
-
-** DONE [#A] Helm command
-
-In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
-
-*** DONE Add
-
-*** DONE Demonstrate
-
-*** DONE Parsing non-Lisp queries
-
-[2019-09-12 Thu 12:56]  Lisp is so much easier to deal with, but some people don't like parentheses.  So I'm trying to add a non-Lisp-style query syntax.  It gets complicated.  The =peg= library helps, but its documentation is sparse and incomplete.  This seems to work fairly well for single-token queries, but I'm not sure if I can or should cram it all into one parser, or use separate ones for certain keywords.
-
-#+BEGIN_SRC elisp
-  (-let* ((input "todo:check|someday")
-          (input "tags:universe+space")
-          (input "heading:\"spaced phrase\"")
-          (input "")
-          (input "heading:\"spaced phrase\"+another")
-          combinator
-          (parsed (peg-parse-string ((predicate (substring keyword) ":" (opt args))
-                                     (keyword (or "heading" "tags" "todo" "property"))
-                                     (args (+ (and (or quoted-arg unquoted-arg) (opt separator))))
-                                     (quoted-arg "\"" unquoted-arg "\"")
-                                     (unquoted-arg (substring (+ (not (or separator "\"")) (any))))
-                                     (separator (or (and "|" (action (setf combinator 'or)))
-                                                    (and "+" (action (setf combinator 'and)))
-                                                    (and ":" (action (setf combinator 'arg))))))
-                                    input 'noerror))
-          ((predicate . args) (nreverse parsed)))
-    (when predicate
-      (list :predicate predicate :args args :combinator combinator)))
-  ;;=> (:predicate "heading" :args ("spaced phrase" "another" t) :combinator and)
-#+END_SRC
-
-I don't know where the =t= is coming from.
-
-The next step is to make it work with multi-token queries.  It needs to handle all of the tokens in one parser so it can handle quoted phrases (if we split on spaces, it would split quoted phrases).  But that makes getting the arguments out of it more difficult.  Probably need to do something like this:
-
-#+BEGIN_SRC elisp
-  (-let* ((input "todo:check|someday")
-          (input "tags:universe+space")
-          (input "heading:\"spaced phrase\"")
-          (input "")
-          (input "heading:\"spaced phrase\"+another")
-          combinator
-          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
-                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
-                                               (opt (syntax-class whitespace))))
-                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
-                                     (predicate (substring keyword) ":" (opt args))
-                                     (keyword (or "heading" "tags" "todo" "property"))
-                                     (args (+ (and (or quoted-arg unquoted-arg) (opt separator))))
-                                     (quoted-arg "\"" unquoted-arg "\"")
-                                     (unquoted-arg (substring (+ (not (or separator "\"")) (any))))
-                                     (separator (or (and "|" (action (setf combinator 'or)))
-                                                    (and "+" (action (setf combinator 'and)))
-                                                    (and ":" (action (setf combinator 'arg))))))
-                                    input 'noerror)))
-    parsed)
-#+END_SRC
-
-In which lists are pushed onto the stack and returned, rather than strings.  But I don't understand yet exactly how to use the =var= forms to consume input from the "value stack"; I need to study the examples more.  I'm also not sure if that will even work with a variable number of arguments.
-
-This seems to work, but we'll have to parse the args again in a separate step:
-
-#+BEGIN_SRC elisp
-  (-let* ((input "todo:check|someday")
-          (input "tags:universe+space")
-          (input "heading:\"spaced phrase\"")
-          (input "")
-          (input "heading:\"spaced phrase\"+another")
-          (input "heading:\"spaced phrase\"+another todo:check")
-          combinator
-          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
-                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
-                                               (opt (+ (syntax-class whitespace) (any)))))
-                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
-                                     (predicate (substring keyword) ":" (opt args))
-                                     (keyword (or "heading" "tags" "todo" "property"))
-                                     (args (substring (+ (and (or quoted-arg unquoted-arg) (opt separator)))))
-                                     (quoted-arg "\"" (+ (not (or separator "\"")) (any)) "\"")
-                                     (unquoted-arg (+ (not (or separator "\"" (syntax-class whitespace))) (any)))
-                                     (separator (or (and "|" (action (setf combinator 'or)))
-                                                    (and "+" (action (setf combinator 'and)))
-                                                    (and ":" (action (setf combinator 'arg))))))
-                                    input 'noerror)))
-    parsed)
-    ;;=> (t (:predicate "todo" :args "check") (:predicate "heading" :args "\"spaced phrase\"+another"))
-#+END_SRC
-
-Well, a bit of fiddling (lots of trial-and-error required) produced this:
-
-#+BEGIN_SRC elisp
-  (-let* ((input "todo:check|someday")
-          (input "tags:universe+space")
-          (input "heading:\"spaced phrase\"")
-          (input "")
-          (input "heading:\"spaced phrase\"+another")
-          (input "heading:\"spaced phrase\"+another todo:check")
-          combinator
-          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
-                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
-                                               (opt (+ (syntax-class whitespace) (any)))))
-                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
-                                     (predicate (substring keyword) ":" (opt args))
-                                     (keyword (or "heading" "tags" "todo" "property"))
-                                     (args (list (+ (and (substring (or quoted-arg unquoted-arg)) (opt separator)))))
-                                     (quoted-arg "\"" (+ (not (or separator "\"")) (any)) "\"")
-                                     (unquoted-arg (+ (not (or separator "\"" (syntax-class whitespace))) (any)))
-                                     (separator (or (and "|" (action (setf combinator 'or)))
-                                                    (and "+" (action (setf combinator 'and)))
-                                                    (and ":" (action (setf combinator 'arg))))))
-                                    input 'noerror)))
-    parsed)
-    ;;=> (t (:predicate "todo" :args ("check")) (:predicate "heading" :args ("\"spaced phrase\"" "another")))
-#+END_SRC
-
-That seems pretty usable!
-
 ** TODO [#B] Add more sorters?
 
 +  [ ] =category=
@@ -219,6 +111,30 @@ For consistency, because plain ~auto~ looks like a variable, and even though it'
 ** TODO [#B] Default sort
 
 Would probably be useful to have a default sort option.
+
+** TODO Dynamic blocks
+
+For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
+
+** TODO [#B] Fancier plain query syntax for tags and properties
+
+e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse_trees_in_emacs_and_organice.html][Organice has now]].
+
+[2020-02-13 Thu 00:42]  Something is needed to help search property values by partial matches.  For example:
+
+#+BEGIN_SRC org
+  ,* [[https://github.com/fniessen/org-html-themes][org-html-themes: Framework including two themes, Bigblow and ReadTheOrg]]
+    :PROPERTIES:
+    :author:   Fabrice Niessen
+    :END:
+
+#+END_SRC
+
+Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
+
+** TODO [#B] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]
+
+[2020-10-19 Mon 00:23]  Should try to use this instead of whatever bespoke code is currently used.
 
 ** TODO [#B] Normalize queries
 
@@ -310,6 +226,9 @@ This works pretty well.  It needs polishing, and some refactoring so items can b
 #+END_SRC
 
 ** TODO [#B] Timeline view
+:PROPERTIES:
+:ID:       00573552-ffe9-4608-8904-7f6c73246b6d
+:END:
 
 e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
 
@@ -372,6 +291,11 @@ e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-or
                                                          'face 'org-agenda-structure))
                              append (ht-get ts-ht ts))))
       (org-ql-agenda--agenda nil nil :strings strings)))
+
+  (org-ql-timeline* (org-agenda-files)
+                    '(ts :from -14)
+                    :filter-ts `(lambda (ts)
+                                  (ts<= ,(ts-adjust 'day -14 (ts-now)) ts)))
 #+END_SRC
 
 Another, more up-to-date implementation:
@@ -450,88 +374,95 @@ Another, more up-to-date implementation:
   ;; (org-ql-view-timeline "~/org/main.org" :from "2019-11-01")
 #+END_SRC
 
-** TODO [#B] Timeline view
-:PROPERTIES:
-:ID:       00573552-ffe9-4608-8904-7f6c73246b6d
-:END:
-
-e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
-
-#+BEGIN_SRC elisp
-  (cl-defun org-ql-timeline (buffers-files query)
-    (let ((results
-           (org-ql-select buffers-files
-             query :action
-             (lambda ()
-               (let* ((heading-string
-                       (->> (org-element-headline-parser
-                             (line-end-position))
-                            org-ql--add-markers
-                            org-ql-agenda--format-element))
-                      (timestamps
-                       (cl-loop with limit = (org-entry-end-position)
-                                while (re-search-forward org-ts-regexp-both
-                                                         limit t)
-                                collect (ts-parse-org (match-string 0))))
-                      (timestamp-strings
-                       (->> timestamps
-                            (-sort #'ts<)
-                            (--map (concat " " (ts-format it))))))
-                 (s-join "\n" (cons heading-string timestamp-strings))))
-             :sort '(date))))
-      (org-ql-agenda--agenda nil nil :strings results)))
-
-  (org-ql-timeline (org-agenda-files)
-                   '(and "Emacs" (ts)))
-
-  ;; More timeline-like version, organized by date rather than task.
-
-  (cl-defun org-ql-timeline* (buffers-files query &key filter-ts)
-    (let* ((ts-ht (ht))
-           (results (org-ql-select buffers-files
-                      query
-                      :action (lambda ()
-                                (let* ((heading-string
-                                        (->> (org-element-headline-parser
-                                              (line-end-position))
-                                             org-ql--add-markers
-                                             org-ql-agenda--format-element))
-                                       (date-timestamps
-                                        ;; Each one set to 00:00:00.
-                                        (cl-loop with limit = (org-entry-end-position)
-                                                 while (re-search-forward org-ts-regexp-both
-                                                                          limit t)
-                                                 collect (->> (match-string 0)
-                                                              ts-parse-org
-                                                              (ts-apply :hour 0 :minute 0 :second 0)))))
-                                  (setf date-timestamps (delete-dups date-timestamps))
-                                  (when filter-ts
-                                    (setf date-timestamps (cl-remove-if-not filter-ts date-timestamps)))
-                                  (--each date-timestamps
-                                    (push heading-string (gethash it ts-ht)))))))
-           (tss-sorted (-sort #'ts< (ht-keys ts-ht)))
-           (strings (cl-loop for ts in tss-sorted
-                             collect (concat "\n"
-                                             (propertize (ts-format "%Y-%m-%d" ts)
-                                                         'face 'org-agenda-structure))
-                             append (ht-get ts-ht ts))))
-      (org-ql-agenda--agenda nil nil :strings strings)))
-
-  (org-ql-timeline* (org-agenda-files)
-                    '(ts :from -14)
-                    :filter-ts `(lambda (ts)
-                                  (ts<= ,(ts-adjust 'day -14 (ts-now)) ts)))
-#+END_SRC
-
 [2019-09-26 Thu 21:28]  Would probably make sense to implement this using the view-sections someday.
 
 ** TODO [#B] Update view screenshots
 
 e.g. doesn't currently show the =View= header.
 
-** TODO Dynamic blocks
+** TODO [#C] ~org-agenda-skip-function~
 
-For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
+As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
+
+#+BEGIN_SRC elisp
+  ;;; lima-0ac22.el --- -*- lexical-binding: t; -*-
+
+  (defun org-ql-skip-function (query)
+    "Return a function for `org-agenda-skip-function' for QUERY.
+  Compared to using QUERY in `org-ql', this effectively turns QUERY
+  into (not QUERY)."
+    (let* ((predicate (org-ql--query-predicate '(regexp "ryo-modal"))))
+      (lambda ()
+        ;; This duplicates the functionality of `org-ql--select'.
+        (let (orig-fns)
+          (--each org-ql-predicates
+            ;; Save original function mappings.
+            (let ((name (plist-get it :name)))
+              (push (list :name name :fn (symbol-function name)) orig-fns)))
+          (unwind-protect
+              (progn
+                (--each org-ql-predicates
+                  ;; Set predicate functions.
+                  (fset (plist-get it :name) (plist-get it :fn)))
+                ;; Run query.
+                ;; FIXME: "If this function returns nil, the current match should not be skipped.
+                ;; Otherwise, the function must return a position from where the search
+                ;; should be continued."
+                (funcall predicate))
+            (--each orig-fns
+              ;; Restore original function mappings.
+              (fset (plist-get it :name) (plist-get it :fn))))))))
+
+  (let ((org-agenda-custom-commands
+         '(("z" "Z"
+            ((tags-todo "PRIORITY=\"A\"+Emacs/!SOMEDAY"))
+            ((org-agenda-skip-function (org-ql-skip-function '(regexp "ryo-modal")))))
+           ((org-agenda-files ("~/org/inbox.org"))))))
+    (org-agenda nil "z"))
+#+END_SRC
+
+I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
+
+** TODO [#C] Test caching
+
+See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
+
+** TODO [#C] Update commentary
+
+** UNDERWAY [#A] Outline path predicate
+
+[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
+
+#+BEGIN_SRC org
+  ,* Food
+
+  ,** Fruits
+
+  ,*** Blueberries
+
+  ,*** Grapes
+
+  ,** Vegetables
+
+  ,*** Carrots
+
+  ,*** Potatoes
+#+END_SRC
+
+Matching could work like this:
+
++  ~(outline "Food")~ :: Would return all nodes.
++  ~(outline "Fruits")~ :: Would return all fruits.
+
+Matching at a specific path would be something like:
+
++  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
+
+I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
+
+To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
+
+[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
 
 ** UNDERWAY [#B] "Node" caching
 
@@ -680,21 +611,6 @@ Appears to be another implementation of magit-section-like expandable sections. 
 
 **** magit-section
 
-** MAYBE Fancier plain query syntax for tags and properties
-
-e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse_trees_in_emacs_and_organice.html][Organice has now]].
-
-[2020-02-13 Thu 00:42]  Something is needed to help search property values by partial matches.  For example:
-
-#+BEGIN_SRC org
-  ,* [[https://github.com/fniessen/org-html-themes][org-html-themes: Framework including two themes, Bigblow and ReadTheOrg]]
-    :PROPERTIES:
-    :author:   Fabrice Niessen
-    :END:
-#+END_SRC
-
-Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
-
 ** MAYBE Overlay-based caching inspired by org-num-mode
 
 [2019-12-30 Mon 22:42]  Newer versions of Org have =org-num-mode=, which uses =font-lock= and =after-change-functions= to update overlays in the buffer with outline numbering.  Maybe a similar approach could be used to cache arbitrary values for headings in a buffer without having to discard the whole buffer's cache when the buffer changes.
@@ -702,6 +618,129 @@ Searching that with a query like =property:author=Fabrice= returns nothing; the 
 ** MAYBE Use Bovine or Wisent to parse non-sexp syntax
 
 They're both built-in to Emacs, so we could drop the =peg= dependency.
+
+** MAYBE [#C] Fancier searching for inherited tags
+
+When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
+
+** DONE [#A] Helm command
+
+In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
+
+*** DONE Add
+
+*** DONE Demonstrate
+
+*** DONE Parsing non-Lisp queries
+
+[2019-09-12 Thu 12:56]  Lisp is so much easier to deal with, but some people don't like parentheses.  So I'm trying to add a non-Lisp-style query syntax.  It gets complicated.  The =peg= library helps, but its documentation is sparse and incomplete.  This seems to work fairly well for single-token queries, but I'm not sure if I can or should cram it all into one parser, or use separate ones for certain keywords.
+
+#+BEGIN_SRC elisp
+  (-let* ((input "todo:check|someday")
+          (input "tags:universe+space")
+          (input "heading:\"spaced phrase\"")
+          (input "")
+          (input "heading:\"spaced phrase\"+another")
+          combinator
+          (parsed (peg-parse-string ((predicate (substring keyword) ":" (opt args))
+                                     (keyword (or "heading" "tags" "todo" "property"))
+                                     (args (+ (and (or quoted-arg unquoted-arg) (opt separator))))
+                                     (quoted-arg "\"" unquoted-arg "\"")
+                                     (unquoted-arg (substring (+ (not (or separator "\"")) (any))))
+                                     (separator (or (and "|" (action (setf combinator 'or)))
+                                                    (and "+" (action (setf combinator 'and)))
+                                                    (and ":" (action (setf combinator 'arg))))))
+                                    input 'noerror))
+          ((predicate . args) (nreverse parsed)))
+    (when predicate
+      (list :predicate predicate :args args :combinator combinator)))
+  ;;=> (:predicate "heading" :args ("spaced phrase" "another" t) :combinator and)
+#+END_SRC
+
+I don't know where the =t= is coming from.
+
+The next step is to make it work with multi-token queries.  It needs to handle all of the tokens in one parser so it can handle quoted phrases (if we split on spaces, it would split quoted phrases).  But that makes getting the arguments out of it more difficult.  Probably need to do something like this:
+
+#+BEGIN_SRC elisp
+  (-let* ((input "todo:check|someday")
+          (input "tags:universe+space")
+          (input "heading:\"spaced phrase\"")
+          (input "")
+          (input "heading:\"spaced phrase\"+another")
+          combinator
+          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
+                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
+                                               (opt (syntax-class whitespace))))
+                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
+                                     (predicate (substring keyword) ":" (opt args))
+                                     (keyword (or "heading" "tags" "todo" "property"))
+                                     (args (+ (and (or quoted-arg unquoted-arg) (opt separator))))
+                                     (quoted-arg "\"" unquoted-arg "\"")
+                                     (unquoted-arg (substring (+ (not (or separator "\"")) (any))))
+                                     (separator (or (and "|" (action (setf combinator 'or)))
+                                                    (and "+" (action (setf combinator 'and)))
+                                                    (and ":" (action (setf combinator 'arg))))))
+                                    input 'noerror)))
+    parsed)
+#+END_SRC
+
+In which lists are pushed onto the stack and returned, rather than strings.  But I don't understand yet exactly how to use the =var= forms to consume input from the "value stack"; I need to study the examples more.  I'm also not sure if that will even work with a variable number of arguments.
+
+This seems to work, but we'll have to parse the args again in a separate step:
+
+#+BEGIN_SRC elisp
+  (-let* ((input "todo:check|someday")
+          (input "tags:universe+space")
+          (input "heading:\"spaced phrase\"")
+          (input "")
+          (input "heading:\"spaced phrase\"+another")
+          (input "heading:\"spaced phrase\"+another todo:check")
+          combinator
+          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
+                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
+                                               (opt (+ (syntax-class whitespace) (any)))))
+                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
+                                     (predicate (substring keyword) ":" (opt args))
+                                     (keyword (or "heading" "tags" "todo" "property"))
+                                     (args (substring (+ (and (or quoted-arg unquoted-arg) (opt separator)))))
+                                     (quoted-arg "\"" (+ (not (or separator "\"")) (any)) "\"")
+                                     (unquoted-arg (+ (not (or separator "\"" (syntax-class whitespace))) (any)))
+                                     (separator (or (and "|" (action (setf combinator 'or)))
+                                                    (and "+" (action (setf combinator 'and)))
+                                                    (and ":" (action (setf combinator 'arg))))))
+                                    input 'noerror)))
+    parsed)
+    ;;=> (t (:predicate "todo" :args "check") (:predicate "heading" :args "\"spaced phrase\"+another"))
+#+END_SRC
+
+Well, a bit of fiddling (lots of trial-and-error required) produced this:
+
+#+BEGIN_SRC elisp
+  (-let* ((input "todo:check|someday")
+          (input "tags:universe+space")
+          (input "heading:\"spaced phrase\"")
+          (input "")
+          (input "heading:\"spaced phrase\"+another")
+          (input "heading:\"spaced phrase\"+another todo:check")
+          combinator
+          (parsed (peg-parse-string ((query (+ (or (and predicate `(pred args -- (list :predicate pred :args args)))
+                                                   (and plain-string `(s -- (list :predicate 'regexp :args s))))
+                                               (opt (+ (syntax-class whitespace) (any)))))
+                                     (plain-string (substring (+ (not (syntax-class whitespace)) (any))))
+                                     (predicate (substring keyword) ":" (opt args))
+                                     (keyword (or "heading" "tags" "todo" "property"))
+                                     (args (list (+ (and (substring (or quoted-arg unquoted-arg)) (opt separator)))))
+                                     (quoted-arg "\"" (+ (not (or separator "\"")) (any)) "\"")
+                                     (unquoted-arg (+ (not (or separator "\"" (syntax-class whitespace))) (any)))
+                                     (separator (or (and "|" (action (setf combinator 'or)))
+                                                    (and "+" (action (setf combinator 'and)))
+                                                    (and ":" (action (setf combinator 'arg))))))
+                                    input 'noerror)))
+    parsed)
+    ;;=> (t (:predicate "todo" :args ("check")) (:predicate "heading" :args ("\"spaced phrase\"" "another")))
+#+END_SRC
+
+That seems pretty usable!
 
 ** DONE Byte-compile lambdas
 CLOSED: [2018-05-09 Wed 17:30]
@@ -941,112 +980,16 @@ If I made the =date= selector a macro, I could avoid the need to quote the compa
 
 Also, maybe instead of having a single =date= selector, I should have =scheduled=, =deadline=, etc.
 
-** TODO [#C] ~org-agenda-skip-function~
-
-As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
-
-#+BEGIN_SRC elisp
-  ;;; lima-0ac22.el --- -*- lexical-binding: t; -*-
-
-  (defun org-ql-skip-function (query)
-    "Return a function for `org-agenda-skip-function' for QUERY.
-  Compared to using QUERY in `org-ql', this effectively turns QUERY
-  into (not QUERY)."
-    (let* ((predicate (org-ql--query-predicate '(regexp "ryo-modal"))))
-      (lambda ()
-        ;; This duplicates the functionality of `org-ql--select'.
-        (let (orig-fns)
-          (--each org-ql-predicates
-            ;; Save original function mappings.
-            (let ((name (plist-get it :name)))
-              (push (list :name name :fn (symbol-function name)) orig-fns)))
-          (unwind-protect
-              (progn
-                (--each org-ql-predicates
-                  ;; Set predicate functions.
-                  (fset (plist-get it :name) (plist-get it :fn)))
-                ;; Run query.
-                ;; FIXME: "If this function returns nil, the current match should not be skipped.
-                ;; Otherwise, the function must return a position from where the search
-                ;; should be continued."
-                (funcall predicate))
-            (--each orig-fns
-              ;; Restore original function mappings.
-              (fset (plist-get it :name) (plist-get it :fn))))))))
-
-  (let ((org-agenda-custom-commands
-         '(("z" "Z"
-            ((tags-todo "PRIORITY=\"A\"+Emacs/!SOMEDAY"))
-            ((org-agenda-skip-function (org-ql-skip-function '(regexp "ryo-modal")))))
-           ((org-agenda-files ("~/org/inbox.org"))))))
-    (org-agenda nil "z"))
-#+END_SRC
-
-I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
-
-** TODO [#C] Test caching
-
-See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
-
-** TODO [#C] Test caching
-
-See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
-
-** TODO [#C] Update commentary
-
-** MAYBE [#C] Fancier searching for inherited tags
-
-When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
-
-* References
-
-** [[https://m00natic.github.io/lisp/manual-jit.html][Uniform Structured Syntax, Metaprogramming and Run-time Compilation]]
-
-** [[gnus:gmane.emacs.orgmode#CAJ51EToLCm5zDLKu8XeuqEWrLhHZF+OoNkviPSivZbFttzF8=A@mail.gmail.com][John Kitchin on rewriting the Org agenda code]]                 :Emacs:Org:
-
-[2019-10-28 Mon 08:28]  Originally from [[id:90a68535-2403-4ba9-a117-60be1862628f][this entry in my notes]].
-
-#+BEGIN_QUOTE
-From: John Kitchin <jkitchin@andrew.cmu.edu>
-Subject: Re: [Orgmode] Slow speed of week and month views
-Newsgroups: gmane.emacs.orgmode
-To: Karl Voit <news1142@karl-voit.at>
-Cc: "emacs-orgmode@gnu.org" <emacs-orgmode@gnu.org>
-Date: Sat, 5 Aug 2017 18:17:09 -0400 (4 hours, 11 minutes, 38 seconds ago)
-
-I can think of two possibilities for a future approach (besides a deep dive on profiling the current elisp to improve the speed there). They both involve some substantial coding though, and would probably add dependencies. I am curious what anyone things about these, or if there are other ideas.
-
-One is to use the new dynamic module capability to write an org parser in C, or a dedicated agenda function, which would presumably be faster than in elisp. This seems hard, and for me would certainly be a multiyear project I am sure! The downside of this is the need to compile the module. I don't know how easy it would be to make this work across platforms with the relatively easy install org-mode currently has. This could have a side benefit though of a c-lib that could be used by others to expand where org-mode is used.
-
-The other way that might work is to rely more heavily on a cached version of the files, perhaps in a different format than elisp, that is faster to work with.  The approach I have explored in this is to index org files into a sqlite database. The idea then would be to generate the agenda from a sql query. I use something like this already to "find stuff in orgmode anywhere". One of the reasons I wrote this is the org-agenda list of files isn't practical for me because my files are so scattered on my file system. I had a need to be able to find TODOs in research projects in a pretty wide range of locations.
-
-The code I use is at https://github.com/jkitchin/scimax/blob/master/org-db.el, and from one database I can find headlines, contacts, locations, TODO headlines across my file system, all the files that contain a particular link, and my own recent org files. This approach relies on emacsql, and a set of hook functions to update the database whenever a file is changed. It is not robust, e.g. the file could be out of sync with the db if it is modified outside emacs, but this works well enough for me so far. Updated files get reindexed whenever emacs is idle. It was a compromise on walking the file system all the time or daily, or trying to use inotify and you can always run a command to prune/sync all the files any time you want.
-
-sqlite is ok, but with emacsql you cannot put strings in it directly (at least when I wrote the org-db code), which has limited it for full-text search so far.  Also with text, the db got up to about 0.5 GB in size, and started slowing down. So it doesn't have text in it for now. It has all the other limitations of sqlite too, limited support for locking, single process....
-
-I am moderately motivated to switch from sqlite to MongoDB, but the support for Mongo in emacs is pretty crummy (I tried writing a few traditional interfaces, but the performance was not that good, and limited since Mongo uses bson, and it is just not the same as json!). Why Mongo? Mostly because the Mongo query language is basically json and easy to generate in Emacs, unlike sql. Also, it is flexible and easy to adapt to new things, e.g. indexing src-blocks or tables or whatever org-element you want. (And I want to use Mongo for something else too ;). Obviously these all add dependencies, and might not be suitable for the core org-mode distribution. But I do think it is important to think about ways to scale org-mode while maintaining compatibility with the core.
-
-The main point of the database was to get a query language, persistence and good performance. I have also used caches to speed up using bibtex files, and my org-contacts with reasonable performance. These have been all elisp, with no additional dependencies. Maybe one could do something similar to keep an agenda cache that is persistent and updated via hook functions.
-
-Thoughts?
-
-John
-#+END_QUOTE
-:PROPERTIES:
-:archive.is: http://archive.is/33R9M
-:END:
-
-+ [[https://github.com/m00natic/cl-fdbq][GitHub - m00natic/cl-fdbq: SQL-like operations over fixed field DBs]]
-
-** Nicolas Goaziou's =org-element= cache implementation
-
-[2020-01-04 Sat 08:31]  https://code.orgmode.org/bzg/org-mode/src/master/lisp/org-element.el#L4817  I guess I haven't been keeping up, because I'm not sure when exactly he made or committed this, or what his plans for it are.  It's currently disabled by default.
-
-** [[https://github.com/ndwarshuis/org-sql][GitHub - ndwarshuis/org-sql: SQL backend for Emacs Org-Mode]]
-
-[2020-01-04 Sat 09:03]
-
 * Examples / testing
+:PROPERTIES:
+:TOC:      :include descendants :depth 1
+:END:
+:CONTENTS:
+- [[#property-matching][Property matching]]
+- [[#regexp-matching][Regexp matching]]
+- [[#screenshot-code][Screenshot code]]
+- [[#sorting][Sorting]]
+:END:
 
 #+BEGIN_SRC elisp
   (org-agenda-ng org-agenda-files
@@ -1083,6 +1026,37 @@ John
          (done)))
 #+END_SRC
 
+** Property matching
+
+#+BEGIN_SRC elisp
+  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+    (property "agenda-group"))
+
+  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+    (property "agenda-group" "plans"))
+#+END_SRC
+
+** Regexp matching
+
+#+BEGIN_SRC elisp
+  (org-ql "~/src/emacs/org-super-agenda/test/test.org"
+    (regexp "over"))
+
+  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+    (regexp "over"))
+#+END_SRC
+
+** Screenshot code
+
+#+BEGIN_SRC elisp
+  (org-super-agenda--test-with-org-today-date "2017-07-08 00:00"
+    (org-ql "~/src/emacs/org-super-agenda/test/test.org"
+      (and (or (date = today)
+               (deadline <=)
+               (scheduled <= today))
+           (not (done)))))
+#+END_SRC
+
 ** Sorting
 
 #+BEGIN_SRC elisp
@@ -1099,38 +1073,14 @@ John
     :sort (todo))
 #+END_SRC
 
-** Regexp matching
-
-#+BEGIN_SRC elisp
-  (org-ql "~/src/emacs/org-super-agenda/test/test.org"
-    (regexp "over"))
-
-  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
-    (regexp "over"))
-#+END_SRC
-
-** Property matching
-
-#+BEGIN_SRC elisp
-  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
-    (property "agenda-group"))
-
-  (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
-    (property "agenda-group" "plans"))
-#+END_SRC
-
-** Screenshot code
-
-#+BEGIN_SRC elisp
-  (org-super-agenda--test-with-org-today-date "2017-07-08 00:00"
-    (org-ql "~/src/emacs/org-super-agenda/test/test.org"
-      (and (or (date = today)
-               (deadline <=)
-               (scheduled <= today))
-           (not (done)))))
-#+END_SRC
-
 * In the wild
+:PROPERTIES:
+:TOC:      :include descendants :depth 1
+:END:
+:CONTENTS:
+- [[#alois-janicek][Alois Janicek]]
+- [[#benson-chu][Benson Chu]]
+:END:
 
 ** [[https://github.com/AloisJanicek/.doom.d-2nd][Alois Janicek]]
 
@@ -1226,6 +1176,427 @@ John
 #+END_SRC
 
 * Profiling
+:PROPERTIES:
+:TOC:      :include descendants :depth 1
+:END:
+
+:CONTENTS:
+- [[#2019-08-29-thu-0624--benchmarking-org-ql-compared-to-re-search-forward-for-getting-headings-in-buffer][{2019-08-29 Thu 06:24}  Benchmarking org-ql compared to re-search-forward for getting headings in buffer]]
+- [[#caching-of-inherited-tags][Caching of inherited tags]]
+- [[#intersecting-query-results][Intersecting query results]]
+- [[#more-profiling][More profiling]]
+- [[#preambles][Preambles]]
+- [[#profiling-flet-across-all-agenda-files][Profiling flet across all agenda files]]
+- [[#profiling-flet-on-a-single-file][Profiling flet on a single file]]
+- [[#profiling-org-trust-scanner-tags][Profiling org-trust-scanner-tags]]
+- [[#profiling-position-based][Profiling position-based]]
+- [[#profiling-tags-matching][Profiling tags matching]]
+- [[#using-org-element-parse-buffer][Using org-element-parse-buffer]]
+- [[#withwithout-tsel][with/without ts.el]]
+:END:
+
+
+** [2019-08-29 Thu 06:24]  Benchmarking org-ql compared to re-search-forward for getting headings in buffer
+:PROPERTIES:
+:ID:       fcc09229-ed24-42eb-a1fd-31d8f7d4c8d5
+:END:
+
+Minimal difference, and that's a very large file, too.  On smaller files it's thousandths of a second.
+
+#+BEGIN_SRC elisp
+  (with-current-buffer (find-buffer-visiting "~/org/inbox.org")
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("org-ql" (org-ql-select (current-buffer)
+                          '(level 1)
+                          :action '(progn
+                                     (font-lock-ensure (line-beginning-position) (line-end-position))
+                                     (cons (org-get-heading t) (point)))))
+              ("re-search-forward" (org-with-wide-buffer
+                                    (goto-char (point-min))
+                                    (when (org-before-first-heading-p)
+                                      (outline-next-heading))
+                                    (cl-loop while (re-search-forward (rx bol "*" (1+ blank)) nil t)
+                                             do (font-lock-ensure (line-beginning-position) (line-end-position))
+                                             collect (cons (org-get-heading t) (match-beginning 0))))))))
+#+END_SRC
+
+#+RESULTS:
+| Form              | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------------+--------------------+---------------+----------+------------------|
+| re-search-forward | 1.17               |      0.520375 |        0 |                0 |
+| org-ql            | slowest            |      0.608281 |        0 |                0 |
+
+** Caching of inherited tags
+
+[2019-09-05 Thu 07:59]  Implemented a per-buffer tags cache that seems to significantly speed up tags queries that use tag inheritance.  It persists as long as the buffer remains unmodified, and it's usable from any code as a single function that automatically uses caching.  It also returns inherited tags and local tags separately, which could be useful for having separate selectors, one for inherited tags, one for local tags, and one for both.
+
+#+BEGIN_SRC elisp
+  (defvar org-ql-tags-cache (ht)
+    "Per-buffer tags cache.
+  Keyed by buffer.  Each value is a cons of the buffer's modified
+  tick, and another hash table keyed on buffer position, whose
+  values are a list of two lists, inherited tags and local tags, as
+  strings.")
+
+  (defun org-ql--tags-at (position)
+    "Return tags for POSITION in current buffer.
+  Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
+    ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
+    ;; bound in the else clause, so destructured variables that are non-nil,
+    ;; like found caches, are not available in the else clause.
+    (if-let* ((buffer-cache (gethash (current-buffer) org-ql-tags-cache))
+              (modified-tick (car buffer-cache))
+              (tags-cache (cdr buffer-cache))
+              (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+              (cached-result (gethash position tags-cache)))
+        ;; Found in cache: return them.
+        (pcase cached-result
+          ('org-ql-nil nil)
+          (_ cached-result))
+      ;; Not found in cache: get tags and cache them.
+      (let* ((local-tags (or (org-get-tags position 'local)
+                             'org-ql-nil))
+             (inherited-tags (or (save-excursion
+                                   (when (org-up-heading-safe)
+                                     (-let* (((inherited local) (org-ql--tags-at (point)))
+                                             (inherited-tags (when (or inherited local)
+                                                               (cond ((and (listp inherited)
+                                                                           (listp local))
+                                                                      (append inherited local))
+                                                                     ((cond ((listp inherited) inherited)
+                                                                            ((listp local) local)))))))
+                                       (when inherited-tags
+                                         (->> inherited-tags -non-nil -uniq)))))
+                                 'org-ql-nil))
+             (all-tags (list inherited-tags local-tags)))
+        ;; Check caches again, because they may have been set now.
+        ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
+        (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
+              modified-tick (car buffer-cache)
+              tags-cache (cdr buffer-cache)
+              buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+        (cond ((or (not buffer-cache)
+                   (not buffer-unmodified-p))
+               ;; Buffer-local tags cache empty or invalid: make new one.
+               (puthash (current-buffer)
+                        (cons (buffer-modified-tick)
+                              (let ((table (make-hash-table)))
+                                (puthash position all-tags table)
+                                table))
+                        org-ql-tags-cache)
+               ;; Return tags, not the cons put on the buffer-cache.
+               all-tags)
+              ;; Buffer-local tags cache found, but no result: store this one.
+              (t (puthash position all-tags tags-cache))))))
+
+  (org-ql--defpred tags-cached (&rest tags)
+    "Return non-nil if current heading has one or more of TAGS (a list of strings)."
+    ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
+    ;; to run `org-get-tags' for every heading, especially with inheritance.
+    (cl-macrolet ((tags-p (tags)
+                          `(and ,tags
+                                (not (eq 'org-ql-nil ,tags)))))
+      (-let* (((inherited local) (org-ql--tags-at (point))))
+        (cl-typecase tags
+          (null (or (tags-p inherited)
+                    (tags-p local)))
+          (otherwise (or (when (tags-p inherited)
+                           (seq-intersection tags inherited))
+                         (when (tags-p local)
+                           (seq-intersection tags local))))))))
+#+END_SRC
+
+Benchmark results:
+
+#+BEGIN_SRC elisp
+  (let* ((buffers '("~/org/main.org"))
+         (tags '("Emacs")))
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("uncached" (let ((org-ql-cache (ht)))
+                            (org-ql-select buffers
+                              `(tags ,@tags))))
+              ("cached" (let ((org-ql-cache (ht))
+                              (org-ql-tags-cache (ht)))
+                          (org-ql-select buffers
+                            `(tags-cached ,@tags)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| cached   | 6.51               |      0.519871 |        0 |                0 |
+| uncached | slowest            |      3.386679 |        0 |                0 |
+
+** Intersecting query results
+
+An idea that /might/ be helpful for performance in /some/ cases, depending on the query, the data, and whether the query has a preamble.  But it looks like it would very rarely be helpful.
+
+#+BEGIN_SRC elisp
+  (cl-defun org-ql-agenda-intersection (buffers-files queries &key entries sort buffer narrow super-groups)
+    "Like `org-ql-agenda', but intersects multiple queries."
+    (declare (indent defun))
+    (let* ((org-ql-cache (ht))
+           (entries (->> queries
+                         (--map (org-ql-select buffers-files
+                                  it
+                                  :action 'element-with-markers
+                                  :narrow narrow
+                                  :sort sort))
+                         (-reduce #'-intersection))))
+      (org-ql-agenda--agenda buffers-files queries
+        :entries entries :super-groups super-groups)))
+
+  (bench-multi-lexical :times 1
+    :forms (("intersection" (let ((org-use-tag-inheritance nil))
+                              (org-ql-agenda-intersection (org-agenda-files)
+                                '((todo "TODO")
+                                  (tags "Emacs"))
+                                :sort '(priority deadline)
+                                :super-groups org-super-agenda-groups)))
+            ("normal" (let ((org-use-tag-inheritance nil))
+                        (org-ql-agenda (org-agenda-files)
+                          (and (todo "TODO")
+                               (tags "Emacs"))
+                          :sort (priority deadline)
+                          :super-groups org-super-agenda-groups)))))
+#+END_SRC
+
+#+RESULTS:
+| Form         | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------+--------------------+---------------+----------+------------------|
+| normal       | 3.70               |      0.233147 |        0 |                0 |
+| intersection | slowest            |      0.862512 |        0 |                0 |
+
+*** Alternative approach
+
+[2019-09-01 Sun 08:17]  This is very experimental, but the results are surprising.  When the action function returns a fairly simple list, the intersection is very slightly faster.  When returning full elements, the intersection is much slower, so that it more than doubles the runtime.  I wonder if the element list comparison is short-circuiting, or if it looks at the whole lists, because it seems like it shouldn't take more than 4-5 list elements before it realizes that two lists don't match.
+
+Anyway, looks like this approach isn't viable, at least not without a much more complicated implementation, which probably wouldn't be worth it.
+
+#+BEGIN_SRC elisp
+  (let* ((action-fn (lambda ()
+                      (list (current-buffer)
+                            (point)
+                            (substring-no-properties (org-get-heading t t)))))
+         (files '("~/org/main.org")))
+    ;; NOTE: Careful to use the same files and action in each one.  I duplicated
+    ;; the variable in each form to make individual testing easier.
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("normal" (->> (let ((org-ql-cache (ht))
+                                   (action-fn (lambda ()
+                                                (list (current-buffer)
+                                                      (point)
+                                                      (substring-no-properties (org-get-heading t t)))))
+                                   (files '("~/org/main.org")))
+                               (org-ql-select files
+                                 '(and (not (done))
+                                       (or (habit)
+                                           (deadline auto)
+                                           (scheduled :to today)
+                                           (ts-active :on today)
+                                           (closed :on today)))
+                                 :action action-fn))))
+              ("Testing" (let* ((org-ql-cache (ht))
+                                (files '("~/org/main.org"))
+                                (action-fn (lambda ()
+                        (list (current-buffer)
+                              (point)
+                              (substring-no-properties (org-get-heading t t)))))
+                                (and-queries '(not (done)))
+                                (or-queries '((habit)
+                                              (deadline auto)
+                                              (scheduled :to today)
+                                              (ts-active :on today)
+                                              (closed :on today)))
+                                (and-results (org-ql-select files
+                                               and-queries
+                                               :action action-fn))
+                                (or-results (cl-loop for query in or-queries
+                                                     append (org-ql-select files
+                                                              query
+                                                              :action action-fn))))
+                           (seq-intersection and-results
+                                             (->> or-results
+                                                  -uniq)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------+--------------------+---------------+----------+------------------|
+| Testing | 1.15               |      0.248376 |        0 |                0 |
+| normal  | slowest            |      0.284897 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+
+;; With caching enabled
+  (let* ((action-fn (lambda ()
+                      (list (current-buffer)
+                            (point)
+                            (substring-no-properties (org-get-heading t t)))))
+         (files '("~/org/main.org")))
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("normal" (->> (org-ql-select files
+                               '(and (not (done))
+                                     (or (habit)
+                                         (deadline auto)
+                                         (scheduled :to today)
+                                         (ts-active :on today)
+                                         (closed :on today)))
+                               :action action-fn)))
+              ("Testing" (let* ((files '("~/org/main.org"))
+                                (and-queries '(not (done)))
+                                (or-queries '((habit)
+                                              (deadline auto)
+                                              (scheduled :to today)
+                                              (ts-active :on today)
+                                              (closed :on today)))
+                                (and-results (org-ql-select files
+                                               and-queries
+                                               :action action-fn))
+                                (or-results (cl-loop for query in or-queries
+                                                     append (org-ql-select files
+                                                              query
+                                                              :action action-fn))))
+                           (seq-intersection and-results
+                                             (->> or-results
+                                                  -uniq)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------+--------------------+---------------+----------+------------------|
+| normal  | 13.72              |      0.002311 |        0 |                0 |
+| Testing | slowest            |      0.031707 |        0 |                0 |
+
+Using full views:
+
+#+BEGIN_SRC elisp
+  (let* ((action-fn (lambda ()
+                      (list (current-buffer)
+                            (point)
+                            (substring-no-properties (org-get-heading t t)))))
+         (files '("~/org/main.org")))
+    (bench-multi-lexical :times 1
+      :forms (("normal" (->> (let ((org-ql-cache (ht))
+                                   (files '("~/org/main.org")))
+                               (org-ql-search files
+                                 '(and (not (done))
+                                       (or (habit)
+                                           (deadline auto)
+                                           (scheduled :to today)
+                                           (ts-active :on today)
+                                           (closed :on today)))))))
+              ("Testing" (let* ((org-ql-cache (ht))
+                                (files '("~/org/main.org"))
+                                (and-queries '(not (done)))
+                                (or-queries '((habit)
+                                              (deadline auto)
+                                              (scheduled :to today)
+                                              (ts-active :on today)
+                                              (closed :on today)))
+                                (and-results (org-ql-select files
+                                               and-queries
+                                               :action 'element-with-markers))
+                                (or-results (cl-loop for query in or-queries
+                                                     append (org-ql-select files
+                                                              query
+                                                              :action 'element-with-markers)))
+                                (final-results (seq-intersection and-results
+                                                                 (->> or-results
+                                                                      -uniq))))
+                           (org-ql-agenda--agenda nil nil
+                             :entries final-results)
+                         
+                           )))))
+#+END_SRC
+
+#+RESULTS:
+| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------+--------------------+---------------+----------+------------------|
+| normal  | 1.74               |      0.534742 |        0 |                0 |
+| Testing | slowest            |      0.931897 |        0 |                0 |
+
+Just gathering results, but using elements:
+
+#+BEGIN_SRC elisp
+  (let* ((action-fn 'element-with-markers)
+         (files '("~/org/main.org")))
+    ;; NOTE: Careful to use the same files and action in each one.  I duplicated
+    ;; the variable in each form to make individual testing easier.
+    (bench-multi-lexical :times 1 :ensure-equal t
+      :forms (("normal" (->> (let ((org-ql-cache (ht)))
+                               (org-ql-select files
+                                 '(and (not (done))
+                                       (or (habit)
+                                           (deadline auto)
+                                           (scheduled :to today)
+                                           (ts-active :on today)
+                                           (closed :on today)))
+                                 :action action-fn))))
+              ("Testing" (let* ((org-ql-cache (ht))
+                                (and-queries '(not (done)))
+                                (or-queries '((habit)
+                                              (deadline auto)
+                                              (scheduled :to today)
+                                              (ts-active :on today)
+                                              (closed :on today)))
+                                (and-results (org-ql-select files
+                                               and-queries
+                                               :action action-fn))
+                                (or-results (cl-loop for query in or-queries
+                                                     append (org-ql-select files
+                                                              query
+                                                              :action action-fn))))
+                           (seq-intersection and-results
+                                             (->> or-results
+                                                  -uniq)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------+--------------------+---------------+----------+------------------|
+| normal  | 2.27               |      0.314218 |        0 |                0 |
+| Testing | slowest            |      0.714587 |        0 |                0 |
+
+
+** More profiling
+
+[2018-05-10 Thu 15:02]  I think these are decent improvements.
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 nil (org-agenda-ng "~/org/main.org"
+                        (or (habit)
+                            (and (or (date '= (org-today))
+                                     (deadline '<=)
+                                     (scheduled '<= (org-today)))
+                                 (not (apply #'todo org-done-keywords-for-agenda)))
+                            (and (todo "DONE" "CANCELLED")
+                                 (closed '= (org-today))))))
+#+END_SRC
+
+#+RESULTS:
+| Function                      | Times called |   Total time | Average time |
+|-------------------------------+--------------+--------------+--------------|
+| mapcar                        |          164 | 1.5004585290 | 0.0091491373 |
+| org-agenda-ng--agenda         |            1 |  1.348231247 |  1.348231247 |
+| org-agenda-ng--filter-buffer  |            1 | 1.1391189879 | 1.1391189879 |
+| org-agenda-ng--date-plain-p   |         1267 | 0.6198571040 | 0.0004892321 |
+| org-entry-get                 |         3983 | 0.2979337370 | 7.480...e-05 |
+| org-is-habit-p                |         1365 | 0.2049101109 | 0.0001501172 |
+| org--property-local-values    |         1365 | 0.1940614150 | 0.0001421695 |
+| org-agenda-ng--habit-p        |         1272 | 0.1911009179 | 0.0001502365 |
+| org-agenda-ng--format-element |           52 |  0.177965411 | 0.0034224117 |
+| org-get-property-block        |         1365 | 0.1760004519 | 0.0001289380 |
+| org-get-tags-at               |           52 | 0.1362824969 | 0.0026208172 |
+| org-agenda-ng--date-p         |         3880 | 0.1351176629 | 3.482...e-05 |
+| org-up-heading-safe           |          226 | 0.1276747609 | 0.0005649325 |
+| re-search-backward            |         2028 | 0.1144211070 | 5.642...e-05 |
+| org-entry-properties          |         2618 | 0.0848660999 | 3.241...e-05 |
+| org-agenda-ng--todo-p         |         1319 |  0.081952653 | 6.213...e-05 |
+| org-get-todo-state            |         1319 | 0.0796836810 | 6.041...e-05 |
+| re-search-forward             |         3754 | 0.0739803739 | 1.970...e-05 |
+| org-inlinetask-in-task-p      |         1365 | 0.0657829330 | 4.819...e-05 |
+| org-agenda-ng--scheduled-p    |         1247 | 0.0619497850 | 4.967...e-05 |
 
 ** Preambles
 
@@ -1568,127 +1939,448 @@ Not sure why that one is slower with preamble.
 | no preamble: (ts-i :to "2019-07-06") | 1.34               |      0.553428 |        0 |                0 |
 | preamble: (ts-i :to "2019-07-06")    | slowest            |      0.743881 |        0 |                0 |
 
-** with/without ts.el
+** Profiling flet across all agenda files
 
-[2019-08-11 Sun 15:39]  These results seem to show a minor performance improvement by using ~ts~, and the code is simpler.
-
-#+BEGIN_SRC elisp
-  ;; (require 'ts)
-
-  (org-ql--defpred ts-ts (&key from to _on)
-    ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
-    ;; pre-process that argument in a macro before this function is called.
-    "Return non-nil if current entry has a timestamp in given period.
-  If no arguments are specified, return non-nil if entry has any
-  timestamp.
-
-  If FROM, return non-nil if entry has a timestamp on or after
-  FROM.
-
-  If TO, return non-nil if entry has a timestamp on or before TO.
-
-  If ON, return non-nil if entry has a timestamp on date ON.
-
-  FROM, TO, and ON should be strings parseable by
-  `parse-time-string' but may omit the time value."
-    ;; TODO: DRY this with the clocked predicate.
-    ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
-    ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
-    ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
-    (cl-macrolet ((next-timestamp ()
-                                  `(when (re-search-forward org-element--timestamp-regexp end-pos t)
-                                     (ts-parse-org (match-string 0))))
-                  (test-timestamps (pred-form)
-                                   `(cl-loop for next-ts = (next-timestamp)
-                                             while next-ts
-                                             thereis ,pred-form)))
-      (save-excursion
-        (let ((end-pos (org-entry-end-position)))
-          (cond ((not (or from to)) (re-search-forward org-element--timestamp-regexp end-pos t))
-                ((and from to) (test-timestamps (and (ts<= from next-ts)
-                                                     (ts<= next-ts to))))
-                (from (test-timestamps (ts<= from next-ts)))
-                (to (test-timestamps (ts<= next-ts to))))))))
-
-#+END_SRC
-
-*** Without timestamp argument
+*** With flet
 
 #+BEGIN_SRC elisp
-  (bench-multi-lexical :times 1 :ensure-equal t
-    :forms (("old ts" (org-ql "~/org/inbox.org"
-                        (ts)))
-            ("ts.el ts" (org-ql "~/org/inbox.org"
-                          (ts-ts)))))
+  (elp-profile 5 (org-agenda-ng--agenda
+                  :files org-agenda-files
+                  :pred (lambda ()
+                          (and (todo)
+                               (or (date :deadline '<= (org-today))
+                                   (date :scheduled '<= (org-today)))
+                               (not (apply #'todo org-done-keywords-for-agenda))))))
 #+END_SRC
 
 #+RESULTS:
-| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|----------+--------------------+---------------+----------+------------------|
-| ts.el ts | 1.14               |      2.251801 |        0 |                0 |
-| old ts   | slowest            |      2.560280 |        0 |                0 |
+#+begin_example
+mapcar                                                        711         25.608392569  0.0360174297
+org-agenda-ng--agenda                                         5           24.019318793  4.8038637586
+org-agenda-ng--filter-buffer                                  40          14.160293256  0.3540073313
+org-agenda-ng--date-p                                         21595       4.2111783960  0.0001950071
+org-agenda-finalize-entries                                   5           4.0930243110  0.8186048622
+org-super-agenda--filter-finalize-entries                     5           3.937522006   0.7875044012
+org-agenda-ng--todo-p                                         37080       3.5687476730  9.624...e-05
+org-get-todo-state                                            37080       3.4737076600  9.368...e-05
+outline-next-heading                                          34625       3.4689080650  0.0001001850
+re-search-forward                                             42280       3.0743315830  7.271...e-05
+org-agenda-ng--format-element                                 1180        2.9511605820  0.0025009835
+org-element-headline-parser                                   1180        2.6757063699  0.0022675477
+org-super-agenda--group-items                                 5           2.187362092   0.4374724183
+org-super-agenda--group-dispatch                              70          2.184685662   0.0312097951
+org-entry-get                                                 22730       2.0711872869  9.112...e-05
+org-entry-properties                                          21595       1.8958912070  8.779...e-05
+org-super-agenda--group-tag                                   25          1.8498977799  0.0739959111
+org-element-timestamp-parser                                  3785        1.8234333229  0.0004817525
+org-parse-time-string                                         7560        1.7121709579  0.0002264776
+org-element--get-time-properties                              1180        1.1814058020  0.0010011913
+#+end_example
+
+*** Without flet
 
 #+BEGIN_SRC elisp
-  (bench-multi-lexical :times 20 :ensure-equal t
-    :forms (("old ts" (org-ql "~/src/emacs/org-ql/tests/data.org"
-                        (ts)))
-            ("ts.el ts" (org-ql "~/src/emacs/org-ql/tests/data.org"
-                          (ts-ts)))))
+  (elp-profile 5 (org-agenda-ng--agenda
+                  :files org-agenda-files
+                  :pred (lambda ()
+                          (and (org-agenda-ng--todo-p)
+                               (or (org-agenda-ng--date-p :deadline '<= (org-today))
+                                   (org-agenda-ng--date-p :scheduled '<= (org-today)))
+                               (not (apply #'org-agenda-ng--todo-p org-done-keywords-for-agenda))))))
 #+END_SRC
 
 #+RESULTS:
-| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|----------+--------------------+---------------+----------+------------------|
-| ts.el ts | 1.05               |      0.103714 |        0 |                0 |
-| old ts   | slowest            |      0.108663 |        0 |                0 |
+#+begin_example
+mapcar                                                        711         26.910164986  0.0378483333
+org-agenda-ng--agenda                                         5           21.012501837  4.2025003674
+org-agenda-ng--filter-buffer                                  40          13.751964650  0.3437991162
+org-agenda-ng--todo-p                                         37080       5.8788306440  0.0001585445
+org-agenda-ng--format-element                                 1180        4.5712275970  0.0038739216
+org-get-todo-state                                            37080       4.1661659069  0.0001123561
+org-agenda-ng--date-p                                         21595       4.1442710769  0.0001919088
+org-entry-get                                                 22730       2.8275069239  0.0001243953
+org-entry-properties                                          21595       2.6558403739  0.0001229840
+outline-next-heading                                          34625       2.0894695999  6.034...e-05
+org-element-headline-parser                                   1180        1.9110445780  0.0016195293
+re-search-forward                                             42280       1.6994989150  4.019...e-05
+org-agenda-ng--add-faces                                      1180        1.6172592580  0.0013705586
+org-agenda-ng--add-scheduled-face                             1180        1.607386145   0.0013621916
+org-get-tags-at                                               1180        1.1521010509  0.0009763568
+org-back-to-heading                                           64530       1.1005834200  1.705...e-05
+org-up-heading-safe                                           2360        1.0182265390  0.0004314519
+outline-back-to-heading                                       64530       1.0086056729  1.563...e-05
+org-parse-time-string                                         7560        0.8314918499  0.0001099856
+org-time-string-to-absolute                                   3780        0.8277485280  0.0002189810
+#+end_example
 
-*** :from
+
+** Profiling flet on a single file
+
+This shows that the difference between them, if any, is so small as to be irrelevant.  The convenience and clarity are a big win.
+
+*** With flet
 
 #+BEGIN_SRC elisp
-  (bench-multi-lexical :times 1 :ensure-equal t
-    :forms (("old ts" (org-ql "~/org/inbox.org"
-                        (ts :from "2017-01-01")))
-            ("ts.el ts" (org-ql "~/org/inbox.org"
-                          (ts-ts :from "2017-01-01")))))
+  (elp-profile 5 (org-agenda-ng--agenda
+                  :files "~/org/main.org"
+                  :pred (lambda ()
+                          (and (todo)
+                               (or (date :deadline '<= (org-today))
+                                   (date :scheduled '<= (org-today)))
+                               (not (apply #'todo org-done-keywords-for-agenda))))))
 #+END_SRC
 
 #+RESULTS:
-| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|----------+--------------------+---------------+----------+------------------|
-| ts.el ts | 1.32               |      1.299966 |        0 |                0 |
-| old ts   | slowest            |      1.713027 |        0 |                0 |
+#+begin_example
+mapcar                                                        526         3.7898506779  0.0072050393
+org-agenda-ng--agenda                                         5           2.7695176850  0.5539035370
+org-agenda-ng--filter-buffer                                  5           1.414347774   0.2828695548
+org-agenda-ng--format-element                                 265         0.8871611419  0.0033477778
+org-get-tags-at                                               265         0.7891641319  0.0029779778
+org-up-heading-safe                                           1150        0.7581951110  0.0006593000
+re-search-backward                                            3700        0.5948686769  0.0001607753
+org-agenda-ng--todo-p                                         6690        0.5840980579  8.730...e-05
+org-get-todo-state                                            6690        0.5666448919  8.470...e-05
+org-agenda-ng--date-p                                         5940        0.5196037069  8.747...e-05
+org-entry-get                                                 6195        0.4144106150  6.689...e-05
+org-entry-properties                                          5940        0.3640680380  6.129...e-05
+org-element-headline-parser                                   265         0.2810144920  0.0010604320
+outline-next-heading                                          6195        0.2495287770  4.027...e-05
+org-back-to-heading                                           14565       0.1959557380  1.345...e-05
+re-search-forward                                             7850        0.1933439489  2.462...e-05
+outline-back-to-heading                                       14565       0.1753121230  1.203...e-05
+org-outline-level                                             2300        0.1676228200  7.287...e-05
+org-agenda-finalize-entries                                   5           0.1607656930  0.0321531386
+org-super-agenda--filter-finalize-entries                     5           0.1316961509  0.0263392301
+#+end_example
 
-*** :to
+*** Without flet
 
 #+BEGIN_SRC elisp
-  (bench-multi-lexical :times 1 :ensure-equal t
-    :forms (("old ts" (org-ql "~/org/inbox.org"
-                        (ts :to "2019-01-01")))
-            ("ts.el ts" (org-ql "~/org/inbox.org"
-                          (ts-ts :to "2019-01-01")))))
+  (elp-profile 5 (org-agenda-ng--agenda
+                  :files "~/org/main.org"
+                  :pred (lambda ()
+                          (and (org-agenda-ng--todo-p)
+                               (or (org-agenda-ng--date-p :deadline '<= (org-today))
+                                   (org-agenda-ng--date-p :scheduled '<= (org-today)))
+                               (not (apply #'org-agenda-ng--todo-p org-done-keywords-for-agenda))))))
 #+END_SRC
 
 #+RESULTS:
-| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|----------+--------------------+---------------+----------+------------------|
-| ts.el ts | 1.01               |      1.300084 |        0 |                0 |
-| old ts   | slowest            |      1.312208 |        0 |                0 |
+#+begin_example
+mapcar                                                        526         3.7766218089  0.0071798893
+org-agenda-ng--agenda                                         5           2.75718831    0.551437662
+org-agenda-ng--filter-buffer                                  5           1.402551392   0.2805102784
+org-agenda-ng--format-element                                 265         0.8864161399  0.0033449665
+org-get-tags-at                                               265         0.7896260759  0.0029797210
+org-up-heading-safe                                           1150        0.7589292910  0.0006599385
+re-search-backward                                            3700        0.5956338739  0.0001609821
+org-agenda-ng--todo-p                                         6690        0.5781650060  8.642...e-05
+org-get-todo-state                                            6690        0.5603983020  8.376...e-05
+org-agenda-ng--date-p                                         5940        0.5209897369  8.770...e-05
+org-entry-get                                                 6195        0.4158440950  6.712...e-05
+org-entry-properties                                          5940        0.3640524090  6.128...e-05
+org-element-headline-parser                                   265         0.2810144710  0.0010604319
+outline-next-heading                                          6195        0.2485497380  4.012...e-05
+org-back-to-heading                                           14565       0.1957209180  1.343...e-05
+re-search-forward                                             7850        0.1927130979  2.454...e-05
+outline-back-to-heading                                       14565       0.1751091780  1.202...e-05
+org-outline-level                                             2300        0.1680958539  7.308...e-05
+org-agenda-finalize-entries                                   5           0.1610422239  0.0322084448
+org-super-agenda--filter-finalize-entries                     5           0.132423043   0.0264846085
+#+end_example
 
-*** :on
+
+** Profiling =org-trust-scanner-tags=
+
+[2018-05-10 Thu 12:59]  Turned on =org-trust-scanner-tags=, going to try profiling again:
 
 #+BEGIN_SRC elisp
-  (bench-multi-lexical :times 1 :ensure-equal t
-    :forms (("old ts" (org-ql "~/org/inbox.org"
-                        (ts :on "2019-05-14")))
-            ("ts.el ts" (org-ql "~/org/inbox.org"
-                          (ts-ts :on "2019-05-14")))))
+  ;; (elp-profile 1 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+  ;;                      (tags "world")))
+
+  (elp-profile 10 nil (org-agenda-ng org-agenda-files
+                       (tags "Emacs")))
 #+END_SRC
 
 #+RESULTS:
-| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|----------+--------------------+---------------+----------+------------------|
-| ts.el ts | 1.17               |      0.557281 |        0 |                0 |
-| old ts   | slowest            |      0.652149 |        0 |                0 |
+| Function                                  | Times called |   Total time | Average time |
+|-------------------------------------------+--------------+--------------+--------------|
+| org-agenda-ng--agenda                     |           10 | 44.092598282 | 4.4092598282 |
+| mapcar                                    |          282 | 40.234516707 | 0.1426755911 |
+| org-agenda-ng--filter-buffer              |           80 | 26.895492471 | 0.3361936558 |
+| org-element-headline-parser               |         3980 | 10.387614362 | 0.0026099533 |
+| org-agenda-finalize-entries               |           10 |  9.194458252 | 0.9194458252 |
+| org-agenda-ng--tags-p                     |        70250 | 8.1897379849 | 0.0001165799 |
+| org-agenda-ng--format-element             |         3980 | 6.5944325679 | 0.0016568926 |
+| outline-next-heading                      |        70320 | 6.1190180490 | 8.701...e-05 |
+| re-search-forward                         |        97050 | 5.8706467829 | 6.049...e-05 |
+| org-get-tags-at                           |        74230 | 5.4078158059 | 7.285...e-05 |
+| org-super-agenda--filter-finalize-entries |           10 | 5.2320123400 | 0.5232012340 |
+| org-super-agenda--group-items             |           10 | 5.1260959210 | 0.5126095921 |
+| org-super-agenda--group-dispatch          |          130 |  5.119333624 | 0.0393794894 |
+| sort                                      |           20 | 3.8204368569 | 0.1910218428 |
+| org-element--parse-objects                |         6180 | 3.5386578929 | 0.0005725983 |
+| org-is-habit-p                            |         5970 | 3.2497755920 | 0.0005443510 |
+| org-entry-get                             |         5970 | 3.2347964049 | 0.0005418419 |
+| org--property-local-values                |         5970 | 3.1796357319 | 0.0005326023 |
+| org-get-property-block                    |         5970 | 3.0767919680 | 0.0005153755 |
+| org-entries-lessp                         |        20020 | 2.6563960079 | 0.0001326871 |
+
+Now trying again without it:
+
+#+BEGIN_SRC elisp
+  ;; (elp-profile 1 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
+  ;;                      (tags "world")))
+
+  (elp-profile 10 nil (org-agenda-ng org-agenda-files
+                       (tags "Emacs")))
+#+END_SRC
+
+#+RESULTS:
+| Function                                  | Times called |   Total time | Average time |
+|-------------------------------------------+--------------+--------------+--------------|
+| mapcar                                    |         1791 | 57.096304538 | 0.0318795670 |
+| org-agenda-ng--agenda                     |           10 | 54.232133506 | 5.4232133505 |
+| org-agenda-ng--filter-buffer              |           80 | 30.065167040 | 0.3758145880 |
+| org-get-tags-at                           |        74230 | 13.840202495 | 0.0001864502 |
+| org-agenda-ng--format-element             |         3980 | 13.429297797 | 0.0033741954 |
+| org-element-headline-parser               |         3980 | 12.771776652 | 0.0032089891 |
+| org-agenda-finalize-entries               |           10 | 9.1439433990 | 0.9143943399 |
+| org-agenda-ng--tags-p                     |        70250 | 9.0249653730 | 0.0001284692 |
+| org-super-agenda--filter-finalize-entries |           10 |  7.300515859 | 0.7300515859 |
+| outline-next-heading                      |        70320 | 7.2384435649 | 0.0001029357 |
+| org-super-agenda--group-items             |           10 |  4.918585855 | 0.4918585855 |
+| org-super-agenda--group-dispatch          |          130 | 4.9125893509 | 0.0377891488 |
+| re-search-forward                         |       101020 | 4.6294823850 | 4.582...e-05 |
+| org-up-heading-safe                       |         7370 | 4.4629885620 | 0.0006055615 |
+| org-is-habit-p                            |         5960 | 4.2772351910 | 0.0007176569 |
+| org-entry-get                             |         5960 | 4.2595350800 | 0.0007146870 |
+| org-super-agenda--group-tag               |           50 | 3.8942044929 | 0.0778840898 |
+| re-search-backward                        |        26150 | 3.3660083490 | 0.0001287192 |
+| org--property-local-values                |         5960 | 3.1793476329 | 0.0005334475 |
+| org-get-property-block                    |         5960 | 3.0662425979 | 0.0005144702 |
+
+Wow, using =org-trust-scanner-tags= saves a /lot/ of time.
+
+** Profiling position-based
+
+*** Macro
+
+#+BEGIN_SRC elisp
+  (defmacro elp-profile (times &rest body)
+    (declare (indent defun))
+    `(let ((prefixes '("org-" "string-" "s-" "buffer-" "append" "delq" "map"
+                       "list" "car" "save-" "outline-" "delete-dups"
+                       "sort" "line-" "nth" "concat" "char-to-string"
+                       "rx-" "goto-" "when" "search-" "re-"))
+           output)
+       (dolist (prefix prefixes)
+         (elp-instrument-package prefix))
+       (dotimes (x ,times)
+         ,@body)
+       (elp-results)
+       (elp-restore-all)
+       (point-min)
+       (forward-line 20)
+       (delete-region (point) (point-max))
+       (setq output (buffer-substring-no-properties (point-min) (point-max)))
+       (kill-buffer)
+       (delete-window)
+       output))
+#+END_SRC
+
+
+*** ng-flet
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 (org-agenda-ng--test-agenda-today))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+mapcar                                                        121         0.1292609089  0.0010682719
+org-agenda-ng--test-agenda-today                              5           0.0860146149  0.017202923
+org-agenda-ng--agenda                                         5           0.0858901769  0.0171780353
+org-agenda-ng--format-element                                 75          0.0308815090  0.0004117534
+org-agenda-ng--filter-buffer                                  5           0.026709027   0.0053418054
+org-agenda-ng--date-p                                         455         0.0210552310  4.627...e-05
+org-element-headline-parser                                   75          0.016209908   0.0002161321
+org-get-tags-at                                               75          0.008953666   0.0001193822
+org-agenda-ng--add-faces                                      75          0.0072834109  9.711...e-05
+org-element-timestamp-interpreter                             150         0.0068781430  4.585...e-05
+org-entry-get                                                 290         0.0060815609  2.097...e-05
+org-up-heading-safe                                           210         0.005708647   2.718...e-05
+org-agenda-finalize-entries                                   5           0.005201221   0.0010402442
+org-element-timestamp-parser                                  150         0.005191617   3.461078e-05
+org-entry-properties                                          290         0.0048787450  1.682...e-05
+org-element--get-time-properties                              75          0.004112675   5.483...e-05
+org-agenda-ng--add-deadline-face                              75          0.0039314910  5.241...e-05
+org-back-to-heading                                           725         0.0037559990  5.180...e-06
+org-agenda-ng--add-scheduled-face                             75          0.0031766149  4.235...e-05
+org-parse-time-string                                         300         0.0031740200  1.058...e-05
+#+end_example
+
+*** ng-funcall
+
+#+BEGIN_SRC elisp
+  (elp-profile 5 (org-agenda-ng--test-agenda-today))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+mapcar                                                        121         0.1296645480  0.0010716078
+org-agenda-ng--test-agenda-today                              5           0.086714029   0.0173428058
+org-agenda-ng--agenda                                         5           0.086584611   0.0173169222
+org-agenda-ng--format-element                                 75          0.0307461019  0.0004099480
+org-agenda-ng--filter-buffer                                  5           0.027136826   0.0054273652
+org-agenda-ng--date-p                                         455         0.0213037090  4.682...e-05
+org-element-headline-parser                                   75          0.016251755   0.0002166900
+org-get-tags-at                                               75          0.008959605   0.0001194614
+org-agenda-ng--add-faces                                      75          0.0072381410  9.650...e-05
+org-element-timestamp-interpreter                             150         0.0069832960  4.655...e-05
+org-entry-get                                                 290         0.0061220340  2.111...e-05
+org-up-heading-safe                                           210         0.0057036860  2.716...e-05
+org-agenda-finalize-entries                                   5           0.005372899   0.0010745798
+org-element-timestamp-parser                                  150         0.0050518689  3.367...e-05
+org-entry-properties                                          290         0.0049517209  1.707...e-05
+org-agenda-ng--add-deadline-face                              75          0.0039273909  5.236...e-05
+org-element--get-time-properties                              75          0.0039059429  5.207...e-05
+org-back-to-heading                                           725         0.0037793259  5.212...e-06
+org-parse-time-string                                         300         0.0032196259  1.073...e-05
+org-agenda-ng--add-scheduled-face                             75          0.0031410580  4.188...e-05
+#+end_example
+
+*** orig
+
+Make sure to kill any existing agenda buffers first.
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 (org-agenda-list nil nil 'week))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+org-agenda-list                                               1           9.693596196   9.693596196
+org-agenda-get-day-entries                                    56          8.630330659   0.1541130474
+org-agenda-get-scheduled                                      56          6.6207980570  0.1182285367
+org-is-habit-p                                                2792        2.2907458449  0.0008204677
+org-entry-get                                                 2798        2.287390186   0.0008175090
+org-agenda--timestamp-to-absolute                             7708        2.0970420100  0.0002720604
+org-agenda-get-deadlines                                      56          1.6941886389  0.0302533685
+org-at-planning-p                                             4399        1.3993312159  0.0003181021
+org--property-local-values                                    2793        1.2699226760  0.0004546805
+org-get-property-block                                        2794        1.2182695930  0.0004360306
+org-time-string-to-absolute                                   7708        1.1513844880  0.0001493752
+org-inlinetask-in-task-p                                      6969        1.139932302   0.0001635718
+org-parse-time-string                                         7880        1.0635759220  0.0001349715
+org-closest-date                                              3864        1.0383435800  0.0002687224
+re-search-forward                                             15199       0.9607921779  6.321...e-05
+org-back-to-heading                                           12667       0.8564486210  6.761...e-05
+outline-back-to-heading                                       12667       0.8362207570  6.601...e-05
+line-beginning-position                                       10333       0.7998346869  7.740...e-05
+org-agenda-format-item                                        279         0.7552402350  0.0027069542
+re-search-backward                                            16726       0.5694224969  3.404...e-05
+#+end_example
+
+** Profiling tags matching
+
+*** ng
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 nil
+    (org-agenda-ng "~/org/main.org"
+      (tags "computer")))
+#+END_SRC
+
+#+RESULTS:
+| Function                       | Times called |   Total time | Average time |
+|--------------------------------+--------------+--------------+--------------|
+| mapcar                         |         4217 | 12.612716455 | 0.0029909216 |
+| org-agenda-ng--agenda          |            1 |  9.721410651 |  9.721410651 |
+| org-get-tags-at                |         1845 | 7.4793860389 | 0.0040538677 |
+| org-up-heading-safe            |         9361 | 6.4622674019 | 0.0006903394 |
+| re-search-backward             |        25001 | 5.3399866239 | 0.0002135909 |
+| org-agenda-ng--filter-buffer   |            1 |  4.874598854 |  4.874598854 |
+| org-agenda-ng--tags-p          |         1238 | 4.8067623430 | 0.0038826836 |
+| org-agenda-ng--format-element  |          607 | 3.6325626609 | 0.0059844524 |
+| org-outline-level              |        17484 | 1.0298924459 | 5.890...e-05 |
+| org-add-props                  |         2074 | 0.8305549259 | 0.0004004604 |
+| org-element-headline-parser    |          607 | 0.2092664829 | 0.0003447553 |
+| org-back-to-heading            |        11813 | 0.1252112960 | 1.059...e-05 |
+| outline-back-to-heading        |        11813 | 0.1100693780 | 9.317...e-06 |
+| org-end-of-subtree             |          607 | 0.0721986340 | 0.0001189433 |
+| outline-on-heading-p           |        11813 | 0.0675261030 | 5.716...e-06 |
+| outline-next-heading           |         1239 | 0.0627980999 | 5.068...e-05 |
+| re-search-forward              |         3273 | 0.0612446620 | 1.871...e-05 |
+| org-agenda-finalize-entries    |            1 |  0.041846274 |  0.041846274 |
+| buffer-substring-no-properties |         6329 | 0.0308716979 | 4.877...e-06 |
+| line-end-position              |          903 | 0.0280484950 | 3.106...e-05 |
+
+*** ng without inheritance
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 nil
+    (org-agenda-ng "~/org/main.org"
+      (tags "computer")))
+#+END_SRC
+
+#+RESULTS:
+| Function                       | Times called |   Total time | Average time |
+|--------------------------------+--------------+--------------+--------------|
+| mapcar                         |         4217 | 12.580246839 | 0.0029832219 |
+| org-agenda-ng--agenda          |            1 |  8.777776059 |  8.777776059 |
+| org-get-tags-at                |         1845 | 8.2853503299 | 0.0044907047 |
+| org-up-heading-safe            |         9361 | 7.2710981889 | 0.0007767437 |
+| re-search-backward             |        25001 | 5.3360082060 | 0.0002134317 |
+| org-agenda-ng--filter-buffer   |            1 |  4.865602689 |  4.865602689 |
+| org-agenda-ng--tags-p          |         1238 | 4.7983754310 | 0.0038759090 |
+| org-agenda-ng--format-element  |          607 | 3.6273825100 | 0.0059759184 |
+| org-outline-level              |        17484 | 1.0284417919 | 5.882...e-05 |
+| org-back-to-heading            |        11813 | 0.9390534479 | 7.949...e-05 |
+| org-split-string               |         4940 |  0.833825087 | 0.0001687905 |
+| string-match                   |         9102 | 0.8231629100 | 9.043...e-05 |
+| org-element-headline-parser    |          607 | 0.2034305819 | 0.0003351409 |
+| outline-back-to-heading        |        11813 | 0.1096120189 | 9.278...e-06 |
+| org-end-of-subtree             |          607 | 0.0710802559 | 0.0001171009 |
+| outline-on-heading-p           |        11813 | 0.0670029359 | 5.671...e-06 |
+| outline-next-heading           |         1239 | 0.0622323519 | 5.022...e-05 |
+| re-search-forward              |         3273 | 0.0603102519 | 1.842...e-05 |
+| org-agenda-finalize-entries    |            1 |  0.037286496 |  0.037286496 |
+| buffer-substring-no-properties |         6329 | 0.0285818689 | 4.516...e-06 |
+
+
+*** original
+
+#+BEGIN_SRC elisp
+  (elp-profile 1 nil
+    (with-current-buffer "main.org"
+(org-tags-view nil "computer")))
+#+END_SRC
+
+#+RESULTS:
+| Function                    | Times called |   Total time | Average time |
+|-----------------------------+--------------+--------------+--------------|
+| org-tags-view               |            1 |  2.620578129 |  2.620578129 |
+| org-scan-tags               |            1 |  1.448883817 |  1.448883817 |
+| org-agenda-format-item      |          607 | 0.9273893060 | 0.0015278242 |
+| org-add-props               |         2042 | 0.8877267209 | 0.0004347339 |
+| org-agenda-finalize         |            1 |  0.144506782 |  0.144506782 |
+| re-search-forward           |         2154 | 0.1367046650 | 6.346...e-05 |
+| string-match                |         8742 | 0.1002517259 | 1.146...e-05 |
+| org-get-priority            |          607 | 0.0961996220 | 0.0001584837 |
+| org-agenda-align-tags       |            1 |  0.095166495 |  0.095166495 |
+| org-agenda-prepare          |            1 |  0.081724472 |  0.081724472 |
+| org-outline-level           |         1246 | 0.0771033170 | 6.188...e-05 |
+| org-agenda-finalize-entries |            1 |  0.071707404 |  0.071707404 |
+| org-agenda-prepare-buffers  |            1 |  0.057903921 |  0.057903921 |
+| org-get-heading             |          607 | 0.0517784369 | 8.530...e-05 |
+| mapcar                      |         3738 | 0.0418641110 | 1.119...e-05 |
+| org-agenda-highlight-todo   |          607 | 0.0273123070 | 4.499...e-05 |
+| mapconcat                   |          609 |  0.024743305 | 4.062...e-05 |
+| sort                        |            2 |   0.02117069 |  0.010585345 |
+| org-activate-plain-links    |          132 | 0.0203558980 | 0.0001542113 |
+| org-activate-bracket-links  |           78 | 0.0198589680 | 0.0002546021 |
 
 ** Using =org-element-parse-buffer=
 
@@ -1992,850 +2684,184 @@ string-match                                                  4594        0.0064
 mapcar                                                        30          0.0041008740  0.0001366958
 #+end_example
 
-** Profiling position-based
+** with/without ts.el
 
-*** Macro
+[2019-08-11 Sun 15:39]  These results seem to show a minor performance improvement by using ~ts~, and the code is simpler.
 
 #+BEGIN_SRC elisp
-  (defmacro elp-profile (times &rest body)
-    (declare (indent defun))
-    `(let ((prefixes '("org-" "string-" "s-" "buffer-" "append" "delq" "map"
-                       "list" "car" "save-" "outline-" "delete-dups"
-                       "sort" "line-" "nth" "concat" "char-to-string"
-                       "rx-" "goto-" "when" "search-" "re-"))
-           output)
-       (dolist (prefix prefixes)
-         (elp-instrument-package prefix))
-       (dotimes (x ,times)
-         ,@body)
-       (elp-results)
-       (elp-restore-all)
-       (point-min)
-       (forward-line 20)
-       (delete-region (point) (point-max))
-       (setq output (buffer-substring-no-properties (point-min) (point-max)))
-       (kill-buffer)
-       (delete-window)
-       output))
+  ;; (require 'ts)
+
+  (org-ql--defpred ts-ts (&key from to _on)
+    ;; The underscore before `on' prevents "unused lexical variable" warnings, because we
+    ;; pre-process that argument in a macro before this function is called.
+    "Return non-nil if current entry has a timestamp in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be strings parseable by
+  `parse-time-string' but may omit the time value."
+    ;; TODO: DRY this with the clocked predicate.
+    ;; NOTE: FROM and TO are actually expected to be Unix timestamps.  The docstring is written
+    ;; for end users, for which the arguments are pre-processed by `org-ql-select'.
+    ;; FIXME: This assumes every "clocked" entry is a range.  Unclosed clock entries are not handled.
+    (cl-macrolet ((next-timestamp ()
+                                  `(when (re-search-forward org-element--timestamp-regexp end-pos t)
+                                     (ts-parse-org (match-string 0))))
+                  (test-timestamps (pred-form)
+                                   `(cl-loop for next-ts = (next-timestamp)
+                                             while next-ts
+                                             thereis ,pred-form)))
+      (save-excursion
+        (let ((end-pos (org-entry-end-position)))
+          (cond ((not (or from to)) (re-search-forward org-element--timestamp-regexp end-pos t))
+                ((and from to) (test-timestamps (and (ts<= from next-ts)
+                                                     (ts<= next-ts to))))
+                (from (test-timestamps (ts<= from next-ts)))
+                (to (test-timestamps (ts<= next-ts to))))))))
+
 #+END_SRC
 
-
-*** orig
-
-Make sure to kill any existing agenda buffers first.
+*** :from
 
 #+BEGIN_SRC elisp
-  (elp-profile 1 (org-agenda-list nil nil 'week))
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-org-agenda-list                                               1           9.693596196   9.693596196
-org-agenda-get-day-entries                                    56          8.630330659   0.1541130474
-org-agenda-get-scheduled                                      56          6.6207980570  0.1182285367
-org-is-habit-p                                                2792        2.2907458449  0.0008204677
-org-entry-get                                                 2798        2.287390186   0.0008175090
-org-agenda--timestamp-to-absolute                             7708        2.0970420100  0.0002720604
-org-agenda-get-deadlines                                      56          1.6941886389  0.0302533685
-org-at-planning-p                                             4399        1.3993312159  0.0003181021
-org--property-local-values                                    2793        1.2699226760  0.0004546805
-org-get-property-block                                        2794        1.2182695930  0.0004360306
-org-time-string-to-absolute                                   7708        1.1513844880  0.0001493752
-org-inlinetask-in-task-p                                      6969        1.139932302   0.0001635718
-org-parse-time-string                                         7880        1.0635759220  0.0001349715
-org-closest-date                                              3864        1.0383435800  0.0002687224
-re-search-forward                                             15199       0.9607921779  6.321...e-05
-org-back-to-heading                                           12667       0.8564486210  6.761...e-05
-outline-back-to-heading                                       12667       0.8362207570  6.601...e-05
-line-beginning-position                                       10333       0.7998346869  7.740...e-05
-org-agenda-format-item                                        279         0.7552402350  0.0027069542
-re-search-backward                                            16726       0.5694224969  3.404...e-05
-#+end_example
-
-*** ng-funcall
-
-#+BEGIN_SRC elisp
-  (elp-profile 5 (org-agenda-ng--test-agenda-today))
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-mapcar                                                        121         0.1296645480  0.0010716078
-org-agenda-ng--test-agenda-today                              5           0.086714029   0.0173428058
-org-agenda-ng--agenda                                         5           0.086584611   0.0173169222
-org-agenda-ng--format-element                                 75          0.0307461019  0.0004099480
-org-agenda-ng--filter-buffer                                  5           0.027136826   0.0054273652
-org-agenda-ng--date-p                                         455         0.0213037090  4.682...e-05
-org-element-headline-parser                                   75          0.016251755   0.0002166900
-org-get-tags-at                                               75          0.008959605   0.0001194614
-org-agenda-ng--add-faces                                      75          0.0072381410  9.650...e-05
-org-element-timestamp-interpreter                             150         0.0069832960  4.655...e-05
-org-entry-get                                                 290         0.0061220340  2.111...e-05
-org-up-heading-safe                                           210         0.0057036860  2.716...e-05
-org-agenda-finalize-entries                                   5           0.005372899   0.0010745798
-org-element-timestamp-parser                                  150         0.0050518689  3.367...e-05
-org-entry-properties                                          290         0.0049517209  1.707...e-05
-org-agenda-ng--add-deadline-face                              75          0.0039273909  5.236...e-05
-org-element--get-time-properties                              75          0.0039059429  5.207...e-05
-org-back-to-heading                                           725         0.0037793259  5.212...e-06
-org-parse-time-string                                         300         0.0032196259  1.073...e-05
-org-agenda-ng--add-scheduled-face                             75          0.0031410580  4.188...e-05
-#+end_example
-
-*** ng-flet
-
-#+BEGIN_SRC elisp
-  (elp-profile 5 (org-agenda-ng--test-agenda-today))
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-mapcar                                                        121         0.1292609089  0.0010682719
-org-agenda-ng--test-agenda-today                              5           0.0860146149  0.017202923
-org-agenda-ng--agenda                                         5           0.0858901769  0.0171780353
-org-agenda-ng--format-element                                 75          0.0308815090  0.0004117534
-org-agenda-ng--filter-buffer                                  5           0.026709027   0.0053418054
-org-agenda-ng--date-p                                         455         0.0210552310  4.627...e-05
-org-element-headline-parser                                   75          0.016209908   0.0002161321
-org-get-tags-at                                               75          0.008953666   0.0001193822
-org-agenda-ng--add-faces                                      75          0.0072834109  9.711...e-05
-org-element-timestamp-interpreter                             150         0.0068781430  4.585...e-05
-org-entry-get                                                 290         0.0060815609  2.097...e-05
-org-up-heading-safe                                           210         0.005708647   2.718...e-05
-org-agenda-finalize-entries                                   5           0.005201221   0.0010402442
-org-element-timestamp-parser                                  150         0.005191617   3.461078e-05
-org-entry-properties                                          290         0.0048787450  1.682...e-05
-org-element--get-time-properties                              75          0.004112675   5.483...e-05
-org-agenda-ng--add-deadline-face                              75          0.0039314910  5.241...e-05
-org-back-to-heading                                           725         0.0037559990  5.180...e-06
-org-agenda-ng--add-scheduled-face                             75          0.0031766149  4.235...e-05
-org-parse-time-string                                         300         0.0031740200  1.058...e-05
-#+end_example
-
-** Profiling =org-trust-scanner-tags=
-
-[2018-05-10 Thu 12:59]  Turned on =org-trust-scanner-tags=, going to try profiling again:
-
-#+BEGIN_SRC elisp
-  ;; (elp-profile 1 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
-  ;;                      (tags "world")))
-
-  (elp-profile 10 nil (org-agenda-ng org-agenda-files
-                       (tags "Emacs")))
-#+END_SRC
-
-#+RESULTS:
-| Function                                  | Times called |   Total time | Average time |
-|-------------------------------------------+--------------+--------------+--------------|
-| org-agenda-ng--agenda                     |           10 | 44.092598282 | 4.4092598282 |
-| mapcar                                    |          282 | 40.234516707 | 0.1426755911 |
-| org-agenda-ng--filter-buffer              |           80 | 26.895492471 | 0.3361936558 |
-| org-element-headline-parser               |         3980 | 10.387614362 | 0.0026099533 |
-| org-agenda-finalize-entries               |           10 |  9.194458252 | 0.9194458252 |
-| org-agenda-ng--tags-p                     |        70250 | 8.1897379849 | 0.0001165799 |
-| org-agenda-ng--format-element             |         3980 | 6.5944325679 | 0.0016568926 |
-| outline-next-heading                      |        70320 | 6.1190180490 | 8.701...e-05 |
-| re-search-forward                         |        97050 | 5.8706467829 | 6.049...e-05 |
-| org-get-tags-at                           |        74230 | 5.4078158059 | 7.285...e-05 |
-| org-super-agenda--filter-finalize-entries |           10 | 5.2320123400 | 0.5232012340 |
-| org-super-agenda--group-items             |           10 | 5.1260959210 | 0.5126095921 |
-| org-super-agenda--group-dispatch          |          130 |  5.119333624 | 0.0393794894 |
-| sort                                      |           20 | 3.8204368569 | 0.1910218428 |
-| org-element--parse-objects                |         6180 | 3.5386578929 | 0.0005725983 |
-| org-is-habit-p                            |         5970 | 3.2497755920 | 0.0005443510 |
-| org-entry-get                             |         5970 | 3.2347964049 | 0.0005418419 |
-| org--property-local-values                |         5970 | 3.1796357319 | 0.0005326023 |
-| org-get-property-block                    |         5970 | 3.0767919680 | 0.0005153755 |
-| org-entries-lessp                         |        20020 | 2.6563960079 | 0.0001326871 |
-
-Now trying again without it:
-
-#+BEGIN_SRC elisp
-  ;; (elp-profile 1 nil (org-agenda-ng "~/src/emacs/org-super-agenda/test/test.org"
-  ;;                      (tags "world")))
-
-  (elp-profile 10 nil (org-agenda-ng org-agenda-files
-                       (tags "Emacs")))
-#+END_SRC
-
-#+RESULTS:
-| Function                                  | Times called |   Total time | Average time |
-|-------------------------------------------+--------------+--------------+--------------|
-| mapcar                                    |         1791 | 57.096304538 | 0.0318795670 |
-| org-agenda-ng--agenda                     |           10 | 54.232133506 | 5.4232133505 |
-| org-agenda-ng--filter-buffer              |           80 | 30.065167040 | 0.3758145880 |
-| org-get-tags-at                           |        74230 | 13.840202495 | 0.0001864502 |
-| org-agenda-ng--format-element             |         3980 | 13.429297797 | 0.0033741954 |
-| org-element-headline-parser               |         3980 | 12.771776652 | 0.0032089891 |
-| org-agenda-finalize-entries               |           10 | 9.1439433990 | 0.9143943399 |
-| org-agenda-ng--tags-p                     |        70250 | 9.0249653730 | 0.0001284692 |
-| org-super-agenda--filter-finalize-entries |           10 |  7.300515859 | 0.7300515859 |
-| outline-next-heading                      |        70320 | 7.2384435649 | 0.0001029357 |
-| org-super-agenda--group-items             |           10 |  4.918585855 | 0.4918585855 |
-| org-super-agenda--group-dispatch          |          130 | 4.9125893509 | 0.0377891488 |
-| re-search-forward                         |       101020 | 4.6294823850 | 4.582...e-05 |
-| org-up-heading-safe                       |         7370 | 4.4629885620 | 0.0006055615 |
-| org-is-habit-p                            |         5960 | 4.2772351910 | 0.0007176569 |
-| org-entry-get                             |         5960 | 4.2595350800 | 0.0007146870 |
-| org-super-agenda--group-tag               |           50 | 3.8942044929 | 0.0778840898 |
-| re-search-backward                        |        26150 | 3.3660083490 | 0.0001287192 |
-| org--property-local-values                |         5960 | 3.1793476329 | 0.0005334475 |
-| org-get-property-block                    |         5960 | 3.0662425979 | 0.0005144702 |
-
-Wow, using =org-trust-scanner-tags= saves a /lot/ of time.
-
-** Profiling flet across all agenda files
-
-*** Without flet
-
-#+BEGIN_SRC elisp
-  (elp-profile 5 (org-agenda-ng--agenda
-                  :files org-agenda-files
-                  :pred (lambda ()
-                          (and (org-agenda-ng--todo-p)
-                               (or (org-agenda-ng--date-p :deadline '<= (org-today))
-                                   (org-agenda-ng--date-p :scheduled '<= (org-today)))
-                               (not (apply #'org-agenda-ng--todo-p org-done-keywords-for-agenda))))))
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-mapcar                                                        711         26.910164986  0.0378483333
-org-agenda-ng--agenda                                         5           21.012501837  4.2025003674
-org-agenda-ng--filter-buffer                                  40          13.751964650  0.3437991162
-org-agenda-ng--todo-p                                         37080       5.8788306440  0.0001585445
-org-agenda-ng--format-element                                 1180        4.5712275970  0.0038739216
-org-get-todo-state                                            37080       4.1661659069  0.0001123561
-org-agenda-ng--date-p                                         21595       4.1442710769  0.0001919088
-org-entry-get                                                 22730       2.8275069239  0.0001243953
-org-entry-properties                                          21595       2.6558403739  0.0001229840
-outline-next-heading                                          34625       2.0894695999  6.034...e-05
-org-element-headline-parser                                   1180        1.9110445780  0.0016195293
-re-search-forward                                             42280       1.6994989150  4.019...e-05
-org-agenda-ng--add-faces                                      1180        1.6172592580  0.0013705586
-org-agenda-ng--add-scheduled-face                             1180        1.607386145   0.0013621916
-org-get-tags-at                                               1180        1.1521010509  0.0009763568
-org-back-to-heading                                           64530       1.1005834200  1.705...e-05
-org-up-heading-safe                                           2360        1.0182265390  0.0004314519
-outline-back-to-heading                                       64530       1.0086056729  1.563...e-05
-org-parse-time-string                                         7560        0.8314918499  0.0001099856
-org-time-string-to-absolute                                   3780        0.8277485280  0.0002189810
-#+end_example
-
-
-*** With flet
-
-#+BEGIN_SRC elisp
-  (elp-profile 5 (org-agenda-ng--agenda
-                  :files org-agenda-files
-                  :pred (lambda ()
-                          (and (todo)
-                               (or (date :deadline '<= (org-today))
-                                   (date :scheduled '<= (org-today)))
-                               (not (apply #'todo org-done-keywords-for-agenda))))))
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-mapcar                                                        711         25.608392569  0.0360174297
-org-agenda-ng--agenda                                         5           24.019318793  4.8038637586
-org-agenda-ng--filter-buffer                                  40          14.160293256  0.3540073313
-org-agenda-ng--date-p                                         21595       4.2111783960  0.0001950071
-org-agenda-finalize-entries                                   5           4.0930243110  0.8186048622
-org-super-agenda--filter-finalize-entries                     5           3.937522006   0.7875044012
-org-agenda-ng--todo-p                                         37080       3.5687476730  9.624...e-05
-org-get-todo-state                                            37080       3.4737076600  9.368...e-05
-outline-next-heading                                          34625       3.4689080650  0.0001001850
-re-search-forward                                             42280       3.0743315830  7.271...e-05
-org-agenda-ng--format-element                                 1180        2.9511605820  0.0025009835
-org-element-headline-parser                                   1180        2.6757063699  0.0022675477
-org-super-agenda--group-items                                 5           2.187362092   0.4374724183
-org-super-agenda--group-dispatch                              70          2.184685662   0.0312097951
-org-entry-get                                                 22730       2.0711872869  9.112...e-05
-org-entry-properties                                          21595       1.8958912070  8.779...e-05
-org-super-agenda--group-tag                                   25          1.8498977799  0.0739959111
-org-element-timestamp-parser                                  3785        1.8234333229  0.0004817525
-org-parse-time-string                                         7560        1.7121709579  0.0002264776
-org-element--get-time-properties                              1180        1.1814058020  0.0010011913
-#+end_example
-
-** Profiling flet on a single file
-
-This shows that the difference between them, if any, is so small as to be irrelevant.  The convenience and clarity are a big win.
-
-*** Without flet
-
-#+BEGIN_SRC elisp
-  (elp-profile 5 (org-agenda-ng--agenda
-                  :files "~/org/main.org"
-                  :pred (lambda ()
-                          (and (org-agenda-ng--todo-p)
-                               (or (org-agenda-ng--date-p :deadline '<= (org-today))
-                                   (org-agenda-ng--date-p :scheduled '<= (org-today)))
-                               (not (apply #'org-agenda-ng--todo-p org-done-keywords-for-agenda))))))
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-mapcar                                                        526         3.7766218089  0.0071798893
-org-agenda-ng--agenda                                         5           2.75718831    0.551437662
-org-agenda-ng--filter-buffer                                  5           1.402551392   0.2805102784
-org-agenda-ng--format-element                                 265         0.8864161399  0.0033449665
-org-get-tags-at                                               265         0.7896260759  0.0029797210
-org-up-heading-safe                                           1150        0.7589292910  0.0006599385
-re-search-backward                                            3700        0.5956338739  0.0001609821
-org-agenda-ng--todo-p                                         6690        0.5781650060  8.642...e-05
-org-get-todo-state                                            6690        0.5603983020  8.376...e-05
-org-agenda-ng--date-p                                         5940        0.5209897369  8.770...e-05
-org-entry-get                                                 6195        0.4158440950  6.712...e-05
-org-entry-properties                                          5940        0.3640524090  6.128...e-05
-org-element-headline-parser                                   265         0.2810144710  0.0010604319
-outline-next-heading                                          6195        0.2485497380  4.012...e-05
-org-back-to-heading                                           14565       0.1957209180  1.343...e-05
-re-search-forward                                             7850        0.1927130979  2.454...e-05
-outline-back-to-heading                                       14565       0.1751091780  1.202...e-05
-org-outline-level                                             2300        0.1680958539  7.308...e-05
-org-agenda-finalize-entries                                   5           0.1610422239  0.0322084448
-org-super-agenda--filter-finalize-entries                     5           0.132423043   0.0264846085
-#+end_example
-
-
-*** With flet
-
-#+BEGIN_SRC elisp
-  (elp-profile 5 (org-agenda-ng--agenda
-                  :files "~/org/main.org"
-                  :pred (lambda ()
-                          (and (todo)
-                               (or (date :deadline '<= (org-today))
-                                   (date :scheduled '<= (org-today)))
-                               (not (apply #'todo org-done-keywords-for-agenda))))))
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-mapcar                                                        526         3.7898506779  0.0072050393
-org-agenda-ng--agenda                                         5           2.7695176850  0.5539035370
-org-agenda-ng--filter-buffer                                  5           1.414347774   0.2828695548
-org-agenda-ng--format-element                                 265         0.8871611419  0.0033477778
-org-get-tags-at                                               265         0.7891641319  0.0029779778
-org-up-heading-safe                                           1150        0.7581951110  0.0006593000
-re-search-backward                                            3700        0.5948686769  0.0001607753
-org-agenda-ng--todo-p                                         6690        0.5840980579  8.730...e-05
-org-get-todo-state                                            6690        0.5666448919  8.470...e-05
-org-agenda-ng--date-p                                         5940        0.5196037069  8.747...e-05
-org-entry-get                                                 6195        0.4144106150  6.689...e-05
-org-entry-properties                                          5940        0.3640680380  6.129...e-05
-org-element-headline-parser                                   265         0.2810144920  0.0010604320
-outline-next-heading                                          6195        0.2495287770  4.027...e-05
-org-back-to-heading                                           14565       0.1959557380  1.345...e-05
-re-search-forward                                             7850        0.1933439489  2.462...e-05
-outline-back-to-heading                                       14565       0.1753121230  1.203...e-05
-org-outline-level                                             2300        0.1676228200  7.287...e-05
-org-agenda-finalize-entries                                   5           0.1607656930  0.0321531386
-org-super-agenda--filter-finalize-entries                     5           0.1316961509  0.0263392301
-#+end_example
-
-** Profiling tags matching
-
-*** ng
-
-#+BEGIN_SRC elisp
-  (elp-profile 1 nil
-    (org-agenda-ng "~/org/main.org"
-      (tags "computer")))
-#+END_SRC
-
-#+RESULTS:
-| Function                       | Times called |   Total time | Average time |
-|--------------------------------+--------------+--------------+--------------|
-| mapcar                         |         4217 | 12.612716455 | 0.0029909216 |
-| org-agenda-ng--agenda          |            1 |  9.721410651 |  9.721410651 |
-| org-get-tags-at                |         1845 | 7.4793860389 | 0.0040538677 |
-| org-up-heading-safe            |         9361 | 6.4622674019 | 0.0006903394 |
-| re-search-backward             |        25001 | 5.3399866239 | 0.0002135909 |
-| org-agenda-ng--filter-buffer   |            1 |  4.874598854 |  4.874598854 |
-| org-agenda-ng--tags-p          |         1238 | 4.8067623430 | 0.0038826836 |
-| org-agenda-ng--format-element  |          607 | 3.6325626609 | 0.0059844524 |
-| org-outline-level              |        17484 | 1.0298924459 | 5.890...e-05 |
-| org-add-props                  |         2074 | 0.8305549259 | 0.0004004604 |
-| org-element-headline-parser    |          607 | 0.2092664829 | 0.0003447553 |
-| org-back-to-heading            |        11813 | 0.1252112960 | 1.059...e-05 |
-| outline-back-to-heading        |        11813 | 0.1100693780 | 9.317...e-06 |
-| org-end-of-subtree             |          607 | 0.0721986340 | 0.0001189433 |
-| outline-on-heading-p           |        11813 | 0.0675261030 | 5.716...e-06 |
-| outline-next-heading           |         1239 | 0.0627980999 | 5.068...e-05 |
-| re-search-forward              |         3273 | 0.0612446620 | 1.871...e-05 |
-| org-agenda-finalize-entries    |            1 |  0.041846274 |  0.041846274 |
-| buffer-substring-no-properties |         6329 | 0.0308716979 | 4.877...e-06 |
-| line-end-position              |          903 | 0.0280484950 | 3.106...e-05 |
-
-*** ng without inheritance
-
-#+BEGIN_SRC elisp
-  (elp-profile 1 nil
-    (org-agenda-ng "~/org/main.org"
-      (tags "computer")))
-#+END_SRC
-
-#+RESULTS:
-| Function                       | Times called |   Total time | Average time |
-|--------------------------------+--------------+--------------+--------------|
-| mapcar                         |         4217 | 12.580246839 | 0.0029832219 |
-| org-agenda-ng--agenda          |            1 |  8.777776059 |  8.777776059 |
-| org-get-tags-at                |         1845 | 8.2853503299 | 0.0044907047 |
-| org-up-heading-safe            |         9361 | 7.2710981889 | 0.0007767437 |
-| re-search-backward             |        25001 | 5.3360082060 | 0.0002134317 |
-| org-agenda-ng--filter-buffer   |            1 |  4.865602689 |  4.865602689 |
-| org-agenda-ng--tags-p          |         1238 | 4.7983754310 | 0.0038759090 |
-| org-agenda-ng--format-element  |          607 | 3.6273825100 | 0.0059759184 |
-| org-outline-level              |        17484 | 1.0284417919 | 5.882...e-05 |
-| org-back-to-heading            |        11813 | 0.9390534479 | 7.949...e-05 |
-| org-split-string               |         4940 |  0.833825087 | 0.0001687905 |
-| string-match                   |         9102 | 0.8231629100 | 9.043...e-05 |
-| org-element-headline-parser    |          607 | 0.2034305819 | 0.0003351409 |
-| outline-back-to-heading        |        11813 | 0.1096120189 | 9.278...e-06 |
-| org-end-of-subtree             |          607 | 0.0710802559 | 0.0001171009 |
-| outline-on-heading-p           |        11813 | 0.0670029359 | 5.671...e-06 |
-| outline-next-heading           |         1239 | 0.0622323519 | 5.022...e-05 |
-| re-search-forward              |         3273 | 0.0603102519 | 1.842...e-05 |
-| org-agenda-finalize-entries    |            1 |  0.037286496 |  0.037286496 |
-| buffer-substring-no-properties |         6329 | 0.0285818689 | 4.516...e-06 |
-
-
-*** original
-
-#+BEGIN_SRC elisp
-  (elp-profile 1 nil
-    (with-current-buffer "main.org"
-(org-tags-view nil "computer")))
-#+END_SRC
-
-#+RESULTS:
-| Function                    | Times called |   Total time | Average time |
-|-----------------------------+--------------+--------------+--------------|
-| org-tags-view               |            1 |  2.620578129 |  2.620578129 |
-| org-scan-tags               |            1 |  1.448883817 |  1.448883817 |
-| org-agenda-format-item      |          607 | 0.9273893060 | 0.0015278242 |
-| org-add-props               |         2042 | 0.8877267209 | 0.0004347339 |
-| org-agenda-finalize         |            1 |  0.144506782 |  0.144506782 |
-| re-search-forward           |         2154 | 0.1367046650 | 6.346...e-05 |
-| string-match                |         8742 | 0.1002517259 | 1.146...e-05 |
-| org-get-priority            |          607 | 0.0961996220 | 0.0001584837 |
-| org-agenda-align-tags       |            1 |  0.095166495 |  0.095166495 |
-| org-agenda-prepare          |            1 |  0.081724472 |  0.081724472 |
-| org-outline-level           |         1246 | 0.0771033170 | 6.188...e-05 |
-| org-agenda-finalize-entries |            1 |  0.071707404 |  0.071707404 |
-| org-agenda-prepare-buffers  |            1 |  0.057903921 |  0.057903921 |
-| org-get-heading             |          607 | 0.0517784369 | 8.530...e-05 |
-| mapcar                      |         3738 | 0.0418641110 | 1.119...e-05 |
-| org-agenda-highlight-todo   |          607 | 0.0273123070 | 4.499...e-05 |
-| mapconcat                   |          609 |  0.024743305 | 4.062...e-05 |
-| sort                        |            2 |   0.02117069 |  0.010585345 |
-| org-activate-plain-links    |          132 | 0.0203558980 | 0.0001542113 |
-| org-activate-bracket-links  |           78 | 0.0198589680 | 0.0002546021 |
-
-** More profiling
-
-[2018-05-10 Thu 15:02]  I think these are decent improvements.
-
-#+BEGIN_SRC elisp
-  (elp-profile 1 nil (org-agenda-ng "~/org/main.org"
-                        (or (habit)
-                            (and (or (date '= (org-today))
-                                     (deadline '<=)
-                                     (scheduled '<= (org-today)))
-                                 (not (apply #'todo org-done-keywords-for-agenda)))
-                            (and (todo "DONE" "CANCELLED")
-                                 (closed '= (org-today))))))
-#+END_SRC
-
-#+RESULTS:
-| Function                      | Times called |   Total time | Average time |
-|-------------------------------+--------------+--------------+--------------|
-| mapcar                        |          164 | 1.5004585290 | 0.0091491373 |
-| org-agenda-ng--agenda         |            1 |  1.348231247 |  1.348231247 |
-| org-agenda-ng--filter-buffer  |            1 | 1.1391189879 | 1.1391189879 |
-| org-agenda-ng--date-plain-p   |         1267 | 0.6198571040 | 0.0004892321 |
-| org-entry-get                 |         3983 | 0.2979337370 | 7.480...e-05 |
-| org-is-habit-p                |         1365 | 0.2049101109 | 0.0001501172 |
-| org--property-local-values    |         1365 | 0.1940614150 | 0.0001421695 |
-| org-agenda-ng--habit-p        |         1272 | 0.1911009179 | 0.0001502365 |
-| org-agenda-ng--format-element |           52 |  0.177965411 | 0.0034224117 |
-| org-get-property-block        |         1365 | 0.1760004519 | 0.0001289380 |
-| org-get-tags-at               |           52 | 0.1362824969 | 0.0026208172 |
-| org-agenda-ng--date-p         |         3880 | 0.1351176629 | 3.482...e-05 |
-| org-up-heading-safe           |          226 | 0.1276747609 | 0.0005649325 |
-| re-search-backward            |         2028 | 0.1144211070 | 5.642...e-05 |
-| org-entry-properties          |         2618 | 0.0848660999 | 3.241...e-05 |
-| org-agenda-ng--todo-p         |         1319 |  0.081952653 | 6.213...e-05 |
-| org-get-todo-state            |         1319 | 0.0796836810 | 6.041...e-05 |
-| re-search-forward             |         3754 | 0.0739803739 | 1.970...e-05 |
-| org-inlinetask-in-task-p      |         1365 | 0.0657829330 | 4.819...e-05 |
-| org-agenda-ng--scheduled-p    |         1247 | 0.0619497850 | 4.967...e-05 |
-
-** Intersecting query results
-
-An idea that /might/ be helpful for performance in /some/ cases, depending on the query, the data, and whether the query has a preamble.  But it looks like it would very rarely be helpful.
-
-#+BEGIN_SRC elisp
-  (cl-defun org-ql-agenda-intersection (buffers-files queries &key entries sort buffer narrow super-groups)
-    "Like `org-ql-agenda', but intersects multiple queries."
-    (declare (indent defun))
-    (let* ((org-ql-cache (ht))
-           (entries (->> queries
-                         (--map (org-ql-select buffers-files
-                                  it
-                                  :action 'element-with-markers
-                                  :narrow narrow
-                                  :sort sort))
-                         (-reduce #'-intersection))))
-      (org-ql-agenda--agenda buffers-files queries
-        :entries entries :super-groups super-groups)))
-
-  (bench-multi-lexical :times 1
-    :forms (("intersection" (let ((org-use-tag-inheritance nil))
-                              (org-ql-agenda-intersection (org-agenda-files)
-                                '((todo "TODO")
-                                  (tags "Emacs"))
-                                :sort '(priority deadline)
-                                :super-groups org-super-agenda-groups)))
-            ("normal" (let ((org-use-tag-inheritance nil))
-                        (org-ql-agenda (org-agenda-files)
-                          (and (todo "TODO")
-                               (tags "Emacs"))
-                          :sort (priority deadline)
-                          :super-groups org-super-agenda-groups)))))
-#+END_SRC
-
-#+RESULTS:
-| Form         | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|--------------+--------------------+---------------+----------+------------------|
-| normal       | 3.70               |      0.233147 |        0 |                0 |
-| intersection | slowest            |      0.862512 |        0 |                0 |
-
-*** Alternative approach
-
-[2019-09-01 Sun 08:17]  This is very experimental, but the results are surprising.  When the action function returns a fairly simple list, the intersection is very slightly faster.  When returning full elements, the intersection is much slower, so that it more than doubles the runtime.  I wonder if the element list comparison is short-circuiting, or if it looks at the whole lists, because it seems like it shouldn't take more than 4-5 list elements before it realizes that two lists don't match.
-
-Anyway, looks like this approach isn't viable, at least not without a much more complicated implementation, which probably wouldn't be worth it.
-
-#+BEGIN_SRC elisp
-  (let* ((action-fn (lambda ()
-                      (list (current-buffer)
-                            (point)
-                            (substring-no-properties (org-get-heading t t)))))
-         (files '("~/org/main.org")))
-    ;; NOTE: Careful to use the same files and action in each one.  I duplicated
-    ;; the variable in each form to make individual testing easier.
-    (bench-multi-lexical :times 1 :ensure-equal t
-      :forms (("normal" (->> (let ((org-ql-cache (ht))
-                                   (action-fn (lambda ()
-                                                (list (current-buffer)
-                                                      (point)
-                                                      (substring-no-properties (org-get-heading t t)))))
-                                   (files '("~/org/main.org")))
-                               (org-ql-select files
-                                 '(and (not (done))
-                                       (or (habit)
-                                           (deadline auto)
-                                           (scheduled :to today)
-                                           (ts-active :on today)
-                                           (closed :on today)))
-                                 :action action-fn))))
-              ("Testing" (let* ((org-ql-cache (ht))
-                                (files '("~/org/main.org"))
-                                (action-fn (lambda ()
-                        (list (current-buffer)
-                              (point)
-                              (substring-no-properties (org-get-heading t t)))))
-                                (and-queries '(not (done)))
-                                (or-queries '((habit)
-                                              (deadline auto)
-                                              (scheduled :to today)
-                                              (ts-active :on today)
-                                              (closed :on today)))
-                                (and-results (org-ql-select files
-                                               and-queries
-                                               :action action-fn))
-                                (or-results (cl-loop for query in or-queries
-                                                     append (org-ql-select files
-                                                              query
-                                                              :action action-fn))))
-                           (seq-intersection and-results
-                                             (->> or-results
-                                                  -uniq)))))))
-#+END_SRC
-
-#+RESULTS:
-| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|---------+--------------------+---------------+----------+------------------|
-| Testing | 1.15               |      0.248376 |        0 |                0 |
-| normal  | slowest            |      0.284897 |        0 |                0 |
-
-#+BEGIN_SRC elisp
-
-;; With caching enabled
-  (let* ((action-fn (lambda ()
-                      (list (current-buffer)
-                            (point)
-                            (substring-no-properties (org-get-heading t t)))))
-         (files '("~/org/main.org")))
-    (bench-multi-lexical :times 1 :ensure-equal t
-      :forms (("normal" (->> (org-ql-select files
-                               '(and (not (done))
-                                     (or (habit)
-                                         (deadline auto)
-                                         (scheduled :to today)
-                                         (ts-active :on today)
-                                         (closed :on today)))
-                               :action action-fn)))
-              ("Testing" (let* ((files '("~/org/main.org"))
-                                (and-queries '(not (done)))
-                                (or-queries '((habit)
-                                              (deadline auto)
-                                              (scheduled :to today)
-                                              (ts-active :on today)
-                                              (closed :on today)))
-                                (and-results (org-ql-select files
-                                               and-queries
-                                               :action action-fn))
-                                (or-results (cl-loop for query in or-queries
-                                                     append (org-ql-select files
-                                                              query
-                                                              :action action-fn))))
-                           (seq-intersection and-results
-                                             (->> or-results
-                                                  -uniq)))))))
-#+END_SRC
-
-#+RESULTS:
-| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|---------+--------------------+---------------+----------+------------------|
-| normal  | 13.72              |      0.002311 |        0 |                0 |
-| Testing | slowest            |      0.031707 |        0 |                0 |
-
-Using full views:
-
-#+BEGIN_SRC elisp
-  (let* ((action-fn (lambda ()
-                      (list (current-buffer)
-                            (point)
-                            (substring-no-properties (org-get-heading t t)))))
-         (files '("~/org/main.org")))
-    (bench-multi-lexical :times 1
-      :forms (("normal" (->> (let ((org-ql-cache (ht))
-                                   (files '("~/org/main.org")))
-                               (org-ql-search files
-                                 '(and (not (done))
-                                       (or (habit)
-                                           (deadline auto)
-                                           (scheduled :to today)
-                                           (ts-active :on today)
-                                           (closed :on today)))))))
-              ("Testing" (let* ((org-ql-cache (ht))
-                                (files '("~/org/main.org"))
-                                (and-queries '(not (done)))
-                                (or-queries '((habit)
-                                              (deadline auto)
-                                              (scheduled :to today)
-                                              (ts-active :on today)
-                                              (closed :on today)))
-                                (and-results (org-ql-select files
-                                               and-queries
-                                               :action 'element-with-markers))
-                                (or-results (cl-loop for query in or-queries
-                                                     append (org-ql-select files
-                                                              query
-                                                              :action 'element-with-markers)))
-                                (final-results (seq-intersection and-results
-                                                                 (->> or-results
-                                                                      -uniq))))
-                           (org-ql-agenda--agenda nil nil
-                             :entries final-results)
-                         
-                           )))))
-#+END_SRC
-
-#+RESULTS:
-| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|---------+--------------------+---------------+----------+------------------|
-| normal  | 1.74               |      0.534742 |        0 |                0 |
-| Testing | slowest            |      0.931897 |        0 |                0 |
-
-Just gathering results, but using elements:
-
-#+BEGIN_SRC elisp
-  (let* ((action-fn 'element-with-markers)
-         (files '("~/org/main.org")))
-    ;; NOTE: Careful to use the same files and action in each one.  I duplicated
-    ;; the variable in each form to make individual testing easier.
-    (bench-multi-lexical :times 1 :ensure-equal t
-      :forms (("normal" (->> (let ((org-ql-cache (ht)))
-                               (org-ql-select files
-                                 '(and (not (done))
-                                       (or (habit)
-                                           (deadline auto)
-                                           (scheduled :to today)
-                                           (ts-active :on today)
-                                           (closed :on today)))
-                                 :action action-fn))))
-              ("Testing" (let* ((org-ql-cache (ht))
-                                (and-queries '(not (done)))
-                                (or-queries '((habit)
-                                              (deadline auto)
-                                              (scheduled :to today)
-                                              (ts-active :on today)
-                                              (closed :on today)))
-                                (and-results (org-ql-select files
-                                               and-queries
-                                               :action action-fn))
-                                (or-results (cl-loop for query in or-queries
-                                                     append (org-ql-select files
-                                                              query
-                                                              :action action-fn))))
-                           (seq-intersection and-results
-                                             (->> or-results
-                                                  -uniq)))))))
-#+END_SRC
-
-#+RESULTS:
-| Form    | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|---------+--------------------+---------------+----------+------------------|
-| normal  | 2.27               |      0.314218 |        0 |                0 |
-| Testing | slowest            |      0.714587 |        0 |                0 |
-
-
-** [2019-08-29 Thu 06:24]  Benchmarking org-ql compared to re-search-forward for getting headings in buffer
-:PROPERTIES:
-:ID:       fcc09229-ed24-42eb-a1fd-31d8f7d4c8d5
-:END:
-
-Minimal difference, and that's a very large file, too.  On smaller files it's thousandths of a second.
-
-#+BEGIN_SRC elisp
-  (with-current-buffer (find-buffer-visiting "~/org/inbox.org")
-    (bench-multi-lexical :times 1 :ensure-equal t
-      :forms (("org-ql" (org-ql-select (current-buffer)
-                          '(level 1)
-                          :action '(progn
-                                     (font-lock-ensure (line-beginning-position) (line-end-position))
-                                     (cons (org-get-heading t) (point)))))
-              ("re-search-forward" (org-with-wide-buffer
-                                    (goto-char (point-min))
-                                    (when (org-before-first-heading-p)
-                                      (outline-next-heading))
-                                    (cl-loop while (re-search-forward (rx bol "*" (1+ blank)) nil t)
-                                             do (font-lock-ensure (line-beginning-position) (line-end-position))
-                                             collect (cons (org-get-heading t) (match-beginning 0))))))))
-#+END_SRC
-
-#+RESULTS:
-| Form              | x faster than next | Total runtime | # of GCs | Total GC runtime |
-|-------------------+--------------------+---------------+----------+------------------|
-| re-search-forward | 1.17               |      0.520375 |        0 |                0 |
-| org-ql            | slowest            |      0.608281 |        0 |                0 |
-
-** Caching of inherited tags
-
-[2019-09-05 Thu 07:59]  Implemented a per-buffer tags cache that seems to significantly speed up tags queries that use tag inheritance.  It persists as long as the buffer remains unmodified, and it's usable from any code as a single function that automatically uses caching.  It also returns inherited tags and local tags separately, which could be useful for having separate selectors, one for inherited tags, one for local tags, and one for both.
-
-#+BEGIN_SRC elisp
-  (defvar org-ql-tags-cache (ht)
-    "Per-buffer tags cache.
-  Keyed by buffer.  Each value is a cons of the buffer's modified
-  tick, and another hash table keyed on buffer position, whose
-  values are a list of two lists, inherited tags and local tags, as
-  strings.")
-
-  (defun org-ql--tags-at (position)
-    "Return tags for POSITION in current buffer.
-  Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
-    ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
-    ;; bound in the else clause, so destructured variables that are non-nil,
-    ;; like found caches, are not available in the else clause.
-    (if-let* ((buffer-cache (gethash (current-buffer) org-ql-tags-cache))
-              (modified-tick (car buffer-cache))
-              (tags-cache (cdr buffer-cache))
-              (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
-              (cached-result (gethash position tags-cache)))
-        ;; Found in cache: return them.
-        (pcase cached-result
-          ('org-ql-nil nil)
-          (_ cached-result))
-      ;; Not found in cache: get tags and cache them.
-      (let* ((local-tags (or (org-get-tags position 'local)
-                             'org-ql-nil))
-             (inherited-tags (or (save-excursion
-                                   (when (org-up-heading-safe)
-                                     (-let* (((inherited local) (org-ql--tags-at (point)))
-                                             (inherited-tags (when (or inherited local)
-                                                               (cond ((and (listp inherited)
-                                                                           (listp local))
-                                                                      (append inherited local))
-                                                                     ((cond ((listp inherited) inherited)
-                                                                            ((listp local) local)))))))
-                                       (when inherited-tags
-                                         (->> inherited-tags -non-nil -uniq)))))
-                                 'org-ql-nil))
-             (all-tags (list inherited-tags local-tags)))
-        ;; Check caches again, because they may have been set now.
-        ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
-        (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
-              modified-tick (car buffer-cache)
-              tags-cache (cdr buffer-cache)
-              buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
-        (cond ((or (not buffer-cache)
-                   (not buffer-unmodified-p))
-               ;; Buffer-local tags cache empty or invalid: make new one.
-               (puthash (current-buffer)
-                        (cons (buffer-modified-tick)
-                              (let ((table (make-hash-table)))
-                                (puthash position all-tags table)
-                                table))
-                        org-ql-tags-cache)
-               ;; Return tags, not the cons put on the buffer-cache.
-               all-tags)
-              ;; Buffer-local tags cache found, but no result: store this one.
-              (t (puthash position all-tags tags-cache))))))
-
-  (org-ql--defpred tags-cached (&rest tags)
-    "Return non-nil if current heading has one or more of TAGS (a list of strings)."
-    ;; TODO: Try to use `org-make-tags-matcher' to improve performance.  It would be nice to not have
-    ;; to run `org-get-tags' for every heading, especially with inheritance.
-    (cl-macrolet ((tags-p (tags)
-                          `(and ,tags
-                                (not (eq 'org-ql-nil ,tags)))))
-      (-let* (((inherited local) (org-ql--tags-at (point))))
-        (cl-typecase tags
-          (null (or (tags-p inherited)
-                    (tags-p local)))
-          (otherwise (or (when (tags-p inherited)
-                           (seq-intersection tags inherited))
-                         (when (tags-p local)
-                           (seq-intersection tags local))))))))
-#+END_SRC
-
-Benchmark results:
-
-#+BEGIN_SRC elisp
-  (let* ((buffers '("~/org/main.org"))
-         (tags '("Emacs")))
-    (bench-multi-lexical :times 1 :ensure-equal t
-      :forms (("uncached" (let ((org-ql-cache (ht)))
-                            (org-ql-select buffers
-                              `(tags ,@tags))))
-              ("cached" (let ((org-ql-cache (ht))
-                              (org-ql-tags-cache (ht)))
-                          (org-ql-select buffers
-                            `(tags-cached ,@tags)))))))
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("old ts" (org-ql "~/org/inbox.org"
+                        (ts :from "2017-01-01")))
+            ("ts.el ts" (org-ql "~/org/inbox.org"
+                          (ts-ts :from "2017-01-01")))))
 #+END_SRC
 
 #+RESULTS:
 | Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
 |----------+--------------------+---------------+----------+------------------|
-| cached   | 6.51               |      0.519871 |        0 |                0 |
-| uncached | slowest            |      3.386679 |        0 |                0 |
+| ts.el ts | 1.32               |      1.299966 |        0 |                0 |
+| old ts   | slowest            |      1.713027 |        0 |                0 |
+
+*** :on
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("old ts" (org-ql "~/org/inbox.org"
+                        (ts :on "2019-05-14")))
+            ("ts.el ts" (org-ql "~/org/inbox.org"
+                          (ts-ts :on "2019-05-14")))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.17               |      0.557281 |        0 |                0 |
+| old ts   | slowest            |      0.652149 |        0 |                0 |
+
+*** :to
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("old ts" (org-ql "~/org/inbox.org"
+                        (ts :to "2019-01-01")))
+            ("ts.el ts" (org-ql "~/org/inbox.org"
+                          (ts-ts :to "2019-01-01")))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.01               |      1.300084 |        0 |                0 |
+| old ts   | slowest            |      1.312208 |        0 |                0 |
+
+*** Without timestamp argument
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("old ts" (org-ql "~/org/inbox.org"
+                        (ts)))
+            ("ts.el ts" (org-ql "~/org/inbox.org"
+                          (ts-ts)))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.14               |      2.251801 |        0 |                0 |
+| old ts   | slowest            |      2.560280 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 20 :ensure-equal t
+    :forms (("old ts" (org-ql "~/src/emacs/org-ql/tests/data.org"
+                        (ts)))
+            ("ts.el ts" (org-ql "~/src/emacs/org-ql/tests/data.org"
+                          (ts-ts)))))
+#+END_SRC
+
+#+RESULTS:
+| Form     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------+--------------------+---------------+----------+------------------|
+| ts.el ts | 1.05               |      0.103714 |        0 |                0 |
+| old ts   | slowest            |      0.108663 |        0 |                0 |
+
+* References
+:PROPERTIES:
+:TOC:      :include descendants :depth 1
+:END:
+:CONTENTS:
+- [[#github---ndwarshuisorg-sql-sql-backend-for-emacs-org-mode][GitHub - ndwarshuis/org-sql: SQL backend for Emacs Org-Mode]]
+- [[#john-kitchin-on-rewriting-the-org-agenda-code][John Kitchin on rewriting the Org agenda code]]
+- [[#nicolas-goazious-org-element-cache-implementation][Nicolas Goaziou's org-element cache implementation]]
+- [[#uniform-structured-syntax-metaprogramming-and-run-time-compilation][Uniform Structured Syntax, Metaprogramming and Run-time Compilation]]
+:END:
+
+** [[https://github.com/ndwarshuis/org-sql][GitHub - ndwarshuis/org-sql: SQL backend for Emacs Org-Mode]]
+
+[2020-01-04 Sat 09:03]
+
+** [[gnus:gmane.emacs.orgmode#CAJ51EToLCm5zDLKu8XeuqEWrLhHZF+OoNkviPSivZbFttzF8=A@mail.gmail.com][John Kitchin on rewriting the Org agenda code]]                 :Emacs:Org:
+
+[2019-10-28 Mon 08:28]  Originally from [[id:90a68535-2403-4ba9-a117-60be1862628f][this entry in my notes]].
+
+#+BEGIN_QUOTE
+From: John Kitchin <jkitchin@andrew.cmu.edu>
+Subject: Re: [Orgmode] Slow speed of week and month views
+Newsgroups: gmane.emacs.orgmode
+To: Karl Voit <news1142@karl-voit.at>
+Cc: "emacs-orgmode@gnu.org" <emacs-orgmode@gnu.org>
+Date: Sat, 5 Aug 2017 18:17:09 -0400 (4 hours, 11 minutes, 38 seconds ago)
+
+I can think of two possibilities for a future approach (besides a deep dive on profiling the current elisp to improve the speed there). They both involve some substantial coding though, and would probably add dependencies. I am curious what anyone things about these, or if there are other ideas.
+
+One is to use the new dynamic module capability to write an org parser in C, or a dedicated agenda function, which would presumably be faster than in elisp. This seems hard, and for me would certainly be a multiyear project I am sure! The downside of this is the need to compile the module. I don't know how easy it would be to make this work across platforms with the relatively easy install org-mode currently has. This could have a side benefit though of a c-lib that could be used by others to expand where org-mode is used.
+
+The other way that might work is to rely more heavily on a cached version of the files, perhaps in a different format than elisp, that is faster to work with.  The approach I have explored in this is to index org files into a sqlite database. The idea then would be to generate the agenda from a sql query. I use something like this already to "find stuff in orgmode anywhere". One of the reasons I wrote this is the org-agenda list of files isn't practical for me because my files are so scattered on my file system. I had a need to be able to find TODOs in research projects in a pretty wide range of locations.
+
+The code I use is at https://github.com/jkitchin/scimax/blob/master/org-db.el, and from one database I can find headlines, contacts, locations, TODO headlines across my file system, all the files that contain a particular link, and my own recent org files. This approach relies on emacsql, and a set of hook functions to update the database whenever a file is changed. It is not robust, e.g. the file could be out of sync with the db if it is modified outside emacs, but this works well enough for me so far. Updated files get reindexed whenever emacs is idle. It was a compromise on walking the file system all the time or daily, or trying to use inotify and you can always run a command to prune/sync all the files any time you want.
+
+sqlite is ok, but with emacsql you cannot put strings in it directly (at least when I wrote the org-db code), which has limited it for full-text search so far.  Also with text, the db got up to about 0.5 GB in size, and started slowing down. So it doesn't have text in it for now. It has all the other limitations of sqlite too, limited support for locking, single process....
+
+I am moderately motivated to switch from sqlite to MongoDB, but the support for Mongo in emacs is pretty crummy (I tried writing a few traditional interfaces, but the performance was not that good, and limited since Mongo uses bson, and it is just not the same as json!). Why Mongo? Mostly because the Mongo query language is basically json and easy to generate in Emacs, unlike sql. Also, it is flexible and easy to adapt to new things, e.g. indexing src-blocks or tables or whatever org-element you want. (And I want to use Mongo for something else too ;). Obviously these all add dependencies, and might not be suitable for the core org-mode distribution. But I do think it is important to think about ways to scale org-mode while maintaining compatibility with the core.
+
+The main point of the database was to get a query language, persistence and good performance. I have also used caches to speed up using bibtex files, and my org-contacts with reasonable performance. These have been all elisp, with no additional dependencies. Maybe one could do something similar to keep an agenda cache that is persistent and updated via hook functions.
+
+Thoughts?
+
+John
+#+END_QUOTE
+:PROPERTIES:
+:archive.is: http://archive.is/33R9M
+:END:
+
++ [[https://github.com/m00natic/cl-fdbq][GitHub - m00natic/cl-fdbq: SQL-like operations over fixed field DBs]]
+
+** Nicolas Goaziou's =org-element= cache implementation
+
+[2020-01-04 Sat 08:31]  https://code.orgmode.org/bzg/org-mode/src/master/lisp/org-element.el#L4817  I guess I haven't been keeping up, because I'm not sure when exactly he made or committed this, or what his plans for it are.  It's currently disabled by default.
+
+** [[https://m00natic.github.io/lisp/manual-jit.html][Uniform Structured Syntax, Metaprogramming and Run-time Compilation]]
 
 * Testing
 
@@ -3083,6 +3109,41 @@ Benchmark results:
 
 #+END_SRC
 
+** Agenda censoring
+
+For sharing screenshots of the agenda without revealing private data.
+
+#+BEGIN_SRC elisp
+  (defun org-agenda-sharpie ()
+    "Censor the text of items in the agenda."
+    (interactive)
+    (let (regexp old-heading new-heading properties)
+      ;; Save face properties of line in agenda to reapply to changed text
+      (setq properties (text-properties-at (point)))
+
+      ;; Go to source buffer
+      (org-with-point-at (org-find-text-property-in-string 'org-marker
+                                                           (buffer-substring (line-beginning-position)
+                                                                             (line-end-position)))
+        ;; Save old heading text and ask for new text
+        (line-beginning-position)
+        (unless (org-at-heading-p)
+          ;; Not sure if necessary
+          (org-back-to-heading))
+        (setq old-heading (when (looking-at org-complex-heading-regexp)
+                            (match-string 4))))
+      (setq new-heading (read-from-minibuffer "Overwrite visible heading with: "))
+      (add-text-properties 0 (length new-heading) properties new-heading)
+      ;; Back to agenda buffer
+      (save-excursion
+        (when (and old-heading new-heading)
+          ;; Replace agenda text
+          (let ((inhibit-read-only t))
+            (goto-char (line-beginning-position))
+            (when (search-forward old-heading (line-end-position))
+              (replace-match new-heading 'fixedcase 'literal)))))))
+#+END_SRC
+
 ** Agenda examining
 
 This helps a lot.
@@ -3128,39 +3189,12 @@ This helps a lot.
                                                         0 5)))
 #+END_SRC
 
-** Agenda censoring
-
-For sharing screenshots of the agenda without revealing private data.
+** Auto categories
 
 #+BEGIN_SRC elisp
-  (defun org-agenda-sharpie ()
-    "Censor the text of items in the agenda."
-    (interactive)
-    (let (regexp old-heading new-heading properties)
-      ;; Save face properties of line in agenda to reapply to changed text
-      (setq properties (text-properties-at (point)))
-
-      ;; Go to source buffer
-      (org-with-point-at (org-find-text-property-in-string 'org-marker
-                                                           (buffer-substring (line-beginning-position)
-                                                                             (line-end-position)))
-        ;; Save old heading text and ask for new text
-        (line-beginning-position)
-        (unless (org-at-heading-p)
-          ;; Not sure if necessary
-          (org-back-to-heading))
-        (setq old-heading (when (looking-at org-complex-heading-regexp)
-                            (match-string 4))))
-      (setq new-heading (read-from-minibuffer "Overwrite visible heading with: "))
-      (add-text-properties 0 (length new-heading) properties new-heading)
-      ;; Back to agenda buffer
-      (save-excursion
-        (when (and old-heading new-heading)
-          ;; Replace agenda text
-          (let ((inhibit-read-only t))
-            (goto-char (line-beginning-position))
-            (when (search-forward old-heading (line-end-position))
-              (replace-match new-heading 'fixedcase 'literal)))))))
+  (let ((org-super-agenda-groups
+         '((:auto-category t))))
+    (org-agenda-list nil nil 'day))
 #+END_SRC
 
 ** Auto grouping
@@ -3172,14 +3206,6 @@ For sharing screenshots of the agenda without revealing private data.
            '((:auto-group t)))
           (org-agenda-files (list "~/src/org-super-agenda/test/test.org")))
       (org-agenda-list nil nil 'day)))
-#+END_SRC
-
-** Auto categories
-
-#+BEGIN_SRC elisp
-  (let ((org-super-agenda-groups
-         '((:auto-category t))))
-    (org-agenda-list nil nil 'day))
 #+END_SRC
 
 ** Date
@@ -3277,4 +3303,12 @@ I don't need this right now, but it might come in handy here or elsewhere.
        output))
 #+END_SRC
 
+
+* [#C] COMMENT Config                                              :noexport:
+
+** File-local variables
+
+# Local Variables:
+# before-save-hook: (org-make-toc (lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (save-excursion (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o))))))
+# End:
 
