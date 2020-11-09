@@ -47,11 +47,6 @@
 (require 'ov)
 (require 'ts)
 
-;;;; Compatibility
-
-(when (version< org-version "9.2")
-  (defalias 'org-get-tags #'org-get-tags-at))
-
 ;;;; Faces
 
 (defface org-ql-view-due-date
@@ -729,18 +724,16 @@ return an empty string."
                        (org-link-display-format it)))
            (todo-keyword (-some--> (org-element-property :todo-keyword element)
                                    (org-ql-view--add-todo-face it)))
-           ;; FIXME: Figure out whether I should use `org-agenda-use-tag-inheritance' or `org-use-tag-inheritance', etc.
            (tag-list (if org-use-tag-inheritance
-                         ;; FIXME: Note that tag inheritance cannot be used here unless markers are
-                         ;; added, otherwise we can't go to the item's buffer to look for inherited
-                         ;; tags.  (Or does `org-element-headline-parser' parse inherited tags too?  I
-                         ;; forget...)
+                         ;; MAYBE: Use our own variable instead of `org-use-tag-inheritance'.
                          (if-let ((marker (or (org-element-property :org-hd-marker element)
                                               (org-element-property :org-marker element))))
-                             (with-current-buffer (marker-buffer marker)
-                               ;; I wish `org-get-tags' used the correct buffer automatically.
-                               (org-get-tags marker (not org-use-tag-inheritance)))
+                             (cl-loop for type in (org-ql--tags-at marker)
+                                      unless (or (eq 'org-ql-nil type)
+                                                 (not type))
+                                      append type)
                            ;; No marker found
+                           ;; TODO: Use `display-warning' with `org-ql' as the type.
                            (warn "No marker found for item: %s" title)
                            (org-element-property :tags element))
                        (org-element-property :tags element)))

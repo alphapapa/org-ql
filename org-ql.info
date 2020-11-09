@@ -772,6 +772,12 @@ File: README.info,  Node: 05-pre,  Next: 046,  Up: Changelog
    *Changed*
    • Binding to refresh search/view buffers changed to r.
 
+   *Internal*
+   • When formatting entries for Org QL View buffers, use internal
+     function for retrieving heading tags.  This improves speed by using
+     our cache, and it removes the need for a compatibility alias for
+     Org versions before 9.3.
+
 
 File: README.info,  Node: 046,  Next: 045,  Prev: 05-pre,  Up: Changelog
 
@@ -1205,25 +1211,25 @@ Node: Listing / acting-on results21208
 Node: Tips25810
 Node: Changelog26141
 Node: 05-pre26780
-Node: 04627369
-Node: 04527772
-Node: 04428131
-Node: 04328488
-Node: 04228683
-Node: 04128842
-Node: 0429081
-Node: 03233012
-Node: 03133389
-Node: 0333586
-Node: 02336561
-Node: 02236789
-Node: 02137057
-Node: 0237256
-Node: 0141291
-Node: Notes41392
-Node: Comparison with Org Agenda searches41554
-Node: org-sidebar42426
-Node: License42705
+Node: 04627626
+Node: 04528029
+Node: 04428388
+Node: 04328745
+Node: 04228940
+Node: 04129099
+Node: 0429338
+Node: 03233269
+Node: 03133646
+Node: 0333843
+Node: 02336818
+Node: 02237046
+Node: 02137314
+Node: 0237513
+Node: 0141548
+Node: Notes41649
+Node: Comparison with Org Agenda searches41811
+Node: org-sidebar42683
+Node: License42962
 
 End Tag Table
 

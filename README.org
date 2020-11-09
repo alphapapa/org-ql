@@ -418,6 +418,9 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 *Changed*
 +  Binding to refresh search/view buffers changed to =r=.
 
+*Internal*
++  When formatting entries for Org QL View buffers, use internal function for retrieving heading tags.  This improves speed by using our cache, and it removes the need for a compatibility alias for Org versions before 9.3.
+
 ** 0.4.6
 
 *Fixed*
