@@ -273,11 +273,11 @@ For example, an org-ql dynamic block header could look like:
                (format-fns
                 ;; NOTE: Backquoting this alist prevents the lambdas from seeing
                 ;; the variable `ts-format', so we use `list' and `cons'.
-                (list (cons 'heading (lambda (element)
+                (list (cons 'todo (lambda (element)
+                                    (org-element-property :todo-keyword element)))
+                      (cons 'heading (lambda (element)
                                        (org-make-link-string (org-element-property :raw-value element)
                                                              (org-element-property :raw-value element))))
-                      (cons 'todo (lambda (element)
-                                    (org-element-property :todo-keyword element)))
                       (cons 'priority (lambda (element)
                                         (--when-let (org-element-property :priority element)
                                           (char-to-string it))))
@@ -302,19 +302,16 @@ For example, an org-ql dynamic block header could look like:
                                                             (list (alist-get (car column) format-fns)))
                                                  collect (or (funcall fn element) ""))
                                         " | ")))
-      ;; Insert table header.
+      ;; Table header
       (insert "| " (string-join (--map (pcase it
                                          ((pred symbolp) (capitalize (symbol-name it)))
                                          (`(,_ ,name) name))
                                        columns)
                                 " | ")
               " |" "\n")
-      ;; Separator line.
-      (insert "|- \n")
-      ;; Elements.
+      (insert "|- \n")  ; Separator hline
       (dolist (element elements)
         (insert "| " (format-element element) " |" "\n"))
-      ;; Delete final newline and align table.
       (delete-char -1)
       (org-table-align))))
 
