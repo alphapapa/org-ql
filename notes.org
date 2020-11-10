@@ -28,7 +28,6 @@
 | B        | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
 | B        | UNDERWAY | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]]           |
 |          | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
-
 #+END:
 
 * [#A] Tasks
@@ -190,83 +189,6 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
 ** TODO [#C] Update commentary
-
-** UNDERWAY [#A] Dynamic blocks
-
-+  *Tasks*
-     -  [ ] Merge code
-     -  [ ] Document the feature
-
-For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
-
-[2020-11-09 Mon 22:00]  I just realized that this is probably much easier than I realized.
-
-+  [[info:org#Dynamic%20blocks][info:org#Dynamic blocks]]
-
-#+BEGIN_SRC elisp
-  (cl-defun org-dblock-write:org-ql (params)
-    "FIXME: Docstring"
-    (pcase-let* (((map :query :columns :sort :ts-format) params)
-                 (format-fns (list (cons 'heading (lambda (element)
-                                                    (org-make-link-string (org-element-property :raw-value element)
-                                                                          (org-element-property :raw-value element))))
-                                   (cons 'todo (lambda (element)
-                                                 (or (org-element-property :todo-keyword element)
-                                                     "")))
-                                   (cons 'priority (lambda (element)
-                                                     (--if-let (org-element-property :priority element)
-                                                         (char-to-string it)
-                                                       "")))
-                                   (cons 'deadline (lambda (element)
-                                                     (--if-let (org-element-property :deadline element)
-                                                         (ts-format ts-format (ts-parse-org-element it ))
-                                                       "")))
-                                   (cons 'scheduled (lambda (element)
-                                                      (--if-let (org-element-property :scheduled element)
-                                                          (ts-format ts-format (ts-parse-org-element it ))
-                                                        "")))))
-                 (elements (org-ql-query :from (current-buffer)
-                                         :where query
-                                         :select '(org-element-headline-parser (line-end-position))
-                                         :order-by sort)))
-      (cl-labels ((format-element
-                   (element) (string-join (cl-loop for column in columns
-                                                   for fn = (alist-get column format-fns)
-                                                   collect (funcall fn element))
-                                          " | ")))
-        (insert "| " (string-join (--map (capitalize (symbol-name it)) columns) " | ") " |" "\n")
-        (insert "|- \n")
-        (dolist (element elements)
-          (insert "| " (format-element element) " |" "\n"))
-        (org-table-align))))
-#+END_SRC
-
-[2020-11-09 Mon 22:35]  This works pretty well!  For example:
-
-#+BEGIN_SRC org
-  ,#+BEGIN: org-ql :query (todo) :format (priority todo heading deadline scheduled) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
-  | Priority | Todo  | Heading    | Deadline         | Scheduled        |
-  |----------+-------+------------+------------------+------------------|
-  | A        | TODAY | Heading 1  | 2020-11-11 00:00 |                  |
-  | B        | TODO  | Heading 2  |                  | 2020-11-09 00:00 |
-
-  ,#+END:
-
-  ,#+BEGIN: columnview :id global :hlines t :indent t
-  | ITEM           | TODO  | PRIORITY | TAGS |
-  |----------------+-------+----------+------|
-  | Test heading 1 | TODAY | B        |      |
-  |----------------+-------+----------+------|
-  | Heading 2      | TODO  | B        |      |
-  ,#+END:
-
-  ,* TODAY [#A] Heading 1
-  DEADLINE: <2020-11-11 Wed>
-
-  ,* TODO [#B] Heading 2
-  SCHEDULED: <2020-11-09 Mon>
-
-#+END_SRC
 
 ** UNDERWAY [#A] Tools for saving queries and accessing them [3/4]
 
@@ -1007,6 +929,85 @@ Next steps:
 +  [X] Also ask him to run benchmark actually using group tags (since I don't actually have any, even though the boolean is t)
 +  [X] Discuss caching of group tag expansion.  It seems like we ought to cache the expansions as well, because sibling headings (especially at level 1) ought to get their group tags re-expanded individually, even when we've already expanded them for another heading.
 +  [X] Remove unused =result= variable
+
+** DONE [#A] Dynamic blocks
+
++  *Tasks*
+     -  [X] Merge code
+     -  [X] Document the feature
+
+For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
+
+[2020-11-09 Mon 22:00]  I just realized that this is probably much easier than I realized.
+
++  [[info:org#Dynamic%20blocks][info:org#Dynamic blocks]]
+
+#+BEGIN_SRC elisp
+  (cl-defun org-dblock-write:org-ql (params)
+    "FIXME: Docstring"
+    (pcase-let* (((map :query :columns :sort :ts-format) params)
+                 (format-fns (list (cons 'heading (lambda (element)
+                                                    (org-make-link-string (org-element-property :raw-value element)
+                                                                          (org-element-property :raw-value element))))
+                                   (cons 'todo (lambda (element)
+                                                 (or (org-element-property :todo-keyword element)
+                                                     "")))
+                                   (cons 'priority (lambda (element)
+                                                     (--if-let (org-element-property :priority element)
+                                                         (char-to-string it)
+                                                       "")))
+                                   (cons 'deadline (lambda (element)
+                                                     (--if-let (org-element-property :deadline element)
+                                                         (ts-format ts-format (ts-parse-org-element it ))
+                                                       "")))
+                                   (cons 'scheduled (lambda (element)
+                                                      (--if-let (org-element-property :scheduled element)
+                                                          (ts-format ts-format (ts-parse-org-element it ))
+                                                        "")))))
+                 (elements (org-ql-query :from (current-buffer)
+                                         :where query
+                                         :select '(org-element-headline-parser (line-end-position))
+                                         :order-by sort)))
+      (cl-labels ((format-element
+                   (element) (string-join (cl-loop for column in columns
+                                                   for fn = (alist-get column format-fns)
+                                                   collect (funcall fn element))
+                                          " | ")))
+        (insert "| " (string-join (--map (capitalize (symbol-name it)) columns) " | ") " |" "\n")
+        (insert "|- \n")
+        (dolist (element elements)
+          (insert "| " (format-element element) " |" "\n"))
+        (org-table-align))))
+#+END_SRC
+
+[2020-11-09 Mon 22:35]  This works pretty well!  For example:
+
+#+BEGIN_SRC org
+  ,#+BEGIN: org-ql :query (todo) :format (priority todo heading deadline scheduled) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
+  | Priority | Todo  | Heading    | Deadline         | Scheduled        |
+  |----------+-------+------------+------------------+------------------|
+  | A        | TODAY | Heading 1  | 2020-11-11 00:00 |                  |
+  | B        | TODO  | Heading 2  |                  | 2020-11-09 00:00 |
+
+  ,#+END:
+
+  ,#+BEGIN: columnview :id global :hlines t :indent t
+  | ITEM           | TODO  | PRIORITY | TAGS |
+  |----------------+-------+----------+------|
+  | Test heading 1 | TODAY | B        |      |
+  |----------------+-------+----------+------|
+  | Heading 2      | TODO  | B        |      |
+  ,#+END:
+
+  ,* TODAY [#A] Heading 1
+  DEADLINE: <2020-11-11 Wed>
+
+  ,* TODO [#B] Heading 2
+  SCHEDULED: <2020-11-09 Mon>
+
+#+END_SRC
+
+[2020-11-10 Tue 00:03]  I think it's ready to merge now.
 
 ** DONE [#A] Helm command
 
