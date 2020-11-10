@@ -608,10 +608,10 @@ protocol.  See, e.g. `org-ql-view--link-store'."
 When opened, the link searches the buffer it's opened from."
   (require 'url-parse)
   (require 'url-util)
-  (unless (or (bufferp org-ql-view-buffers-files)
-              (= 1 (length org-ql-view-buffers-files)))
-    (user-error "Only views searching a single buffer may be linked"))
   (when org-ql-view-query
+    (unless (or (bufferp org-ql-view-buffers-files)
+                (= 1 (length org-ql-view-buffers-files)))
+      (user-error "Only views searching a single buffer may be linked"))
     (let* ((params (list (when org-ql-view-super-groups
                            (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
                          (when org-ql-view-sort
