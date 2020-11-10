@@ -1672,9 +1672,12 @@ element should be a regexp string."
 (defvar peg-stack nil)
 
 (defmacro org-ql--peg-parse-string (rules string &optional noerror)
-  "Parse STRING according to RULES.
-If NOERROR is non-nil, push nil resp. t if the parse failed
-resp. succeded instead of signaling an error."
+  "Parse STRING according to RULES."
+  ;; This sentence was in the docstring but Checkdoc is complaining,
+  ;; so moving it to a comment: "If NOERROR is non-nil, push nil
+  ;; resp. t if the parse failed resp. succeded instead of signaling
+  ;; an error."
+
   ;; Unfortunately, this macro was moved to peg-tests.el, so we copy it here.
   `(with-temp-buffer
      (insert ,string)
