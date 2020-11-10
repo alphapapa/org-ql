@@ -286,7 +286,7 @@ For example, an org-ql dynamic block header could look like:
                                        :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
-                       ((and integer (satisfies minusp)) (-take-last (abs take) elements))
+                       ((and integer (satisfies cl-minusp)) (-take-last (abs take) elements))
                        (integer (-take take elements)))))
     (cl-labels ((format-element
                  (element) (string-join (cl-loop for column in columns
