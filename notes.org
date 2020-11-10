@@ -55,6 +55,8 @@
 - [[#document-sorters][Document sorters]]
 - [[#org-block-to-insert-results-of-queries-with-links-to-entries][Org block to insert results of queries with links to entries]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
+- [[#save-views-to-dynamic-blocks][Save views to dynamic blocks]]
+- [[#consider-how-to-secure-searches-from-links-and-dynamic-blocks][Consider how to "secure" searches from links and dynamic blocks]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
 - [[#add-more-sorters][Add more sorters?]]
 - [[#default-sort][Default sort]]
@@ -83,7 +85,6 @@
 - [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
-- [[#save-views-to-dynamic-blocks][Save views to dynamic blocks]]
 :END:
 
 ** TODO [#A] Add ~:auto~ keyword to ~(planning)~ predicate
@@ -105,6 +106,17 @@ For consistency, because plain ~auto~ looks like a variable, and even though it'
 ** TODO [#A] Save views to dynamic blocks
 
 [2020-11-10 Tue 04:31]  A command would save users from having to write out the dynamic block manually.
+
+** TODO [#A] Consider how to "secure" searches from links and dynamic blocks
+
+Theoretically one could put a sexp-based query into a link that would run arbitrary code to do something evil.  Like:
+
+[[org-ql-search:(message "AHA")]]
+
+That's very unlikely to be abused, but it would be good to protect against it.  Two possibilities:
+
+1.  For sexp-based queries in links and dynamic blocks, prompt for confirmation before running.
+2.  Use a special variable to control whether lambdas and arbitrary sexps are allowed in queries, and disable it for links and dynamic blocks.  (That might be difficult to do, since they could be buried in an ~and~ or something.  A whitelist approach might be needed.)
 
 ** TODO [#B] Outline path in buffers-files arg
 :PROPERTIES:
