@@ -404,6 +404,7 @@ Org QL provides a dynamic block that lists entries in the current document match
 
 +  ~:query~: An Org QL query expression in either sexp or non-sexp form.
 +  ~:columns~ A list of columns, including ~heading~, ~todo~, ~priority~, ~deadline~, ~scheduled~.
+     -  Each column may also be specified as a list with the second element being a header string.  For example, to abbreviate the priority column: ~(priority "P")~
 +  ~:sort~ One or a list of Org QL sorting methods (see ~org-ql-select~).
 +  ~:take~ Optionally take a number of results from the front (a positive number) or the end (a negative number) of the results.
 +  ~:ts-format~ Optional format string used to format timestamp-based columns.
@@ -415,16 +416,16 @@ For example, this dynamic block shows the first seven headings that are to-do it
 # NOTE: These results are edited manually because the Org links don't display well in the Info manual.
 
 #+BEGIN_SRC org
-  ,#+BEGIN: org-ql :query "todo: priority:A,B" :columns (todo priority deadline heading) :sort (deadline priority) :take 7 :ts-format "%Y-%m-%d %H:%M"
-  | Todo | Priority | Deadline         | Heading                               |
-  |------+----------+------------------+---------------------------------------|
-  | TODO | A        | 2017-07-07 00:00 | Take over the world                   |
-  | TODO | B        | 2017-07-10 00:00 | Renew membership in supervillain club |
-  | TODO | A        | 2017-07-15 00:00 | Take over the universe                |
-  | TODO | B        | 2017-07-21 00:00 | Internet                              |
-  | TODO | A        | 2017-08-01 00:00 | Spaceship lease                       |
-  | TODO | A        |                  | Skype with president of Antarctica    |
-  | TODO | B        |                  | Take over Mars                        |
+  ,#+BEGIN: org-ql :query "todo: priority:A,B" :columns (todo (priority "P") deadline heading) :sort (deadline priority) :take 7 :ts-format "%Y-%m-%d %H:%M"
+  | Todo | P | Deadline         | Heading                               |
+  |------+---+------------------+---------------------------------------|
+  | TODO | A | 2017-07-07 00:00 | Take over the world                   |
+  | TODO | B | 2017-07-10 00:00 | Renew membership in supervillain club |
+  | TODO | A | 2017-07-15 00:00 | Take over the universe                |
+  | TODO | B | 2017-07-21 00:00 | Internet                              |
+  | TODO | A | 2017-08-01 00:00 | Spaceship lease                       |
+  | TODO | A |                  | Skype with president of Antarctica    |
+  | TODO | B |                  | Take over Mars                        |
   ,#+END:
 #+END_SRC
 

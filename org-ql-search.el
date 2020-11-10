@@ -242,17 +242,24 @@ automatically from the query."
   "Insert content for org-ql dynamic block at point according to PARAMS.
 Valid parameters include:
 
-  :query  An Org QL query expression in either sexp or non-sexp form.
+  :query    An Org QL query expression in either sexp or non-sexp
+            form.
 
   :columns  A list of columns, including `heading', `todo',
-  `priority', `deadline', `scheduled'.
+            `priority', `deadline', `scheduled'.  Each column may
+            also be specified as a list with the second element
+            being a header string.  For example, to abbreviate
+            the priority column:  (priority \"P\")
 
-  :sort  One or a list of Org QL sorting methods (see `org-ql-select').
+  :sort     One or a list of Org QL sorting methods
+            (see `org-ql-select').
 
-  :take  Optionally take a number of results from the front (a
-  positive number) or the end (a negative number) of the results.
+  :take     Optionally take a number of results from the front (a
+            positive number) or the end (a negative number) of
+            the results.
 
-  :ts-format  Optional format string used to format timestamp-based columns.
+  :ts-format  Optional format string used to format
+              timestamp-based columns.
 
 For example, an org-ql dynamic block header could look like:
 
@@ -261,7 +268,7 @@ For example, an org-ql dynamic block header could look like:
                (query (cl-etypecase query
                         (string (org-ql--plain-query query))
                         (t query)))
-               (columns (or columns '(heading todo priority)))
+               (columns (or columns '(heading todo (priority "P"))))
                ;; MAYBE: Custom column functions.
                (format-fns
                 ;; NOTE: Backquoting this alist prevents the lambdas from seeing
@@ -290,11 +297,15 @@ For example, an org-ql dynamic block header could look like:
                        (integer (-take take elements)))))
     (cl-labels ((format-element
                  (element) (string-join (cl-loop for column in columns
-                                                 for fn = (alist-get column format-fns)
+                                                 for fn = (cl-etypecase column
+                                                            (symbol (alist-get column format-fns))
+                                                            (list (alist-get (car column) format-fns)))
                                                  collect (or (funcall fn element) ""))
                                         " | ")))
       ;; Insert table header.
-      (insert "| " (string-join (--map (capitalize (symbol-name it))
+      (insert "| " (string-join (--map (pcase it
+                                         ((pred symbolp) (capitalize (symbol-name it)))
+                                         (`(,_ ,name) name))
                                        columns)
                                 " | ")
               " |" "\n")

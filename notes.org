@@ -20,30 +20,30 @@
 
 [[org-ql-search:%2528todo%2520%2522UNDERWAY%2522%2529?sort=%2528priority%2529&title=%2522Underway%2522][org-ql-search: Underway]]
 
-#+BEGIN: org-ql :query (todo "UNDERWAY") :columns (priority todo heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
-| Priority | Todo     | Heading                                                            |
-|----------+----------+--------------------------------------------------------------------|
-| A        | UNDERWAY | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]]                  |
-| A        | UNDERWAY | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                               |
-| A        | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                             |
-| B        | UNDERWAY | [[Recursive queries][Recursive queries]]                                                  |
-| B        | UNDERWAY | [[Timeline view][Timeline view]]                                                      |
-| B        | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
-| B        | UNDERWAY | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]]           |
-|          | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
+#+BEGIN: org-ql :query (todo "UNDERWAY") :columns ((priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
+| P | Keyword  | Heading                                                            |
+|---+----------+--------------------------------------------------------------------|
+| A | UNDERWAY | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]]                  |
+| A | UNDERWAY | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                               |
+| A | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                             |
+| B | UNDERWAY | [[Recursive queries][Recursive queries]]                                                  |
+| B | UNDERWAY | [[Timeline view][Timeline view]]                                                      |
+| B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
+| B | UNDERWAY | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]]           |
+|   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
 #+END:
 
 ** To-do
 
 [[org-ql-search:%2528and%2520%2528todo%2520%2522TODO%2522%2529%2520%2528priority%2520%2522A%2522%2529%2529?sort=%2528priority%2529&title=%2522To-do%2520%255B%2523A%255D%2522][org-ql-search: To-do {#A}]]
 
-#+BEGIN: org-ql :query "todo:TODO priority:A" :columns (priority todo heading) :sort (priority date) :take 7
-| Priority | Todo | Heading                                                      |
-|----------+------+--------------------------------------------------------------|
-| A        | TODO | [[Add ~:auto~ keyword to ~(planning)~ predicate][Add ~:auto~ keyword to ~(planning)~ predicate]]                    |
-| A        | TODO | [[Document sorters][Document sorters]]                                             |
-| A        | TODO | [[Org block to insert results of queries with links to entries][Org block to insert results of queries with links to entries]] |
-| A        | TODO | [[Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~][Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~]]  |
+#+BEGIN: org-ql :query "todo:TODO priority:A" :columns ((priority "P") todo heading) :sort (priority date) :take 7
+| P | Todo | Heading                                                      |
+|---+------+--------------------------------------------------------------|
+| A | TODO | [[Add ~:auto~ keyword to ~(planning)~ predicate][Add ~:auto~ keyword to ~(planning)~ predicate]]                    |
+| A | TODO | [[Document sorters][Document sorters]]                                             |
+| A | TODO | [[Org block to insert results of queries with links to entries][Org block to insert results of queries with links to entries]] |
+| A | TODO | [[Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~][Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~]]  |
 #+END:
 
 * [#A] Tasks
