@@ -232,6 +232,81 @@ automatically from the query."
 ;;;###autoload
 (defalias 'org-ql-block 'org-ql-search-block)
 
+;;;; Dynamic blocks
+
+;; This section implements support for Org dynamic blocks.  See Info node `(org)Dynamic blocks'.
+
+(require 'org-table)
+
+(cl-defun org-dblock-write:org-ql (params)
+  "Insert content for org-ql dynamic block at point according to PARAMS.
+Valid parameters include:
+
+  :query  An Org QL query expression in either sexp or non-sexp form.
+
+  :columns  A list of columns, including `heading', `todo',
+  `priority', `deadline', `scheduled'.
+
+  :sort  One or a list of Org QL sorting methods (see `org-ql-select').
+
+  :take  Optionally take a number of results from the front (a
+  positive number) or the end (a negative number) of the results.
+
+  :ts-format  Optional format string used to format timestamp-based columns.
+
+For example, an org-ql dynamic block header could look like:
+
+  #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
+  (pcase-let* (((map :query :columns :sort :ts-format :take) params)
+               (query (cl-etypecase query
+                        (string (org-ql--plain-query query))
+                        (t query)))
+               (columns (or columns '(heading todo priority)))
+               ;; MAYBE: Custom column functions.
+               (format-fns
+                ;; NOTE: Backquoting this alist prevents the lambdas from seeing
+                ;; the variable `ts-format', so we use `list' and `cons'.
+                (list (cons 'heading (lambda (element)
+                                       (org-make-link-string (org-element-property :raw-value element)
+                                                             (org-element-property :raw-value element))))
+                      (cons 'todo (lambda (element)
+                                    (org-element-property :todo-keyword element)))
+                      (cons 'priority (lambda (element)
+                                        (--when-let (org-element-property :priority element)
+                                          (char-to-string it))))
+                      (cons 'deadline (lambda (element)
+                                        (--when-let (org-element-property :deadline element)
+                                          (ts-format ts-format (ts-parse-org-element it)))))
+                      (cons 'scheduled (lambda (element)
+                                         (--when-let (org-element-property :scheduled element)
+                                           (ts-format ts-format (ts-parse-org-element it)))))))
+               (elements (org-ql-query :from (current-buffer)
+                                       :where query
+                                       :select '(org-element-headline-parser (line-end-position))
+                                       :order-by sort)))
+    (when take
+      (setf elements (cl-etypecase take
+                       ((and integer (satisfies minusp)) (-take-last (abs take) elements))
+                       (integer (-take take elements)))))
+    (cl-labels ((format-element
+                 (element) (string-join (cl-loop for column in columns
+                                                 for fn = (alist-get column format-fns)
+                                                 collect (or (funcall fn element) ""))
+                                        " | ")))
+      ;; Insert table header.
+      (insert "| " (string-join (--map (capitalize (symbol-name it))
+                                       columns)
+                                " | ")
+              " |" "\n")
+      ;; Separator line.
+      (insert "|- \n")
+      ;; Elements.
+      (dolist (element elements)
+        (insert "| " (format-element element) " |" "\n"))
+      ;; Delete final newline and align table.
+      (delete-char -1)
+      (org-table-align))))
+
 ;;;; Functions
 
 (cl-defun org-ql-search-directories-files (&key (directories (list org-directory))

@@ -35,6 +35,7 @@ Usage
 * Commands::
 * Queries::
 * Functions / Macros::
+* Dynamic block::
 * Tips::
 
 Commands
@@ -154,7 +155,7 @@ File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
 *******
 
    • • 
-        • • • • • • 
+        • • • • • • • 
    Feedback on these APIs is welcome.  Eventually, after being tested
 and polished, they will be considered stable.
 
@@ -165,6 +166,7 @@ and polished, they will be considered stable.
 * Commands::
 * Queries::
 * Functions / Macros::
+* Dynamic block::
 * Tips::
 
 
@@ -544,7 +546,7 @@ number of days.  The number can be negative to invert the direction.
           scheduled at any time.
 
 
-File: README.info,  Node: Functions / Macros,  Next: Tips,  Prev: Queries,  Up: Usage
+File: README.info,  Node: Functions / Macros,  Next: Dynamic block,  Prev: Queries,  Up: Usage
 
 4.3 Functions / Macros
 ======================
@@ -711,9 +713,49 @@ File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,
      For convenience, arguments should be unquoted.
 
 
-File: README.info,  Node: Tips,  Prev: Functions / Macros,  Up: Usage
+File: README.info,  Node: Dynamic block,  Next: Tips,  Prev: Functions / Macros,  Up: Usage
 
-4.4 Tips
+4.4 Dynamic block
+=================
+
+Org QL provides a dynamic block that lists entries in the current
+document matching a query.  In the header, these parameters are
+supported:
+
+   • ‘:query’: An Org QL query expression in either sexp or non-sexp
+     form.
+   • ‘:columns’ A list of columns, including ‘heading’, ‘todo’,
+     ‘priority’, ‘deadline’, ‘scheduled’.
+   • ‘:sort’ One or a list of Org QL sorting methods (see
+     ‘org-ql-select’).
+   • ‘:take’ Optionally take a number of results from the front (a
+     positive number) or the end (a negative number) of the results.
+   • ‘:ts-format’ Optional format string used to format timestamp-based
+     columns.
+
+   The heading column is formatted as a link to the heading (not shown
+in the following example).
+
+   For example, this dynamic block shows the first seven headings that
+are to-do items with priority A or B, sorted by deadline then priority,
+with certain columns and timestamp format:
+
+     #+BEGIN: org-ql :query "todo: priority:A,B" :columns (todo priority deadline heading) :sort (deadline priority) :take 7 :ts-format "%Y-%m-%d %H:%M"
+     | Todo | Priority | Deadline         | Heading                               |
+     |------+----------+------------------+---------------------------------------|
+     | TODO | A        | 2017-07-07 00:00 | Take over the world                   |
+     | TODO | B        | 2017-07-10 00:00 | Renew membership in supervillain club |
+     | TODO | A        | 2017-07-15 00:00 | Take over the universe                |
+     | TODO | B        | 2017-07-21 00:00 | Internet                              |
+     | TODO | A        | 2017-08-01 00:00 | Spaceship lease                       |
+     | TODO | A        |                  | Skype with president of Antarctica    |
+     | TODO | B        |                  | Take over Mars                        |
+     #+END:
+
+
+File: README.info,  Node: Tips,  Prev: Dynamic block,  Up: Usage
+
+4.5 Tips
 ========
 
    • Org QL View buffers can be bookmarked with Emacs bookmark commands,
@@ -767,6 +809,7 @@ File: README.info,  Node: 05-pre,  Next: 046,  Up: Changelog
      e.g.  C-x r m and shown with, e.g.  C-x r b.  (This also enables
      view restoration with Burly
      (https://github.com/alphapapa/burly.el).)
+   • Dynamic block support.
    • Mascot.
 
    *Changed*
@@ -1188,48 +1231,49 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1521
-Node: Screenshots1644
-Node: Installation1762
-Node: Quelpa2400
-Node: Usage2843
-Node: Commands3205
-Node: org-ql-search3678
-Node: helm-org-ql5392
-Node: org-ql-view5804
-Node: org-ql-view-sidebar6304
-Node: org-ql-view-recent-items6660
-Node: org-ql-sparse-tree7144
-Node: Queries7944
-Node: Non-sexp query syntax8852
-Node: General predicates10559
-Node: Ancestor/descendant predicates15774
-Node: Date/time predicates16902
-Node: Functions / Macros19557
-Node: Agenda-like views19803
-Node: Listing / acting-on results21208
-Node: Tips25810
-Node: Changelog26141
-Node: 05-pre26780
-Node: 04627626
-Node: 04528029
-Node: 04428388
-Node: 04328745
-Node: 04228940
-Node: 04129099
-Node: 0429338
-Node: 03233269
-Node: 03133646
-Node: 0333843
-Node: 02336818
-Node: 02237046
-Node: 02137314
-Node: 0237513
-Node: 0141548
-Node: Notes41649
-Node: Comparison with Org Agenda searches41811
-Node: org-sidebar42683
-Node: License42962
+Node: Contents1539
+Node: Screenshots1662
+Node: Installation1780
+Node: Quelpa2418
+Node: Usage2861
+Node: Commands3245
+Node: org-ql-search3718
+Node: helm-org-ql5432
+Node: org-ql-view5844
+Node: org-ql-view-sidebar6344
+Node: org-ql-view-recent-items6700
+Node: org-ql-sparse-tree7184
+Node: Queries7984
+Node: Non-sexp query syntax8892
+Node: General predicates10599
+Node: Ancestor/descendant predicates15814
+Node: Date/time predicates16942
+Node: Functions / Macros19597
+Node: Agenda-like views19852
+Node: Listing / acting-on results21257
+Node: Dynamic block25859
+Node: Tips27885
+Node: Changelog28211
+Node: 05-pre28850
+Node: 04629726
+Node: 04530129
+Node: 04430488
+Node: 04330845
+Node: 04231040
+Node: 04131199
+Node: 0431438
+Node: 03235369
+Node: 03135746
+Node: 0335943
+Node: 02338918
+Node: 02239146
+Node: 02139414
+Node: 0239613
+Node: 0143648
+Node: Notes43749
+Node: Comparison with Org Agenda searches43911
+Node: org-sidebar44783
+Node: License45062
 
 End Tag Table
 

@@ -16,7 +16,7 @@
 
 * [#A] Overview
 
-#+BEGIN: org-ql :query (todo "UNDERWAY") :format (priority todo heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
+#+BEGIN: org-ql :query (todo "UNDERWAY") :columns (priority todo heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 | Priority | Todo     | Heading                                                            |
 |----------+----------+--------------------------------------------------------------------|
 | A        | UNDERWAY | [[Dynamic blocks][Dynamic blocks]]                                                     |
@@ -206,7 +206,7 @@ For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this 
 #+BEGIN_SRC elisp
   (cl-defun org-dblock-write:org-ql (params)
     "FIXME: Docstring"
-    (pcase-let* (((map :query :format :sort :ts-format) params)
+    (pcase-let* (((map :query :columns :sort :ts-format) params)
                  (format-fns (list (cons 'heading (lambda (element)
                                                     (org-make-link-string (org-element-property :raw-value element)
                                                                           (org-element-property :raw-value element))))
@@ -230,11 +230,11 @@ For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this 
                                          :select '(org-element-headline-parser (line-end-position))
                                          :order-by sort)))
       (cl-labels ((format-element
-                   (element) (string-join (cl-loop for prop in format
-                                                   for fn = (alist-get prop format-fns)
+                   (element) (string-join (cl-loop for column in columns
+                                                   for fn = (alist-get column format-fns)
                                                    collect (funcall fn element))
                                           " | ")))
-        (insert "| " (string-join (--map (capitalize (symbol-name it)) format) " | ") " |" "\n")
+        (insert "| " (string-join (--map (capitalize (symbol-name it)) columns) " | ") " |" "\n")
         (insert "|- \n")
         (dolist (element elements)
           (insert "| " (format-element element) " |" "\n"))

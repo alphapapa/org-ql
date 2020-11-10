@@ -68,6 +68,7 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
   - [[#ancestordescendant-predicates][Ancestor/descendant predicates]]
   - [[#datetime-predicates][Date/time predicates]]
 - [[#functions--macros][Functions / Macros]]
+- [[#dynamic-block][Dynamic block]]
 - [[#tips][Tips]]
 :END:
 
@@ -396,6 +397,36 @@ Examples:
 
 Expands into a call to ~org-ql-select~ with the same arguments.  For convenience, arguments should be unquoted.
 
+** Dynamic block
+
+Org QL provides a dynamic block that lists entries in the current document matching a query.  In the header, these parameters are supported:
+
++  ~:query~: An Org QL query expression in either sexp or non-sexp form.
++  ~:columns~ A list of columns, including ~heading~, ~todo~, ~priority~, ~deadline~, ~scheduled~.
++  ~:sort~ One or a list of Org QL sorting methods (see ~org-ql-select~).
++  ~:take~ Optionally take a number of results from the front (a positive number) or the end (a negative number) of the results.
++  ~:ts-format~ Optional format string used to format timestamp-based columns.
+
+The heading column is formatted as a link to the heading (not shown in the following example).
+
+For example, this dynamic block shows the first seven headings that are to-do items with priority A or B, sorted by deadline then priority, with certain columns and timestamp format:
+
+# NOTE: These results are edited manually because the Org links don't display well in the Info manual.
+
+#+BEGIN_SRC org
+  ,#+BEGIN: org-ql :query "todo: priority:A,B" :columns (todo priority deadline heading) :sort (deadline priority) :take 7 :ts-format "%Y-%m-%d %H:%M"
+  | Todo | Priority | Deadline         | Heading                               |
+  |------+----------+------------------+---------------------------------------|
+  | TODO | A        | 2017-07-07 00:00 | Take over the world                   |
+  | TODO | B        | 2017-07-10 00:00 | Renew membership in supervillain club |
+  | TODO | A        | 2017-07-15 00:00 | Take over the universe                |
+  | TODO | B        | 2017-07-21 00:00 | Internet                              |
+  | TODO | A        | 2017-08-01 00:00 | Spaceship lease                       |
+  | TODO | A        |                  | Skype with president of Antarctica    |
+  | TODO | B        |                  | Take over Mars                        |
+  ,#+END:
+#+END_SRC
+
 ** Tips
 
 +  Org QL View buffers can be bookmarked with Emacs bookmark commands, e.g. =C-x r m=.  This also integrates with [[https://github.com/alphapapa/org-sidebar][org-sidebar]] and [[https://github.com/alphapapa/burly.el][Burly]].
@@ -413,6 +444,7 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 +  View dispatcher using =transient.el= (like Magit), bound to =v= in search/view buffers.
 +  Predicate =link=, which matches descriptions and targets in Org links.
 +  Emacs bookmark support: Org QL View buffers can be bookmarked with, e.g. =C-x r m= and shown with, e.g. =C-x r b=.  (This also enables view restoration with [[https://github.com/alphapapa/burly.el][Burly]].)
++  Dynamic block support.
 +  Mascot.
 
 *Changed*
