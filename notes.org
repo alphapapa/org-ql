@@ -83,6 +83,7 @@
 - [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
+- [[#save-views-to-dynamic-blocks][Save views to dynamic blocks]]
 :END:
 
 ** TODO [#A] Add ~:auto~ keyword to ~(planning)~ predicate
@@ -100,6 +101,10 @@ Note that the built-in sorting only works on Org elements, which is the default 
 ** TODO [#A] Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~
 
 For consistency, because plain ~auto~ looks like a variable, and even though it's in a quoted form, it could be confusing.
+
+** TODO [#A] Save views to dynamic blocks
+
+[2020-11-10 Tue 04:31]  A command would save users from having to write out the dynamic block manually.
 
 ** TODO [#B] Outline path in buffers-files arg
 :PROPERTIES:
