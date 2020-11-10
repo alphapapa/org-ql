@@ -5,6 +5,7 @@
 :TOC:      :include siblings :depth 1 :ignore this :force depth
 :END:
 :CONTENTS:
+- [[#overview][Overview]]
 - [[#tasks][Tasks]]
 - [[#examples--testing][Examples / testing]]
 - [[#in-the-wild][In the wild]]
@@ -13,6 +14,22 @@
 - [[#testing][Testing]]
 :END:
 
+* [#A] Overview
+
+#+BEGIN: org-ql :query (todo "UNDERWAY") :format (priority todo heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
+| Priority | Todo     | Heading                                                            |
+|----------+----------+--------------------------------------------------------------------|
+| A        | UNDERWAY | [[Dynamic blocks][Dynamic blocks]]                                                     |
+| A        | UNDERWAY | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]]                  |
+| A        | UNDERWAY | [[Org link types][Org link types]]                                                     |
+| A        | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                             |
+| B        | UNDERWAY | [[Recursive queries][Recursive queries]]                                                  |
+| B        | UNDERWAY | [[Timeline view][Timeline view]]                                                      |
+| B        | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
+| B        | UNDERWAY | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]]           |
+|          | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
+
+#+END:
 
 * [#A] Tasks
 :PROPERTIES:
@@ -22,29 +39,30 @@
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#document-sorters][Document sorters]]
 - [[#org-block-to-insert-results-of-queries-with-links-to-entries][Org block to insert results of queries with links to entries]]
+- [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
 - [[#add-more-sorters][Add more sorters?]]
-- [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
 - [[#default-sort][Default sort]]
-- [[#dynamic-blocks][Dynamic blocks]]
 - [[#partial-match-for-property-queries][Partial match for property queries]]
 - [[#new-transient-transient-lisp-variable-class][New Transient transient-lisp-variable class]]
 - [[#normalize-queries][Normalize queries]]
-- [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
-- [[#recursive-queries][Recursive queries]]
-- [[#timeline-view][Timeline view]]
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#test-caching][Test caching]]
 - [[#update-commentary][Update commentary]]
+- [[#dynamic-blocks][Dynamic blocks]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#outline-path-predicate][Outline path predicate]]
+- [[#recursive-queries][Recursive queries]]
+- [[#timeline-view][Timeline view]]
 - [[#node-caching]["Node" caching]]
 - [[#implement-view-with-tabulated-list-mode-or-magit-section][Implement view with tabulated-list-mode or magit-section]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
+- [[#group-tag-support][Group tag support]]
 - [[#helm-command][Helm command]]
+- [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
 - [[#byte-compile-lambdas][Byte-compile lambdas]]
 - [[#documentfigure-out-tag-inheritance][Document/figure out tag inheritance]]
 - [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
@@ -106,10 +124,6 @@ e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse
 #+END_SRC
 
 Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
-
-** TODO [#C] Dynamic blocks
-
-For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
 
 ** TODO [#C] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]
 
@@ -176,6 +190,83 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
 ** TODO [#C] Update commentary
+
+** UNDERWAY [#A] Dynamic blocks
+
++  *Tasks*
+     -  [ ] Merge code
+     -  [ ] Document the feature
+
+For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this blog article]] shows a way that Org's existing dynamic =columnview= blocks can be very useful.  =org-ql= queries could be useful in them as well.
+
+[2020-11-09 Mon 22:00]  I just realized that this is probably much easier than I realized.
+
++  [[info:org#Dynamic%20blocks][info:org#Dynamic blocks]]
+
+#+BEGIN_SRC elisp
+  (cl-defun org-dblock-write:org-ql (params)
+    "FIXME: Docstring"
+    (pcase-let* (((map :query :format :sort :ts-format) params)
+                 (format-fns (list (cons 'heading (lambda (element)
+                                                    (org-make-link-string (org-element-property :raw-value element)
+                                                                          (org-element-property :raw-value element))))
+                                   (cons 'todo (lambda (element)
+                                                 (or (org-element-property :todo-keyword element)
+                                                     "")))
+                                   (cons 'priority (lambda (element)
+                                                     (--if-let (org-element-property :priority element)
+                                                         (char-to-string it)
+                                                       "")))
+                                   (cons 'deadline (lambda (element)
+                                                     (--if-let (org-element-property :deadline element)
+                                                         (ts-format ts-format (ts-parse-org-element it ))
+                                                       "")))
+                                   (cons 'scheduled (lambda (element)
+                                                      (--if-let (org-element-property :scheduled element)
+                                                          (ts-format ts-format (ts-parse-org-element it ))
+                                                        "")))))
+                 (elements (org-ql-query :from (current-buffer)
+                                         :where query
+                                         :select '(org-element-headline-parser (line-end-position))
+                                         :order-by sort)))
+      (cl-labels ((format-element
+                   (element) (string-join (cl-loop for prop in format
+                                                   for fn = (alist-get prop format-fns)
+                                                   collect (funcall fn element))
+                                          " | ")))
+        (insert "| " (string-join (--map (capitalize (symbol-name it)) format) " | ") " |" "\n")
+        (insert "|- \n")
+        (dolist (element elements)
+          (insert "| " (format-element element) " |" "\n"))
+        (org-table-align))))
+#+END_SRC
+
+[2020-11-09 Mon 22:35]  This works pretty well!  For example:
+
+#+BEGIN_SRC org
+  ,#+BEGIN: org-ql :query (todo) :format (priority todo heading deadline scheduled) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
+  | Priority | Todo  | Heading    | Deadline         | Scheduled        |
+  |----------+-------+------------+------------------+------------------|
+  | A        | TODAY | Heading 1  | 2020-11-11 00:00 |                  |
+  | B        | TODO  | Heading 2  |                  | 2020-11-09 00:00 |
+
+  ,#+END:
+
+  ,#+BEGIN: columnview :id global :hlines t :indent t
+  | ITEM           | TODO  | PRIORITY | TAGS |
+  |----------------+-------+----------+------|
+  | Test heading 1 | TODAY | B        |      |
+  |----------------+-------+----------+------|
+  | Heading 2      | TODO  | B        |      |
+  ,#+END:
+
+  ,* TODAY [#A] Heading 1
+  DEADLINE: <2020-11-11 Wed>
+
+  ,* TODO [#B] Heading 2
+  SCHEDULED: <2020-11-09 Mon>
+
+#+END_SRC
 
 ** UNDERWAY [#A] Tools for saving queries and accessing them [3/4]
 
@@ -664,6 +755,258 @@ However, there might still be a useful idea here somewhere...
 ** MAYBE [#C] Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
+
+** PROJECT [#A] Group tag support
+
+*** UNDERWAY Benchmarking tags searches without and with new group-tags support
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 10 :ensure-equal t
+    :forms (("without group-tags support"
+             (org-ql-select (org-ql-search-directories-files)
+               '(tags "Emacs")
+               :action #'point))
+            ))
+#+END_SRC
+
+#+RESULTS:
+| Form                       | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------------------------+--------------------+---------------+----------+------------------|
+| without group-tags support | slowest            |      5.512271 |        0 |                0 |
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 10 :ensure-equal t
+    :forms (("with group-tags support"
+             (org-ql-select (org-ql-search-directories-files)
+               '(tags "Emacs")
+               :action #'point))
+            ))
+#+END_SRC
+
+#+RESULTS:
+| Form                    | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------------------+--------------------+---------------+----------+------------------|
+| with group-tags support | slowest            |      5.154639 |        0 |                0 |
+
+[2020-11-09 Mon 17:43]  I think I need to enhance the benchmarking macros to make this easier.  But that might require copying much of =benchmark-run-compiled=, so let me try something else:  This is messy, but it ought to be fair enough (the only difference being the minor change in =org-ql--tags-at=.
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 10 :ensure-equal t
+    :forms (("without group-tags support"
+             (progn
+               (setf org-ql-cache (make-hash-table :weakness 'key)
+                     org-ql-tags-cache (make-hash-table :weakness 'key)
+                     org-ql-node-value-cache (make-hash-table :weakness 'key))
+               (defun org-ql--expand-tag-hierarchy (tags &optional excluded)
+                 "Return TAGS along with their associated group tags.
+  This function recursively searches for groups that each given tag belongs to,
+  directly or indirectly, and includes the corresponding group tags to the result.
+
+  TAGS should be a list of tags (i.e., strings).
+  If non-nil, EXCLUDED should be a list of group tags that will not be
+  automatically added to the results unless they are already in TAGS."
+                 (let ((groups (org-tag-alist-to-groups org-current-tag-alist))
+                       (excluded (append tags excluded)))
+                   (let (group-tags)
+                     (dolist (tag tags)
+                       (pcase-dolist (`(,group-tag . ,group-members) groups)
+                         (when (and (not (member group-tag excluded))
+                                    ;; Check if one of the members in the group matches tag.
+                                    ;; Notice that each member may be a plain string or
+                                    ;; a regexp pattern (enclosed between curly brackets).
+                                    (--some (if (string-match-p "^[{].+[}]$" it)
+                                                ;; If pattern (it) is a regexp, remove the brackets and
+                                                ;; make sure that it either matches the whole tag or not.
+                                                (string-match-p (concat "^" (substring it 1 -1) "$") tag)
+                                              ;; Check if member (it) is identical to tag.
+                                              (string= it tag))
+                                            group-members))
+                           (push group-tag group-tags))))
+                     ;; If group tags not already included have been found,
+                     ;; then recursively expand them as well.
+                     ;; Notice that by passing (group-tags excluded) to the next call
+                     ;; instead of ((append tags group-tags)) ensures that we do not
+                     ;; unnecessarily loop over the elements of TAGS more than once.
+                     (if group-tags
+                         (append tags (org-ql--expand-tag-hierarchy group-tags excluded))
+                       tags))))
+               (defun org-ql--tags-at (position)
+                 "Return tags for POSITION in current buffer.
+  Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
+                 ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
+                 ;; bound in the else clause, so destructured variables that are non-nil,
+                 ;; like found caches, are not available in the else clause.
+                 (if-let* ((buffer-cache (gethash (current-buffer) org-ql-tags-cache))
+                           (modified-tick (car buffer-cache))
+                           (tags-cache (cdr buffer-cache))
+                           (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                           (cached-result (gethash position tags-cache)))
+                     ;; Found in cache: return them.
+                     (pcase cached-result
+                       ('org-ql-nil nil)
+                       (_ cached-result))
+                   ;; Not found in cache: get tags and cache them.
+                   (let* ((local-tags (or (when (looking-at org-ql-tag-line-re)
+                                            (split-string (match-string-no-properties 2) ":" t))
+                                          'org-ql-nil))
+                          (inherited-tags (or (when org-use-tag-inheritance
+                                                (save-excursion
+                                                  (if (org-up-heading-safe)
+                                                      ;; Return parent heading's tags.
+                                                      (-let* (((inherited local) (org-ql--tags-at (point)))
+                                                              (tags (when (or inherited local)
+                                                                      (cond ((and (listp inherited)
+                                                                                  (listp local))
+                                                                             (->> (append inherited local)
+                                                                                  -non-nil -uniq))
+                                                                            ((listp inherited) inherited)
+                                                                            ((listp local) local)))))
+                                                        (cl-typecase org-use-tag-inheritance
+                                                          (list (setf tags (-intersection tags org-use-tag-inheritance)))
+                                                          (string (setf tags (--select (string-match org-use-tag-inheritance it)
+                                                                                       tags))))
+                                                        (pcase org-tags-exclude-from-inheritance
+                                                          ('nil tags)
+                                                          (_ (-difference tags org-tags-exclude-from-inheritance))))
+                                                    ;; Top-level heading: use file tags.
+                                                    org-file-tags)))
+                                              'org-ql-nil))
+                          (all-tags (list inherited-tags local-tags)))
+                     ;; Check caches again, because they may have been set now.
+                     ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
+                     (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
+                           modified-tick (car buffer-cache)
+                           tags-cache (cdr buffer-cache)
+                           buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                     (unless (and buffer-cache buffer-unmodified-p)
+                       ;; Buffer-local tags cache empty or invalid: make new one.
+                       (setf tags-cache (make-hash-table))
+                       (puthash (current-buffer)
+                                (cons (buffer-modified-tick) tags-cache)
+                                org-ql-tags-cache))
+                     (puthash position all-tags tags-cache))))
+               (org-ql-select (org-ql-search-directories-files)
+                 '(tags "Emacs")
+                 :action #'point)))
+            ("with group-tags support"
+             (progn
+               (setf org-ql-cache (make-hash-table :weakness 'key)
+                     org-ql-tags-cache (make-hash-table :weakness 'key)
+                     org-ql-node-value-cache (make-hash-table :weakness 'key))
+               (defun org-ql--expand-tag-hierarchy (tags &optional excluded)
+                 "Return TAGS along with their associated group tags.
+  This function recursively searches for groups that each given tag belongs to,
+  directly or indirectly, and includes the corresponding group tags to the result.
+
+  TAGS should be a list of tags (i.e., strings).
+  If non-nil, EXCLUDED should be a list of group tags that will not be
+  automatically added to the results unless they are already in TAGS."
+                 (let ((groups (org-tag-alist-to-groups org-current-tag-alist))
+                       (excluded (append tags excluded)))
+                   (let (group-tags)
+                     (dolist (tag tags)
+                       (pcase-dolist (`(,group-tag . ,group-members) groups)
+                         (when (and (not (member group-tag excluded))
+                                    ;; Check if one of the members in the group matches tag.
+                                    ;; Notice that each member may be a plain string or
+                                    ;; a regexp pattern (enclosed between curly brackets).
+                                    (--some (if (string-match-p "^[{].+[}]$" it)
+                                                ;; If pattern (it) is a regexp, remove the brackets and
+                                                ;; make sure that it either matches the whole tag or not.
+                                                (string-match-p (concat "^" (substring it 1 -1) "$") tag)
+                                              ;; Check if member (it) is identical to tag.
+                                              (string= it tag))
+                                            group-members))
+                           (push group-tag group-tags))))
+                     ;; If group tags not already included have been found,
+                     ;; then recursively expand them as well.
+                     ;; Notice that by passing (group-tags excluded) to the next call
+                     ;; instead of ((append tags group-tags)) ensures that we do not
+                     ;; unnecessarily loop over the elements of TAGS more than once.
+                     (if group-tags
+                         (append tags (org-ql--expand-tag-hierarchy group-tags excluded))
+                       tags))))
+               (defun org-ql--tags-at (position)
+                 "Return tags for POSITION in current buffer.
+  Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
+                 ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
+                 ;; bound in the else clause, so destructured variables that are non-nil,
+                 ;; like found caches, are not available in the else clause.
+                 (if-let* ((buffer-cache (gethash (current-buffer) org-ql-tags-cache))
+                           (modified-tick (car buffer-cache))
+                           (tags-cache (cdr buffer-cache))
+                           (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                           (cached-result (gethash position tags-cache)))
+                     ;; Found in cache: return them.
+                     (pcase cached-result
+                       ('org-ql-nil nil)
+                       (_ cached-result))
+                   ;; Not found in cache: get tags and cache them.
+                   (let* ((local-tags (or (when (looking-at org-ql-tag-line-re)
+                                            (split-string (match-string-no-properties 2) ":" t))
+                                          'org-ql-nil))
+                          (inherited-tags (or (when org-use-tag-inheritance
+                                                (save-excursion
+                                                  (if (org-up-heading-safe)
+                                                      ;; Return parent heading's tags.
+                                                      (-let* (((inherited local) (org-ql--tags-at (point)))
+                                                              (tags (when (or inherited local)
+                                                                      (cond ((and (listp inherited)
+                                                                                  (listp local))
+                                                                             (->> (append inherited local)
+                                                                                  -non-nil -uniq))
+                                                                            ((listp inherited) inherited)
+                                                                            ((listp local) local)))))
+                                                        (cl-typecase org-use-tag-inheritance
+                                                          (list (setf tags (-intersection tags org-use-tag-inheritance)))
+                                                          (string (setf tags (--select (string-match org-use-tag-inheritance it)
+                                                                                       tags))))
+                                                        (pcase org-tags-exclude-from-inheritance
+                                                          ('nil tags)
+                                                          (_ (-difference tags org-tags-exclude-from-inheritance))))
+                                                    ;; Top-level heading: use file tags.
+                                                    org-file-tags)))
+                                              'org-ql-nil))
+                          all-tags)
+                     (when org-group-tags
+                       (unless (eq local-tags 'org-ql-nil)
+                         (setq local-tags (org-ql--expand-tag-hierarchy local-tags)))
+                       (unless (eq inherited-tags 'org-ql-nil)
+                         (setq inherited-tags (org-ql--expand-tag-hierarchy inherited-tags))))
+                     (setq all-tags (list inherited-tags local-tags))
+                     ;; Check caches again, because they may have been set now.
+                     ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
+                     (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
+                           modified-tick (car buffer-cache)
+                           tags-cache (cdr buffer-cache)
+                           buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                     (unless (and buffer-cache buffer-unmodified-p)
+                       ;; Buffer-local tags cache empty or invalid: make new one.
+                       (setf tags-cache (make-hash-table))
+                       (puthash (current-buffer)
+                                (cons (buffer-modified-tick) tags-cache)
+                                org-ql-tags-cache))
+                     (puthash position all-tags tags-cache))))
+               (org-ql-select (org-ql-search-directories-files)
+                 '(tags "Emacs")
+                 :action #'point)))
+            ))
+#+END_SRC
+
+#+RESULTS:
+| Form                       | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------------------------+--------------------+---------------+----------+------------------|
+| without group-tags support | 1.01               |     52.832562 |        4 |         1.989522 |
+| with group-tags support    | slowest            |     53.425342 |        5 |         2.479128 |
+
+[2020-11-09 Mon 17:57]  Well, the performance difference seems smaller than I expected.  For single iterations, it ought to be unnoticeable.  Although I'm still a bit skeptical about this benchmark: I feel like it ought to have more of an impact than that, but maybe I'm wrong--and that would be great!
+
+Next steps:
+
++  [X] Post benchmark code on PR and ask Panagiotis to verify
++  [X] Also ask him to run benchmark actually using group tags (since I don't actually have any, even though the boolean is t)
++  [X] Discuss caching of group tag expansion.  It seems like we ought to cache the expansions as well, because sibling headings (especially at level 1) ought to get their group tags re-expanded individually, even when we've already expanded them for another heading.
++  [X] Remove unused =result= variable
 
 ** DONE [#A] Helm command
 
