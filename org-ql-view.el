@@ -398,6 +398,8 @@ update search arguments."
            insert))
     (current-buffer)))
 
+(defvar bookmark-make-record-function)
+
 (cl-defun org-ql-view--display (&key (buffer org-ql-view-buffer) header string)
   "Display STRING in `org-ql-view' BUFFER.
 
@@ -521,8 +523,7 @@ dates in the past, and negative for dates in the future."
 
 ;; Support for Emacs bookmarks.
 
-(eval-when-compile
-  (require 'bookmark))
+(require 'bookmark)
 
 (defun org-ql-view--bookmark-make-record ()
   "Return a bookmark record for the current Org QL View buffer."
