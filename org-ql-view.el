@@ -528,7 +528,8 @@ dates in the past, and negative for dates in the future."
 (defun org-ql-view--bookmark-make-record ()
   "Return a bookmark record for the current Org QL View buffer."
   (cl-labels ((file-nameize
-               (b-f) (or (buffer-file-name b-f)
+               (b-f) (or (when (stringp b-f) b-f)
+                         (buffer-file-name b-f)
                          (when (buffer-base-buffer b-f)
                            (buffer-file-name (buffer-base-buffer b-f)))
                          (user-error "Only file-backed buffers can be bookmarked by Org QL View: %s" b-f))))
@@ -537,6 +538,7 @@ dates in the past, and negative for dates in the future."
       ;; Replace buffers with their filenames, and signal error if any are not file-backed.
       (setf plist (plist-put plist :buffers-files
                              (cl-etypecase buffers-files
+                               (function (funcall buffers-files))
                                (string buffers-files)
                                (buffer (file-nameize buffers-files))
                                (list (cl-loop for b-f in buffers-files
