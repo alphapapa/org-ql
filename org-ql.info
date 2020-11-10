@@ -36,6 +36,7 @@ Usage
 * Queries::
 * Functions / Macros::
 * Dynamic block::
+* Links::
 * Tips::
 
 Commands
@@ -155,7 +156,7 @@ File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
 *******
 
    • • 
-        • • • • • • • 
+        • • • • • • • • 
    Feedback on these APIs is welcome.  Eventually, after being tested
 and polished, they will be considered stable.
 
@@ -167,6 +168,7 @@ and polished, they will be considered stable.
 * Queries::
 * Functions / Macros::
 * Dynamic block::
+* Links::
 * Tips::
 
 
@@ -713,7 +715,7 @@ File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,
      For convenience, arguments should be unquoted.
 
 
-File: README.info,  Node: Dynamic block,  Next: Tips,  Prev: Functions / Macros,  Up: Usage
+File: README.info,  Node: Dynamic block,  Next: Links,  Prev: Functions / Macros,  Up: Usage
 
 4.4 Dynamic block
 =================
@@ -753,9 +755,30 @@ with certain columns and timestamp format:
      #+END:
 
 
-File: README.info,  Node: Tips,  Prev: Dynamic block,  Up: Usage
+File: README.info,  Node: Links,  Next: Tips,  Prev: Dynamic block,  Up: Usage
 
-4.5 Tips
+4.5 Links
+=========
+
+Org QL View searches may be accessed by opening ‘org-ql-search:’ links
+in an Org file.
+
+   In an Org QL View buffer, the command ‘org-store-link’ (i.e.  ‘C-c
+l’) stores a link to the current search, and it may be inserted into an
+Org buffer with the command ‘org-insert-link’ (‘C-c C-l’).  The stored
+link records all of the view settings, like title, sorting, and
+grouping.
+
+   Simple links may also be written manually in either sexp or non-sexp
+form, like:
+
+     [[org-ql-search:todo:NEXT priority:A]]
+     [[org-ql-search:(and (todo "NEXT") (priority "A"))]]
+
+
+File: README.info,  Node: Tips,  Prev: Links,  Up: Usage
+
+4.6 Tips
 ========
 
    • Org QL View buffers can be bookmarked with Emacs bookmark commands,
@@ -810,6 +833,8 @@ File: README.info,  Node: 05-pre,  Next: 046,  Up: Changelog
      view restoration with Burly
      (https://github.com/alphapapa/burly.el).)
    • Dynamic block support.
+   • Org link support (storing and opening links to Org QL View searches
+     in the current document).
    • Mascot.
 
    *Changed*
@@ -1231,49 +1256,50 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1539
-Node: Screenshots1662
-Node: Installation1780
-Node: Quelpa2418
-Node: Usage2861
-Node: Commands3245
-Node: org-ql-search3718
-Node: helm-org-ql5432
-Node: org-ql-view5844
-Node: org-ql-view-sidebar6344
-Node: org-ql-view-recent-items6700
-Node: org-ql-sparse-tree7184
-Node: Queries7984
-Node: Non-sexp query syntax8892
-Node: General predicates10599
-Node: Ancestor/descendant predicates15814
-Node: Date/time predicates16942
-Node: Functions / Macros19597
-Node: Agenda-like views19852
-Node: Listing / acting-on results21257
-Node: Dynamic block25859
-Node: Tips27885
-Node: Changelog28211
-Node: 05-pre28850
-Node: 04629726
-Node: 04530129
-Node: 04430488
-Node: 04330845
-Node: 04231040
-Node: 04131199
-Node: 0431438
-Node: 03235369
-Node: 03135746
-Node: 0335943
-Node: 02338918
-Node: 02239146
-Node: 02139414
-Node: 0239613
-Node: 0143648
-Node: Notes43749
-Node: Comparison with Org Agenda searches43911
-Node: org-sidebar44783
-Node: License45062
+Node: Contents1549
+Node: Screenshots1672
+Node: Installation1790
+Node: Quelpa2428
+Node: Usage2871
+Node: Commands3269
+Node: org-ql-search3742
+Node: helm-org-ql5456
+Node: org-ql-view5868
+Node: org-ql-view-sidebar6368
+Node: org-ql-view-recent-items6724
+Node: org-ql-sparse-tree7208
+Node: Queries8008
+Node: Non-sexp query syntax8916
+Node: General predicates10623
+Node: Ancestor/descendant predicates15838
+Node: Date/time predicates16966
+Node: Functions / Macros19621
+Node: Agenda-like views19876
+Node: Listing / acting-on results21281
+Node: Dynamic block25883
+Node: Links27910
+Node: Tips28597
+Node: Changelog28915
+Node: 05-pre29554
+Node: 04630536
+Node: 04530939
+Node: 04431298
+Node: 04331655
+Node: 04231850
+Node: 04132009
+Node: 0432248
+Node: 03236179
+Node: 03136556
+Node: 0336753
+Node: 02339728
+Node: 02239956
+Node: 02140224
+Node: 0240423
+Node: 0144458
+Node: Notes44559
+Node: Comparison with Org Agenda searches44721
+Node: org-sidebar45593
+Node: License45872
 
 End Tag Table
 

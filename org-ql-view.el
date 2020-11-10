@@ -565,6 +565,68 @@ dates in the past, and negative for dates in the future."
     ;; more complicated and might introduce bugs elsewhere, so we'll just do this for now.
     (set-buffer (window-buffer (selected-window)))))
 
+;;;; Links
+
+;; This section implements support for Org links to Org QL searches.  Since the
+;; links are stored from and opened in `org-ql-view' buffers, this section resides
+;; in this file.  However, since the links are to `org-ql-search' searches rather
+;; than `org-ql-view' saved views, the link type is "org-ql-search".
+
+(org-link-set-parameters "org-ql-search"
+                         :follow #'org-ql-view--link-open
+                         :store #'org-ql-view--link-store)
+
+;; We require the URL libraries in the functions to hopefully avoid
+;; loading them until they're needed.
+
+(defun org-ql-view--link-open (path)
+  "Open Org QL query for current buffer at PATH.
+PATH should be the part of an \"org-ql-search:\" URL after the
+protocol.  See, e.g. `org-ql-view--link-store'."
+  (require 'url-parse)
+  (require 'url-util)
+  (pcase-let* ((`(,query . ,params) (url-path-and-query
+                                     (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                            path)))
+               (query (url-unhex-string query))
+               (params (when params (url-parse-query-string params)))
+               ;; `url-parse-query-string' returns "improper" alists, which makes this awkward.
+               (sort (--when-let (alist-get "sort" params nil nil #'string=)
+                       (read it)))
+               (groups (--when-let (alist-get "super-groups" params nil nil #'string=)
+                         (read it)))
+               (title (--when-let (alist-get "title" params nil nil #'string=)
+                        (read it))))
+    (org-ql-search (current-buffer) query
+      :sort sort
+      :super-groups groups
+      :title title)))
+
+(defun org-ql-view--link-store ()
+  "Store a link to the current Org QL view.
+When opened, the link searches the buffer it's opened from."
+  (require 'url-parse)
+  (require 'url-util)
+  (unless (or (bufferp org-ql-view-buffers-files)
+              (= 1 (length org-ql-view-buffers-files)))
+    (user-error "Only views searching a single buffer may be linked"))
+  (when org-ql-view-query
+    (let* ((params (list (when org-ql-view-super-groups
+                           (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
+                         (when org-ql-view-sort
+                           (list "sort" (prin1-to-string org-ql-view-sort)))
+                         (when org-ql-view-title
+                           (list "title" (prin1-to-string org-ql-view-title)))))
+           (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
+                             "?" (url-build-query-string (delete nil params))))
+           (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                         filename))))
+      (org-store-link-props
+       :type "org-ql-search"
+       :link url
+       :description (concat "org-ql-search: " org-ql-view-title)))
+    t))
+
 ;;;; Transient
 
 ;; This section uses `transient' to allow the user to easily modify

@@ -69,6 +69,7 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
   - [[#datetime-predicates][Date/time predicates]]
 - [[#functions--macros][Functions / Macros]]
 - [[#dynamic-block][Dynamic block]]
+- [[#links][Links]]
 - [[#tips][Tips]]
 :END:
 
@@ -427,6 +428,19 @@ For example, this dynamic block shows the first seven headings that are to-do it
   ,#+END:
 #+END_SRC
 
+** Links
+
+Org QL View searches may be accessed by opening ~org-ql-search:~ links in an Org file.
+
+In an Org QL View buffer, the command ~org-store-link~ (i.e. ~C-c l~) stores a link to the current search, and it may be inserted into an Org buffer with the command ~org-insert-link~ (~C-c C-l~).  The stored link records all of the view settings, like title, sorting, and grouping.
+
+Simple links may also be written manually in either sexp or non-sexp form, like:
+
+#+BEGIN_SRC org
+  [[org-ql-search:todo:NEXT priority:A]]
+  [[org-ql-search:(and (todo "NEXT") (priority "A"))]]
+#+END_SRC
+
 ** Tips
 
 +  Org QL View buffers can be bookmarked with Emacs bookmark commands, e.g. =C-x r m=.  This also integrates with [[https://github.com/alphapapa/org-sidebar][org-sidebar]] and [[https://github.com/alphapapa/burly.el][Burly]].
@@ -445,6 +459,7 @@ For example, this dynamic block shows the first seven headings that are to-do it
 +  Predicate =link=, which matches descriptions and targets in Org links.
 +  Emacs bookmark support: Org QL View buffers can be bookmarked with, e.g. =C-x r m= and shown with, e.g. =C-x r b=.  (This also enables view restoration with [[https://github.com/alphapapa/burly.el][Burly]].)
 +  Dynamic block support.
++  Org link support (storing and opening links to Org QL View searches in the current document).
 +  Mascot.
 
 *Changed*

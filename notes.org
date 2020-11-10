@@ -16,18 +16,34 @@
 
 * [#A] Overview
 
+** Underway
+
+[[org-ql-search:%2528todo%2520%2522UNDERWAY%2522%2529?sort=%2528priority%2529&title=%2522Underway%2522][org-ql-search: Underway]]
+
 #+BEGIN: org-ql :query (todo "UNDERWAY") :columns (priority todo heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 | Priority | Todo     | Heading                                                            |
 |----------+----------+--------------------------------------------------------------------|
-| A        | UNDERWAY | [[Dynamic blocks][Dynamic blocks]]                                                     |
 | A        | UNDERWAY | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]]                  |
-| A        | UNDERWAY | [[Org link types][Org link types]]                                                     |
+| A        | UNDERWAY | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                               |
 | A        | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                             |
 | B        | UNDERWAY | [[Recursive queries][Recursive queries]]                                                  |
 | B        | UNDERWAY | [[Timeline view][Timeline view]]                                                      |
 | B        | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
 | B        | UNDERWAY | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]]           |
 |          | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
+#+END:
+
+** To-do
+
+[[org-ql-search:%2528and%2520%2528todo%2520%2522TODO%2522%2529%2520%2528priority%2520%2522A%2522%2529%2529?sort=%2528priority%2529&title=%2522To-do%2520%255B%2523A%255D%2522][org-ql-search: To-do {#A}]]
+
+#+BEGIN: org-ql :query "todo:TODO priority:A" :columns (priority todo heading) :sort (priority date) :take 7
+| Priority | Todo | Heading                                                      |
+|----------+------+--------------------------------------------------------------|
+| A        | TODO | [[Add ~:auto~ keyword to ~(planning)~ predicate][Add ~:auto~ keyword to ~(planning)~ predicate]]                    |
+| A        | TODO | [[Document sorters][Document sorters]]                                             |
+| A        | TODO | [[Org block to insert results of queries with links to entries][Org block to insert results of queries with links to entries]] |
+| A        | TODO | [[Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~][Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~]]  |
 #+END:
 
 * [#A] Tasks
@@ -49,7 +65,6 @@
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#test-caching][Test caching]]
 - [[#update-commentary][Update commentary]]
-- [[#dynamic-blocks][Dynamic blocks]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#recursive-queries][Recursive queries]]
@@ -60,6 +75,7 @@
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#group-tag-support][Group tag support]]
+- [[#dynamic-blocks][Dynamic blocks]]
 - [[#helm-command][Helm command]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
 - [[#byte-compile-lambdas][Byte-compile lambdas]]
@@ -194,12 +210,16 @@ See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test
 
 + Added example to =examples.org=.
 
-*** UNDERWAY [#A] Org link types
+*** UNDERWAY [#A] Org link types [2/3]
 :PROPERTIES:
 :ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
 :END:
 
 This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
+
+**** TODO For saved queries
+
+**** DONE For searches
 
 [2020-11-08 Sun 22:59]  Let's try a very simple implementation so I could write a link like this to search the current buffer:
 
@@ -209,7 +229,7 @@ This would be useful for having a menu of saved queries as Org links, or even bo
 
 [2020-11-08 Sun 23:22]  Seems to work!
 
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :results silent
   ;;;; Org link type
 
   ;; This section adds a custom link type to Org.  See info:org#Adding hyperlink types.
@@ -240,9 +260,103 @@ Tested on these queries:
   +  [[org-ql-search:link:nullprogram]]
 #+END_SRC
 
-**** TODO For all parameters
+[2020-11-10 Tue 00:35]  I'd like to support other parameters to the search, like grouping and sorting, so:
 
-**** TODO For saved queries
+#+BEGIN_SRC elisp :results silent
+  ;;;; Org link type
+
+  ;; This section adds a custom link type to Org.  See info:org#Adding hyperlink types.
+
+  (org-link-set-parameters "org-ql-search"
+                           :follow #'org-ql-search--link-open
+                           :store #'org-ql-search--link-store)
+
+  (defun org-ql-search--link-open (query)
+    "Open Org QL QUERY for current buffer."
+    (require 'url-parse)
+    (pcase-let* ((`(,query . ,params)
+                  (url-path-and-query (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                             query)))
+                 (params (url-parse-query-string params))
+                 ;; Hacky or elegant?
+                 (_ (mapc (lambda (pair)
+                            (cl-callf (lambda (it)
+                                        (intern (concat ":" it)))
+                                (car pair))
+                            (cl-callf read (cdr pair)))
+                          params))
+                 (params (cl-loop for (key . value) in params
+                                  append (list key value))))
+      (apply #'org-ql-search (current-buffer) query params)))
+
+  (defun org-ql-search--link-store ()
+    "Store a link to current Org QL query."
+    (when org-ql-view-query
+      (org-store-link-props :type "org-ql-search"
+                            :link (concat "org-ql-search:" (org-ql-view--format-query org-ql-view-query))
+                            :description org-ql-view-title)
+      t))
+#+END_SRC
+
+That seems to work, like:
+
+#+BEGIN_SRC org
+  [[org-ql-search:property:author="Chris%20Wellons"?super-groups=((:auto-outline-path%20t))]]
+#+END_SRC
+
+[2020-11-10 Tue 01:34]  Okay, this seems to take care of all parameters:
+
+#+BEGIN_SRC elisp
+  (defun org-ql-search--link-open (path)
+    "Open Org QL query for current buffer at PATH.
+  PATH should be the part of an \"org-ql-search:\" URL after the
+  protocol.  See, e.g. `org-ql-search--link-store'."
+    (require 'url-parse)
+    (require 'url-util)
+    (pcase-let* ((`(,query . ,params) (url-path-and-query
+                                       (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                              path)))
+                 (query (url-unhex-string query))
+                 (params (when params
+                           (url-parse-query-string params)))
+                 ;; `url-parse-query-string' returns "improper" alists, which makes this awkward.
+                 (sort (when (alist-get "sort" params nil nil #'string=)
+                         (read (alist-get "sort" params nil nil #'string=))))
+                 (groups (when (alist-get "super-groups" params nil nil #'string=)
+                           (read (alist-get "super-groups" params nil nil #'string=))))
+                 (title (when (alist-get "title" params nil nil #'string=)
+                          (read (alist-get "title" params nil nil #'string=)))))
+      (org-ql-search (current-buffer) query
+        :sort sort
+        :super-groups groups
+        :title title)))
+
+  (defun org-ql-search--link-store ()
+    "Store a link to the current Org QL view.
+  Only views that search a single buffer may be linked to."
+    (require 'url-parse)
+    (require 'url-util)
+    (unless (or (bufferp org-ql-view-buffers-files) (= 1 (length org-ql-view-buffers-files)))
+      (user-error "Only views searching a single buffer may be linked"))
+    (when org-ql-view-query
+      (let* ((params (list (when org-ql-view-super-groups
+                             (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
+                           (when org-ql-view-sort
+                             (list "sort" (prin1-to-string org-ql-view-sort)))
+                           (when org-ql-view-title
+                             (list "title" (prin1-to-string org-ql-view-title)))))
+             (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
+                               "?" (url-build-query-string (delete nil params))))
+             (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                           filename))))
+        (org-store-link-props
+         :type "org-ql-search"
+         :link url
+         :description (concat "org-ql-search: " org-ql-view-title)))
+      t))
+#+END_SRC
+
+**** DONE For all parameters
 
 *** DONE Bookmarks
 
