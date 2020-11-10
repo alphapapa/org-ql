@@ -599,8 +599,10 @@ protocol.  See, e.g. `org-ql-view--link-store'."
                (groups (--when-let (alist-get "super-groups" params nil nil #'string=)
                          (read it)))
                (title (--when-let (alist-get "title" params nil nil #'string=)
+                        (read it)))
+               (files (--when-let (alist-get "files" params nil nil #'string=)
                         (read it))))
-    (org-ql-search (current-buffer) query
+    (org-ql-search files query
       :sort sort
       :super-groups groups
       :title title)))
@@ -610,24 +612,36 @@ protocol.  See, e.g. `org-ql-view--link-store'."
 When opened, the link searches the buffer it's opened from."
   (require 'url-parse)
   (require 'url-util)
-  (unless (or (bufferp org-ql-view-buffers-files)
-              (= 1 (length org-ql-view-buffers-files)))
-    (user-error "Only views searching a single buffer may be linked"))
   (when org-ql-view-query
-    (let* ((params (list (when org-ql-view-super-groups
-                           (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
-                         (when org-ql-view-sort
-                           (list "sort" (prin1-to-string org-ql-view-sort)))
-                         (when org-ql-view-title
-                           (list "title" (prin1-to-string org-ql-view-title)))))
-           (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
-                             "?" (url-build-query-string (delete nil params))))
-           (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
-                                                         filename))))
-      (org-store-link-props
-       :type "org-ql-search"
-       :link url
-       :description (concat "org-ql-search: " org-ql-view-title)))
+    (cl-labels ((file-nameize
+                 (b-f) (or (when (stringp b-f) b-f)
+                           (buffer-file-name b-f)
+                           (when (buffer-base-buffer b-f)
+                             (buffer-file-name (buffer-base-buffer b-f)))
+                           (user-error "Only file-backed buffers can be bookmarked by Org QL View: %s" b-f))))
+      (let* ((buffers-files org-ql-view-buffers-files)
+             (files (cl-etypecase buffers-files
+                      (function (funcall buffers-files))
+                      (string buffers-files)
+                      (buffer (file-nameize buffers-files))
+                      (list (cl-loop for b-f in buffers-files
+                                     collect (file-nameize b-f)))))
+             (params (list (when org-ql-view-super-groups
+                             (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
+                           (when org-ql-view-sort
+                             (list "sort" (prin1-to-string org-ql-view-sort)))
+                           (when org-ql-view-title
+                             (list "title" (prin1-to-string org-ql-view-title)))
+                           (when org-ql-view-buffers-files
+                             (list "files" (prin1-to-string files)))))
+             (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
+                               "?" (url-build-query-string (delete nil params))))
+             (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                           filename))))
+        (org-store-link-props
+         :type "org-ql-search"
+         :link url
+         :description (concat "org-ql-search: " org-ql-view-title))))
     t))
 
 ;;;; Transient
