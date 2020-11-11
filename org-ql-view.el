@@ -619,8 +619,9 @@ protocol.  See, e.g. `org-ql-view--link-store'."
                          (read it)))
                (title (--when-let (alist-get "title" params nil nil #'string=)
                         (read it)))
-               (buffers-files (--when-let (alist-get "buffers-files" params nil nil #'string=)
-                                (read it))))
+               (buffers-files (--if-let (alist-get "buffers-files" params nil nil #'string=)
+                                  (read it)
+                                (current-buffer))))
     (when (and org-ql-view-ask-unsafe-links
                (or (string-match (rx bol (0+ space) "(") query)
                    (listp query)))
@@ -644,12 +645,18 @@ When opened, the link searches the buffer it's opened from."
   (require 'url-parse)
   (require 'url-util)
   (when org-ql-view-query
-    (unless (or (bufferp org-ql-view-buffers-files)
-                (file-exists-p org-ql-view-buffers-files)
-                (and (listp org-ql-view-buffers-files)
-                     (cl-every #'file-exists-p org-ql-view-buffers-files)))
+    (unless (cl-etypecase org-ql-view-buffers-files
+              ;; I really wish `anaphora' were in ELPA, because `aetypecase' would be
+              ;; nice here, and I'd prefer to avoid adding more MELPA-only dependencies.
+              (buffer t)
+              (string (file-exists-p org-ql-view-buffers-files))
+              (list (and (cl-every #'stringp org-ql-view-buffers-files)
+                         (cl-every #'file-exists-p org-ql-view-buffers-files))))
       (user-error "Can only store links to views of either a single buffer/file or a list of files"))
-    (let* ((params (list (when org-ql-view-buffers-files
+    (let* ((params (list (when (and org-ql-view-buffers-files
+                                    ;; If it's one buffer (i.e. the view searches the current
+                                    ;; buffer), don't serialize it, because buffers are unreadable.
+                                    (not (bufferp org-ql-view-buffers-files)))
                            (list "buffers-files" (prin1-to-string org-ql-view-buffers-files)))
                          (when org-ql-view-super-groups
                            (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
