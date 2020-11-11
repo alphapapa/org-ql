@@ -623,7 +623,7 @@ protocol.  See, e.g. `org-ql-view--link-store'."
                (title (--when-let (alist-get "title" params nil nil #'string=)
                         (read it)))
                (buffers-files (--if-let (alist-get "buffers-files" params nil nil #'string=)
-                                  (read it)
+                                  (org-ql-view--expand-buffers-files (read it))
                                 (current-buffer))))
     (when (and org-ql-view-ask-unsafe-links
                (or (string-match (rx bol (0+ space) "(") query)
@@ -642,39 +642,43 @@ protocol.  See, e.g. `org-ql-view--link-store'."
       :super-groups groups
       :title title)))
 
+(defvar org-ql-view--link-store-counter 0
+  "Workaround for an idiosyncrasy of `org-store-link' that calls link-storing functions twice.")
+
 (defun org-ql-view--link-store ()
   "Store a link to the current Org QL view.
 When opened, the link searches the buffer it's opened from."
   (require 'url-parse)
   (require 'url-util)
   (when org-ql-view-query
-    (unless (cl-etypecase org-ql-view-buffers-files
-              ;; I really wish `anaphora' were in ELPA, because `aetypecase' would be
-              ;; nice here, and I'd prefer to avoid adding more MELPA-only dependencies.
-              (buffer t)
-              (string (file-exists-p org-ql-view-buffers-files))
-              (list (and (cl-every #'stringp org-ql-view-buffers-files)
-                         (cl-every #'file-exists-p org-ql-view-buffers-files))))
-      (user-error "Can only store links to views of either a single buffer/file or a list of files"))
-    (let* ((params (list (when (and org-ql-view-buffers-files
-                                    ;; If it's one buffer (i.e. the view searches the current
-                                    ;; buffer), don't serialize it, because buffers are unreadable.
-                                    (not (bufferp org-ql-view-buffers-files)))
-                           (list "buffers-files" (prin1-to-string org-ql-view-buffers-files)))
-                         (when org-ql-view-super-groups
-                           (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
-                         (when org-ql-view-sort
-                           (list "sort" (prin1-to-string org-ql-view-sort)))
-                         (when org-ql-view-title
-                           (list "title" (prin1-to-string org-ql-view-title)))))
-           (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
-                             "?" (url-build-query-string (delete nil params))))
-           (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
-                                                         filename))))
-      (org-store-link-props
-       :type "org-ql-search"
-       :link url
-       :description (concat "org-ql-search: " org-ql-view-title)))
+    (cl-incf org-ql-view--link-store-counter)
+    ;; Only Org QL View buffers should have `org-ql-view-query' set.
+    (cl-flet ((prompt-for (buffers-files)
+                          ;; HACK: Use counter to avoid prompting the first of the
+                          ;; two times that `org-store-link' calls this function.
+                          (when (cl-evenp org-ql-view--link-store-counter)
+                            (pcase-exhaustive
+                                (completing-read (format "Link to search file containing inserted link or %s?  " buffers-files)
+                                                 (list "containing file" buffers-files) nil t)
+                              ("containing file" nil)
+                              (buffers-files (prin1-to-string buffers-files))))))
+      (let* ((buffers-files (prompt-for (org-ql-view--contract-buffers-files org-ql-view-buffers-files)))
+             (params (list (when buffers-files
+                             (list "buffers-files" buffers-files))
+                           (when org-ql-view-super-groups
+                             (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
+                           (when org-ql-view-sort
+                             (list "sort" (prin1-to-string org-ql-view-sort)))
+                           (when org-ql-view-title
+                             (list "title" (prin1-to-string org-ql-view-title)))))
+             (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
+                               "?" (url-build-query-string (delete nil params))))
+             (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                           filename))))
+        (org-store-link-props
+         :type "org-ql-search"
+         :link url
+         :description (concat "org-ql-search: " org-ql-view-title))))
     t))
 
 ;;;; Transient
@@ -992,6 +996,9 @@ property."
 
 ;;;;; Completion
 
+;; These functions are somewhat regrettable because of the need to keep them
+;; in sync, but it seems worth it to provide users with the flexibility.
+
 (defun org-ql-view--contract-buffers-files (buffers-files)
   "Return BUFFERS-FILES in its \"contracted\" form.
 The contracted form is \"org-agenda-files\" if BUFFERS-FILES
@@ -1020,6 +1027,8 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
        "buffer")
       ((or 'org-agenda-files '(function org-agenda-files))
        "org-agenda-files")
+      ((and (pred bufferp) (guard (file-exists-p (buffer-file-name buffers-files))))
+       (buffer-file-name buffers-files))
       (_ (let ((print-length nil))
            (prin1-to-string buffers-files))))))
 
@@ -1034,17 +1043,23 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
         ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
         ;; TODO: Find a way to fix this.
         org-ql-view-buffers-files
-      (pcase-exhaustive
-          (completing-read "Buffers/Files: "
-                           (list 'buffer 'org-agenda-files 'org-directory 'all)
-                           nil nil (initial-input))
-        ((or "" "buffer") (current-buffer))
-        ("org-agenda-files" (org-agenda-files))
-        ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                         (buffer-list)))
-        ("org-directory" (org-ql-search-directories-files))
-        ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
-        (else (s-split (rx (1+ space)) else))))))
+      (org-ql-view--expand-buffers-files
+       (completing-read "Buffers/Files: "
+                        (list 'buffer 'org-agenda-files 'org-directory 'all)
+                        nil nil (initial-input))))))
+
+(defun org-ql-view--expand-buffers-files (buffers-files)
+  "Return BUFFERS-FILES expanded to a list of files or buffers.
+The counterpart to `org-ql-view--contract-buffers-files'."
+  (pcase-exhaustive buffers-files
+    ((pred bufferp) buffers-files)
+    ((or "" "buffer") (current-buffer))
+    ("org-agenda-files" (org-agenda-files))
+    ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                     (buffer-list)))
+    ("org-directory" (org-ql-search-directories-files))
+    ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
+    (else (s-split (rx (1+ space)) else))))
 
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."
