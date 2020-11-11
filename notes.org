@@ -321,6 +321,8 @@ See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test
 
 [2020-11-11 Wed 01:45]  Seems to work well.  Now to integrate that into link-saving...
 
+[2020-11-11 Wed 02:41]  Seems to work.  Will [[https://github.com/alphapapa/org-ql/issues/147#issuecomment-725287074][wait for feedback]] before merging.
+
 ** UNDERWAY [#A] Tools for saving queries and accessing them [3/4]
 
 + Added example to =examples.org=.
