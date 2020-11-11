@@ -597,8 +597,10 @@ protocol.  See, e.g. `org-ql-view--link-store'."
                (groups (--when-let (alist-get "super-groups" params nil nil #'string=)
                          (read it)))
                (title (--when-let (alist-get "title" params nil nil #'string=)
-                        (read it))))
-    (org-ql-search (current-buffer) query
+                        (read it)))
+               (buffers-files (--when-let (alist-get "buffers-files" params nil nil #'string=)
+                                (read it))))
+    (org-ql-search buffers-files query
       :sort sort
       :super-groups groups
       :title title)))
@@ -610,9 +612,12 @@ When opened, the link searches the buffer it's opened from."
   (require 'url-util)
   (when org-ql-view-query
     (unless (or (bufferp org-ql-view-buffers-files)
-                (= 1 (length org-ql-view-buffers-files)))
-      (user-error "Only views searching a single buffer may be linked"))
-    (let* ((params (list (when org-ql-view-super-groups
+                (and (listp org-ql-view-buffers-files)
+                     (cl-every #'file-exists-p org-ql-view-buffers-files)))
+      (user-error "Can only store links to views of either a single buffer or a list of files"))
+    (let* ((params (list (when org-ql-view-buffers-files
+                           (list "buffers-files" (prin1-to-string org-ql-view-buffers-files)))
+                         (when org-ql-view-super-groups
                            (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
                          (when org-ql-view-sort
                            (list "sort" (prin1-to-string org-ql-view-sort)))
