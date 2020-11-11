@@ -662,7 +662,9 @@ When opened, the link searches the buffer it's opened from."
                                                  (list "containing file" buffers-files) nil t)
                               ("containing file" nil)
                               (buffers-files (prin1-to-string buffers-files))))))
-      (let* ((buffers-files (prompt-for (org-ql-view--contract-buffers-files org-ql-view-buffers-files)))
+      (let* ((query-string (--if-let (org-ql--query-sexp-to-string org-ql-view-query)
+                               it (prin1-to-string (org-ql-view--format-query org-ql-view-query))))
+             (buffers-files (prompt-for (org-ql-view--contract-buffers-files org-ql-view-buffers-files)))
              (params (list (when buffers-files
                              (list "buffers-files" buffers-files))
                            (when org-ql-view-super-groups
@@ -671,7 +673,7 @@ When opened, the link searches the buffer it's opened from."
                              (list "sort" (prin1-to-string org-ql-view-sort)))
                            (when org-ql-view-title
                              (list "title" (prin1-to-string org-ql-view-title)))))
-             (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
+             (filename (concat (url-hexify-string query-string)
                                "?" (url-build-query-string (delete nil params))))
              (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
                                                            filename))))
