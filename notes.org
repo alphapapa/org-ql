@@ -35,15 +35,18 @@
 
 ** To-do
 
-[[org-ql-search:%2528and%2520%2528todo%2520%2522TODO%2522%2529%2520%2528priority%2520%2522A%2522%2529%2529?sort=%2528priority%2529&title=%2522To-do%2520%255B%2523A%255D%2522][org-ql-search: To-do {#A}]]
+[[org-ql-search:todo:?super-groups=%2528%2528%253Aauto-outline-path%2529%2529&sort=%2528priority%2529][org-ql-search: Tasks]]
 
-#+BEGIN: org-ql :query "todo:TODO priority:A" :columns ((priority "P") todo heading) :sort (priority date) :take 7
-| P | Todo | Heading                                                      |
-|---+------+--------------------------------------------------------------|
-| A | TODO | [[Add ~:auto~ keyword to ~(planning)~ predicate][Add ~:auto~ keyword to ~(planning)~ predicate]]                    |
-| A | TODO | [[Document sorters][Document sorters]]                                             |
-| A | TODO | [[Org block to insert results of queries with links to entries][Org block to insert results of queries with links to entries]] |
-| A | TODO | [[Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~][Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~]]  |
+#+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") todo heading) :sort (priority date) :take 7
+| P | Todo     | Heading                                                         |
+|---+----------+-----------------------------------------------------------------|
+| A | TODO     | [[Add ~:auto~ keyword to ~(planning)~ predicate][Add ~:auto~ keyword to ~(planning)~ predicate]]                       |
+| A | TODO     | [[Document sorters][Document sorters]]                                                |
+| A | TODO     | [[Org block to insert results of queries with links to entries][Org block to insert results of queries with links to entries]]    |
+| A | TODO     | [[Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~][Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~]]     |
+| A | TODO     | [[Save views to dynamic blocks][Save views to dynamic blocks]]                                    |
+| A | TODO     | [[Consider how to "secure" searches from links and dynamic blocks][Consider how to "secure" searches from links and dynamic blocks]] |
+| A | UNDERWAY | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]]               |
 #+END:
 
 * [#A] Tasks
@@ -67,6 +70,7 @@
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#test-caching][Test caching]]
 - [[#update-commentary][Update commentary]]
+- [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#recursive-queries][Recursive queries]]
@@ -222,6 +226,100 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
 ** TODO [#C] Update commentary
+
+** UNDERWAY [#A] Convert simple sexp queries to non-sexp
+
+[2020-11-11 Wed 00:28]  This will be very helpful for storing links.  Surely simple ones won't be too hard...
+
+#+BEGIN_SRC elisp
+  (defun org-ql--query-sexp-to-plain (query)
+    "Return a plain query string for sexp QUERY.
+    If QUERY can't be converted to a plain one, return nil."
+    ;; This started out pretty simple...but at least it's not just one long function, right?
+    (cl-labels ((complex-p (query)
+                           (or (contains-p 'or query)))
+                (contains-p (symbol list)
+                            (cl-loop for element in list
+                                     thereis (or (eq symbol element)
+                                                 (and (listp element)
+                                                      (contains-p symbol element)))))
+                (format-args
+                 (args) (let (non-paired paired next-keyword)
+                          (cl-loop for arg in args
+                                   do (cond (next-keyword (push (cons next-keyword arg) paired)
+                                                          (setf next-keyword nil))
+                                            ((keywordp arg) (setf next-keyword (substring (symbol-name arg) 1)))
+                                            (t (push arg non-paired))))
+                          (string-join (append (mapcar #'format-atom non-paired)
+                                               (nreverse (--map (format "%s=%s" (car it) (cdr it))
+                                                                paired)))
+                                       ",")))
+                (format-atom
+                 (atom) (cl-typecase atom
+                          (string (if (string-match (rx space) atom)
+                                      (format "%S" atom)
+                                    (format "%s" atom)))
+                          (t (format "%s" atom))))
+                (format-form
+                 (form) (pcase form
+                          (`(not . (,rest)) (concat "!" (format-form rest)))
+                          (`(priority . ,_) (format-priority form))
+                          ;; FIXME: Convert (src) queries to non-sexp form...someday...
+                          (`(src . ,_) (user-error "Converting (src ...) queries to non-sexp form is not implemented"))
+                          (_ (pcase-let* ((`(,pred . ,args) form)
+                                          (args-string (pcase args
+                                                         ('() "")
+                                                         ((guard (= 1 (length args))) (format "%s" (car args)))
+                                                         (_ (format-args args)))))
+                               (format "%s:%s" pred args-string)))))
+                (format-and
+                 (form) (pcase-let* ((`(and . ,rest) form))
+                          (string-join (mapcar #'format-form rest) " ")))
+                (format-priority
+                 (form) (pcase-let* ((`(priority . ,rest) form)
+                                     (args (pcase rest
+                                             (`(,(and comparator (or < <= > >= =)) ,letter)
+                                              (priority-letters comparator letter))
+                                             (_ rest))))
+                          (concat "priority:" (string-join args ","))))
+                (priority-letters
+                 (comparator letter) (let* ((char (string-to-char (upcase (symbol-name letter))))
+                                            (numeric-priorities '(?A ?B ?C))
+                                            ;; NOTE: The comparator inversion is intentional.
+                                            (others (pcase comparator
+                                                      ('< (--select (> it char) numeric-priorities))
+                                                      ('<= (--select (>= it char) numeric-priorities))
+                                                      ('> (--select (< it char) numeric-priorities))
+                                                      ('>= (--select (<= it char) numeric-priorities))
+                                                      ('= (--select (= it char) numeric-priorities)))))
+                                       (mapcar #'char-to-string others))))
+      (unless (complex-p query)
+        (pcase query
+          (`(and . ,_) (format-and query))
+          (_ (format-form query))))))
+
+  (--map (cons it (org-ql--query-sexp-to-plain it))
+         '((priority >= B)
+           (priority > B)
+           (priority < B)
+           (priority < A)
+           (priority = A)
+           (todo)
+           (todo "TODO")
+           (todo "TODO" "NEXT")
+           (ts :from -1 :to 1)
+           (ts :on today)
+           (ts-active :from "2017-01-01" :to "2018-01-01")
+           (heading "quoted phrase" "word")
+           (and (tags "book" "books") (priority "A"))
+           (and (tags "space") (not (regexp "moon")))
+           (src :lang "elisp" :regexps ("defun")))
+
+
+         )
+#+END_SRC
+
+[2020-11-11 Wed 01:45]  Seems to work well.  Now to integrate that into link-saving...
 
 ** UNDERWAY [#A] Tools for saving queries and accessing them [3/4]
 
