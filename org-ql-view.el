@@ -837,10 +837,12 @@ return an empty string."
                          ;; MAYBE: Use our own variable instead of `org-use-tag-inheritance'.
                          (if-let ((marker (or (org-element-property :org-hd-marker element)
                                               (org-element-property :org-marker element))))
-                             (cl-loop for type in (org-ql--tags-at marker)
-                                      unless (or (eq 'org-ql-nil type)
-                                                 (not type))
-                                      append type)
+                             (with-current-buffer (marker-buffer marker)
+                               (org-with-wide-buffer
+                                (cl-loop for type in (org-ql--tags-at marker)
+                                         unless (or (eq 'org-ql-nil type)
+                                                    (not type))
+                                         append type)))
                            ;; No marker found
                            ;; TODO: Use `display-warning' with `org-ql' as the type.
                            (warn "No marker found for item: %s" title)
