@@ -393,6 +393,7 @@ If NARROW is non-nil, buffer will not be widened."
 ;;;;; Helpers
 
 (defun org-ql--tags-at (position)
+  ;; FIXME: This function actually assumes that point is already at POSITION.
   "Return tags for POSITION in current buffer.
 Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
   ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
@@ -404,6 +405,9 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
             (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
             (cached-result (gethash position tags-cache)))
       ;; Found in cache: return them.
+      ;; FIXME: Isn't `cached-result' a list of (INHERITED . LOCAL)?  It
+      ;; will never be just `org-ql-nil', but the CAR and CDR may be, so
+      ;; they need to each be checked and replaced with nil if necessary.
       (pcase cached-result
         ('org-ql-nil nil)
         (_ cached-result))
