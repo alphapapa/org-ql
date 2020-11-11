@@ -641,9 +641,10 @@ When opened, the link searches the buffer it's opened from."
   (require 'url-util)
   (when org-ql-view-query
     (unless (or (bufferp org-ql-view-buffers-files)
+                (file-exists-p org-ql-view-buffers-files)
                 (and (listp org-ql-view-buffers-files)
                      (cl-every #'file-exists-p org-ql-view-buffers-files)))
-      (user-error "Can only store links to views of either a single buffer or a list of files"))
+      (user-error "Can only store links to views of either a single buffer/file or a list of files"))
     (let* ((params (list (when org-ql-view-buffers-files
                            (list "buffers-files" (prin1-to-string org-ql-view-buffers-files)))
                          (when org-ql-view-super-groups
