@@ -121,17 +121,18 @@ Interactively, may also be:
 - An expression which evaluates to a list of files/buffers
 - A space-separated list of file or buffer names
 
-QUERY: An `org-ql' query in either sexp or \"plain string\"
-form (see documentation).
+QUERY: An `org-ql' query in either sexp or non-sexp form (see
+Info node `(org-ql)Queries').
 
 SUPER-GROUPS: An `org-super-agenda' group set.  See variable
-`org-super-agenda-groups'.
+`org-super-agenda-groups' and Info node `(org-super-agenda)Group
+selectors'.
 
 NARROW: When non-nil, don't widen buffers before
 searching. Interactively, with prefix, leave narrowed.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
-`priority'.
+`priority' (see Info node `(org-ql)Listing / acting-on results').
 
 TITLE: An optional string displayed in the header.
 
