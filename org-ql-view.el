@@ -651,8 +651,8 @@ When opened, the link searches the buffer it's opened from."
   (require 'url-parse)
   (require 'url-util)
   (when org-ql-view-query
-    (cl-incf org-ql-view--link-store-counter)
     ;; Only Org QL View buffers should have `org-ql-view-query' set.
+    (cl-incf org-ql-view--link-store-counter)
     (cl-flet ((prompt-for (buffers-files)
                           ;; HACK: Use counter to avoid prompting the first of the
                           ;; two times that `org-store-link' calls this function.
