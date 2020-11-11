@@ -1668,6 +1668,8 @@ element should be a regexp string."
 ;; This section implements parsing of "plain," non-Lisp queries using the `peg'
 ;; library.  NOTE: This needs to appear after the predicates are defined.
 
+;; TODO: Rename "plain" to "string", or something like that.
+
 (require 'peg)
 
 ;; Fix compiler warnings probably caused by `peg' not using lexical-binding.
@@ -1748,6 +1750,75 @@ Multiple predicates are combined with BOOLEAN."
                (cadr query)))))))
 
   (org-ql--def-plain-query-fn))
+
+;; And now we go the other direction...
+
+(defun org-ql--query-sexp-to-string (query)
+  "Return a string query for sexp QUERY.
+If QUERY can't be converted to a string, return nil."
+  ;; This started out pretty simple...but at least it's not just one long function, right?
+  (cl-labels ((complex-p (query)
+                         (or (contains-p 'or query)))
+              (contains-p (symbol list)
+                          (cl-loop for element in list
+                                   thereis (or (eq symbol element)
+                                               (and (listp element)
+                                                    (contains-p symbol element)))))
+              (format-args
+               (args) (let (non-paired paired next-keyword)
+                        (cl-loop for arg in args
+                                 do (cond (next-keyword (push (cons next-keyword arg) paired)
+                                                        (setf next-keyword nil))
+                                          ((keywordp arg) (setf next-keyword (substring (symbol-name arg) 1)))
+                                          (t (push arg non-paired))))
+                        (string-join (append (mapcar #'format-atom non-paired)
+                                             (nreverse (--map (format "%s=%s" (car it) (cdr it))
+                                                              paired)))
+                                     ",")))
+              (format-atom
+               (atom) (cl-typecase atom
+                        (string (if (string-match (rx space) atom)
+                                    (format "%S" atom)
+                                  (format "%s" atom)))
+                        (t (format "%s" atom))))
+              (format-form
+               (form) (pcase form
+                        (`(not . (,rest)) (concat "!" (format-form rest)))
+                        (`(priority . ,_) (format-priority form))
+                        ;; FIXME: Convert (src) queries to non-sexp form...someday...
+                        (`(src . ,_) (user-error "Converting (src ...) queries to non-sexp form is not implemented"))
+                        (_ (pcase-let* ((`(,pred . ,args) form)
+                                        (args-string (pcase args
+                                                       ('() "")
+                                                       ((guard (= 1 (length args))) (format "%s" (car args)))
+                                                       (_ (format-args args)))))
+                             (format "%s:%s" pred args-string)))))
+              (format-and
+               (form) (pcase-let* ((`(and . ,rest) form))
+                        (string-join (mapcar #'format-form rest) " ")))
+              (format-priority
+               (form) (pcase-let* ((`(priority . ,rest) form)
+                                   (args (pcase rest
+                                           (`(,(and comparator (or '< '<= '> '>= '=)) ,letter)
+                                            (priority-letters comparator letter))
+                                           (_ rest))))
+                        (concat "priority:" (string-join args ","))))
+              (priority-letters
+               (comparator letter) (let* ((char (string-to-char (upcase (symbol-name letter))))
+                                          (numeric-priorities '(?A ?B ?C))
+                                          ;; NOTE: The comparator inversion is intentional.
+                                          (others (pcase comparator
+                                                    ('< (--select (> it char) numeric-priorities))
+                                                    ('<= (--select (>= it char) numeric-priorities))
+                                                    ('> (--select (< it char) numeric-priorities))
+                                                    ('>= (--select (<= it char) numeric-priorities))
+                                                    ('= (--select (= it char) numeric-priorities)))))
+                                     (mapcar #'char-to-string others))))
+    ;; FIXME: Error out for ts structs passed to `ts' predicate (very unlikely to be linked to).
+    (unless (complex-p query)
+      (pcase query
+        (`(and . ,_) (format-and query))
+        (_ (format-form query))))))
 
 ;;;; Footer
 
