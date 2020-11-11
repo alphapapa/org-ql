@@ -566,6 +566,9 @@ dates in the past, and negative for dates in the future."
 ;;;###autoload
 (defun org-ql-view--bookmark-handler (bookmark)
   "Show Org QL View BOOKMARK in current buffer."
+  ;; FIXME: Getting "(void-variable super-groups)" errors when this function is byte-compiled,
+  ;; but not when it's interpreted!  Using (:super-groups super-groups) instead of just
+  ;; :super-groups fixes it, but I have no idea why, and the macroexpansion is the same.
   (pcase-let* (((map org-ql-view-plist) (bookmark-get-bookmark-record bookmark))
                ((map :buffers-files :query :super-groups :narrow :sort :title)
                 org-ql-view-plist)
