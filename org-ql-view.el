@@ -597,6 +597,10 @@ dates in the past, and negative for dates in the future."
 ;; We require the URL libraries in the functions to hopefully avoid
 ;; loading them until they're needed.
 
+(eval-when-compile
+  (require 'url-parse)
+  (require 'url-util))
+
 (defun org-ql-view--link-open (path)
   "Open Org QL query for current buffer at PATH.
 PATH should be the part of an \"org-ql-search:\" URL after the
