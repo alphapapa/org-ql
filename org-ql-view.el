@@ -1063,7 +1063,6 @@ The counterpart to `org-ql-view--contract-buffers-files'."
     ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
                      (buffer-list)))
     ("org-directory" (org-ql-search-directories-files))
-    ((and form (guard (rx bos "("))) (-flatten (eval (read form))))
     (else (s-split (rx (1+ space)) else))))
 
 (defun org-ql-view--complete-super-groups ()

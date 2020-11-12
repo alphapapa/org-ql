@@ -119,7 +119,6 @@ Interactively, may also be:
 - `all': search all Org buffers
 - `agenda': search buffers returned by the function `org-agenda-files'
 - `directory': search Org files in `org-directory'
-- An expression which evaluates to a list of files/buffers
 - A space-separated list of file or buffer names
 
 QUERY: An `org-ql' query in either sexp or non-sexp form (see
