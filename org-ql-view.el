@@ -617,6 +617,7 @@ protocol.  See, e.g. `org-ql-view--link-store'."
                ;; `url-parse-query-string' returns "improper" alists, which makes this awkward.
                (sort (--when-let (alist-get "sort" params nil nil #'string=)
                        (read it)))
+               (org-super-agenda-allow-unsafe-groups nil) ; Disallow unsafe group selectors.
                (groups (--when-let (alist-get "super-groups" params nil nil #'string=)
                          (read it)))
                (title (--when-let (alist-get "title" params nil nil #'string=)
