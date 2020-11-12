@@ -247,10 +247,17 @@ Valid parameters include:
             form.
 
   :columns  A list of columns, including `heading', `todo',
-            `priority', `deadline', `scheduled'.  Each column may
-            also be specified as a list with the second element
-            being a header string.  For example, to abbreviate
-            the priority column:  (priority \"P\")
+            `property', `priority', `deadline', `scheduled'.
+            Each column may also be specified as a list with the
+            second element being a header string.  For example,
+            to abbreviate the priority column: (priority \"P\").
+            For certain columns, like `property', arguments may
+            be passed by specifying the column type itself as a
+            list.  For example, to display a column showing the
+            values of a property named \"milestone\", with the
+            header being abbreviated to \"M\":
+
+              ((property \"milestone\") \"M\").
 
   :sort     One or a list of Org QL sorting methods
             (see `org-ql-select').
@@ -287,7 +294,9 @@ For example, an org-ql dynamic block header could look like:
                                           (ts-format ts-format (ts-parse-org-element it)))))
                       (cons 'scheduled (lambda (element)
                                          (--when-let (org-element-property :scheduled element)
-                                           (ts-format ts-format (ts-parse-org-element it)))))))
+                                           (ts-format ts-format (ts-parse-org-element it)))))
+                      (cons 'property (lambda (element property &optional value)
+                                        (org-element-property (intern (concat ":" (upcase property))) element)))))
                (elements (org-ql-query :from (current-buffer)
                                        :where query
                                        :select '(org-element-headline-parser (line-end-position))
@@ -298,10 +307,14 @@ For example, an org-ql dynamic block header could look like:
                        (integer (-take take elements)))))
     (cl-labels ((format-element
                  (element) (string-join (cl-loop for column in columns
-                                                 for fn = (cl-etypecase column
-                                                            (symbol (alist-get column format-fns))
-                                                            (list (alist-get (car column) format-fns)))
-                                                 collect (or (funcall fn element) ""))
+                                                 collect (or (pcase-exhaustive column
+                                                               ((pred symbolp)
+                                                                (funcall (alist-get column format-fns) element))
+                                                               (`((,column . ,args) ,header)
+                                                                (apply (alist-get column format-fns) element args))
+                                                               (`(,column ,header)
+                                                                (funcall (alist-get column format-fns) element)))
+                                                             ""))
                                         " | ")))
       ;; Table header
       (insert "| " (string-join (--map (pcase it

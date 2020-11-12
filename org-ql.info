@@ -730,10 +730,15 @@ supported:
    • ‘:query’: An Org QL query expression in either sexp or non-sexp
      form.
    • ‘:columns’ A list of columns, including ‘heading’, ‘todo’,
-     ‘priority’, ‘deadline’, ‘scheduled’.
+     ‘property’, ‘priority’, ‘deadline’, ‘scheduled’.
         • Each column may also be specified as a list with the second
           element being a header string.  For example, to abbreviate the
-          priority column: ‘(priority "P")’
+          priority column: ‘(priority "P")’.
+        • For certain columns, like property, arguments may be passed by
+          specifying the column type itself as a list.  For example, to
+          display a column showing the values of a ‘property’ named
+          ‘milestone’, with the header being abbreviated to ‘M’:
+          ‘((property "milestone") "M")’.
    • ‘:sort’ One or a list of Org QL sorting methods (see
      ‘org-ql-select’).
    • ‘:take’ Optionally take a number of results from the front (a
@@ -746,18 +751,19 @@ in the following example).
 
    For example, this dynamic block shows the first seven headings that
 are to-do items with priority A or B, sorted by deadline then priority,
-with certain columns and timestamp format:
+with certain columns (including the value of the agenda-group property
+with a custom header) and timestamp format:
 
-     #+BEGIN: org-ql :query "todo: priority:A,B" :columns (todo (priority "P") deadline heading) :sort (deadline priority) :take 7 :ts-format "%Y-%m-%d %H:%M"
-     | Todo | P | Deadline         | Heading                               |
-     |------+---+------------------+---------------------------------------|
-     | TODO | A | 2017-07-07 00:00 | Take over the world                   |
-     | TODO | B | 2017-07-10 00:00 | Renew membership in supervillain club |
-     | TODO | A | 2017-07-15 00:00 | Take over the universe                |
-     | TODO | B | 2017-07-21 00:00 | Internet                              |
-     | TODO | A | 2017-08-01 00:00 | Spaceship lease                       |
-     | TODO | A |                  | Skype with president of Antarctica    |
-     | TODO | B |                  | Take over Mars                        |
+     #+BEGIN: org-ql :query "todo: priority:A,B" :columns (todo (priority "P") ((property "agenda-group") "Group") deadline heading) :sort (deadline priority) :take 7 :ts-format "%Y-%m-%d %H:%M"
+     | Todo | P | Group | Deadline         | Heading                               |
+     |------+---+-------+------------------+---------------------------------------|
+     | TODO | A |       | 2017-07-07 00:00 | Take over the world                   |
+     | TODO | B |       | 2017-07-10 00:00 | Renew membership in supervillain club |
+     | TODO | A | plans | 2017-07-15 00:00 | Take over the universe                |
+     | TODO | B |       | 2017-07-21 00:00 | Internet                              |
+     | TODO | A | bills | 2017-08-01 00:00 | Spaceship lease                       |
+     | TODO | A |       |                  | Skype with president of Antarctica    |
+     | TODO | B |       |                  | Take over Mars                        |
      #+END:
 
 
@@ -1289,29 +1295,29 @@ Node: Functions / Macros19755
 Node: Agenda-like views20010
 Node: Listing / acting-on results21415
 Node: Dynamic block26017
-Node: Links28180
-Node: Tips28867
-Node: Changelog29185
-Node: 05-pre29824
-Node: 04631063
-Node: 04531466
-Node: 04431825
-Node: 04332182
-Node: 04232377
-Node: 04132536
-Node: 0432775
-Node: 03236706
-Node: 03137083
-Node: 0337280
-Node: 02340255
-Node: 02240483
-Node: 02140751
-Node: 0240950
-Node: 0144985
-Node: Notes45086
-Node: Comparison with Org Agenda searches45248
-Node: org-sidebar46120
-Node: License46399
+Node: Links28715
+Node: Tips29402
+Node: Changelog29720
+Node: 05-pre30359
+Node: 04631598
+Node: 04532001
+Node: 04432360
+Node: 04332717
+Node: 04232912
+Node: 04133071
+Node: 0433310
+Node: 03237241
+Node: 03137618
+Node: 0337815
+Node: 02340790
+Node: 02241018
+Node: 02141286
+Node: 0241485
+Node: 0145520
+Node: Notes45621
+Node: Comparison with Org Agenda searches45783
+Node: org-sidebar46655
+Node: License46934
 
 End Tag Table
 

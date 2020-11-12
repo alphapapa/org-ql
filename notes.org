@@ -24,12 +24,8 @@
 | P | Keyword  | Heading                                                            |
 |---+----------+--------------------------------------------------------------------|
 | A | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                             |
-| B | UNDERWAY | [[Recursive queries][Recursive queries]]                                                  |
-| B | UNDERWAY | [[Timeline view][Timeline view]]                                                      |
 | B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
-| B | UNDERWAY | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]]           |
 |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
-|   | UNDERWAY | [[Add automated tests][Add automated tests]]                                                |
 #+END:
 
 ** To-do
@@ -46,6 +42,16 @@
 | A | TODO     | [[Save views to dynamic blocks][Save views to dynamic blocks]]                                    |
 | A | TODO     | [[Consider how to "secure" searches from links and dynamic blocks][Consider how to "secure" searches from links and dynamic blocks]] |
 | A | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                          |
+#+END:
+
+** Milestones
+
+[[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Milestones%2522][org-ql-search: Milestones]]
+
+#+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
+|   M | P | Todo | Heading                    |
+|-----+---+------+----------------------------|
+| 0.6 | B | TODO | [[Save view to dynamic block][Save view to dynamic block]] |
 #+END:
 
 * [#A] Tasks
@@ -68,13 +74,9 @@
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
-- [[#test-caching][Test caching]]
 - [[#update-commentary][Update commentary]]
 - [[#outline-path-predicate][Outline path predicate]]
-- [[#recursive-queries][Recursive queries]]
-- [[#timeline-view][Timeline view]]
 - [[#node-caching]["Node" caching]]
-- [[#implement-view-with-tabulated-list-mode-or-magit-section][Implement view with tabulated-list-mode or magit-section]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
@@ -82,7 +84,11 @@
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#group-tag-support][Group tag support]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
+- [[#recursive-queries][Recursive queries]]
+- [[#timeline-view][Timeline view]]
+- [[#implement-view-with-tabulated-list-mode-or-magit-section][Implement view with tabulated-list-mode or magit-section]]
 - [[#dynamic-blocks][Dynamic blocks]]
+- [[#test-caching][Test caching]]
 - [[#helm-command][Helm command]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
 - [[#byte-compile-lambdas][Byte-compile lambdas]]
@@ -225,10 +231,6 @@ As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integra
 #+END_SRC
 
 I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
-
-** TODO [#C] Test caching
-
-See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
 ** TODO [#C] Update commentary
 
@@ -1252,6 +1254,9 @@ Appears to be another implementation of magit-section-like expandable sections. 
 ** PROJECT Dynamic blocks
 
 *** TODO [#B] Save view to dynamic block
+:PROPERTIES:
+:milestone: 0.6
+:END:
 
 [2020-11-12 Thu 03:23]  A command to do this would be very helpful.
 
@@ -1333,6 +1338,10 @@ For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this 
 #+END_SRC
 
 [2020-11-10 Tue 00:03]  I think it's ready to merge now.
+
+** PROJECT [#C] Test caching
+
+See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
 ** DONE [#A] Helm command
 
