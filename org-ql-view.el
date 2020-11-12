@@ -443,7 +443,7 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
                    (null (org-ql-view--buffer buffer))
                    (buffer buffer))))
     (with-current-buffer buffer
-      (setq-local bookmark-make-record-function #'org-ql-view--bookmark-make-record)
+      (setq-local bookmark-make-record-function #'org-ql-view-bookmark-make-record)
       (use-local-map org-ql-view-map)
       ;; Prepare buffer, saving data for refreshing.
       (cl-loop for symbol in vars
@@ -541,7 +541,7 @@ dates in the past, and negative for dates in the future."
 
 (require 'bookmark)
 
-(defun org-ql-view--bookmark-make-record ()
+(defun org-ql-view-bookmark-make-record ()
   "Return a bookmark record for the current Org QL View buffer."
   (cl-labels ((file-nameize
                (b-f) (or (buffer-file-name b-f)
@@ -559,11 +559,11 @@ dates in the past, and negative for dates in the future."
                                               collect (file-nameize b-f))))))
       (list (concat "Org QL View: " org-ql-view-title)
             (cons 'org-ql-view-plist plist)
-            (cons 'handler #'org-ql-view--bookmark-handler)
+            (cons 'handler #'org-ql-view-bookmark-handler)
             (cons 'position (point))))))
 
 ;;;###autoload
-(defun org-ql-view--bookmark-handler (bookmark)
+(defun org-ql-view-bookmark-handler (bookmark)
   "Show Org QL View BOOKMARK in current buffer."
   ;; FIXME: Getting "(void-variable super-groups)" errors when this function is byte-compiled,
   ;; but not when it's interpreted!  Using (:super-groups super-groups) instead of just
