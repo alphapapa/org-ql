@@ -70,8 +70,6 @@
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#test-caching][Test caching]]
 - [[#update-commentary][Update commentary]]
-- [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
-- [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#recursive-queries][Recursive queries]]
 - [[#timeline-view][Timeline view]]
@@ -80,7 +78,10 @@
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
+- [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
+- [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#group-tag-support][Group tag support]]
+- [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
 - [[#dynamic-blocks][Dynamic blocks]]
 - [[#helm-command][Helm command]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
@@ -1166,6 +1167,83 @@ Next steps:
 +  [X] Also ask him to run benchmark actually using group tags (since I don't actually have any, even though the boolean is t)
 +  [X] Discuss caching of group tag expansion.  It seems like we ought to cache the expansions as well, because sibling headings (especially at level 1) ought to get their group tags re-expanded individually, even when we've already expanded them for another heading.
 +  [X] Remove unused =result= variable
+
+** PROJECT [#A] Checking links for unsafe parameters
+:PROPERTIES:
+:ID:       ba70e375-eddb-40df-8892-fb418c1f70d1
+:END:
+:LOGBOOK:
+-  State "PROJECT"    from "UNDERWAY"   [2020-11-12 Thu 00:26]
+-  State "UNDERWAY"   from              [2020-11-11 Wed 23:09]
+:END:
+
+*** TODO Tag org-super-agenda 1.2 and bump required version in org-ql
+
+That /should/ force the version of org-super-agenda with the fix to be installed when org-ql is upgraded.
+
+*** UNDERWAY Add automated tests
+:LOGBOOK:
+-  State "UNDERWAY"   from "TODO"       [2020-11-12 Thu 00:24]
+-  State "TODO"       from "MAYBE"      [2020-11-11 Wed 23:16]
+-  State "MAYBE"      from              [2020-11-11 Wed 23:15]
+:END:
+
+Maybe impractical, but maybe we could at least test that potentially unsafe ones signal errors.
+
+[2020-11-12 Thu 00:24]  Works better than I expected.  All the tests seem to correctly pass, signaling the correct errors for the correct reasons--except for the tests specific to org-super-agenda.  For that, I'm currently waiting for MELPA to build the version of org-super-agenda that has the fix applied, so I can install that into the test sandbox, and then those two tests should pass also.
+
+*** DONE Enumerate and test parameters and potentially unsafe types
+CLOSED: [2020-11-11 Wed 23:26]
+:LOGBOOK:
+-  State "DONE"       from "UNDERWAY"   [2020-11-11 Wed 23:26]
+-  State "UNDERWAY"   from              [2020-11-11 Wed 23:15]
+:END:
+
+#+CAPTION: Template for making testable links
+#+BEGIN_SRC org
+[[org-ql-search:todo:?]]
+#+END_SRC
+
+#+CAPTION: Expression to insert encoded values into template (after the =?=)
+#+BEGIN_SRC elisp
+  (insert (url-hexify-string (concat "buffers-files=" (prin1-to-string '((lambda () (message "AHA")))))))
+#+END_SRC
+
++  [X] Buffers-Files: Expanded by =org-ql-view--expand-buffers-files=:
+     -  [X] Quoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted lambda in list (safe): [[org-ql-search:todo:?buffers-files%3D%28%28quote%20%28lambda%20nil%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] Unquoted lambda in list: (safe) [[org-ql-search:todo:?buffers-files%3D%28%28lambda%20nil%20%28message%20%22AHA%22%29%29%29]]
++  [X] Groups
+     -  [X] Quoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted expression (safe): [[org-ql-search:todo:?super-groups%3D%28message%20%22AHA%22%29]]
+     -  [X] Unquoted expression (safe): [[org-ql-search:todo:?super-groups%3D%22AHA%22]]
+     -  [X] ~:pred~ selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Apred%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] =:auto-map= selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Aauto-map%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
++  [X] Title
+     -  [X] Quoted lambda (produces the same encoded value as unquoted lambda): (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Expression: (safe) [[org-ql-search:todo:?title%3D%28message%20%22AHA%22%29]]
++  [X] Sort
+     -  [X] Bare, quoted lambda: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Bare, unquoted lambda: (UNSAFE, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted lambda in list: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28%28quote%20%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] Unquoted lambda in a list: (UNSAFE, but caught now):  [[org-ql-search:todo:?sort=((lambda%20nil%20(message%20"AHA")))]]
+
+For the query expression:
+
+1.  String queries are parsed by the PEG parsing function (which I will probably rename soon), which should only allow known Org QL predicates, not arbitrary functions.  For example:
+
+  #+BEGIN_SRC elisp
+    (org-ql--plain-query "message:AHA")  ;;=> (regexp "message:AHA")
+    (org-ql--plain-query '(message "AHA"))   ;;=> (wrong-type-argument stringp (message "AHA"))
+    (org-ql--plain-query "(message \"AHA\"")  ;;=> (and (regexp "(message") (regexp "AHA"))
+  #+END_SRC
+
+2.  Sexp queries already prompt for confirmation, unless the user has set =org-ql-view-ask-unsafe-links= to nil.
+
+[2020-11-11 Wed 23:27]  That's all the parameters and all the types that I can think to test.
 
 ** DONE [#A] Dynamic blocks
 
