@@ -648,6 +648,8 @@ protocol.  See, e.g. `org-ql-view--link-store'."
       :title title)))
 
 (defvar org-ql-view--link-store-counter 0
+  ;; TODO: When compatibility with Org <=9.1.4 is dropped, remove this.  See
+  ;; <https://github.com/alphapapa/org-ql/issues/147#issuecomment-725835457>.
   "Workaround for an idiosyncrasy of `org-store-link' that calls link-storing functions twice.")
 
 (defun org-ql-view--link-store ()
@@ -661,11 +663,13 @@ When opened, the link searches the buffer it's opened from."
               (cl-some #'bufferp org-ql-view-buffers-files))
       ;; Buffers are unreadable, so they can't be linked to.
       (user-error "Views that search buffers rather than files can't be linked to"))
-    (cl-incf org-ql-view--link-store-counter)
+    (cl-incf org-ql-view--link-store-counter) ;; TODO: Remove when not supporting Org<=9.1.4.  See other comment.
     (cl-flet ((prompt-for (buffers-files)
                           ;; HACK: Use counter to avoid prompting the first of the
                           ;; two times that `org-store-link' calls this function.
-                          (when (cl-evenp org-ql-view--link-store-counter)
+                          ;; TODO: Remove the version check when not supporting Org<=9.1.4.  See other comment.
+                          (when (or (version< "9.1.4" (org-version))
+                                    (cl-evenp org-ql-view--link-store-counter))
                             (pcase-exhaustive
                                 (completing-read (format "Link to search file containing inserted link or %s?  " buffers-files)
                                                  (list "containing file" buffers-files) nil t)
