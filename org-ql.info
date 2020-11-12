@@ -836,8 +836,8 @@ File: README.info,  Node: 05-pre,  Next: 046,  Up: Changelog
      view restoration with Burly
      (https://github.com/alphapapa/burly.el).)
    • Dynamic block support.
-   • Org link support (storing and opening links to Org QL View searches
-     in the current document).
+   • Org link support (storing and opening links to Org QL View
+     searches).
    • Mascot.
 
    *Changed*
@@ -1288,25 +1288,25 @@ Node: Links28046
 Node: Tips28733
 Node: Changelog29051
 Node: 05-pre29690
-Node: 04630806
-Node: 04531209
-Node: 04431568
-Node: 04331925
-Node: 04232120
-Node: 04132279
-Node: 0432518
-Node: 03236449
-Node: 03136826
-Node: 0337023
-Node: 02339998
-Node: 02240226
-Node: 02140494
-Node: 0240693
-Node: 0144728
-Node: Notes44829
-Node: Comparison with Org Agenda searches44991
-Node: org-sidebar45863
-Node: License46142
+Node: 04630782
+Node: 04531185
+Node: 04431544
+Node: 04331901
+Node: 04232096
+Node: 04132255
+Node: 0432494
+Node: 03236425
+Node: 03136802
+Node: 0336999
+Node: 02339974
+Node: 02240202
+Node: 02140470
+Node: 0240669
+Node: 0144704
+Node: Notes44805
+Node: Comparison with Org Agenda searches44967
+Node: org-sidebar45839
+Node: License46118
 
 End Tag Table
 

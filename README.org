@@ -460,7 +460,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Predicate =link=, which matches descriptions and targets in Org links.
 +  Emacs bookmark support: Org QL View buffers can be bookmarked with, e.g. =C-x r m= and shown with, e.g. =C-x r b=.  (This also enables view restoration with [[https://github.com/alphapapa/burly.el][Burly]].)
 +  Dynamic block support.
-+  Org link support (storing and opening links to Org QL View searches in the current document).
++  Org link support (storing and opening links to Org QL View searches).
 +  Mascot.
 
 *Changed*
