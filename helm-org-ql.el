@@ -30,12 +30,9 @@
 
 (eval-and-compile
 
-  (eval-when-compile
-    ;; Require these when compiling, but not necessarily on load.
-    (require 'org)
-
-    (require 'org-ql)
-    (require 'org-ql-search))
+  (require 'org)
+  (require 'org-ql)
+  (require 'org-ql-search)
 
 ;;;; Compatibility
 
@@ -77,8 +74,10 @@ Based on `helm-map'.")
         :action (list (cons "Show view" #'org-ql-view)))
       "Helm source for `org-ql-views'.")
 
-    (defvar-local helm-org-ql-buffers-files nil
-      "Used for `helm-org-ql-save'.")
+    (with-no-warnings
+      ;; Silence compiler warning: "‘make-variable-buffer-local’ not called at toplevel"
+      (defvar-local helm-org-ql-buffers-files nil
+        "Used for `helm-org-ql-save'."))
 
 ;;;; Customization
 
