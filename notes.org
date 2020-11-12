@@ -30,7 +30,7 @@
 
 ** To-do
 
-[[org-ql-search:todo:?super-groups=%2528%2528%253Aauto-outline-path%2529%2529&sort=%2528priority%2529][org-ql-search: Tasks]]
++  [[org-ql-search:todo:?super-groups=%2528%2528%253Aauto-outline-path%2529%2529&sort=%2528priority%2529][org-ql-search: Tasks]]
 
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") todo heading) :sort (priority date) :take 7
 | P | Todo     | Heading                                                         |
@@ -42,6 +42,20 @@
 | A | TODO     | [[Save views to dynamic blocks][Save views to dynamic blocks]]                                    |
 | A | TODO     | [[Consider how to "secure" searches from links and dynamic blocks][Consider how to "secure" searches from links and dynamic blocks]] |
 | A | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                          |
+#+END:
+
+** [[org-ql-search:(and%20(todo%20"PROJECT")%20(not%20(descendants%20(todo%20"NEXT"))))?super-groups=%2528%2528%253Aauto-outline-path%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][Stuck projects]]
+
+#+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT")))) :columns ((priority "P") heading) :sort (priority date) :take 7
+| P | Heading                                           |
+|---+---------------------------------------------------|
+| A | [[Outline path predicate][Outline path predicate]]                            |
+| A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]           |
+| A | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]] |
+| A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                              |
+| A | [[Group tag support][Group tag support]]                                 |
+| A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]              |
+| B | [[Recursive queries][Recursive queries]]                                 |
 #+END:
 
 ** Milestones
@@ -63,7 +77,6 @@
 - [[#document-sorters][Document sorters]]
 - [[#org-block-to-insert-results-of-queries-with-links-to-entries][Org block to insert results of queries with links to entries]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
-- [[#save-views-to-dynamic-blocks][Save views to dynamic blocks]]
 - [[#consider-how-to-secure-searches-from-links-and-dynamic-blocks][Consider how to "secure" searches from links and dynamic blocks]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
 - [[#add-more-sorters][Add more sorters?]]
@@ -75,11 +88,12 @@
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
-- [[#outline-path-predicate][Outline path predicate]]
+- [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
 - [[#node-caching]["Node" caching]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
+- [[#outline-path-predicate][Outline path predicate]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#group-tag-support][Group tag support]]
@@ -96,6 +110,7 @@
 - [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
+- [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
 :END:
 
 ** TODO [#A] Add ~:auto~ keyword to ~(planning)~ predicate
@@ -113,10 +128,6 @@ Note that the built-in sorting only works on Org elements, which is the default 
 ** TODO [#A] Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~
 
 For consistency, because plain ~auto~ looks like a variable, and even though it's in a quoted form, it could be confusing.
-
-** TODO [#A] Save views to dynamic blocks
-
-[2020-11-10 Tue 04:31]  A command would save users from having to write out the dynamic block manually.
 
 ** TODO [#A] Consider how to "secure" searches from links and dynamic blocks
 
@@ -234,40 +245,11 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 
 ** TODO [#C] Update commentary
 
-** UNDERWAY [#A] Outline path predicate
+** NEXT [#A] Fix query-sexp-to-string function's handling of, e.g. =descendants= :bug:
 
-[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
+** NEXT [#A] Make dynamic blocks warn about sexp queries
 
-#+BEGIN_SRC org
-  ,* Food
-
-  ,** Fruits
-
-  ,*** Blueberries
-
-  ,*** Grapes
-
-  ,** Vegetables
-
-  ,*** Carrots
-
-  ,*** Potatoes
-#+END_SRC
-
-Matching could work like this:
-
-+  ~(outline "Food")~ :: Would return all nodes.
-+  ~(outline "Fruits")~ :: Would return all fruits.
-
-Matching at a specific path would be something like:
-
-+  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
-
-I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
-
-To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
-
-[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
+[2020-11-12 Thu 05:22]  I guess to be super-extra careful, just in case someone had =org-update-all-dblocks= in the =before-save-hook= or something.
 
 ** UNDERWAY [#B] "Node" caching
 
@@ -389,6 +371,41 @@ However, there might still be a useful idea here somewhere...
 ** MAYBE [#C] Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
+
+** PROJECT [#A] Outline path predicate
+
+[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
+
+#+BEGIN_SRC org
+  ,* Food
+
+  ,** Fruits
+
+  ,*** Blueberries
+
+  ,*** Grapes
+
+  ,** Vegetables
+
+  ,*** Carrots
+
+  ,*** Potatoes
+#+END_SRC
+
+Matching could work like this:
+
++  ~(outline "Food")~ :: Would return all nodes.
++  ~(outline "Fruits")~ :: Would return all fruits.
+
+Matching at a specific path would be something like:
+
++  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
+
+I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
+
+To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
+
+[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
 
 ** PROJECT [#A] Convert simple sexp queries to non-sexp
 
@@ -1258,7 +1275,9 @@ Appears to be another implementation of magit-section-like expandable sections. 
 :milestone: 0.6
 :END:
 
-[2020-11-12 Thu 03:23]  A command to do this would be very helpful.
+[2020-11-10 Tue 04:31]  A command would save users from having to write out the dynamic block manually.
+
+[2020-11-12 Thu 03:23]  A command to do this would be very helpful.  (Yes, I entered this idea twice.  I should use my own systems better, apparently.  But that's what this package is all about, right?)
 
 *** DONE [#A] Implement dynamic blocks
 
