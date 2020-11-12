@@ -227,262 +227,6 @@ See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test
 
 ** TODO [#C] Update commentary
 
-** UNDERWAY [#A] Convert simple sexp queries to non-sexp
-
-[2020-11-11 Wed 00:28]  This will be very helpful for storing links.  Surely simple ones won't be too hard...
-
-#+BEGIN_SRC elisp
-  (defun org-ql--query-sexp-to-plain (query)
-    "Return a plain query string for sexp QUERY.
-    If QUERY can't be converted to a plain one, return nil."
-    ;; This started out pretty simple...but at least it's not just one long function, right?
-    (cl-labels ((complex-p (query)
-                           (or (contains-p 'or query)))
-                (contains-p (symbol list)
-                            (cl-loop for element in list
-                                     thereis (or (eq symbol element)
-                                                 (and (listp element)
-                                                      (contains-p symbol element)))))
-                (format-args
-                 (args) (let (non-paired paired next-keyword)
-                          (cl-loop for arg in args
-                                   do (cond (next-keyword (push (cons next-keyword arg) paired)
-                                                          (setf next-keyword nil))
-                                            ((keywordp arg) (setf next-keyword (substring (symbol-name arg) 1)))
-                                            (t (push arg non-paired))))
-                          (string-join (append (mapcar #'format-atom non-paired)
-                                               (nreverse (--map (format "%s=%s" (car it) (cdr it))
-                                                                paired)))
-                                       ",")))
-                (format-atom
-                 (atom) (cl-typecase atom
-                          (string (if (string-match (rx space) atom)
-                                      (format "%S" atom)
-                                    (format "%s" atom)))
-                          (t (format "%s" atom))))
-                (format-form
-                 (form) (pcase form
-                          (`(not . (,rest)) (concat "!" (format-form rest)))
-                          (`(priority . ,_) (format-priority form))
-                          ;; FIXME: Convert (src) queries to non-sexp form...someday...
-                          (`(src . ,_) (user-error "Converting (src ...) queries to non-sexp form is not implemented"))
-                          (_ (pcase-let* ((`(,pred . ,args) form)
-                                          (args-string (pcase args
-                                                         ('() "")
-                                                         ((guard (= 1 (length args))) (format "%s" (car args)))
-                                                         (_ (format-args args)))))
-                               (format "%s:%s" pred args-string)))))
-                (format-and
-                 (form) (pcase-let* ((`(and . ,rest) form))
-                          (string-join (mapcar #'format-form rest) " ")))
-                (format-priority
-                 (form) (pcase-let* ((`(priority . ,rest) form)
-                                     (args (pcase rest
-                                             (`(,(and comparator (or < <= > >= =)) ,letter)
-                                              (priority-letters comparator letter))
-                                             (_ rest))))
-                          (concat "priority:" (string-join args ","))))
-                (priority-letters
-                 (comparator letter) (let* ((char (string-to-char (upcase (symbol-name letter))))
-                                            (numeric-priorities '(?A ?B ?C))
-                                            ;; NOTE: The comparator inversion is intentional.
-                                            (others (pcase comparator
-                                                      ('< (--select (> it char) numeric-priorities))
-                                                      ('<= (--select (>= it char) numeric-priorities))
-                                                      ('> (--select (< it char) numeric-priorities))
-                                                      ('>= (--select (<= it char) numeric-priorities))
-                                                      ('= (--select (= it char) numeric-priorities)))))
-                                       (mapcar #'char-to-string others))))
-      (unless (complex-p query)
-        (pcase query
-          (`(and . ,_) (format-and query))
-          (_ (format-form query))))))
-
-  (--map (cons it (org-ql--query-sexp-to-plain it))
-         '((priority >= B)
-           (priority > B)
-           (priority < B)
-           (priority < A)
-           (priority = A)
-           (todo)
-           (todo "TODO")
-           (todo "TODO" "NEXT")
-           (ts :from -1 :to 1)
-           (ts :on today)
-           (ts-active :from "2017-01-01" :to "2018-01-01")
-           (heading "quoted phrase" "word")
-           (and (tags "book" "books") (priority "A"))
-           (and (tags "space") (not (regexp "moon")))
-           (src :lang "elisp" :regexps ("defun")))
-
-
-         )
-#+END_SRC
-
-[2020-11-11 Wed 01:45]  Seems to work well.  Now to integrate that into link-saving...
-
-[2020-11-11 Wed 02:41]  Seems to work.  Will [[https://github.com/alphapapa/org-ql/issues/147#issuecomment-725287074][wait for feedback]] before merging.
-
-** UNDERWAY [#A] Tools for saving queries and accessing them [3/4]
-
-+ Added example to =examples.org=.
-
-*** UNDERWAY [#A] Org link types [2/3]
-:PROPERTIES:
-:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
-:END:
-
-This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
-
-**** TODO For saved queries
-
-**** DONE For searches
-
-[2020-11-08 Sun 22:59]  Let's try a very simple implementation so I could write a link like this to search the current buffer:
-
-#+BEGIN_SRC org
-  [[org-ql-search:property:author="AUTHOR"]]
-#+END_SRC
-
-[2020-11-08 Sun 23:22]  Seems to work!
-
-#+BEGIN_SRC elisp :results silent
-  ;;;; Org link type
-
-  ;; This section adds a custom link type to Org.  See info:org#Adding hyperlink types.
-
-  (org-link-set-parameters "org-ql-search"
-                           :follow #'org-ql-search--link-open
-                           :store #'org-ql-search--link-store)
-
-  (defun org-ql-search--link-open (query)
-    "Open Org QL QUERY for current buffer."
-    (org-ql-search (current-buffer) query))
-
-  (defun org-ql-search--link-store ()
-    "Store a link to current Org QL query."
-    ;; TODO: When we have an org-ql-view-mode, test it here instead of org-ql-view-query.
-    (when org-ql-view-query
-      (org-store-link-props :type "org-ql-search"
-                            :link (concat "org-ql-search:" (org-ql-view--format-query org-ql-view-query))
-                            :description org-ql-view-title)
-      t))
-#+END_SRC
-
-Tested on these queries:
-
-#+BEGIN_SRC org
-  +  [[org-ql-search:(property%20:author%20"Chris%20Wellons")][org-ql-search:(property :author "Chris Wellons")]]
-  +  [[org-ql-search:(link%20"nullprogram")][org-ql-search:(link "nullprogram")]]
-  +  [[org-ql-search:link:nullprogram]]
-#+END_SRC
-
-[2020-11-10 Tue 00:35]  I'd like to support other parameters to the search, like grouping and sorting, so:
-
-#+BEGIN_SRC elisp :results silent
-  ;;;; Org link type
-
-  ;; This section adds a custom link type to Org.  See info:org#Adding hyperlink types.
-
-  (org-link-set-parameters "org-ql-search"
-                           :follow #'org-ql-search--link-open
-                           :store #'org-ql-search--link-store)
-
-  (defun org-ql-search--link-open (query)
-    "Open Org QL QUERY for current buffer."
-    (require 'url-parse)
-    (pcase-let* ((`(,query . ,params)
-                  (url-path-and-query (url-parse-make-urlobj "org-ql-search" nil nil nil nil
-                                                             query)))
-                 (params (url-parse-query-string params))
-                 ;; Hacky or elegant?
-                 (_ (mapc (lambda (pair)
-                            (cl-callf (lambda (it)
-                                        (intern (concat ":" it)))
-                                (car pair))
-                            (cl-callf read (cdr pair)))
-                          params))
-                 (params (cl-loop for (key . value) in params
-                                  append (list key value))))
-      (apply #'org-ql-search (current-buffer) query params)))
-
-  (defun org-ql-search--link-store ()
-    "Store a link to current Org QL query."
-    (when org-ql-view-query
-      (org-store-link-props :type "org-ql-search"
-                            :link (concat "org-ql-search:" (org-ql-view--format-query org-ql-view-query))
-                            :description org-ql-view-title)
-      t))
-#+END_SRC
-
-That seems to work, like:
-
-#+BEGIN_SRC org
-  [[org-ql-search:property:author="Chris%20Wellons"?super-groups=((:auto-outline-path%20t))]]
-#+END_SRC
-
-[2020-11-10 Tue 01:34]  Okay, this seems to take care of all parameters:
-
-#+BEGIN_SRC elisp
-  (defun org-ql-search--link-open (path)
-    "Open Org QL query for current buffer at PATH.
-  PATH should be the part of an \"org-ql-search:\" URL after the
-  protocol.  See, e.g. `org-ql-search--link-store'."
-    (require 'url-parse)
-    (require 'url-util)
-    (pcase-let* ((`(,query . ,params) (url-path-and-query
-                                       (url-parse-make-urlobj "org-ql-search" nil nil nil nil
-                                                              path)))
-                 (query (url-unhex-string query))
-                 (params (when params
-                           (url-parse-query-string params)))
-                 ;; `url-parse-query-string' returns "improper" alists, which makes this awkward.
-                 (sort (when (alist-get "sort" params nil nil #'string=)
-                         (read (alist-get "sort" params nil nil #'string=))))
-                 (groups (when (alist-get "super-groups" params nil nil #'string=)
-                           (read (alist-get "super-groups" params nil nil #'string=))))
-                 (title (when (alist-get "title" params nil nil #'string=)
-                          (read (alist-get "title" params nil nil #'string=)))))
-      (org-ql-search (current-buffer) query
-        :sort sort
-        :super-groups groups
-        :title title)))
-
-  (defun org-ql-search--link-store ()
-    "Store a link to the current Org QL view.
-  Only views that search a single buffer may be linked to."
-    (require 'url-parse)
-    (require 'url-util)
-    (unless (or (bufferp org-ql-view-buffers-files) (= 1 (length org-ql-view-buffers-files)))
-      (user-error "Only views searching a single buffer may be linked"))
-    (when org-ql-view-query
-      (let* ((params (list (when org-ql-view-super-groups
-                             (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
-                           (when org-ql-view-sort
-                             (list "sort" (prin1-to-string org-ql-view-sort)))
-                           (when org-ql-view-title
-                             (list "title" (prin1-to-string org-ql-view-title)))))
-             (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
-                               "?" (url-build-query-string (delete nil params))))
-             (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
-                                                           filename))))
-        (org-store-link-props
-         :type "org-ql-search"
-         :link url
-         :description (concat "org-ql-search: " org-ql-view-title)))
-      t))
-#+END_SRC
-
-**** DONE For all parameters
-
-*** DONE Bookmarks
-
-[2020-11-08 Sun 23:25]  Already done in =e5b4cd106558790563af26a8e32ec9508f904855=.
-
-*** DONE Access saved query from saved query list
-
-*** DONE Save query from ql-agenda buffer
-
 ** UNDERWAY [#A] Outline path predicate
 
 [2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
@@ -908,6 +652,268 @@ However, there might still be a useful idea here somewhere...
 ** MAYBE [#C] Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
+
+** PROJECT [#A] Convert simple sexp queries to non-sexp
+
+[2020-11-11 Wed 00:28]  This will be very helpful for storing links.  Surely simple ones won't be too hard...
+
+#+BEGIN_SRC elisp
+  (defun org-ql--query-sexp-to-plain (query)
+    "Return a plain query string for sexp QUERY.
+    If QUERY can't be converted to a plain one, return nil."
+    ;; This started out pretty simple...but at least it's not just one long function, right?
+    (cl-labels ((complex-p (query)
+                           (or (contains-p 'or query)))
+                (contains-p (symbol list)
+                            (cl-loop for element in list
+                                     thereis (or (eq symbol element)
+                                                 (and (listp element)
+                                                      (contains-p symbol element)))))
+                (format-args
+                 (args) (let (non-paired paired next-keyword)
+                          (cl-loop for arg in args
+                                   do (cond (next-keyword (push (cons next-keyword arg) paired)
+                                                          (setf next-keyword nil))
+                                            ((keywordp arg) (setf next-keyword (substring (symbol-name arg) 1)))
+                                            (t (push arg non-paired))))
+                          (string-join (append (mapcar #'format-atom non-paired)
+                                               (nreverse (--map (format "%s=%s" (car it) (cdr it))
+                                                                paired)))
+                                       ",")))
+                (format-atom
+                 (atom) (cl-typecase atom
+                          (string (if (string-match (rx space) atom)
+                                      (format "%S" atom)
+                                    (format "%s" atom)))
+                          (t (format "%s" atom))))
+                (format-form
+                 (form) (pcase form
+                          (`(not . (,rest)) (concat "!" (format-form rest)))
+                          (`(priority . ,_) (format-priority form))
+                          ;; FIXME: Convert (src) queries to non-sexp form...someday...
+                          (`(src . ,_) (user-error "Converting (src ...) queries to non-sexp form is not implemented"))
+                          (_ (pcase-let* ((`(,pred . ,args) form)
+                                          (args-string (pcase args
+                                                         ('() "")
+                                                         ((guard (= 1 (length args))) (format "%s" (car args)))
+                                                         (_ (format-args args)))))
+                               (format "%s:%s" pred args-string)))))
+                (format-and
+                 (form) (pcase-let* ((`(and . ,rest) form))
+                          (string-join (mapcar #'format-form rest) " ")))
+                (format-priority
+                 (form) (pcase-let* ((`(priority . ,rest) form)
+                                     (args (pcase rest
+                                             (`(,(and comparator (or < <= > >= =)) ,letter)
+                                              (priority-letters comparator letter))
+                                             (_ rest))))
+                          (concat "priority:" (string-join args ","))))
+                (priority-letters
+                 (comparator letter) (let* ((char (string-to-char (upcase (symbol-name letter))))
+                                            (numeric-priorities '(?A ?B ?C))
+                                            ;; NOTE: The comparator inversion is intentional.
+                                            (others (pcase comparator
+                                                      ('< (--select (> it char) numeric-priorities))
+                                                      ('<= (--select (>= it char) numeric-priorities))
+                                                      ('> (--select (< it char) numeric-priorities))
+                                                      ('>= (--select (<= it char) numeric-priorities))
+                                                      ('= (--select (= it char) numeric-priorities)))))
+                                       (mapcar #'char-to-string others))))
+      (unless (complex-p query)
+        (pcase query
+          (`(and . ,_) (format-and query))
+          (_ (format-form query))))))
+
+  (--map (cons it (org-ql--query-sexp-to-plain it))
+         '((priority >= B)
+           (priority > B)
+           (priority < B)
+           (priority < A)
+           (priority = A)
+           (todo)
+           (todo "TODO")
+           (todo "TODO" "NEXT")
+           (ts :from -1 :to 1)
+           (ts :on today)
+           (ts-active :from "2017-01-01" :to "2018-01-01")
+           (heading "quoted phrase" "word")
+           (and (tags "book" "books") (priority "A"))
+           (and (tags "space") (not (regexp "moon")))
+           (src :lang "elisp" :regexps ("defun")))
+
+
+         )
+#+END_SRC
+
+[2020-11-11 Wed 01:45]  Seems to work well.  Now to integrate that into link-saving...
+
+[2020-11-11 Wed 02:41]  Seems to work.  Will [[https://github.com/alphapapa/org-ql/issues/147#issuecomment-725287074][wait for feedback]] before merging.
+
+[2020-11-11 Wed 19:13]  Seems to be working properly.  One more thing to do though, I think:
+
+*** TODO [#B] Use string queries in view headers when possible
+
+Maybe make it an option to automatically convert them when possible, because if a user wanted to add complexity to a string query, he'd have to rewrite it as a sexp.
+
+** PROJECT [#A] Tools for saving queries and accessing them [3/4]
+
++ Added example to =examples.org=.
+
+*** PROJECT [#A] Org link types [2/3]
+:PROPERTIES:
+:ID:       4db73c1c-a4ed-425e-9e38-8d334ed03e1e
+:END:
+
+This would be useful for having a menu of saved queries as Org links, or even bookmarking saved queries.
+
+**** TODO For saved queries
+
+**** DONE For searches
+
+[2020-11-08 Sun 22:59]  Let's try a very simple implementation so I could write a link like this to search the current buffer:
+
+#+BEGIN_SRC org
+  [[org-ql-search:property:author="AUTHOR"]]
+#+END_SRC
+
+[2020-11-08 Sun 23:22]  Seems to work!
+
+#+BEGIN_SRC elisp :results silent
+  ;;;; Org link type
+
+  ;; This section adds a custom link type to Org.  See info:org#Adding hyperlink types.
+
+  (org-link-set-parameters "org-ql-search"
+                           :follow #'org-ql-search--link-open
+                           :store #'org-ql-search--link-store)
+
+  (defun org-ql-search--link-open (query)
+    "Open Org QL QUERY for current buffer."
+    (org-ql-search (current-buffer) query))
+
+  (defun org-ql-search--link-store ()
+    "Store a link to current Org QL query."
+    ;; TODO: When we have an org-ql-view-mode, test it here instead of org-ql-view-query.
+    (when org-ql-view-query
+      (org-store-link-props :type "org-ql-search"
+                            :link (concat "org-ql-search:" (org-ql-view--format-query org-ql-view-query))
+                            :description org-ql-view-title)
+      t))
+#+END_SRC
+
+Tested on these queries:
+
+#+BEGIN_SRC org
+  +  [[org-ql-search:(property%20:author%20"Chris%20Wellons")][org-ql-search:(property :author "Chris Wellons")]]
+  +  [[org-ql-search:(link%20"nullprogram")][org-ql-search:(link "nullprogram")]]
+  +  [[org-ql-search:link:nullprogram]]
+#+END_SRC
+
+[2020-11-10 Tue 00:35]  I'd like to support other parameters to the search, like grouping and sorting, so:
+
+#+BEGIN_SRC elisp :results silent
+  ;;;; Org link type
+
+  ;; This section adds a custom link type to Org.  See info:org#Adding hyperlink types.
+
+  (org-link-set-parameters "org-ql-search"
+                           :follow #'org-ql-search--link-open
+                           :store #'org-ql-search--link-store)
+
+  (defun org-ql-search--link-open (query)
+    "Open Org QL QUERY for current buffer."
+    (require 'url-parse)
+    (pcase-let* ((`(,query . ,params)
+                  (url-path-and-query (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                             query)))
+                 (params (url-parse-query-string params))
+                 ;; Hacky or elegant?
+                 (_ (mapc (lambda (pair)
+                            (cl-callf (lambda (it)
+                                        (intern (concat ":" it)))
+                                (car pair))
+                            (cl-callf read (cdr pair)))
+                          params))
+                 (params (cl-loop for (key . value) in params
+                                  append (list key value))))
+      (apply #'org-ql-search (current-buffer) query params)))
+
+  (defun org-ql-search--link-store ()
+    "Store a link to current Org QL query."
+    (when org-ql-view-query
+      (org-store-link-props :type "org-ql-search"
+                            :link (concat "org-ql-search:" (org-ql-view--format-query org-ql-view-query))
+                            :description org-ql-view-title)
+      t))
+#+END_SRC
+
+That seems to work, like:
+
+#+BEGIN_SRC org
+  [[org-ql-search:property:author="Chris%20Wellons"?super-groups=((:auto-outline-path%20t))]]
+#+END_SRC
+
+[2020-11-10 Tue 01:34]  Okay, this seems to take care of all parameters:
+
+#+BEGIN_SRC elisp
+  (defun org-ql-search--link-open (path)
+    "Open Org QL query for current buffer at PATH.
+  PATH should be the part of an \"org-ql-search:\" URL after the
+  protocol.  See, e.g. `org-ql-search--link-store'."
+    (require 'url-parse)
+    (require 'url-util)
+    (pcase-let* ((`(,query . ,params) (url-path-and-query
+                                       (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                              path)))
+                 (query (url-unhex-string query))
+                 (params (when params
+                           (url-parse-query-string params)))
+                 ;; `url-parse-query-string' returns "improper" alists, which makes this awkward.
+                 (sort (when (alist-get "sort" params nil nil #'string=)
+                         (read (alist-get "sort" params nil nil #'string=))))
+                 (groups (when (alist-get "super-groups" params nil nil #'string=)
+                           (read (alist-get "super-groups" params nil nil #'string=))))
+                 (title (when (alist-get "title" params nil nil #'string=)
+                          (read (alist-get "title" params nil nil #'string=)))))
+      (org-ql-search (current-buffer) query
+        :sort sort
+        :super-groups groups
+        :title title)))
+
+  (defun org-ql-search--link-store ()
+    "Store a link to the current Org QL view.
+  Only views that search a single buffer may be linked to."
+    (require 'url-parse)
+    (require 'url-util)
+    (unless (or (bufferp org-ql-view-buffers-files) (= 1 (length org-ql-view-buffers-files)))
+      (user-error "Only views searching a single buffer may be linked"))
+    (when org-ql-view-query
+      (let* ((params (list (when org-ql-view-super-groups
+                             (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
+                           (when org-ql-view-sort
+                             (list "sort" (prin1-to-string org-ql-view-sort)))
+                           (when org-ql-view-title
+                             (list "title" (prin1-to-string org-ql-view-title)))))
+             (filename (concat (url-hexify-string (org-ql-view--format-query org-ql-view-query))
+                               "?" (url-build-query-string (delete nil params))))
+             (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
+                                                           filename))))
+        (org-store-link-props
+         :type "org-ql-search"
+         :link url
+         :description (concat "org-ql-search: " org-ql-view-title)))
+      t))
+#+END_SRC
+
+**** DONE For all parameters
+
+*** DONE Bookmarks
+
+[2020-11-08 Sun 23:25]  Already done in =e5b4cd106558790563af26a8e32ec9508f904855=.
+
+*** DONE Access saved query from saved query list
+
+*** DONE Save query from ql-agenda buffer
 
 ** PROJECT [#A] Group tag support
 
