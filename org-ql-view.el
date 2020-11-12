@@ -2,7 +2,6 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Package-Requires: ((transient) (map "2.0"))
 
 ;;; Commentary:
 
