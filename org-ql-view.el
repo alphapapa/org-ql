@@ -647,11 +647,6 @@ protocol.  See, e.g. `org-ql-view--link-store'."
       :super-groups groups
       :title title)))
 
-(defvar org-ql-view--link-store-counter 0
-  ;; TODO: When compatibility with Org <=9.1.4 is dropped, remove this.  See
-  ;; <https://github.com/alphapapa/org-ql/issues/147#issuecomment-725835457>.
-  "Workaround for an idiosyncrasy of `org-store-link' that calls link-storing functions twice.")
-
 (defun org-ql-view--link-store ()
   "Store a link to the current Org QL view.
 When opened, the link searches the buffer it's opened from."
@@ -659,22 +654,20 @@ When opened, the link searches the buffer it's opened from."
   (require 'url-util)
   (when org-ql-view-query
     ;; Only Org QL View buffers should have `org-ql-view-query' set.
-    (when (or (bufferp org-ql-view-buffers-files)
-              (cl-some #'bufferp org-ql-view-buffers-files))
-      ;; Buffers are unreadable, so they can't be linked to.
-      (user-error "Views that search buffers rather than files can't be linked to"))
-    (cl-incf org-ql-view--link-store-counter) ;; TODO: Remove when not supporting Org<=9.1.4.  See other comment.
     (cl-flet ((prompt-for (buffers-files)
-                          ;; HACK: Use counter to avoid prompting the first of the
-                          ;; two times that `org-store-link' calls this function.
-                          ;; TODO: Remove the version check when not supporting Org<=9.1.4.  See other comment.
-                          (when (or (version< "9.1.4" (org-version))
-                                    (cl-evenp org-ql-view--link-store-counter))
-                            (pcase-exhaustive
-                                (completing-read (format "Link to search file containing inserted link or %s?  " buffers-files)
-                                                 (list "containing file" buffers-files) nil t)
-                              ("containing file" nil)
-                              (buffers-files (prin1-to-string buffers-files))))))
+                          (pcase-exhaustive
+                              (completing-read (format "Link to search file containing inserted link or %s?  " buffers-files)
+                                               (list "containing file" buffers-files) nil t)
+                            ("containing file" nil)
+                            (buffers-files (prin1-to-string buffers-files))))
+              (string-or-file-buffer-p
+               (thing) (or (stringp thing)
+                           (and (bufferp thing)
+                                (buffer-file-name thing)))))
+      (unless (or (string-or-file-buffer-p org-ql-view-buffers-files)
+                  (and (listp org-ql-view-buffers-files)
+                       (cl-every #'string-or-file-buffer-p org-ql-view-buffers-files)))
+        (user-error "Views that search non-file-backed buffers can't be linked to"))
       (let* ((query-string (--if-let (org-ql--query-sexp-to-string org-ql-view-query)
                                it (prin1-to-string (org-ql-view--format-query org-ql-view-query))))
              (buffers-files (prompt-for (org-ql-view--contract-buffers-files org-ql-view-buffers-files)))
