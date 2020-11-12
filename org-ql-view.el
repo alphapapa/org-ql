@@ -1032,7 +1032,7 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
        "buffer")
       ((or 'org-agenda-files '(function org-agenda-files))
        "org-agenda-files")
-      ((and (pred bufferp) (guard (file-exists-p (buffer-file-name buffers-files))))
+      ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
        (buffer-file-name buffers-files))
       (_ (let ((print-length nil))
            (prin1-to-string buffers-files))))))
