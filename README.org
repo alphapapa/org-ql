@@ -469,6 +469,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Internal*
 +  When formatting entries for Org QL View buffers, use internal function for retrieving heading tags.  This improves speed by using our cache, and it removes the need for a compatibility alias for Org versions before 9.3.
 
+*Acknowledgments*
++  [[https://github.com/tpeacock19][tpeacock19]] for extensive help testing new features in this version.
+
 ** 0.4.6
 
 *Fixed*

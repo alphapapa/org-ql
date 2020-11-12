@@ -849,6 +849,10 @@ File: README.info,  Node: 05-pre,  Next: 046,  Up: Changelog
      our cache, and it removes the need for a compatibility alias for
      Org versions before 9.3.
 
+   *Acknowledgments*
+   • tpeacock19 (https://github.com/tpeacock19) for extensive help
+     testing new features in this version.
+
 
 File: README.info,  Node: 046,  Next: 045,  Prev: 05-pre,  Up: Changelog
 
@@ -1284,25 +1288,25 @@ Node: Links28046
 Node: Tips28733
 Node: Changelog29051
 Node: 05-pre29690
-Node: 04630672
-Node: 04531075
-Node: 04431434
-Node: 04331791
-Node: 04231986
-Node: 04132145
-Node: 0432384
-Node: 03236315
-Node: 03136692
-Node: 0336889
-Node: 02339864
-Node: 02240092
-Node: 02140360
-Node: 0240559
-Node: 0144594
-Node: Notes44695
-Node: Comparison with Org Agenda searches44857
-Node: org-sidebar45729
-Node: License46008
+Node: 04630806
+Node: 04531209
+Node: 04431568
+Node: 04331925
+Node: 04232120
+Node: 04132279
+Node: 0432518
+Node: 03236449
+Node: 03136826
+Node: 0337023
+Node: 02339998
+Node: 02240226
+Node: 02140494
+Node: 0240693
+Node: 0144728
+Node: Notes44829
+Node: Comparison with Org Agenda searches44991
+Node: org-sidebar45863
+Node: License46142
 
 End Tag Table
 
