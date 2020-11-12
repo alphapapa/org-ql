@@ -31,6 +31,7 @@
 
 (require 'dash)
 (require 'f)
+(require 'map)
 (require 'org-super-agenda)
 (require 's)
 
