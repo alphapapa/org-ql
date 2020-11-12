@@ -652,6 +652,10 @@ When opened, the link searches the buffer it's opened from."
   (require 'url-util)
   (when org-ql-view-query
     ;; Only Org QL View buffers should have `org-ql-view-query' set.
+    (when (or (bufferp org-ql-view-buffers-files)
+              (cl-some #'bufferp org-ql-view-buffers-files))
+      ;; Buffers are unreadable, so they can't be linked to.
+      (user-error "Views that search buffers rather than files can't be linked to"))
     (cl-incf org-ql-view--link-store-counter)
     (cl-flet ((prompt-for (buffers-files)
                           ;; HACK: Use counter to avoid prompting the first of the
