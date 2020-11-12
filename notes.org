@@ -18,19 +18,18 @@
 
 ** Underway
 
-[[org-ql-search:%2528todo%2520%2522UNDERWAY%2522%2529?sort=%2528priority%2529&title=%2522Underway%2522][org-ql-search: Underway]]
+[[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][org-ql-search: Underway]]
 
 #+BEGIN: org-ql :query (todo "UNDERWAY") :columns ((priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 | P | Keyword  | Heading                                                            |
 |---+----------+--------------------------------------------------------------------|
-| A | UNDERWAY | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]]                  |
-| A | UNDERWAY | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                               |
 | A | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                             |
 | B | UNDERWAY | [[Recursive queries][Recursive queries]]                                                  |
 | B | UNDERWAY | [[Timeline view][Timeline view]]                                                      |
 | B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
 | B | UNDERWAY | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]]           |
 |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
+|   | UNDERWAY | [[Add automated tests][Add automated tests]]                                                |
 #+END:
 
 ** To-do
@@ -46,7 +45,7 @@
 | A | TODO     | [[Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~][Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~]]     |
 | A | TODO     | [[Save views to dynamic blocks][Save views to dynamic blocks]]                                    |
 | A | TODO     | [[Consider how to "secure" searches from links and dynamic blocks][Consider how to "secure" searches from links and dynamic blocks]] |
-| A | UNDERWAY | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]]               |
+| A | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                          |
 #+END:
 
 * [#A] Tasks
@@ -64,6 +63,7 @@
 - [[#add-more-sorters][Add more sorters?]]
 - [[#default-sort][Default sort]]
 - [[#partial-match-for-property-queries][Partial match for property queries]]
+- [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
 - [[#new-transient-transient-lisp-variable-class][New Transient transient-lisp-variable class]]
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
@@ -161,6 +161,10 @@ e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse
 #+END_SRC
 
 Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
+
+** TODO [#B] Move this notes file into an orphan =meta/notes= branch
+
+[2020-11-12 Thu 03:17]  Will probably have to merge or delete some WIP branches first, otherwise they'll probably get conflicts.
 
 ** TODO [#C] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]
 
@@ -1181,7 +1185,7 @@ Next steps:
 
 That /should/ force the version of org-super-agenda with the fix to be installed when org-ql is upgraded.
 
-*** UNDERWAY Add automated tests
+*** DONE Add automated tests
 :LOGBOOK:
 -  State "UNDERWAY"   from "TODO"       [2020-11-12 Thu 00:24]
 -  State "TODO"       from "MAYBE"      [2020-11-11 Wed 23:16]
@@ -1245,7 +1249,13 @@ For the query expression:
 
 [2020-11-11 Wed 23:27]  That's all the parameters and all the types that I can think to test.
 
-** DONE [#A] Dynamic blocks
+** PROJECT Dynamic blocks
+
+*** TODO [#B] Save view to dynamic block
+
+[2020-11-12 Thu 03:23]  A command to do this would be very helpful.
+
+*** DONE [#A] Implement dynamic blocks
 
 +  *Tasks*
      -  [X] Merge code
