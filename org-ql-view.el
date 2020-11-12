@@ -844,7 +844,7 @@ return an empty string."
                        (org-element-property :raw-value it)
                        (org-link-display-format it)))
            (todo-keyword (-some--> (org-element-property :todo-keyword element)
-                                   (org-ql-view--add-todo-face it)))
+                           (org-ql-view--add-todo-face it)))
            (tag-list (if org-use-tag-inheritance
                          ;; MAYBE: Use our own variable instead of `org-use-tag-inheritance'.
                          (if-let ((marker (or (org-element-property :org-hd-marker element)
@@ -868,9 +868,9 @@ return an empty string."
                               (org-add-props it nil 'face 'org-tag))))
            ;;  (category (org-element-property :category element))
            (priority-string (-some->> (org-element-property :priority element)
-                                      (char-to-string)
-                                      (format "[#%s]")
-                                      (org-ql-view--add-priority-face)))
+                              (char-to-string)
+                              (format "[#%s]")
+                              (org-ql-view--add-priority-face)))
            (habit-property (org-with-point-at (org-element-property :begin element)
                              (when (org-is-habit-p)
                                (org-habit-parse-todo))))
