@@ -455,6 +455,10 @@ Arguments are listed next to predicate names, where applicable.
      Return non-nil if current heading includes all of ‘TAGS’.  Tests
      both inherited and local tags.
         • Aliases: ‘tags&’.
+‘tags-regexp (&rest regexps)’
+     Return non-nil if current heading has tags matching one or more of
+     ‘REGEXPS’.  Tests both inherited and local tags.
+        • Aliases: ‘tags*’.
 ‘todo (&optional keywords)’
      Return non-nil if current heading is a ‘TODO’ item.  With
      ‘KEYWORDS’, return non-nil if its keyword is one of ‘KEYWORDS’ (a
@@ -830,6 +834,8 @@ File: README.info,  Node: 05-pre,  Next: 046,  Up: Changelog
      search/view buffers.
    • Predicate link, which matches descriptions and targets in Org
      links.
+   • Predicate ‘tags-regexp’ (alias: ‘tags*’), which matches regexps
+     against entry tags (e.g, helpful when a tag might end in "s").
    • Emacs bookmark support: Org QL View buffers can be bookmarked with,
      e.g.  C-x r m and shown with, e.g.  C-x r b.  (This also enables
      view restoration with Burly
@@ -1277,35 +1283,35 @@ Node: org-ql-sparse-tree7144
 Node: Queries7944
 Node: Non-sexp query syntax8852
 Node: General predicates10559
-Node: Ancestor/descendant predicates15774
-Node: Date/time predicates16902
-Node: Functions / Macros19557
-Node: Agenda-like views19812
-Node: Listing / acting-on results21217
-Node: Dynamic block25819
-Node: Links27982
-Node: Tips28669
-Node: Changelog28987
-Node: 05-pre29626
-Node: 04630718
-Node: 04531121
-Node: 04431480
-Node: 04331837
-Node: 04232032
-Node: 04132191
-Node: 0432430
-Node: 03236361
-Node: 03136738
-Node: 0336935
-Node: 02339910
-Node: 02240138
-Node: 02140406
-Node: 0240605
-Node: 0144640
-Node: Notes44741
-Node: Comparison with Org Agenda searches44903
-Node: org-sidebar45775
-Node: License46054
+Node: Ancestor/descendant predicates15972
+Node: Date/time predicates17100
+Node: Functions / Macros19755
+Node: Agenda-like views20010
+Node: Listing / acting-on results21415
+Node: Dynamic block26017
+Node: Links28180
+Node: Tips28867
+Node: Changelog29185
+Node: 05-pre29824
+Node: 04631063
+Node: 04531466
+Node: 04431825
+Node: 04332182
+Node: 04232377
+Node: 04132536
+Node: 0432775
+Node: 03236706
+Node: 03137083
+Node: 0337280
+Node: 02340255
+Node: 02240483
+Node: 02140751
+Node: 0240950
+Node: 0144985
+Node: Notes45086
+Node: Comparison with Org Agenda searches45248
+Node: org-sidebar46120
+Node: License46399
 
 End Tag Table
 

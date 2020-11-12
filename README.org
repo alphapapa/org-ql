@@ -219,6 +219,8 @@ Arguments are listed next to predicate names, where applicable.
      -  Aliases: ~local-tags~, ~tags-l~, ~ltags~.
 +  =tags-all (tags)= :: Return non-nil if current heading includes all of ~TAGS~.  Tests both inherited and local tags.
      -  Aliases: ~tags&~.
++  =tags-regexp (&rest regexps)= :: Return non-nil if current heading has tags matching one or more of ~REGEXPS~.  Tests both inherited and local tags.
+     -  Aliases: ~tags*~.
 +  =todo (&optional keywords)= :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
 
 *** Ancestor/descendant predicates
@@ -457,6 +459,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Added*
 +  View dispatcher using =transient.el= (like Magit), bound to =v= in search/view buffers.
 +  Predicate =link=, which matches descriptions and targets in Org links.
++  Predicate ~tags-regexp~ (alias: ~tags*~), which matches regexps against entry tags (e.g, helpful when a tag might end in "s").
 +  Emacs bookmark support: Org QL View buffers can be bookmarked with, e.g. =C-x r m= and shown with, e.g. =C-x r b=.  (This also enables view restoration with [[https://github.com/alphapapa/burly.el][Burly]].)
 +  Dynamic block support.
 +  Org link support (storing and opening links to Org QL View searches).

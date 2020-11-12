@@ -962,6 +962,34 @@ RESULTS should be a list of strings as returned by
           '("Fruit" "Blueberry" "Strawberry")
           :buffer (org-ql-test-data-buffer "data2.org"))))
 
+    (describe "(tags-regexp), (tags*)"
+
+      (org-ql-it "without arguments"
+        (org-ql-expect ((tags-regexp))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
+        (org-ql-expect ((not (tags*)))
+          '("Recurring" "Sunrise/sunset" "Ideas")))
+
+      (org-ql-it "with a tag regexp"
+        (org-ql-expect ((tags-regexp "Emac"))
+          '("/r/emacs" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((not (tags* "Emac")))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
+
+      (org-ql-it "with 2 tag regexps"
+        (org-ql-expect ((tags-regexp "Emac" "spac"))
+          '("Visit Mars" "Visit the moon" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ((not (tags* "Emac" "spac")))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
+
+      (org-ql-it "with regexp matching file tags"
+        (org-ql-expect ((tags-regexp "foo"))
+          '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+          :buffer (org-ql-test-data-buffer "data2.org"))
+        (org-ql-expect ((tags* "frui"))
+          '("Fruit" "Blueberry" "Strawberry")
+          :buffer (org-ql-test-data-buffer "data2.org"))))
+
     (describe "(ts)"
 
       (describe "active"

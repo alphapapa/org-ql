@@ -672,6 +672,7 @@ Replaces bare strings with (regexp) selectors, and appropriate
                      ;; Inherited and local predicate aliases.
                      (`(,(or 'tags-i 'itags 'inherited-tags) . ,tags) `(tags-inherited ,@tags))
                      (`(,(or 'tags-l 'ltags 'local-tags) . ,tags) `(tags-local ,@tags))
+                     (`(,(or 'tags*) . ,regexps) `(tags-regexp ,@regexps))
 
                      ;; Timestamps
                      (`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
@@ -1152,6 +1153,25 @@ If TAGS is nil, return non-nil if heading has any local tags."
         (null (tags-p local))
         (otherwise (when (tags-p local)
                      (seq-intersection tags local)))))))
+
+(org-ql--defpred (tags-regexp tags*) (&rest regexps)
+  "Return non-nil if current heading has tags matching one or more of REGEXPS.
+Tests both inherited and local tags."
+  (cl-macrolet ((tags-p (tags)
+                        `(and ,tags
+                              (not (eq 'org-ql-nil ,tags)))))
+    (-let* (((inherited local) (org-ql--tags-at (point))))
+      (cl-typecase regexps
+        (null (or (tags-p inherited)
+                  (tags-p local)))
+        (otherwise (or (when (tags-p inherited)
+                         (cl-loop for tag in inherited
+                                  thereis (cl-loop for regexp in regexps
+                                                   thereis (string-match regexp tag))))
+                       (when (tags-p local)
+                         (cl-loop for tag in local
+                                  thereis (cl-loop for regexp in regexps
+                                                   thereis (string-match regexp tag))))))))))
 
 (org-ql--defpred level (level-or-comparator &optional level)
   "Return non-nil if current heading's outline level matches arguments.
