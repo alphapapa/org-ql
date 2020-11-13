@@ -1172,79 +1172,87 @@ RESULTS should be a list of strings as returned by
     (require 'org-ql-search)
     (require 'org-ql-view)
 
-    (cl-flet ((open-link
-               (link) (with-temp-buffer
-                        (org-mode)
-                        (insert link)
-                        (backward-char 1)
-                        (call-interactively #'org-open-at-point))))
+    ;; The :auto-map test requires there to be results (because the org-super-agenda :auto-map group's
+    ;; key-form, where the safety check is, only gets evaluated when there are results).  Using
+    ;; `with-temp-buffer' in the `open-link' function causes the temp buffer to be killed before the results
+    ;; have a chance to be gathered.  So we make a test buffer and run the test in that, with a test heading.
 
-      (it "buffers-files parameter"
-        (let ((quoted-lambda-link "[[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]")
-              (unquoted-lambda-link "[[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]")
-              (quoted-lambda-in-list-link "[[org-ql-search:todo:?buffers-files%3D%28%28quote%20%28lambda%20nil%20%28message%20%22AHA%22%29%29%29%29]]")
-              (unquoted-lambda-in-list-link "[[org-ql-search:todo:?buffers-files%3D%28%28lambda%20nil%20%28message%20%22AHA%22%29%29%29]]"))
-          (expect (open-link quoted-lambda-link)
-                  :to-throw 'wrong-type-argument '(stringp (lambda nil (message "AHA"))))
-          (expect (open-link unquoted-lambda-link)
-                  :to-throw 'wrong-type-argument '(stringp (lambda nil (message "AHA"))))
-          (expect (open-link quoted-lambda-in-list-link)
-                  :to-throw 'wrong-type-argument '(stringp ((quote (lambda nil (message "AHA"))))))
-          (expect (open-link unquoted-lambda-in-list-link)
-                  :to-throw 'wrong-type-argument '(stringp ((lambda nil (message "AHA")))))))
+    (let ((test-buffer (get-buffer-create "*test-org-ql*")))
+      (cl-flet ((open-link
+                 (link) (with-current-buffer test-buffer
+                          (erase-buffer)
+                          (org-mode)
+                          (insert "* TODO Test heading \n\n")
+                          (insert link)
+                          (backward-char 1)
+                          (call-interactively #'org-open-at-point))))
 
-      (it "super-groups parameter"
-        (let ((quoted-lambda-link "[[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]")
-              (unquoted-lambda-link "[[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]")
-              (quoted-expression-link "[[org-ql-search:todo:?super-groups%3D%28message%20%22AHA%22%29]]")
-              (unquoted-expression-link "[[org-ql-search:todo:?super-groups%3D%22AHA%22]]")
-              (pred-selector-link "[[org-ql-search:todo:?super-groups%3D%28%28%3Apred%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]")
-              (auto-map-selector-link "[[org-ql-search:todo:?super-groups%3D%28%28%3Aauto-map%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]"))
-          (expect (open-link quoted-lambda-link)
-                  :to-throw 'wrong-type-argument '(listp lambda))
-          (expect (open-link unquoted-lambda-link)
-                  :to-throw 'wrong-type-argument '(listp lambda))
-          (expect (open-link quoted-expression-link)
-                  :to-throw 'wrong-type-argument '(listp message))
-          (expect (open-link unquoted-expression-link)
-                  :to-throw 'error '("cl-etypecase failed: AHA, (symbol list)"))
+        (it "buffers-files parameter"
+          (let ((quoted-lambda-link "[[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]")
+                (unquoted-lambda-link "[[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]")
+                (quoted-lambda-in-list-link "[[org-ql-search:todo:?buffers-files%3D%28%28quote%20%28lambda%20nil%20%28message%20%22AHA%22%29%29%29%29]]")
+                (unquoted-lambda-in-list-link "[[org-ql-search:todo:?buffers-files%3D%28%28lambda%20nil%20%28message%20%22AHA%22%29%29%29]]"))
+            (expect (open-link quoted-lambda-link)
+                    :to-throw 'wrong-type-argument '(stringp (lambda nil (message "AHA"))))
+            (expect (open-link unquoted-lambda-link)
+                    :to-throw 'wrong-type-argument '(stringp (lambda nil (message "AHA"))))
+            (expect (open-link quoted-lambda-in-list-link)
+                    :to-throw 'wrong-type-argument '(stringp ((quote (lambda nil (message "AHA"))))))
+            (expect (open-link unquoted-lambda-in-list-link)
+                    :to-throw 'wrong-type-argument '(stringp ((lambda nil (message "AHA")))))))
 
-          ;; FIXME: These two tests will not pass (i.e. they will not
-          ;; signal an error) until the version of org-super-agenda in
-          ;; the test sandbox is upgraded, which I'll do when MELPA
-          ;; packages the latest version.  On the bright side, I just
-          ;; confirmed that, without the fix to org-super-agenda,
-          ;; these are vulnerable, which means that the test catches
-          ;; this problem and detects the fix.
-          (expect (open-link pred-selector-link)
-                  :to-throw 'error '("Unsafe groups disallowed (:pred): (lambda (_) (message AHA))"))
-          (expect (open-link auto-map-selector-link)
-                  :to-throw 'error '("Unsafe groups disallowed (:auto-map): ((lambda (_) (message AHA)))"))))
+        (it "super-groups parameter"
+          (let ((quoted-lambda-link "[[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]")
+                (unquoted-lambda-link "[[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]")
+                (quoted-expression-link "[[org-ql-search:todo:?super-groups%3D%28message%20%22AHA%22%29]]")
+                (unquoted-expression-link "[[org-ql-search:todo:?super-groups%3D%22AHA%22]]")
+                (pred-selector-link "[[org-ql-search:todo:?super-groups%3D%28%28%3Apred%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]")
+                (auto-map-selector-link "[[org-ql-search:todo:?super-groups%3D%28%28%3Aauto-map%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]"))
+            (expect (open-link quoted-lambda-link)
+                    :to-throw 'wrong-type-argument '(listp lambda))
+            (expect (open-link unquoted-lambda-link)
+                    :to-throw 'wrong-type-argument '(listp lambda))
+            (expect (open-link quoted-expression-link)
+                    :to-throw 'wrong-type-argument '(listp message))
+            (expect (open-link unquoted-expression-link)
+                    :to-throw 'error '("cl-etypecase failed: AHA, (symbol list)"))
 
-      (it "title parameter"
-        (let ((quoted-lambda-link "[[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]")
-              (unquoted-lambda-link "[[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]")
-              (expression-link "[[org-ql-search:todo:?title%3D%28message%20%22AHA%22%29]]"))
-          (expect (open-link quoted-lambda-link)
-                  :to-throw 'wrong-type-argument '(characterp lambda))
-          (expect (open-link unquoted-lambda-link)
-                  :to-throw 'wrong-type-argument '(characterp lambda))
-          (expect (open-link expression-link)
-                  :to-throw 'wrong-type-argument '(characterp message))))
+            ;; FIXME: These two tests will not pass (i.e. they will not
+            ;; signal an error) until the version of org-super-agenda in
+            ;; the test sandbox is upgraded, which I'll do when MELPA
+            ;; packages the latest version.  On the bright side, I just
+            ;; confirmed that, without the fix to org-super-agenda,
+            ;; these are vulnerable, which means that the test catches
+            ;; this problem and detects the fix.
+            (expect (open-link pred-selector-link)
+                    :to-throw 'error '("Unsafe groups disallowed (:pred): (lambda (_) (message AHA))"))
+            (expect (open-link auto-map-selector-link)
+                    :to-throw 'error '("Unsafe groups disallowed (:auto-map): ((lambda (_) (message AHA)))"))))
 
-      (it "sort parameter"
-        (let ((quoted-lambda-link "[[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]")
-              (unquoted-lambda-link "[[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]")
-              (quoted-lambda-in-list-link "[[org-ql-search:todo:?sort%3D%28%28quote%20%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29%29%29]]")
-              (unquoted-lambda-in-list-link "[[org-ql-search:todo:?sort=((lambda%20nil%20(message%20\"AHA\")))]]"))
-          (expect (open-link quoted-lambda-link)
-                  :to-throw 'error '("Potentially unsafe value found in link’s SORT parameter ((lambda (_ _) (message AHA))).  Link not opened"))
-          (expect (open-link unquoted-lambda-link)
-                  :to-throw 'error '("Potentially unsafe value found in link’s SORT parameter ((lambda (_ _) (message AHA))).  Link not opened"))
-          (expect (open-link quoted-lambda-in-list-link)
-                  :to-throw 'error '("Potentially unsafe value found in link’s SORT parameter (((quote (lambda (_ _) (message AHA))))).  Link not opened"))
-          (expect (open-link unquoted-lambda-in-list-link)
-                  :to-throw 'error '("Potentially unsafe value found in link’s SORT parameter (((lambda nil (message AHA)))).  Link not opened")))))))
+        (it "title parameter"
+          (let ((quoted-lambda-link "[[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]")
+                (unquoted-lambda-link "[[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]")
+                (expression-link "[[org-ql-search:todo:?title%3D%28message%20%22AHA%22%29]]"))
+            (expect (open-link quoted-lambda-link)
+                    :to-throw 'wrong-type-argument '(characterp lambda))
+            (expect (open-link unquoted-lambda-link)
+                    :to-throw 'wrong-type-argument '(characterp lambda))
+            (expect (open-link expression-link)
+                    :to-throw 'wrong-type-argument '(characterp message))))
+
+        (it "sort parameter"
+          (let ((quoted-lambda-link "[[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]")
+                (unquoted-lambda-link "[[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]")
+                (quoted-lambda-in-list-link "[[org-ql-search:todo:?sort%3D%28%28quote%20%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29%29%29]]")
+                (unquoted-lambda-in-list-link "[[org-ql-search:todo:?sort=((lambda%20nil%20(message%20\"AHA\")))]]"))
+            (expect (open-link quoted-lambda-link)
+                    :to-throw 'error '("Potentially unsafe value found in link’s SORT parameter ((lambda (_ _) (message AHA))).  Link not opened"))
+            (expect (open-link unquoted-lambda-link)
+                    :to-throw 'error '("Potentially unsafe value found in link’s SORT parameter ((lambda (_ _) (message AHA))).  Link not opened"))
+            (expect (open-link quoted-lambda-in-list-link)
+                    :to-throw 'error '("Potentially unsafe value found in link’s SORT parameter (((quote (lambda (_ _) (message AHA))))).  Link not opened"))
+            (expect (open-link unquoted-lambda-in-list-link)
+                    :to-throw 'error '("Potentially unsafe value found in link’s SORT parameter (((lambda nil (message AHA)))).  Link not opened"))))))))
 
 ;; Local Variables:
 ;; truncate-lines: t
