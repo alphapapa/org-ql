@@ -89,10 +89,12 @@
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
 - [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
+- [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
 - [[#node-caching]["Node" caching]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
+- [[#fix-org-ql-view--link-open-on-newer-org-versions][Fix org-ql-view--link-open on newer Org versions]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
@@ -110,7 +112,6 @@
 - [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
-- [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
 :END:
 
 ** TODO [#A] Add ~:auto~ keyword to ~(planning)~ predicate
@@ -371,6 +372,21 @@ However, there might still be a useful idea here somewhere...
 ** MAYBE [#C] Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
+
+** PROJECT [#A] Fix =org-ql-view--link-open= on newer Org versions
+:PROPERTIES:
+:milestone: 0.5
+:END:
+
+The version of Org in my personal that passes a URL-decoded string (i.e. as if run through =url-unhex-string=) as the argument to =org-ql-view--link-open=.  But Org 9.3 in Emacs 27.1 passes a non-URL-decoded string, so =org-ql-view--link-open= needs to pass it through =url-unhex-string= itself.
+
+But I don't know which version of Org that changed in.   I'm comparing the function =org-open-at-point=, but it's a 114-line function, and in neither version does it call =url-unhex-string=, so whatever code decodes the string must be elsewhere.
+
+I do recall something about links changing in Org 9.3 (or thereabouts), so that was probably part of it.  Maybe I can find it in the release notes.  I just need to know basically which version it happened in.
+
+I noticed because the CI tests on GitHub show the link-safety tests failing on the Emacs snapshot version.  However, I think they're not currently vulnerable on that Org version, because the link parameters fail to be parsed correctly, so all the arguments to =org-ql-search= should end up being nil.
+
+*** NEXT [#A] Check Org release notes for link changes
 
 ** PROJECT [#A] Outline path predicate
 
