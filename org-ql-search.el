@@ -310,9 +310,9 @@ For example, an org-ql dynamic block header could look like:
                                                  collect (or (pcase-exhaustive column
                                                                ((pred symbolp)
                                                                 (funcall (alist-get column format-fns) element))
-                                                               (`((,column . ,args) ,header)
+                                                               (`((,column . ,args) ,_header)
                                                                 (apply (alist-get column format-fns) element args))
-                                                               (`(,column ,header)
+                                                               (`(,column ,_header)
                                                                 (funcall (alist-get column format-fns) element)))
                                                              ""))
                                         " | ")))
