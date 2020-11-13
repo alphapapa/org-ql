@@ -295,7 +295,7 @@ For example, an org-ql dynamic block header could look like:
                       (cons 'scheduled (lambda (element)
                                          (--when-let (org-element-property :scheduled element)
                                            (ts-format ts-format (ts-parse-org-element it)))))
-                      (cons 'property (lambda (element property &optional value)
+                      (cons 'property (lambda (element property)
                                         (org-element-property (intern (concat ":" (upcase property))) element)))))
                (elements (org-ql-query :from (current-buffer)
                                        :where query
