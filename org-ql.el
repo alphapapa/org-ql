@@ -1778,7 +1778,11 @@ Multiple predicates are combined with BOOLEAN."
 If QUERY can't be converted to a string, return nil."
   ;; This started out pretty simple...but at least it's not just one long function, right?
   (cl-labels ((complex-p (query)
-                         (or (contains-p 'or query)))
+                         (or (contains-p 'or query)
+			     (contains-p 'ancestors query)
+			     (contains-p 'children query)
+			     (contains-p 'descendants query)
+			     (contains-p 'parent query)))
               (contains-p (symbol list)
                           (cl-loop for element in list
                                    thereis (or (eq symbol element)
