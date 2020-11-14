@@ -669,7 +669,7 @@ When opened, the link searches the buffer it's opened from."
                        (cl-every #'string-or-file-buffer-p org-ql-view-buffers-files)))
         (user-error "Views that search non-file-backed buffers can't be linked to"))
       (let* ((query-string (--if-let (org-ql--query-sexp-to-string org-ql-view-query)
-                               it (prin1-to-string (org-ql-view--format-query org-ql-view-query))))
+                               it (org-ql-view--format-query org-ql-view-query)))
              (buffers-files (prompt-for (org-ql-view--contract-buffers-files org-ql-view-buffers-files)))
              (params (list (when buffers-files
                              (list "buffers-files" buffers-files))
