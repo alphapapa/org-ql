@@ -683,6 +683,7 @@ When opened, the link searches the buffer it's opened from."
                                "?" (url-build-query-string (delete nil params))))
              (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
                                                            filename))))
+	;; FIXME: "Warning: ‘org-store-link-props’ is an obsolete function (as of Org 9.3); use ‘org-link-store-props’ instead"
         (org-store-link-props
          :type "org-ql-search"
          :link url
