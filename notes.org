@@ -1,4 +1,5 @@
 #+PROPERTY: LOGGING nil
+#+TODO: TODO MAYBE NEXT PROJECT UNDERWAY WAITING | DONE CANCELED
 
 * [#A] Contents
 :PROPERTIES:
@@ -16,56 +17,66 @@
 
 * [#A] Overview
 
+** Bugs
+
++ [[org-ql-search:todo%3A%20tags%3Abug?super-groups=%28%28%3Aauto-property%20%22Milestone%22%29%29&sort=%28priority%29&title=%22Bugs%22][org-ql-search: Bugs]]
+
+#+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
+| P | M | Keyword | Heading                                                             |
+|---+---+---------+---------------------------------------------------------------------|
+| A |   | NEXT    | [[Fix query-sexp-to-string function's handling of, e.g. =descendants=][Fix query-sexp-to-string function's handling of, e.g. =descendants=]] |
+#+END:
+
 ** Underway
 
-[[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][org-ql-search: Underway]]
++ [[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][org-ql-search: Underway]]
 
 #+BEGIN: org-ql :query (todo "UNDERWAY") :columns ((priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 | P | Keyword  | Heading                                                            |
 |---+----------+--------------------------------------------------------------------|
-| A | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                             |
 | B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
 |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
 #+END:
 
 ** To-do
 
-+  [[org-ql-search:todo:?super-groups=%2528%2528%253Aauto-outline-path%2529%2529&sort=%2528priority%2529][org-ql-search: Tasks]]
++  [[org-ql-search:todo%3A?super-groups=%28%28%3Atodo%20%22NEXT%22%29%20%28%3Atodo%20%22PROJECT%22%29%20%28%3Aauto-priority%29%29&sort=%28todo%29][org-ql-search: Tasks]]
 
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") todo heading) :sort (priority date) :take 7
-| P | Todo     | Heading                                                         |
-|---+----------+-----------------------------------------------------------------|
-| A | TODO     | [[Add ~:auto~ keyword to ~(planning)~ predicate][Add ~:auto~ keyword to ~(planning)~ predicate]]                       |
-| A | TODO     | [[Document sorters][Document sorters]]                                                |
-| A | TODO     | [[Org block to insert results of queries with links to entries][Org block to insert results of queries with links to entries]]    |
-| A | TODO     | [[Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~][Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~]]     |
-| A | TODO     | [[Save views to dynamic blocks][Save views to dynamic blocks]]                                    |
-| A | TODO     | [[Consider how to "secure" searches from links and dynamic blocks][Consider how to "secure" searches from links and dynamic blocks]] |
-| A | UNDERWAY | [[Outline path predicate][Outline path predicate]]                                          |
+| P | Todo    | Heading                                                                    |
+|---+---------+----------------------------------------------------------------------------|
+| A | NEXT    | [[Fix query-sexp-to-string function's handling of, e.g. =descendants=][Fix query-sexp-to-string function's handling of, e.g. =descendants=]]        |
+| A | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                                |
+| A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                             |
+| A | PROJECT | [[Fix =org-ql-view--link-open= on newer Org versions][Fix =org-ql-view--link-open= on newer Org versions]] |
+| A | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                                    |
+| A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                                       |
+| A | PROJECT | [[Org link types [2/3\]][Org link types [2/3]​]]                                                       |
 #+END:
 
-** [[org-ql-search:(and%20(todo%20"PROJECT")%20(not%20(descendants%20(todo%20"NEXT"))))?super-groups=%2528%2528%253Aauto-outline-path%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][Stuck projects]]
+** [[org-ql-search:%28and%20%28todo%20%22PROJECT%22%29%20%28not%20%28descendants%20%28todo%20%22NEXT%22%29%29%29%29?super-groups=%28%28%3Aauto-parent%29%29&sort=%28priority%29&title=%22Stuck%20Projects%22][org-ql-search: Stuck Projects]]
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT")))) :columns ((priority "P") heading) :sort (priority date) :take 7
-| P | Heading                                           |
-|---+---------------------------------------------------|
-| A | [[Outline path predicate][Outline path predicate]]                            |
-| A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]           |
-| A | [[Tools%20for%20saving%20queries%20and%20accessing%20them%20%5B3/4%5D][Tools for saving queries and accessing them {3/4}]] |
-| A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                              |
-| A | [[Group tag support][Group tag support]]                                 |
-| A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]              |
-| B | [[Recursive queries][Recursive queries]]                                 |
+| P | Heading                                                                    |
+|---+----------------------------------------------------------------------------|
+| A | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                             |
+| A | [[Fix =org-ql-view--link-open= on newer Org versions][Fix =org-ql-view--link-open= on newer Org versions]] |
+| A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                                    |
+| A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                                       |
+| A | [[Org link types [2/3\]][Org link types [2/3]​]]                                                       |
+| B | [[Outline path predicate][Outline path predicate]]                                                     |
+| B | [[Group tag support][Group tag support]]                                                          |
 #+END:
 
 ** Milestones
 
-[[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Milestones%2522][org-ql-search: Milestones]]
+[[org-ql-search:todo%3A?super-groups=%28%28%3Aauto-property%20%22milestone%22%29%29&sort=%28todo%29&title=%22Milestones%22][org-ql-search: Milestones]]
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
-|   M | P | Todo | Heading                    |
-|-----+---+------+----------------------------|
-| 0.6 | B | TODO | [[Save view to dynamic block][Save view to dynamic block]] |
+|   M | P | Todo    | Heading                                                                    |
+|-----+---+---------+----------------------------------------------------------------------------|
+| 0.5 | A | PROJECT | [[Fix =org-ql-view--link-open= on newer Org versions][Fix =org-ql-view--link-open= on newer Org versions]] |
+| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                                 |
 #+END:
 
 * [#A] Tasks
@@ -74,18 +85,12 @@
 :END:
 :CONTENTS:
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
-- [[#document-sorters][Document sorters]]
-- [[#org-block-to-insert-results-of-queries-with-links-to-entries][Org block to insert results of queries with links to entries]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
-- [[#consider-how-to-secure-searches-from-links-and-dynamic-blocks][Consider how to "secure" searches from links and dynamic blocks]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
 - [[#add-more-sorters][Add more sorters?]]
 - [[#default-sort][Default sort]]
 - [[#partial-match-for-property-queries][Partial match for property queries]]
 - [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
-- [[#new-transient-transient-lisp-variable-class][New Transient transient-lisp-variable class]]
-- [[#normalize-queries][Normalize queries]]
-- [[#update-view-screenshots][Update view screenshots]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
 - [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
@@ -94,16 +99,21 @@
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
+- [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#fix-org-ql-view--link-open-on-newer-org-versions][Fix org-ql-view--link-open on newer Org versions]]
-- [[#outline-path-predicate][Outline path predicate]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
-- [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
-- [[#group-tag-support][Group tag support]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
+- [[#outline-path-predicate][Outline path predicate]]
+- [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them [3/4]​]]
+- [[#group-tag-support][Group tag support]]
+- [[#document-the-sorting-functions][Document the sorting functions]]
 - [[#recursive-queries][Recursive queries]]
 - [[#timeline-view][Timeline view]]
 - [[#implement-view-with-tabulated-list-mode-or-magit-section][Implement view with tabulated-list-mode or magit-section]]
 - [[#dynamic-blocks][Dynamic blocks]]
+- [[#new-transient-transient-lisp-variable-class][New Transient transient-lisp-variable class]]
+- [[#normalize-queries][Normalize queries]]
+- [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
 - [[#helm-command][Helm command]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
@@ -114,32 +124,14 @@
 - [[#use-macros-for-date][Use macros for date]]
 :END:
 
-** TODO [#A] Add ~:auto~ keyword to ~(planning)~ predicate
+** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
 
 It should act like ~(or (deadline auto) (scheduled :to today))~.
 
-** TODO [#A] Document sorters
-
-Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
-
-** TODO [#A] Org block to insert results of queries with links to entries
-
-[2020-01-16 Thu 06:20]  This idea just came to me when I was thinking about using the search-based paradigm vs. outline-based.  This would allow both, e.g. some kind of =#+BEGIN_QUERY= block that would update when =C-c C-c= is pressed on it.
-
-** TODO [#A] Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~
+** TODO [#B] Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~
 
 For consistency, because plain ~auto~ looks like a variable, and even though it's in a quoted form, it could be confusing.
 
-** TODO [#A] Consider how to "secure" searches from links and dynamic blocks
-
-Theoretically one could put a sexp-based query into a link that would run arbitrary code to do something evil.  Like:
-
-[[org-ql-search:(message "AHA")]]
-
-That's very unlikely to be abused, but it would be good to protect against it.  Two possibilities:
-
-1.  For sexp-based queries in links and dynamic blocks, prompt for confirmation before running.
-2.  Use a special variable to control whether lambdas and arbitrary sexps are allowed in queries, and disable it for links and dynamic blocks.  (That might be difficult to do, since they could be buried in an ~and~ or something.  A whitelist approach might be needed.)
 
 ** TODO [#B] Outline path in buffers-files arg
 :PROPERTIES:
@@ -183,23 +175,6 @@ Searching that with a query like =property:author=Fabrice= returns nothing; the 
 ** TODO [#B] Move this notes file into an orphan =meta/notes= branch
 
 [2020-11-12 Thu 03:17]  Will probably have to merge or delete some WIP branches first, otherwise they'll probably get conflicts.
-
-** TODO [#C] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]
-
-[2020-10-19 Mon 00:23]  Should try to use this instead of whatever bespoke code is currently used.
-
-** TODO [#C] Normalize queries
-
-[2019-07-16 Tue 11:49]  This serves two purposes:
-
-1.  Equivalent queries will return the same results from the cache.
-2.  The selectors that can be converted to the fastest preamble regexps will be sorted first, so the fastest preamble will be used.  Although this may not always be straightforward.  For example, in a file with only a few =TODO= items, the ~(todo "TODO")~ selector would convert to a preamble that would quickly search through the file.  But if there were a thousand =TODO= items, it wouldn't be as much of a benefit, and a ~(regexp "something")~ selector's preamble might be much faster, depending on how many times =something= appears in the file.
-
-So the second purpose might actually be a drawback, because it would prevent users from optimizing their queries with knowledge of their data.  Maybe there should be an option to not normalize queries, so advanced users can order their selectors manually.
-
-** TODO [#C] Update view screenshots
-
-e.g. doesn't currently show the =View= header.
 
 ** TODO [#C] ~org-agenda-skip-function~
 
@@ -247,6 +222,9 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 ** TODO [#C] Update commentary
 
 ** NEXT [#A] Fix query-sexp-to-string function's handling of, e.g. =descendants= :bug:
+:PROPERTIES:
+:milestone: 0.5
+:END:
 
 ** NEXT [#A] Make dynamic blocks warn about sexp queries
 
@@ -373,7 +351,27 @@ However, there might still be a useful idea here somewhere...
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
 
-** PROJECT [#A] Fix =org-ql-view--link-open= on newer Org versions
+** PROJECT [#A] Compatibility with Org 9.4 custom link changes          :bug:
+:PROPERTIES:
+:milestone: 0.5
+:END:
+
+[2020-11-13 Fri 22:36]  From [[https://www.orgmode.org/Changes.html][the changelog]]:
+
+#+BEGIN_QUOTE
+Calling conventions changes when opening or exporting custom links
+
+This changes affects export back-ends, and libraries providing new link types.
+
+Function used in :follow link parameter is required to accept a second argument. Likewise, function used in :export parameter needs to accept a fourth argument. See org-link-set-parameters for details.
+
+Eventually, the function org-export-custom-protocol-maybe is now called with a fourth argument. Even though the 3-arguments definition is still supported, at least for now, we encourage back-end developers to switch to the new signature.
+#+END_QUOTE
+
+Unfortunately it does not say what the new, required second argument is.
+
+
+** PROJECT [#A] Fix =org-ql-view--link-open= on newer Org versions :compatibility:bug:
 :PROPERTIES:
 :milestone: 0.5
 :END:
@@ -386,42 +384,62 @@ I do recall something about links changing in Org 9.3 (or thereabouts), so that 
 
 I noticed because the CI tests on GitHub show the link-safety tests failing on the Emacs snapshot version.  However, I think they're not currently vulnerable on that Org version, because the link parameters fail to be parsed correctly, so all the arguments to =org-ql-search= should end up being nil.
 
-*** NEXT [#A] Check Org release notes for link changes
+*** DONE [#A] Check Org release notes for link changes
 
-** PROJECT [#A] Outline path predicate
+[2020-11-13 Fri 22:44]  From [[https://www.orgmode.org/Changes_old.html][the changelog]]:
 
-[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
+#+BEGIN_QUOTE
+Change bracket link escaping syntax
 
-#+BEGIN_SRC org
-  ,* Food
+Org used to percent-encode sensitive characters in the URI part of the bracket links.
 
-  ,** Fruits
+Now, escaping mechanism uses the usual backslash character, according to the following rules, applied in order:
 
-  ,*** Blueberries
+-  All consecutive \ characters at the end of the link must be escaped;
+-  Any ] character at the very end of the link must be escaped;
+-  All consecutive \ characters preceding ][ or ]] patterns must be escaped;
+-  Any ] character followed by either [ or ] must be escaped;
+-  Others ] and \ characters need not be escaped.
 
-  ,*** Grapes
+When in doubt, use the function org-link-escape in order to turn a link string into its properly escaped form.
 
-  ,** Vegetables
+The following function will help switching your links to the new syntax:
 
-  ,*** Carrots
+(defun org-update-link-syntax (&optional no-query)
+  "Update syntax for links in current buffer.
+Query before replacing a link, unless optional argument NO-QUERY
+is non-nil."
+  (interactive "P")
+  (org-with-point-at 1
+    (let ((case-fold-search t))
+      (while (re-search-forward "\\[\\[[^]]*?%\\(?:2[05]\\|5[BD]\\)" nil t)
+        (let ((object (save-match-data (org-element-context))))
+          (when (and (eq 'link (org-element-type object))
+                     (= (match-beginning 0)
+                        (org-element-property :begin object)))
+            (goto-char (org-element-property :end object))
+            (let* ((uri-start (+ 2 (match-beginning 0)))
+                   (uri-end (save-excursion
+                              (goto-char uri-start)
+                              (re-search-forward "\\][][]" nil t)
+                              (match-beginning 0)))
+                   (uri (buffer-substring-no-properties uri-start uri-end)))
+              (when (or no-query
+                        (y-or-n-p
+                         (format "Possibly obsolete URI syntax: %S.  Fix? "
+                                 uri)))
+                (setf (buffer-substring uri-start uri-end)
+                      (org-link-escape (org-link-decode uri)))))))))))
 
-  ,*** Potatoes
-#+END_SRC
+The old org-link-escape and org-link-unescape functions have been renamed into org-link-encode and org-link-decode.
+#+END_QUOTE
 
-Matching could work like this:
+This is exactly the kind of breaking, backwards-incompatible change that I've said should mandate a major-version increment.  It's not only a change in Org's code, and a change that affects third-party packages, but it's a change in the file format!
 
-+  ~(outline "Food")~ :: Would return all nodes.
-+  ~(outline "Fruits")~ :: Would return all fruits.
+Is it even possible to support both Org 9.3+ and earlier versions at the same time?
 
-Matching at a specific path would be something like:
+This change doesn't even seem to make sense to me.  Percent-encoding solves so many problems in a simple way: pass a string to the encoding function on the way in, and to the decoding function on the way out.  Now, instead of a simple, standard way of encoding links, there's a list of Org-specific rules and Org-specific encoding/decoding functions.  What is gained this way?
 
-+  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
-
-I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
-
-To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
-
-[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
 
 ** PROJECT [#A] Convert simple sexp queries to non-sexp
 
@@ -525,7 +543,132 @@ To implement this with good performance probably needs an outline-path cache.  I
 
 Maybe make it an option to automatically convert them when possible, because if a user wanted to add complexity to a string query, he'd have to rewrite it as a sexp.
 
-** PROJECT [#A] Tools for saving queries and accessing them [3/4]
+** PROJECT [#A] Checking links for unsafe parameters
+:PROPERTIES:
+:ID:       ba70e375-eddb-40df-8892-fb418c1f70d1
+:END:
+:LOGBOOK:
+-  State "PROJECT"    from "UNDERWAY"   [2020-11-12 Thu 00:26]
+-  State "UNDERWAY"   from              [2020-11-11 Wed 23:09]
+:END:
+
+Theoretically one could put a sexp-based query into a link that would run arbitrary code to do something evil.  Like:
+
+[[org-ql-search:(message "AHA")]]
+
+That's very unlikely to be abused, but it would be good to protect against it.  Two possibilities:
+
+1.  For sexp-based queries in links and dynamic blocks, prompt for confirmation before running.
+2.  Use a special variable to control whether lambdas and arbitrary sexps are allowed in queries, and disable it for links and dynamic blocks.  (That might be difficult to do, since they could be buried in an ~and~ or something.  A whitelist approach might be needed.)
+
+*** TODO [#A] Tag org-super-agenda 1.2 and bump required version in org-ql
+:PROPERTIES:
+:milestone: 0.5
+:END:
+
+That /should/ force the version of org-super-agenda with the fix to be installed when org-ql is upgraded.
+
+*** DONE Add automated tests
+:LOGBOOK:
+-  State "UNDERWAY"   from "TODO"       [2020-11-12 Thu 00:24]
+-  State "TODO"       from "MAYBE"      [2020-11-11 Wed 23:16]
+-  State "MAYBE"      from              [2020-11-11 Wed 23:15]
+:END:
+
+Maybe impractical, but maybe we could at least test that potentially unsafe ones signal errors.
+
+[2020-11-12 Thu 00:24]  Works better than I expected.  All the tests seem to correctly pass, signaling the correct errors for the correct reasons--except for the tests specific to org-super-agenda.  For that, I'm currently waiting for MELPA to build the version of org-super-agenda that has the fix applied, so I can install that into the test sandbox, and then those two tests should pass also.
+
+*** DONE Enumerate and test parameters and potentially unsafe types
+CLOSED: [2020-11-11 Wed 23:26]
+:LOGBOOK:
+-  State "DONE"       from "UNDERWAY"   [2020-11-11 Wed 23:26]
+-  State "UNDERWAY"   from              [2020-11-11 Wed 23:15]
+:END:
+
+#+CAPTION: Template for making testable links
+#+BEGIN_SRC org
+[[org-ql-search:todo:?]]
+#+END_SRC
+
+#+CAPTION: Expression to insert encoded values into template (after the =?=)
+#+BEGIN_SRC elisp
+  (insert (url-hexify-string (concat "buffers-files=" (prin1-to-string '((lambda () (message "AHA")))))))
+#+END_SRC
+
++  [X] Buffers-Files: Expanded by =org-ql-view--expand-buffers-files=:
+     -  [X] Quoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted lambda in list (safe): [[org-ql-search:todo:?buffers-files%3D%28%28quote%20%28lambda%20nil%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] Unquoted lambda in list: (safe) [[org-ql-search:todo:?buffers-files%3D%28%28lambda%20nil%20%28message%20%22AHA%22%29%29%29]]
++  [X] Groups
+     -  [X] Quoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted expression (safe): [[org-ql-search:todo:?super-groups%3D%28message%20%22AHA%22%29]]
+     -  [X] Unquoted expression (safe): [[org-ql-search:todo:?super-groups%3D%22AHA%22]]
+     -  [X] ~:pred~ selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Apred%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] =:auto-map= selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Aauto-map%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
++  [X] Title
+     -  [X] Quoted lambda (produces the same encoded value as unquoted lambda): (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Expression: (safe) [[org-ql-search:todo:?title%3D%28message%20%22AHA%22%29]]
++  [X] Sort
+     -  [X] Bare, quoted lambda: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Bare, unquoted lambda: (UNSAFE, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted lambda in list: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28%28quote%20%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] Unquoted lambda in a list: (UNSAFE, but caught now):  [[org-ql-search:todo:?sort=((lambda%20nil%20(message%20"AHA")))]]
+
+For the query expression:
+
+1.  String queries are parsed by the PEG parsing function (which I will probably rename soon), which should only allow known Org QL predicates, not arbitrary functions.  For example:
+
+  #+BEGIN_SRC elisp
+    (org-ql--plain-query "message:AHA")  ;;=> (regexp "message:AHA")
+    (org-ql--plain-query '(message "AHA"))   ;;=> (wrong-type-argument stringp (message "AHA"))
+    (org-ql--plain-query "(message \"AHA\"")  ;;=> (and (regexp "(message") (regexp "AHA"))
+  #+END_SRC
+
+2.  Sexp queries already prompt for confirmation, unless the user has set =org-ql-view-ask-unsafe-links= to nil.
+
+[2020-11-11 Wed 23:27]  That's all the parameters and all the types that I can think to test.
+
+
+** PROJECT [#B] Outline path predicate
+
+[2019-10-07 Mon 11:15]  There are two potential types of matching on outline paths: matching on any part of the outline path, and matching a specific path.  For example, with this file:
+
+#+BEGIN_SRC org
+  ,* Food
+
+  ,** Fruits
+
+  ,*** Blueberries
+
+  ,*** Grapes
+
+  ,** Vegetables
+
+  ,*** Carrots
+
+  ,*** Potatoes
+#+END_SRC
+
+Matching could work like this:
+
++  ~(outline "Food")~ :: Would return all nodes.
++  ~(outline "Fruits")~ :: Would return all fruits.
+
+Matching at a specific path would be something like:
+
++  ~(outline-path "Food" "Fruits")~ :: Would return all fruits.  But if there were another =Fruits= heading somewhere in the file, under a different outline path, it would not return its nodes.
+
+I'm not sure the second type of matching belongs in predicates, but rather in [[id:6935361a-9e1d-48ec-8d17-876a90b90f50][this]].
+
+To implement this with good performance probably needs an outline-path cache.  I can probably repurpose the tags caching, but maybe it should be generalized.
+
+[2019-10-07 Mon 13:09]  This is basically done with =be2bf6df316b96b3ed56851b8ffe0e227796b621= and =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but not the specific-path matching.  I left a =MAYBE= in the code about "anchored" path matching, which would accomplish that.
+
+** PROJECT Tools for saving queries and accessing them [3/4]
 
 + Added example to =examples.org=.
 
@@ -685,7 +828,7 @@ That seems to work, like:
 
 *** DONE Save query from ql-agenda buffer
 
-** PROJECT [#A] Group tag support
+** PROJECT [#B] Group tag support
 
 *** UNDERWAY Benchmarking tags searches without and with new group-tags support
 
@@ -937,82 +1080,10 @@ Next steps:
 +  [X] Discuss caching of group tag expansion.  It seems like we ought to cache the expansions as well, because sibling headings (especially at level 1) ought to get their group tags re-expanded individually, even when we've already expanded them for another heading.
 +  [X] Remove unused =result= variable
 
-** PROJECT [#A] Checking links for unsafe parameters
-:PROPERTIES:
-:ID:       ba70e375-eddb-40df-8892-fb418c1f70d1
-:END:
-:LOGBOOK:
--  State "PROJECT"    from "UNDERWAY"   [2020-11-12 Thu 00:26]
--  State "UNDERWAY"   from              [2020-11-11 Wed 23:09]
-:END:
+** PROJECT [#B] Document the sorting functions
 
-*** TODO Tag org-super-agenda 1.2 and bump required version in org-ql
+Note that the built-in sorting only works on Org elements, which is the default ~:action~.  So if a different action is used, sorting will not work.  In that case, the action should be mapped across the Org element results from outside the ~org-ql~ form.
 
-That /should/ force the version of org-super-agenda with the fix to be installed when org-ql is upgraded.
-
-*** DONE Add automated tests
-:LOGBOOK:
--  State "UNDERWAY"   from "TODO"       [2020-11-12 Thu 00:24]
--  State "TODO"       from "MAYBE"      [2020-11-11 Wed 23:16]
--  State "MAYBE"      from              [2020-11-11 Wed 23:15]
-:END:
-
-Maybe impractical, but maybe we could at least test that potentially unsafe ones signal errors.
-
-[2020-11-12 Thu 00:24]  Works better than I expected.  All the tests seem to correctly pass, signaling the correct errors for the correct reasons--except for the tests specific to org-super-agenda.  For that, I'm currently waiting for MELPA to build the version of org-super-agenda that has the fix applied, so I can install that into the test sandbox, and then those two tests should pass also.
-
-*** DONE Enumerate and test parameters and potentially unsafe types
-CLOSED: [2020-11-11 Wed 23:26]
-:LOGBOOK:
--  State "DONE"       from "UNDERWAY"   [2020-11-11 Wed 23:26]
--  State "UNDERWAY"   from              [2020-11-11 Wed 23:15]
-:END:
-
-#+CAPTION: Template for making testable links
-#+BEGIN_SRC org
-[[org-ql-search:todo:?]]
-#+END_SRC
-
-#+CAPTION: Expression to insert encoded values into template (after the =?=)
-#+BEGIN_SRC elisp
-  (insert (url-hexify-string (concat "buffers-files=" (prin1-to-string '((lambda () (message "AHA")))))))
-#+END_SRC
-
-+  [X] Buffers-Files: Expanded by =org-ql-view--expand-buffers-files=:
-     -  [X] Quoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
-     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
-     -  [X] Quoted lambda in list (safe): [[org-ql-search:todo:?buffers-files%3D%28%28quote%20%28lambda%20nil%20%28message%20%22AHA%22%29%29%29%29]]
-     -  [X] Unquoted lambda in list: (safe) [[org-ql-search:todo:?buffers-files%3D%28%28lambda%20nil%20%28message%20%22AHA%22%29%29%29]]
-+  [X] Groups
-     -  [X] Quoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
-     -  [X] Unquoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
-     -  [X] Quoted expression (safe): [[org-ql-search:todo:?super-groups%3D%28message%20%22AHA%22%29]]
-     -  [X] Unquoted expression (safe): [[org-ql-search:todo:?super-groups%3D%22AHA%22]]
-     -  [X] ~:pred~ selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Apred%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
-     -  [X] =:auto-map= selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Aauto-map%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
-+  [X] Title
-     -  [X] Quoted lambda (produces the same encoded value as unquoted lambda): (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
-     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
-     -  [X] Expression: (safe) [[org-ql-search:todo:?title%3D%28message%20%22AHA%22%29]]
-+  [X] Sort
-     -  [X] Bare, quoted lambda: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
-     -  [X] Bare, unquoted lambda: (UNSAFE, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
-     -  [X] Quoted lambda in list: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28%28quote%20%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29%29%29]]
-     -  [X] Unquoted lambda in a list: (UNSAFE, but caught now):  [[org-ql-search:todo:?sort=((lambda%20nil%20(message%20"AHA")))]]
-
-For the query expression:
-
-1.  String queries are parsed by the PEG parsing function (which I will probably rename soon), which should only allow known Org QL predicates, not arbitrary functions.  For example:
-
-  #+BEGIN_SRC elisp
-    (org-ql--plain-query "message:AHA")  ;;=> (regexp "message:AHA")
-    (org-ql--plain-query '(message "AHA"))   ;;=> (wrong-type-argument stringp (message "AHA"))
-    (org-ql--plain-query "(message \"AHA\"")  ;;=> (and (regexp "(message") (regexp "AHA"))
-  #+END_SRC
-
-2.  Sexp queries already prompt for confirmation, unless the user has set =org-ql-view-ask-unsafe-links= to nil.
-
-[2020-11-11 Wed 23:27]  That's all the parameters and all the types that I can think to test.
 
 ** PROJECT [#B] Recursive queries
 
@@ -1286,7 +1357,7 @@ Appears to be another implementation of magit-section-like expandable sections. 
 
 ** PROJECT Dynamic blocks
 
-*** TODO [#B] Save view to dynamic block
+*** PROJECT [#B] Save view to dynamic block
 :PROPERTIES:
 :milestone: 0.6
 :END:
@@ -1373,6 +1444,32 @@ For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this 
 #+END_SRC
 
 [2020-11-10 Tue 00:03]  I think it's ready to merge now.
+
+*** DONE [#A] Org block to insert results of queries with links to entries
+:PROPERTIES:
+:ID:       422754bb-3a7c-4dbf-b303-4056d3cafb7e
+:END:
+
+[2020-01-16 Thu 06:20]  This idea just came to me when I was thinking about using the search-based paradigm vs. outline-based.  This would allow both, e.g. some kind of =#+BEGIN_QUERY= block that would update when =C-c C-c= is pressed on it.
+
+[2020-11-13 Fri 22:57]  I keep rediscovering ideas that I've had previously.  This is now done as the dynamic block feature.  I guess I should actually use these tools I've made.
+
+** PROJECT [#C] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]  :compatibility:
+
+[2020-10-19 Mon 00:23]  Should try to use this instead of whatever bespoke code is currently used.
+
+** PROJECT [#C] Normalize queries
+
+[2019-07-16 Tue 11:49]  This serves two purposes:
+
+1.  Equivalent queries will return the same results from the cache.
+2.  The selectors that can be converted to the fastest preamble regexps will be sorted first, so the fastest preamble will be used.  Although this may not always be straightforward.  For example, in a file with only a few =TODO= items, the ~(todo "TODO")~ selector would convert to a preamble that would quickly search through the file.  But if there were a thousand =TODO= items, it wouldn't be as much of a benefit, and a ~(regexp "something")~ selector's preamble might be much faster, depending on how many times =something= appears in the file.
+
+So the second purpose might actually be a drawback, because it would prevent users from optimizing their queries with knowledge of their data.  Maybe there should be an option to not normalize queries, so advanced users can order their selectors manually.
+
+** PROJECT [#C] Update view screenshots
+
+e.g. doesn't currently show the =View= header.
 
 ** PROJECT [#C] Test caching
 
@@ -1940,7 +2037,7 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 :END:
 
 :CONTENTS:
-- [[#2019-08-29-thu-0624--benchmarking-org-ql-compared-to-re-search-forward-for-getting-headings-in-buffer][{2019-08-29 Thu 06:24}  Benchmarking org-ql compared to re-search-forward for getting headings in buffer]]
+- [[#2019-08-29-thu-0624--benchmarking-org-ql-compared-to-re-search-forward-for-getting-headings-in-buffer][[2019-08-29 Thu 06:24]  Benchmarking org-ql compared to re-search-forward for getting headings in buffer]]
 - [[#caching-of-inherited-tags][Caching of inherited tags]]
 - [[#intersecting-query-results][Intersecting query results]]
 - [[#more-profiling][More profiling]]
