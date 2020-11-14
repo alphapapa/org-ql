@@ -159,7 +159,11 @@ match."
          (fn-name (intern (concat "org-ql--predicate-" (symbol-name name))))
          (pred-name (intern (symbol-name name))))
     `(progn
-       (push (list :name ',pred-name :aliases ',aliases :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates)
+       (cl-eval-when (compile load eval)
+	 ;; When compiling, the predicate must be added to `org-ql-predicates' before `org-ql--def-plain-query-fn'
+	 ;; is called to define `org-ql--plain-query'.  Otherwise, `org-ql--plain-query' seems to work properly
+	 ;; when interpreted but not always when the file is byte-compiled.
+	 (push (list :name ',pred-name :aliases ',aliases :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates))
        (cl-defun ,fn-name ,args ,docstring ,@body))))
 
 ;; TODO: Mark as obsolete/deprecated.
