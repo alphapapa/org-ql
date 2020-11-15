@@ -557,8 +557,7 @@ dates in the past, and negative for dates in the future."
                              (cl-etypecase buffers-files
                                (string buffers-files)
                                (buffer (file-nameize buffers-files))
-                               (list (cl-loop for b-f in buffers-files
-                                              collect (file-nameize b-f))))))
+                               (list (mapcar #'file-nameize buffers-files)))))
       (list (concat "Org QL View: " org-ql-view-title)
             (cons 'org-ql-view-plist plist)
             (cons 'handler #'org-ql-view-bookmark-handler)
