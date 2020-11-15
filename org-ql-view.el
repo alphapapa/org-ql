@@ -662,9 +662,10 @@ When opened, the link searches the buffer it's opened from."
                             ("containing file" nil)
                             (buffers-files (prin1-to-string buffers-files))))
               (string-or-file-buffer-p
-               (thing) (or (stringp thing)
-                           (and (bufferp thing)
-                                (buffer-file-name thing)))))
+               (thing) (cl-typecase thing
+                         (string thing)
+                         (buffer (or (buffer-file-name thing)
+                                     (buffer-file-name (buffer-base-buffer thing)))))))
       (unless (or (string-or-file-buffer-p org-ql-view-buffers-files)
                   (and (listp org-ql-view-buffers-files)
                        (cl-every #'string-or-file-buffer-p org-ql-view-buffers-files)))

@@ -4184,6 +4184,6 @@ I don't need this right now, but it might come in handy here or elsewhere.
 ** File-local variables
 
 # Local Variables:
-# before-save-hook: (org-make-toc (lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (save-excursion (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o))))))
+# before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (save-excursion (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o))))) org-make-toc)
 # End:
 
