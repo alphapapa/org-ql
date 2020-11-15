@@ -662,10 +662,15 @@ When opened, the link searches the buffer it's opened from."
                             ("containing file" nil)
                             (buffers-files (prin1-to-string buffers-files))))
               (string-or-file-buffer-p
-               (thing) (cl-typecase thing
+               (thing) (cl-etypecase thing
                          (string thing)
                          (buffer (or (buffer-file-name thing)
-                                     (buffer-file-name (buffer-base-buffer thing)))))))
+                                     ;; TODO: Should indirect buffers be allowed?  Maybe not, since their narrowing isn't preserved.
+                                     ;; On the other hand, it's possible to accidentally make a search view for an indirect buffer
+                                     ;; that's since been widened, and forcing the user to manually change that would be awkward,
+                                     ;; and trying to communicate the problem would be difficult, so maybe it's okay to allow it.
+                                     (when (buffer-base-buffer thing)
+                                       (buffer-file-name (buffer-base-buffer thing))))))))
       (unless (or (string-or-file-buffer-p org-ql-view-buffers-files)
                   (and (listp org-ql-view-buffers-files)
                        (cl-every #'string-or-file-buffer-p org-ql-view-buffers-files)))
