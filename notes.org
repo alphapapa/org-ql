@@ -17,66 +17,63 @@
 
 * [#A] Overview
 
-** Bugs
+** Bugs ([[org-ql-search:todo%253A%2520tags%253Abug?super-groups=%2528%2528%253Aauto-property%2520%2522Milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Bugs%2522][view]])
 
-+ [[org-ql-search:todo%3A%20tags%3Abug?super-groups=%28%28%3Aauto-property%20%22Milestone%22%29%29&sort=%28priority%29&title=%22Bugs%22][org-ql-search: Bugs]]
-
-#+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
-| P | M | Keyword | Heading                                                             |
-|---+---+---------+---------------------------------------------------------------------|
-| A |   | NEXT    | [[Fix query-sexp-to-string function's handling of, e.g. =descendants=][Fix query-sexp-to-string function's handling of, e.g. =descendants=]] |
+#+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
+| P |   M | Keyword | Heading                                        |
+|---+-----+---------+------------------------------------------------|
+| A | 0.5 | NEXT    | [[Write tests for storing/opening links][Write tests for storing/opening links]]          |
+| A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
+| A | 0.5 | PROJECT | [[Fix =org-ql-view--link-open= on Org 9.3+][Fix =org-ql-view--link-open= on Org 9.3+]]         |
 #+END:
 
-** Underway
+** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
 
-+ [[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][org-ql-search: Underway]]
-
-#+BEGIN: org-ql :query (todo "UNDERWAY") :columns ((priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
-| P | Keyword  | Heading                                                            |
-|---+----------+--------------------------------------------------------------------|
-| B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
-|   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
+#+BEGIN: org-ql :query (todo "UNDERWAY") :columns (((property "milestone") "M") (priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
+| M | P | Keyword  | Heading                                                            |
+|---+---+----------+--------------------------------------------------------------------|
+|   | B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
+|   |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
 #+END:
 
-** To-do
+** To-do ([[org-ql-search:todo:?super-groups=((:todo%20"NEXT")%20(:todo%20"PROJECT")%20(:auto-priority))&sort=(todo)][view]])
 
-+  [[org-ql-search:todo%3A?super-groups=%28%28%3Atodo%20%22NEXT%22%29%20%28%3Atodo%20%22PROJECT%22%29%20%28%3Aauto-priority%29%29&sort=%28todo%29][org-ql-search: Tasks]]
-
-#+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") todo heading) :sort (priority date) :take 7
-| P | Todo    | Heading                                                                    |
-|---+---------+----------------------------------------------------------------------------|
-| A | NEXT    | [[Fix query-sexp-to-string function's handling of, e.g. =descendants=][Fix query-sexp-to-string function's handling of, e.g. =descendants=]]        |
-| A | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                                |
-| A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                             |
-| A | PROJECT | [[Fix =org-ql-view--link-open= on newer Org versions][Fix =org-ql-view--link-open= on newer Org versions]] |
-| A | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                                    |
-| A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                                       |
-| A | PROJECT | [[Org link types [2/3\]][Org link types [2/3]​]]                                                       |
+#+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
+| P |   M | Todo    | Heading                                                      |
+|---+-----+---------+--------------------------------------------------------------|
+| A |     | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                  |
+| A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
+| A | 0.5 | PROJECT | [[Fix =org-ql-view--link-open= on Org 9.3+][Fix =org-ql-view--link-open= on Org 9.3+]]                       |
+| A | 0.5 | NEXT    | [[Write tests for storing/opening links][Write tests for storing/opening links]]                        |
+| A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
+| A |     | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
+| A | 0.5 | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
 #+END:
 
-** [[org-ql-search:%28and%20%28todo%20%22PROJECT%22%29%20%28not%20%28descendants%20%28todo%20%22NEXT%22%29%29%29%29?super-groups=%28%28%3Aauto-parent%29%29&sort=%28priority%29&title=%22Stuck%20Projects%22][org-ql-search: Stuck Projects]]
+** Stuck projects ([[org-ql-search:(and%20(todo%20"PROJECT")%20(not%20(descendants%20(todo%20"NEXT"))))?super-groups=((:auto-parent))&sort=(priority)&title="Stuck%20Projects"][view]])
 
-#+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT")))) :columns ((priority "P") heading) :sort (priority date) :take 7
-| P | Heading                                                                    |
-|---+----------------------------------------------------------------------------|
-| A | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                             |
-| A | [[Fix =org-ql-view--link-open= on newer Org versions][Fix =org-ql-view--link-open= on newer Org versions]] |
-| A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                                    |
-| A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                                       |
-| A | [[Org link types [2/3\]][Org link types [2/3]​]]                                                       |
-| B | [[Outline path predicate][Outline path predicate]]                                                     |
-| B | [[Group tag support][Group tag support]]                                                          |
+#+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
+|   M | P | Heading                                               |
+|-----+---+-------------------------------------------------------|
+| 0.5 | A | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]        |
+|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]               |
+|     | A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                  |
+|     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                  |
+|     | B | [[Move this notes file into an orphan =meta/notes= branch][Move this notes file into an orphan =meta/notes= branch]] |
+|     | B | [[Outline path predicate][Outline path predicate]]                                |
+|     | B | [[Group tag support][Group tag support]]                                     |
 #+END:
 
-** Milestones
-
-[[org-ql-search:todo%3A?super-groups=%28%28%3Aauto-property%20%22milestone%22%29%29&sort=%28todo%29&title=%22Milestones%22][org-ql-search: Milestones]]
+** Milestones ([[org-ql-search:todo:?super-groups=((:auto-property%20"milestone"))&sort=(todo)&title="Milestones"][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
-|   M | P | Todo    | Heading                                                                    |
-|-----+---+---------+----------------------------------------------------------------------------|
-| 0.5 | A | PROJECT | [[Fix =org-ql-view--link-open= on newer Org versions][Fix =org-ql-view--link-open= on newer Org versions]] |
-| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                                 |
+|   M | P | Todo    | Heading                                                      |
+|-----+---+---------+--------------------------------------------------------------|
+| 0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
+| 0.5 | A | PROJECT | [[Fix =org-ql-view--link-open= on Org 9.3+][Fix =org-ql-view--link-open= on Org 9.3+]]                       |
+| 0.5 | A | NEXT    | [[Write tests for storing/opening links][Write tests for storing/opening links]]                        |
+| 0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
+| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
 #+END:
 
 * [#A] Tasks
@@ -93,18 +90,17 @@
 - [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
-- [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
 - [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
 - [[#node-caching]["Node" caching]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
-- [[#fix-org-ql-view--link-open-on-newer-org-versions][Fix org-ql-view--link-open on newer Org versions]]
+- [[#fix-org-ql-view--link-open-on-org-93][Fix org-ql-view--link-open on Org 9.3+]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
 - [[#outline-path-predicate][Outline path predicate]]
-- [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them [3/4]​]]
+- [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#group-tag-support][Group tag support]]
 - [[#document-the-sorting-functions][Document the sorting functions]]
 - [[#recursive-queries][Recursive queries]]
@@ -115,6 +111,7 @@
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
+- [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
 - [[#helm-command][Helm command]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
 - [[#byte-compile-lambdas][Byte-compile lambdas]]
@@ -172,10 +169,6 @@ e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse
 
 Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
 
-** TODO [#B] Move this notes file into an orphan =meta/notes= branch
-
-[2020-11-12 Thu 03:17]  Will probably have to merge or delete some WIP branches first, otherwise they'll probably get conflicts.
-
 ** TODO [#C] ~org-agenda-skip-function~
 
 As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integrates_orgql_into_org_agenda/ewi1q36/][here]], this is a cool feature that allows further integration into existing custom agenda commands.  Example:
@@ -220,11 +213,6 @@ As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integra
 I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
 
 ** TODO [#C] Update commentary
-
-** NEXT [#A] Fix query-sexp-to-string function's handling of, e.g. =descendants= :bug:
-:PROPERTIES:
-:milestone: 0.5
-:END:
 
 ** NEXT [#A] Make dynamic blocks warn about sexp queries
 
@@ -371,7 +359,7 @@ Eventually, the function org-export-custom-protocol-maybe is now called with a f
 Unfortunately it does not say what the new, required second argument is.
 
 
-** PROJECT [#A] Fix =org-ql-view--link-open= on newer Org versions :compatibility:bug:
+** PROJECT [#A] Fix =org-ql-view--link-open= on Org 9.3+ :compatibility:bug:
 :PROPERTIES:
 :milestone: 0.5
 :END:
@@ -383,6 +371,26 @@ But I don't know which version of Org that changed in.   I'm comparing the funct
 I do recall something about links changing in Org 9.3 (or thereabouts), so that was probably part of it.  Maybe I can find it in the release notes.  I just need to know basically which version it happened in.
 
 I noticed because the CI tests on GitHub show the link-safety tests failing on the Emacs snapshot version.  However, I think they're not currently vulnerable on that Org version, because the link parameters fail to be parsed correctly, so all the arguments to =org-ql-search= should end up being nil.
+
+[2020-11-14 Sat 20:41]  I should probably do something like this in =org-ql-view--link-open=:
+
+#+BEGIN_SRC elisp
+  (when (version<= "9.3" (org-version))
+    ;; Org 9.3+ makes a backward-incompatible change to link escaping.
+    ;; I don't think it would be a good idea to try to guess whether
+    ;; the string received by this function was made with or without
+    ;; that change, so we'll just test the current version of Org.
+    ;; Any links created with older Org versions and then opened with
+    ;; newer ones will have to be recreated.
+    (setf path (url-unhex-string path)))
+#+END_SRC
+
+But, first, I should write tests for saving and opening links, so it can actually be tested on different versions automatically.
+
+*** NEXT [#A] Write tests for storing/opening links
+:PROPERTIES:
+:milestone: 0.5
+:END:
 
 *** DONE [#A] Check Org release notes for link changes
 
@@ -632,6 +640,10 @@ For the query expression:
 
 [2020-11-11 Wed 23:27]  That's all the parameters and all the types that I can think to test.
 
+
+** PROJECT [#B] Move this notes file into an orphan =meta/notes= branch
+
+[2020-11-12 Thu 03:17]  Will probably have to merge or delete some WIP branches first, otherwise they'll probably get conflicts.
 
 ** PROJECT [#B] Outline path predicate
 
@@ -1475,6 +1487,13 @@ e.g. doesn't currently show the =View= header.
 
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
+** DONE [#A] Fix query-sexp-to-string function's handling of, e.g. =descendants= :bug:
+:PROPERTIES:
+:milestone: 0.5
+:END:
+
+[2020-11-14 Sat 20:45]  Fixed in =89ff02a1501b53b4e20cdc66a8fcaa37e7d15734=.
+
 ** DONE [#A] Helm command
 
 In branch =wip/helm-org-ql=.  Works really well, should add it and demonstrate it.
@@ -2037,7 +2056,7 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 :END:
 
 :CONTENTS:
-- [[#2019-08-29-thu-0624--benchmarking-org-ql-compared-to-re-search-forward-for-getting-headings-in-buffer][[2019-08-29 Thu 06:24]  Benchmarking org-ql compared to re-search-forward for getting headings in buffer]]
+- [[#2019-08-29-thu-0624--benchmarking-org-ql-compared-to-re-search-forward-for-getting-headings-in-buffer][{2019-08-29 Thu 06:24}  Benchmarking org-ql compared to re-search-forward for getting headings in buffer]]
 - [[#caching-of-inherited-tags][Caching of inherited tags]]
 - [[#intersecting-query-results][Intersecting query results]]
 - [[#more-profiling][More profiling]]
