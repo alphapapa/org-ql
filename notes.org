@@ -1855,6 +1855,18 @@ If I made the =date= selector a macro, I could avoid the need to quote the compa
 
 Also, maybe instead of having a single =date= selector, I should have =scheduled=, =deadline=, etc.
 
+* Checklists
+
+** Commit
+
+*** Fix
+
++  [ ] Check repo for closing issue
++  [ ] Check this file for closing task
++  [ ] Lint
++  [ ] Test
++  [ ] Commit and push
+
 * Examples / testing
 :PROPERTIES:
 :TOC:      :include descendants :depth 1
