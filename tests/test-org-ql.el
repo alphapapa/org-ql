@@ -1422,6 +1422,7 @@ RESULTS should be a list of strings as returned by
                   (with-current-buffer buffer
                     (erase-buffer)
                     (org-mode)
+                    (insert "* TODO Test heading\n\n")
                     (insert link)
                     (backward-char 1)
                     (org-open-at-point)))
