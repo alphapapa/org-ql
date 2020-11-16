@@ -1205,8 +1205,11 @@ RESULTS should be a list of strings as returned by
             (expect (open-link unquoted-lambda-link)
                     :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: (lambda nil (error UNSAFE))")))
           (it "Errors for a quoted lambda in a list"
-            (expect (open-link quoted-lambda-in-list-link)
-                    :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: ((quote (lambda nil (error UNSAFE))))")))
+            (if (version< (org-version) "9.3")
+                (expect (open-link quoted-lambda-in-list-link)
+                        :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: ((quote (lambda nil (error UNSAFE))))"))
+              (expect (open-link quoted-lambda-in-list-link)
+                      :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: ('(lambda nil (error UNSAFE)))"))))
           (it "Errors for an unquoted lambda in a list"
             (expect (open-link unquoted-lambda-in-list-link)
                     :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: ((lambda nil (error UNSAFE)))"))))
@@ -1268,8 +1271,11 @@ RESULTS should be a list of strings as returned by
             (expect (open-link unquoted-lambda-link)
                     :to-throw 'error '("CAUTION: Link not opened because unsafe sort parameter detected: (lambda (_ _) (error UNSAFE))")))
           (it "Errors for a quoted lambda in a list"
-            (expect (open-link quoted-lambda-in-list-link)
-                    :to-throw 'error '("CAUTION: Link not opened because unsafe sort parameter detected: ((quote (lambda (_ _) (error UNSAFE))))")))
+            (if (version< (org-version) "9.3")
+                (expect (open-link quoted-lambda-in-list-link)
+                        :to-throw 'error '("CAUTION: Link not opened because unsafe sort parameter detected: ((quote (lambda (_ _) (error UNSAFE))))"))
+              (expect (open-link quoted-lambda-in-list-link)
+                      :to-throw 'error '("CAUTION: Link not opened because unsafe sort parameter detected: ('(lambda (_ _) (error UNSAFE)))"))))
           (it "Errors for an unquoted lambda in a list"
             (expect (open-link unquoted-lambda-in-list-link)
                     :to-throw 'error '("CAUTION: Link not opened because unsafe sort parameter detected: ((lambda nil (error UNSAFE)))")))))))
