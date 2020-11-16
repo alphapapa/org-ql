@@ -225,6 +225,8 @@ returns nil or non-nil."
                           (list buffers-or-files)
                           (otherwise (list buffers-or-files)))
                         (--map (cl-etypecase it
+                                 ;; NOTE: This etypecase is essential to opening links safely,
+                                 ;; as it rejects, e.g. lambdas in the buffers-files argument.
                                  (buffer it)
                                  (string (or (find-buffer-visiting it)
                                              (when (file-readable-p it)

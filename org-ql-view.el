@@ -620,7 +620,7 @@ protocol.  See, e.g. `org-ql-view--link-store'."
                                  (read-value (read stored-string)))
                        ;; Ensure the value is either a symbol or list of symbols (which excludes lambdas).
                        (unless (or (symbolp read-value) (cl-every #'symbolp read-value))
-                         (error "Potentially unsafe value found in link's SORT parameter (%s).  Link not opened"
+                         (error "CAUTION: Link not opened because unsafe sort parameter detected: %s"
                                 read-value))
                        read-value))
                (org-super-agenda-allow-unsafe-groups nil) ; Disallow unsafe group selectors.
@@ -631,6 +631,10 @@ protocol.  See, e.g. `org-ql-view--link-store'."
                (buffers-files (--if-let (alist-get "buffers-files" params nil nil #'string=)
                                   (org-ql-view--expand-buffers-files (read it))
                                 (current-buffer))))
+    (unless (or (bufferp buffers-files)
+                (stringp buffers-files)
+                (cl-every #'stringp buffers-files))
+      (error "CAUTION: Link not opened because unsafe buffers-files parameter detected: %s" buffers-files))
     (when (and org-ql-view-ask-unsafe-links
                (or (string-match (rx bol (0+ space) "(") query)
                    (listp query)))
@@ -655,31 +659,31 @@ When opened, the link searches the buffer it's opened from."
   (require 'url-util)
   (when org-ql-view-query
     ;; Only Org QL View buffers should have `org-ql-view-query' set.
-    (cl-flet ((prompt-for (buffers-files)
-                          (pcase-exhaustive
-                              (completing-read (format "Link to search file containing inserted link or %s?  " buffers-files)
-                                               (list "containing file" buffers-files) nil t)
-                            ("containing file" nil)
-                            (buffers-files (prin1-to-string buffers-files))))
-              (string-or-file-buffer-p
-               (thing) (cl-etypecase thing
-                         (string thing)
-                         (buffer (or (buffer-file-name thing)
-                                     ;; TODO: Should indirect buffers be allowed?  Maybe not, since their narrowing isn't preserved.
-                                     ;; On the other hand, it's possible to accidentally make a search view for an indirect buffer
-                                     ;; that's since been widened, and forcing the user to manually change that would be awkward,
-                                     ;; and trying to communicate the problem would be difficult, so maybe it's okay to allow it.
-                                     (when (buffer-base-buffer thing)
-                                       (buffer-file-name (buffer-base-buffer thing))))))))
-      (unless (or (string-or-file-buffer-p org-ql-view-buffers-files)
-                  (and (listp org-ql-view-buffers-files)
-                       (cl-every #'string-or-file-buffer-p org-ql-view-buffers-files)))
+    (cl-labels ((prompt-for (buffers-files)
+                            (pcase-exhaustive
+                                (completing-read (format "Make link that searches: ")
+                                                 '("file link is in" "files currently searched")
+                                                 nil t nil nil "file link is in")
+                              ("file link is in" nil)
+                              ("files currently searched" buffers-files)))
+                (strings-or-file-buffers-p
+                 (thing) (cl-etypecase thing
+                           (list (cl-every #'strings-or-file-buffers-p thing))
+                           (string thing)
+                           (buffer (or (buffer-file-name thing)
+                                       ;; TODO: Should indirect buffers be allowed?  Maybe not, since their narrowing isn't preserved.
+                                       ;; On the other hand, it's possible to accidentally make a search view for an indirect buffer
+                                       ;; that's since been widened, and forcing the user to manually change that would be awkward,
+                                       ;; and trying to communicate the problem would be difficult, so maybe it's okay to allow it.
+                                       (when (buffer-base-buffer thing)
+                                         (buffer-file-name (buffer-base-buffer thing))))))))
+      (unless (strings-or-file-buffers-p org-ql-view-buffers-files)
         (user-error "Views that search non-file-backed buffers can't be linked to"))
       (let* ((query-string (--if-let (org-ql--query-sexp-to-string org-ql-view-query)
                                it (org-ql-view--format-query org-ql-view-query)))
              (buffers-files (prompt-for (org-ql-view--contract-buffers-files org-ql-view-buffers-files)))
              (params (list (when buffers-files
-                             (list "buffers-files" buffers-files))
+                             (list "buffers-files" (prin1-to-string buffers-files)))
                            (when org-ql-view-super-groups
                              (list "super-groups" (prin1-to-string org-ql-view-super-groups)))
                            (when org-ql-view-sort
@@ -1037,16 +1041,14 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
           "org-agenda-files")
          ((pred (seq-set-equal-p (org-ql-search-directories-files)))
           "org-directory")
-         (_ (let ((print-length nil))
-              (concat "'" (prin1-to-string buffers-files))))))
+         (_ buffers-files)))
       ((pred (equal (current-buffer)))
        "buffer")
       ((or 'org-agenda-files '(function org-agenda-files))
        "org-agenda-files")
       ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
        (buffer-file-name buffers-files))
-      (_ (let ((print-length nil))
-           (prin1-to-string buffers-files))))))
+      (_ buffers-files))))
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion."
@@ -1068,13 +1070,15 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
   "Return BUFFERS-FILES expanded to a list of files or buffers.
 The counterpart to `org-ql-view--contract-buffers-files'."
   (pcase-exhaustive buffers-files
-    ((pred bufferp) buffers-files)
-    ((or "" "buffer") (current-buffer))
-    ("org-agenda-files" (org-agenda-files))
     ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
                      (buffer-list)))
+    ("org-agenda-files" (org-agenda-files))
     ("org-directory" (org-ql-search-directories-files))
-    (else (s-split (rx (1+ space)) else))))
+    ((or "" "buffer") (current-buffer))
+    ((pred bufferp) buffers-files)
+    ((pred listp) buffers-files)
+    ;; A single filename.
+    ((pred stringp) buffers-files)))
 
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."
