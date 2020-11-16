@@ -475,6 +475,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Acknowledgments*
 +  [[https://github.com/tpeacock19][tpeacock19]] for extensive help testing new features in this version.
 
+** 0.4.7
+
+*Fixed*
++  Give a useful error if =org-ql-search-directories-files= is called without a directories argument and =org-directory= doesn't exist.  (Fixes [[https://github.com/alphapapa/org-ql/issues/139][#139]].  Thanks to [[https://github.com/matthuszagh][Matt Huszagh]] for reporting.)
+
 ** 0.4.6
 
 *Fixed*
