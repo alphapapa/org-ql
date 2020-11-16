@@ -398,6 +398,11 @@ Expands into a call to ~org-ql-select~ with the same arguments.  For convenience
 
 /Note:/ Breaking changes may be made before version 1.0, but in the event of major changes, attempts at backward compatibility will be made with obsolescence declarations, translation of arguments, etc.  Users who need stability guarantees before 1.0 may choose to use tagged stable releases.
 
+** 0.4.7
+
+*Fixed*
++  Give a useful error if =org-ql-search-directories-files= is called without a directories argument and =org-directory= doesn't exist.  (Fixes [[https://github.com/alphapapa/org-ql/issues/139][#139]].  Thanks to [[https://github.com/matthuszagh][Matt Huszagh]] for reporting.)
+
 ** 0.4.6
 
 *Fixed*

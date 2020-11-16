@@ -270,9 +270,12 @@ automatically from the query."
 
 ;;;; Functions
 
-(cl-defun org-ql-search-directories-files (&key (directories (list org-directory))
-                                                (recurse org-ql-search-directories-files-recursive)
-                                                (regexp org-ql-search-directories-files-regexp))
+(cl-defun org-ql-search-directories-files
+    (&key (directories (if (file-exists-p org-directory)
+                           (list org-directory)
+                         (user-error "org-ql-search-directories-files: No DIRECTORIES given, and `org-directory' doesn't exist")))
+          (recurse org-ql-search-directories-files-recursive)
+          (regexp org-ql-search-directories-files-regexp))
   "Return list of matching files in DIRECTORIES, a list of directory paths.
 When RECURSE is non-nil, recurse into subdirectories.  When
 REGEXP is non-nil, only return files that match REGEXP."
