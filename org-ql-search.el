@@ -272,35 +272,35 @@ Valid parameters include:
 For example, an org-ql dynamic block header could look like:
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
-  (pcase-let* (((map :query :columns :sort :ts-format :take) params)
-               (query (cl-etypecase query
-                        (string (org-ql--plain-query query))
-                        (t query)))
-               (columns (or columns '(heading todo (priority "P"))))
-               ;; MAYBE: Custom column functions.
-               (format-fns
-                ;; NOTE: Backquoting this alist prevents the lambdas from seeing
-                ;; the variable `ts-format', so we use `list' and `cons'.
-                (list (cons 'todo (lambda (element)
-                                    (org-element-property :todo-keyword element)))
-                      (cons 'heading (lambda (element)
-                                       (org-make-link-string (org-element-property :raw-value element)
-                                                             (org-element-property :raw-value element))))
-                      (cons 'priority (lambda (element)
-                                        (--when-let (org-element-property :priority element)
-                                          (char-to-string it))))
-                      (cons 'deadline (lambda (element)
-                                        (--when-let (org-element-property :deadline element)
-                                          (ts-format ts-format (ts-parse-org-element it)))))
-                      (cons 'scheduled (lambda (element)
-                                         (--when-let (org-element-property :scheduled element)
-                                           (ts-format ts-format (ts-parse-org-element it)))))
-                      (cons 'property (lambda (element property)
-                                        (org-element-property (intern (concat ":" (upcase property))) element)))))
-               (elements (org-ql-query :from (current-buffer)
-                                       :where query
-                                       :select '(org-element-headline-parser (line-end-position))
-                                       :order-by sort)))
+  (-let* (((&plist :query :columns :sort :ts-format :take) params)
+          (query (cl-etypecase query
+                   (string (org-ql--plain-query query))
+                   (t query)))
+          (columns (or columns '(heading todo (priority "P"))))
+          ;; MAYBE: Custom column functions.
+          (format-fns
+           ;; NOTE: Backquoting this alist prevents the lambdas from seeing
+           ;; the variable `ts-format', so we use `list' and `cons'.
+           (list (cons 'todo (lambda (element)
+                               (org-element-property :todo-keyword element)))
+                 (cons 'heading (lambda (element)
+                                  (org-make-link-string (org-element-property :raw-value element)
+                                                        (org-element-property :raw-value element))))
+                 (cons 'priority (lambda (element)
+                                   (--when-let (org-element-property :priority element)
+                                     (char-to-string it))))
+                 (cons 'deadline (lambda (element)
+                                   (--when-let (org-element-property :deadline element)
+                                     (ts-format ts-format (ts-parse-org-element it)))))
+                 (cons 'scheduled (lambda (element)
+                                    (--when-let (org-element-property :scheduled element)
+                                      (ts-format ts-format (ts-parse-org-element it)))))
+                 (cons 'property (lambda (element property)
+                                   (org-element-property (intern (concat ":" (upcase property))) element)))))
+          (elements (org-ql-query :from (current-buffer)
+                                  :where query
+                                  :select '(org-element-headline-parser (line-end-position))
+                                  :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
                        ((and integer (satisfies cl-minusp)) (-take-last (abs take) elements))

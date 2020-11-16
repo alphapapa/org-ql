@@ -550,8 +550,8 @@ dates in the past, and negative for dates in the future."
                                    (when (buffer-base-buffer b-f)
                                      (buffer-file-name (buffer-base-buffer b-f)))))
                        (t (user-error "Only file-backed buffers can be bookmarked by Org QL View: %s" b-f)))))
-    (pcase-let* ((plist (org-ql-view--plist (current-buffer)))
-                 ((map :buffers-files) plist))
+    (-let* ((plist (org-ql-view--plist (current-buffer)))
+            ((&plist :buffers-files) plist))
       ;; Replace buffers with their filenames, and signal error if any are not file-backed.
       (setf plist (plist-put plist :buffers-files
                              (cl-etypecase buffers-files
@@ -566,15 +566,15 @@ dates in the past, and negative for dates in the future."
 ;;;###autoload
 (defun org-ql-view-bookmark-handler (bookmark)
   "Show Org QL View BOOKMARK in current buffer."
-  ;; FIXME: Getting "(void-variable super-groups)" errors when this function is byte-compiled,
-  ;; but not when it's interpreted!  Using (:super-groups super-groups) instead of just
-  ;; :super-groups fixes it, but I have no idea why, and the macroexpansion is the same.
-  (pcase-let* (((map org-ql-view-plist) (bookmark-get-bookmark-record bookmark))
-               ((map :buffers-files :query :super-groups :narrow :sort :title)
-                org-ql-view-plist)
-               (super-groups (cl-etypecase super-groups
-                               (symbol (symbol-value super-groups))
-                               (list super-groups))))
+  ;; FIXME: `pcase-let*' is easier to use to destructure this, but if I use
+  ;; that, I want to use map 2.1 for the extra convenience, but I can't force
+  ;; that to be installed into the makem.sh sandbox, so I just use `-let*' here.
+  (-let* ((org-ql-view-plist (car (bookmark-get-bookmark-record bookmark)))
+          ((&plist :buffers-files :query :super-groups :narrow :sort :title)
+           (cdr org-ql-view-plist))
+          (super-groups (cl-etypecase super-groups
+                          (symbol (symbol-value super-groups))
+                          (list super-groups))))
     (org-ql-search buffers-files query
       :super-groups super-groups :narrow narrow :sort sort :title title)
     ;; HACK: `bookmark--jump-via' expects that, when the handler returns, the current buffer
