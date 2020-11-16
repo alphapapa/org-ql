@@ -59,7 +59,7 @@ jobs:
     - name: Lint
       # NOTE: Uncomment this line to treat lint failures as passing
       #       so the job doesn't show failure.
-      # continue-on-error: true
+      continue-on-error: true
       run: ./makem.sh -vv --sandbox=$SANDBOX_DIR lint
 
     - name: Test
