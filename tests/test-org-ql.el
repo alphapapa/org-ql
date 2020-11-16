@@ -1432,11 +1432,15 @@ RESULTS should be a list of strings as returned by
                     :super-groups super-groups
                     :sort sort :title title :buffer view-buffer)
                   (with-current-buffer view-buffer
+                    (cl-assert (member '("org-ql-search" :follow org-ql-view--link-open :store org-ql-view--link-store)
+                                       org-link-parameters)
+                               t)
                     (with-simulated-input input
                       ;; Avoid writing "Stored: ..." to test output.
                       (let ((inhibit-message t))
                         (call-interactively #'org-store-link nil)))
                     (kill-buffer))
+                  (cl-assert (and org-stored-links (caar org-stored-links)) t)
                   (open-link-in (caar org-stored-links) buffer)
                   (with-current-buffer (get-buffer (concat "*Org QL View: " title "*"))
                     (prog1 (buffer-local-value var (current-buffer))
