@@ -82,6 +82,7 @@
 :TOC:      :include descendants :depth 1
 :END:
 :CONTENTS:
+- [[#add-emacs-271-to-testyml][Add Emacs 27.1 to test.yml]]
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
@@ -120,6 +121,11 @@
 - [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
+:END:
+
+** TODO [#A] Add Emacs 27.1 to =test.yml=
+:PROPERTIES:
+:milestone: 0.5
 :END:
 
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
