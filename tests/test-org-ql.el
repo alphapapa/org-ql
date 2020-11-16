@@ -1415,22 +1415,31 @@ RESULTS should be a list of strings as returned by
           (insert "* TODO Test heading\n\n")
           (org-mode)))
 
-      (cl-flet ((var-after-link-save-open
-                 (var buffers-files query &key sort super-groups (input "RET"))
-                 (org-ql-search buffers-files query
-                   :super-groups super-groups
-                   :sort sort :title title :buffer view-buffer)
-                 (with-current-buffer view-buffer
-                   (with-simulated-input input
-                     ;; Avoid writing "Stored: ..." to test output.
-                     (let ((inhibit-message t))
-                       (org-store-link nil)))
-                   (kill-buffer))
-                 ;; ;; Let's see if this trick works.
-                 (org-open-link-from-string (caar org-stored-links) nil link-buffer)
-                 (with-current-buffer (get-buffer (concat "*Org QL View: " title "*"))
-                   (prog1 (buffer-local-value var (current-buffer))
-                     (kill-buffer)))))
+      (cl-flet* ((open-link-in
+                  (link buffer)
+                  ;; Org REDUCED THE NUMBER OF ARGUMENTS TO `org-open-link-from-string'!  That BREAKS BACKWARD
+                  ;; COMPATIBILITY!  So I have to make my own function so these tests can work across Org versions!
+                  (with-current-buffer buffer
+                    (erase-buffer)
+                    (org-mode)
+                    (insert link)
+                    (backward-char 1)
+                    (org-open-at-point)))
+                 (var-after-link-save-open
+                  (var buffers-files query &key sort super-groups (buffer link-buffer) (input "RET"))
+                  (org-ql-search buffers-files query
+                    :super-groups super-groups
+                    :sort sort :title title :buffer view-buffer)
+                  (with-current-buffer view-buffer
+                    (with-simulated-input input
+                      ;; Avoid writing "Stored: ..." to test output.
+                      (let ((inhibit-message t))
+                        (org-store-link nil)))
+                    (kill-buffer))
+                  (open-link-in (caar org-stored-links) buffer)
+                  (with-current-buffer (get-buffer (concat "*Org QL View: " title "*"))
+                    (prog1 (buffer-local-value var (current-buffer))
+                      (kill-buffer)))))
 
         (describe "Queries"
           :var ((string-query "todo:TODO regexp:heading")
@@ -1465,9 +1474,6 @@ RESULTS should be a list of strings as returned by
         (describe "Buffers/Files"
           :var ((query '(and (todo "TODO") (regexp "heading")))
                 (one-filename (car temp-filenames)))
-          (it "Can search buffer containing the link"
-            (expect (var-after-link-save-open 'org-ql-view-buffers-files one-filename query)
-                    :to-equal link-buffer))
           (it "Can search a file by filename"
             (expect (var-after-link-save-open 'org-ql-view-buffers-files one-filename query
                                               :input "M-n M-n RET")
@@ -1475,7 +1481,12 @@ RESULTS should be a list of strings as returned by
           (it "Can search multiple files by filename"
             (expect (var-after-link-save-open 'org-ql-view-buffers-files temp-filenames query
                                               :input "M-n M-n RET")
-                    :to-equal temp-filenames)))))
+                    :to-equal temp-filenames))
+          (it "Can search buffer containing the link"
+            ;; This is sort-of a special case because of how the test link-opening function works.
+            (expect (var-after-link-save-open 'org-ql-view-buffers-files one-filename query
+                                              :buffer link-buffer)
+                    :to-equal link-buffer)))))
 
     ;; MAYBE: Also test `org-ql-views', although I already know it works now.
     ;; (describe "org-ql-views")
