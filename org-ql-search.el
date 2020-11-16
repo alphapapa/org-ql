@@ -334,7 +334,7 @@ For example, an org-ql dynamic block header could look like:
 (cl-defun org-ql-search-directories-files
     (&key (directories (if (file-exists-p org-directory)
                            (list org-directory)
-                         (user-error "org-ql-search-directories-files: No DIRECTORIES given, and `org-directory' doesn't exist")))
+                         (user-error "Org-ql-search-directories-files: No DIRECTORIES given, and `org-directory' doesn't exist")))
           (recurse org-ql-search-directories-files-recursive)
           (regexp org-ql-search-directories-files-regexp))
   "Return list of matching files in DIRECTORIES, a list of directory paths.
