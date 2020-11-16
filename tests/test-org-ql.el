@@ -1435,7 +1435,7 @@ RESULTS should be a list of strings as returned by
                     (with-simulated-input input
                       ;; Avoid writing "Stored: ..." to test output.
                       (let ((inhibit-message t))
-                        (org-store-link nil)))
+                        (call-interactively #'org-store-link nil)))
                     (kill-buffer))
                   (open-link-in (caar org-stored-links) buffer)
                   (with-current-buffer (get-buffer (concat "*Org QL View: " title "*"))
