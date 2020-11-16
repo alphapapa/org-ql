@@ -40,7 +40,6 @@
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
 | P |   M | Todo    | Heading                                                      |
 |---+-----+---------+--------------------------------------------------------------|
-| A | 0.5 | TODO    | [[Add Emacs 27.1 to =test.yml=][Add Emacs 27.1 to =test.yml=]]                                 |
 | A |     | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                  |
 | A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
 | A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
@@ -68,7 +67,6 @@
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
 |   M | P | Todo    | Heading                                                      |
 |-----+---+---------+--------------------------------------------------------------|
-| 0.5 | A | TODO    | [[Add Emacs 27.1 to =test.yml=][Add Emacs 27.1 to =test.yml=]]                                 |
 | 0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
 | 0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
 | 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
@@ -79,7 +77,6 @@
 :TOC:      :include descendants :depth 1
 :END:
 :CONTENTS:
-- [[#add-emacs-271-to-testyml][Add Emacs 27.1 to test.yml]]
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
@@ -109,6 +106,7 @@
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
 - [[#node-caching]["Node" caching]]
+- [[#add-emacs-271-to-testyml][Add Emacs 27.1 to test.yml]]
 - [[#fix-org-ql-view--link-open-on-org-93][Fix org-ql-view--link-open on Org 9.3+]]
 - [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
 - [[#helm-command][Helm command]]
@@ -118,11 +116,6 @@
 - [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
-:END:
-
-** TODO [#A] Add Emacs 27.1 to =test.yml=
-:PROPERTIES:
-:milestone: 0.5
 :END:
 
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
@@ -1400,6 +1393,13 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
               :volatile t
               :action #'helm-org-goto-marker))))
 #+END_SRC
+
+** DONE [#A] Add Emacs 27.1 to =test.yml=
+:PROPERTIES:
+:milestone: 0.5
+:END:
+
+[2020-11-16 Mon 05:22]  Also releasing =makem.sh= 0.2 with this change.
 
 ** DONE [#A] Fix =org-ql-view--link-open= on Org 9.3+      :compatibility:bug:
 :PROPERTIES:
