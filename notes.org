@@ -1,5 +1,5 @@
 #+PROPERTY: LOGGING nil
-#+TODO: TODO MAYBE NEXT PROJECT UNDERWAY WAITING | DONE CANCELED
+#+TODO: TODO MAYBE NEXT PROJECT UNDERWAY WAITING | DONE(d) CANCELED
 
 * [#A] Contents
 :PROPERTIES:
@@ -23,9 +23,7 @@
 #+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
 | P |   M | Keyword | Heading                                        |
 |---+-----+---------+------------------------------------------------|
-| A | 0.5 | NEXT    | [[Write tests for storing/opening links][Write tests for storing/opening links]]          |
 | A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
-| A | 0.5 | PROJECT | [[Fix =org-ql-view--link-open= on Org 9.3+][Fix =org-ql-view--link-open= on Org 9.3+]]         |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -42,13 +40,13 @@
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
 | P |   M | Todo    | Heading                                                      |
 |---+-----+---------+--------------------------------------------------------------|
+| A | 0.5 | TODO    | [[Add Emacs 27.1 to =test.yml=][Add Emacs 27.1 to =test.yml=]]                                 |
 | A |     | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                  |
 | A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-| A | 0.5 | PROJECT | [[Fix =org-ql-view--link-open= on Org 9.3+][Fix =org-ql-view--link-open= on Org 9.3+]]                       |
-| A | 0.5 | NEXT    | [[Write tests for storing/opening links][Write tests for storing/opening links]]                        |
 | A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
 | A |     | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
 | A | 0.5 | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
+| A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                         |
 #+END:
 
 ** Stuck projects ([[org-ql-search:(and%20(todo%20"PROJECT")%20(not%20(descendants%20(todo%20"NEXT"))))?super-groups=((:auto-parent))&sort=(priority)&title="Stuck%20Projects"][view]])
@@ -70,9 +68,8 @@
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
 |   M | P | Todo    | Heading                                                      |
 |-----+---+---------+--------------------------------------------------------------|
+| 0.5 | A | TODO    | [[Add Emacs 27.1 to =test.yml=][Add Emacs 27.1 to =test.yml=]]                                 |
 | 0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-| 0.5 | A | PROJECT | [[Fix =org-ql-view--link-open= on Org 9.3+][Fix =org-ql-view--link-open= on Org 9.3+]]                       |
-| 0.5 | A | NEXT    | [[Write tests for storing/opening links][Write tests for storing/opening links]]                        |
 | 0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
 | 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
 #+END:
@@ -96,7 +93,6 @@
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
-- [[#fix-org-ql-view--link-open-on-org-93][Fix org-ql-view--link-open on Org 9.3+]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
 - [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
@@ -113,6 +109,7 @@
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
 - [[#node-caching]["Node" caching]]
+- [[#fix-org-ql-view--link-open-on-org-93][Fix org-ql-view--link-open on Org 9.3+]]
 - [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
 - [[#helm-command][Helm command]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
@@ -260,97 +257,6 @@ Eventually, the function org-export-custom-protocol-maybe is now called with a f
 #+END_QUOTE
 
 Unfortunately it does not say what the new, required second argument is.
-
-
-** PROJECT [#A] Fix =org-ql-view--link-open= on Org 9.3+ :compatibility:bug:
-:PROPERTIES:
-:milestone: 0.5
-:url:      https://github.com/alphapapa/org-ql/issues/147
-:END:
-
-The version of Org in my personal that passes a URL-decoded string (i.e. as if run through =url-unhex-string=) as the argument to =org-ql-view--link-open=.  But Org 9.3 in Emacs 27.1 passes a non-URL-decoded string, so =org-ql-view--link-open= needs to pass it through =url-unhex-string= itself.
-
-But I don't know which version of Org that changed in.   I'm comparing the function =org-open-at-point=, but it's a 114-line function, and in neither version does it call =url-unhex-string=, so whatever code decodes the string must be elsewhere.
-
-I do recall something about links changing in Org 9.3 (or thereabouts), so that was probably part of it.  Maybe I can find it in the release notes.  I just need to know basically which version it happened in.
-
-I noticed because the CI tests on GitHub show the link-safety tests failing on the Emacs snapshot version.  However, I think they're not currently vulnerable on that Org version, because the link parameters fail to be parsed correctly, so all the arguments to =org-ql-search= should end up being nil.
-
-[2020-11-14 Sat 20:41]  I should probably do something like this in =org-ql-view--link-open=:
-
-#+BEGIN_SRC elisp
-  (when (version<= "9.3" (org-version))
-    ;; Org 9.3+ makes a backward-incompatible change to link escaping.
-    ;; I don't think it would be a good idea to try to guess whether
-    ;; the string received by this function was made with or without
-    ;; that change, so we'll just test the current version of Org.
-    ;; Any links created with older Org versions and then opened with
-    ;; newer ones will have to be recreated.
-    (setf path (url-unhex-string path)))
-#+END_SRC
-
-But, first, I should write tests for saving and opening links, so it can actually be tested on different versions automatically.
-
-*** NEXT [#A] Write tests for storing/opening links
-:PROPERTIES:
-:milestone: 0.5
-:END:
-
-*** DONE [#A] Check Org release notes for link changes
-
-[2020-11-13 Fri 22:44]  From [[https://www.orgmode.org/Changes_old.html][the changelog]]:
-
-#+BEGIN_QUOTE
-Change bracket link escaping syntax
-
-Org used to percent-encode sensitive characters in the URI part of the bracket links.
-
-Now, escaping mechanism uses the usual backslash character, according to the following rules, applied in order:
-
--  All consecutive \ characters at the end of the link must be escaped;
--  Any ] character at the very end of the link must be escaped;
--  All consecutive \ characters preceding ][ or ]] patterns must be escaped;
--  Any ] character followed by either [ or ] must be escaped;
--  Others ] and \ characters need not be escaped.
-
-When in doubt, use the function org-link-escape in order to turn a link string into its properly escaped form.
-
-The following function will help switching your links to the new syntax:
-
-(defun org-update-link-syntax (&optional no-query)
-  "Update syntax for links in current buffer.
-Query before replacing a link, unless optional argument NO-QUERY
-is non-nil."
-  (interactive "P")
-  (org-with-point-at 1
-    (let ((case-fold-search t))
-      (while (re-search-forward "\\[\\[[^]]*?%\\(?:2[05]\\|5[BD]\\)" nil t)
-        (let ((object (save-match-data (org-element-context))))
-          (when (and (eq 'link (org-element-type object))
-                     (= (match-beginning 0)
-                        (org-element-property :begin object)))
-            (goto-char (org-element-property :end object))
-            (let* ((uri-start (+ 2 (match-beginning 0)))
-                   (uri-end (save-excursion
-                              (goto-char uri-start)
-                              (re-search-forward "\\][][]" nil t)
-                              (match-beginning 0)))
-                   (uri (buffer-substring-no-properties uri-start uri-end)))
-              (when (or no-query
-                        (y-or-n-p
-                         (format "Possibly obsolete URI syntax: %S.  Fix? "
-                                 uri)))
-                (setf (buffer-substring uri-start uri-end)
-                      (org-link-escape (org-link-decode uri)))))))))))
-
-The old org-link-escape and org-link-unescape functions have been renamed into org-link-encode and org-link-decode.
-#+END_QUOTE
-
-This is exactly the kind of breaking, backwards-incompatible change that I've said should mandate a major-version increment.  It's not only a change in Org's code, and a change that affects third-party packages, but it's a change in the file format!
-
-Is it even possible to support both Org 9.3+ and earlier versions at the same time?
-
-This change doesn't even seem to make sense to me.  Percent-encoding solves so many problems in a simple way: pass a string to the encoding function on the way in, and to the decoding function on the way out.  Now, instead of a simple, standard way of encoding links, there's a list of Org-specific rules and Org-specific encoding/decoding functions.  What is gained this way?
 
 
 ** PROJECT [#A] Convert simple sexp queries to non-sexp
@@ -1494,6 +1400,101 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
               :volatile t
               :action #'helm-org-goto-marker))))
 #+END_SRC
+
+** DONE [#A] Fix =org-ql-view--link-open= on Org 9.3+      :compatibility:bug:
+:PROPERTIES:
+:milestone: 0.5
+:url:      https://github.com/alphapapa/org-ql/issues/147
+:END:
+
+The version of Org in my personal that passes a URL-decoded string (i.e. as if run through =url-unhex-string=) as the argument to =org-ql-view--link-open=.  But Org 9.3 in Emacs 27.1 passes a non-URL-decoded string, so =org-ql-view--link-open= needs to pass it through =url-unhex-string= itself.
+
+But I don't know which version of Org that changed in.   I'm comparing the function =org-open-at-point=, but it's a 114-line function, and in neither version does it call =url-unhex-string=, so whatever code decodes the string must be elsewhere.
+
+I do recall something about links changing in Org 9.3 (or thereabouts), so that was probably part of it.  Maybe I can find it in the release notes.  I just need to know basically which version it happened in.
+
+I noticed because the CI tests on GitHub show the link-safety tests failing on the Emacs snapshot version.  However, I think they're not currently vulnerable on that Org version, because the link parameters fail to be parsed correctly, so all the arguments to =org-ql-search= should end up being nil.
+
+[2020-11-14 Sat 20:41]  I should probably do something like this in =org-ql-view--link-open=:
+
+#+BEGIN_SRC elisp
+  (when (version<= "9.3" (org-version))
+    ;; Org 9.3+ makes a backward-incompatible change to link escaping.
+    ;; I don't think it would be a good idea to try to guess whether
+    ;; the string received by this function was made with or without
+    ;; that change, so we'll just test the current version of Org.
+    ;; Any links created with older Org versions and then opened with
+    ;; newer ones will have to be recreated.
+    (setf path (url-unhex-string path)))
+#+END_SRC
+
+But, first, I should write tests for saving and opening links, so it can actually be tested on different versions automatically.
+
+[2020-11-16 Mon 05:12]  Finally, all of the tests pass on my Org version and on 9.3.  And I tested for all the combinations of link and bookmark saving/opening I could think of.  I hope they work and are safe.
+
+*** DONE [#A] Write tests for storing/opening links
+:PROPERTIES:
+:milestone: 0.5
+:END:
+
+[2020-11-16 Mon 05:11]  Took way longer than I expected.  I hope it was worth it.
+
+*** DONE [#A] Check Org release notes for link changes
+
+[2020-11-13 Fri 22:44]  From [[https://www.orgmode.org/Changes_old.html][the changelog]]:
+
+#+BEGIN_QUOTE
+Change bracket link escaping syntax
+
+Org used to percent-encode sensitive characters in the URI part of the bracket links.
+
+Now, escaping mechanism uses the usual backslash character, according to the following rules, applied in order:
+
+-  All consecutive \ characters at the end of the link must be escaped;
+-  Any ] character at the very end of the link must be escaped;
+-  All consecutive \ characters preceding ][ or ]] patterns must be escaped;
+-  Any ] character followed by either [ or ] must be escaped;
+-  Others ] and \ characters need not be escaped.
+
+When in doubt, use the function org-link-escape in order to turn a link string into its properly escaped form.
+
+The following function will help switching your links to the new syntax:
+
+(defun org-update-link-syntax (&optional no-query)
+  "Update syntax for links in current buffer.
+Query before replacing a link, unless optional argument NO-QUERY
+is non-nil."
+  (interactive "P")
+  (org-with-point-at 1
+    (let ((case-fold-search t))
+      (while (re-search-forward "\\[\\[[^]]*?%\\(?:2[05]\\|5[BD]\\)" nil t)
+        (let ((object (save-match-data (org-element-context))))
+          (when (and (eq 'link (org-element-type object))
+                     (= (match-beginning 0)
+                        (org-element-property :begin object)))
+            (goto-char (org-element-property :end object))
+            (let* ((uri-start (+ 2 (match-beginning 0)))
+                   (uri-end (save-excursion
+                              (goto-char uri-start)
+                              (re-search-forward "\\][][]" nil t)
+                              (match-beginning 0)))
+                   (uri (buffer-substring-no-properties uri-start uri-end)))
+              (when (or no-query
+                        (y-or-n-p
+                         (format "Possibly obsolete URI syntax: %S.  Fix? "
+                                 uri)))
+                (setf (buffer-substring uri-start uri-end)
+                      (org-link-escape (org-link-decode uri)))))))))))
+
+The old org-link-escape and org-link-unescape functions have been renamed into org-link-encode and org-link-decode.
+#+END_QUOTE
+
+This is exactly the kind of breaking, backwards-incompatible change that I've said should mandate a major-version increment.  It's not only a change in Org's code, and a change that affects third-party packages, but it's a change in the file format!
+
+Is it even possible to support both Org 9.3+ and earlier versions at the same time?
+
+This change doesn't even seem to make sense to me.  Percent-encoding solves so many problems in a simple way: pass a string to the encoding function on the way in, and to the decoding function on the way out.  Now, instead of a simple, standard way of encoding links, there's a list of Org-specific rules and Org-specific encoding/decoding functions.  What is gained this way?
+
 
 ** DONE [#A] Fix query-sexp-to-string function's handling of, e.g. =descendants= :bug:
 :PROPERTIES:
