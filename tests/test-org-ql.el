@@ -1464,9 +1464,7 @@ RESULTS should be a list of strings as returned by
 
         (describe "Buffers/Files"
           :var ((query '(and (todo "TODO") (regexp "heading")))
-                (one-buffer (find-file-noselect (car temp-filenames)))
-                (one-filename (car temp-filenames))
-                (buffers (mapcar #'find-file-noselect temp-filenames)))
+                (one-filename (car temp-filenames)))
           (it "Can search buffer containing the link"
             (expect (var-after-link-save-open 'org-ql-view-buffers-files one-filename query)
                     :to-equal link-buffer))
