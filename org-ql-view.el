@@ -610,6 +610,14 @@ PATH should be the part of an \"org-ql-search:\" URL after the
 protocol.  See, e.g. `org-ql-view--link-store'."
   (require 'url-parse)
   (require 'url-util)
+  (when (version<= "9.3" (org-version))
+    ;; Org 9.3+ makes a backward-incompatible change to link escaping.
+    ;; I don't think it would be a good idea to try to guess whether
+    ;; the string received by this function was made with or without
+    ;; that change, so we'll just test the current version of Org.
+    ;; Any links created with older Org versions and then opened with
+    ;; newer ones will have to be recreated.
+    (setf path (url-unhex-string path)))
   (pcase-let* ((`(,query . ,params) (url-path-and-query
                                      (url-parse-make-urlobj "org-ql-search" nil nil nil nil
                                                             path)))
