@@ -40,26 +40,26 @@
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
 | P |   M | Todo    | Heading                                                      |
 |---+-----+---------+--------------------------------------------------------------|
-| A |     | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                  |
+| A | 0.5 | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                  |
 | A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-| A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
-| A |     | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
+| A | 0.5 | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
+| A | 0.5 | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
 | A | 0.5 | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
 | A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                         |
 #+END:
 
-** Stuck projects ([[org-ql-search:(and%20(todo%20"PROJECT")%20(not%20(descendants%20(todo%20"NEXT"))))?super-groups=((:auto-parent))&sort=(priority)&title="Stuck%20Projects"][view]])
+** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
 |   M | P | Heading                                               |
 |-----+---+-------------------------------------------------------|
 | 0.5 | A | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]        |
-|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]               |
-|     | A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                  |
+| 0.5 | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]               |
+| 0.5 | A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                  |
 |     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                  |
 |     | B | [[Move this notes file into an orphan =meta/notes= branch][Move this notes file into an orphan =meta/notes= branch]] |
 |     | B | [[Outline path predicate][Outline path predicate]]                                |
-|     | B | [[Group tag support][Group tag support]]                                     |
+| 0.6 | B | [[Group tag support][Group tag support]]                                     |
 #+END:
 
 ** Milestones ([[org-ql-search:todo:?super-groups=((:auto-property%20"milestone"))&sort=(todo)&title="Milestones"][view]])
@@ -67,8 +67,12 @@
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
 |   M | P | Todo    | Heading                                                      |
 |-----+---+---------+--------------------------------------------------------------|
+| 0.5 | A | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                  |
 | 0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
+| 0.5 | A | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
+| 0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
 | 0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
+| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
 | 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
 #+END:
 
@@ -220,6 +224,9 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 However, there might still be a useful idea here somewhere...
 
 ** MAYBE [#C] Alternative parsing libraries
+:PROPERTIES:
+:milestone: future
+:END:
 
 +  e.g. Bovine and Wisent come with Emacs, which would allow us to drop the =peg= dependency (which doesn't use lexical binding).
 +  [[https://github.com/cute-jumper/parsec.el][parsec]] is third-party, but looks powerful
@@ -229,6 +236,9 @@ However, there might still be a useful idea here somewhere...
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
 
 ** NEXT [#A] Make dynamic blocks warn about sexp queries
+:PROPERTIES:
+:milestone: 0.5
+:END:
 
 [2020-11-12 Thu 05:22]  I guess to be super-extra careful, just in case someone had =org-update-all-dblocks= in the =before-save-hook= or something.
 
@@ -253,6 +263,9 @@ Unfortunately it does not say what the new, required second argument is.
 
 
 ** PROJECT [#A] Convert simple sexp queries to non-sexp
+:PROPERTIES:
+:milestone: 0.5
+:END:
 
 [2020-11-11 Wed 00:28]  This will be very helpful for storing links.  Surely simple ones won't be too hard...
 
@@ -357,6 +370,7 @@ Maybe make it an option to automatically convert them when possible, because if 
 ** PROJECT [#A] Checking links for unsafe parameters
 :PROPERTIES:
 :ID:       ba70e375-eddb-40df-8892-fb418c1f70d1
+:milestone: 0.5
 :END:
 :LOGBOOK:
 -  State "PROJECT"    from "UNDERWAY"   [2020-11-12 Thu 00:26]
@@ -644,6 +658,9 @@ That seems to work, like:
 *** DONE Save query from ql-agenda buffer
 
 ** PROJECT [#B] Group tag support
+:PROPERTIES:
+:milestone: 0.6
+:END:
 
 *** UNDERWAY Benchmarking tags searches without and with new group-tags support
 
@@ -1138,6 +1155,9 @@ One of the things in that branch is =org-ql-item=, which is a struct used to car
 Another idea for it is to simply store the element from =org-element-headline-parser= in one of its slots, and populate all of the other slots lazily, like =ts=.  It already does that for a couple of slots, but I think it makes sense to do it for all of them, to reduce the overhead of making the struct for every query result.
 
 *** MAYBE [#C] Experiment with =widget=
+:PROPERTIES:
+:milestone: future
+:END:
 
 The code that powers the customization UI.  Has collapsible and customizable widgets.  Might be perfect.  Might even enable editing items in the list, with functions to make the changes in the source  buffers.
 
@@ -4205,6 +4225,6 @@ I don't need this right now, but it might come in handy here or elsewhere.
 ** File-local variables
 
 # Local Variables:
-# before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (save-excursion (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o))))) org-make-toc)
+# before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (save-excursion (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o))))) org-update-all-dblocks org-make-toc)
 # End:
 
