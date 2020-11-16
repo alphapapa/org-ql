@@ -1039,7 +1039,9 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
        (pcase (expand-files buffers-files)
          ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
           "org-agenda-files")
-         ((pred (seq-set-equal-p (org-ql-search-directories-files)))
+         ((and (guard (file-exists-p org-directory))
+               (pred (seq-set-equal-p (org-ql-search-directories-files
+                                       :directories (list org-directory)))))
           "org-directory")
          (_ buffers-files)))
       ((pred (equal (current-buffer)))
