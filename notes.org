@@ -23,12 +23,13 @@
 #+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
 | P |   M | Keyword | Heading                                        |
 |---+-----+---------+------------------------------------------------|
+| A | 0.5 | TODO    | [[Views: Multiple sorters are not preserved][Views: Multiple sorters are not preserved]]      |
 | A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
 
-#+BEGIN: org-ql :query (todo "UNDERWAY") :columns (((property "milestone") "M") (priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
+#+BEGIN: org-ql :query "todo:UNDERWAY" :columns (((property "milestone") "M") (priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 | M | P | Keyword  | Heading                                                            |
 |---+---+----------+--------------------------------------------------------------------|
 |   | B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
@@ -40,6 +41,7 @@
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
 | P |   M | Todo    | Heading                                                      |
 |---+-----+---------+--------------------------------------------------------------|
+| A | 0.5 | TODO    | [[Views: Multiple sorters are not preserved][Views: Multiple sorters are not preserved]]                    |
 | A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
 | A | 0.5 | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
 | A | 0.5 | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
@@ -61,18 +63,18 @@
 | 0.6 | B | [[Group tag support][Group tag support]]                                     |
 #+END:
 
-** Milestones ([[org-ql-search:todo:?super-groups=((:auto-property%20"milestone"))&sort=(todo)&title="Milestones"][view]])
+** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
-|      M | P | Todo    | Heading                                                      |
-|--------+---+---------+--------------------------------------------------------------|
-|    0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-|    0.5 | A | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
-|    0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
-|    0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
-|    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
-|    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
-| future | C | MAYBE   | [[Alternative parsing libraries][Alternative parsing libraries]]                                |
+|   M | P | Todo    | Heading                                                      |
+|-----+---+---------+--------------------------------------------------------------|
+| 0.5 | A | TODO    | [[Views: Multiple sorters are not preserved][Views: Multiple sorters are not preserved]]                    |
+| 0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
+| 0.5 | A | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
+| 0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
+| 0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
+| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
+| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
 #+END:
 
 * [#A] Tasks
@@ -80,6 +82,7 @@
 :TOC:      :include descendants :depth 1
 :END:
 :CONTENTS:
+- [[#views-multiple-sorters-are-not-preserved][Views: Multiple sorters are not preserved]]
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
@@ -120,6 +123,12 @@
 - [[#dual-matching-with-regexp-and-predicates][Dual matching with regexp and predicates]]
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
+:END:
+
+** TODO [#A] Views: Multiple sorters are not preserved                 :bug:
+:PROPERTIES:
+:milestone: 0.5
+:url:      https://github.com/alphapapa/org-ql/issues/136
 :END:
 
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
@@ -4235,5 +4244,6 @@ I don't need this right now, but it might come in handy here or elsewhere.
 
 # Local Variables:
 # before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (save-excursion (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o))))) org-update-all-dblocks org-make-toc)
+# org-ql-ask-unsafe-queries: nil
 # End:
 
