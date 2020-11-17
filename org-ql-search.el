@@ -243,7 +243,7 @@ automatically from the query."
   "Insert content for org-ql dynamic block at point according to PARAMS.
 Valid parameters include:
 
-  :query    An Org QL query expression in either sexp or non-sexp
+  :query    An Org QL query expression in either sexp or string
             form.
 
   :columns  A list of columns, including `heading', `todo',
