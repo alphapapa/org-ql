@@ -40,7 +40,6 @@
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
 | P |   M | Todo    | Heading                                                      |
 |---+-----+---------+--------------------------------------------------------------|
-| A | 0.5 | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                  |
 | A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
 | A | 0.5 | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
 | A | 0.5 | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
@@ -65,15 +64,15 @@
 ** Milestones ([[org-ql-search:todo:?super-groups=((:auto-property%20"milestone"))&sort=(todo)&title="Milestones"][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
-|   M | P | Todo    | Heading                                                      |
-|-----+---+---------+--------------------------------------------------------------|
-| 0.5 | A | NEXT    | [[Make dynamic blocks warn about sexp queries][Make dynamic blocks warn about sexp queries]]                  |
-| 0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-| 0.5 | A | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
-| 0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
-| 0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
-| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
-| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
+|      M | P | Todo    | Heading                                                      |
+|--------+---+---------+--------------------------------------------------------------|
+|    0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
+|    0.5 | A | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
+|    0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
+|    0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
+|    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
+|    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
+| future | C | MAYBE   | [[Alternative parsing libraries][Alternative parsing libraries]]                                |
 #+END:
 
 * [#A] Tasks
@@ -93,7 +92,6 @@
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
-- [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
@@ -111,6 +109,7 @@
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
 - [[#node-caching]["Node" caching]]
+- [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
 - [[#add-emacs-271-to-testyml][Add Emacs 27.1 to test.yml]]
 - [[#fix-org-ql-view--link-open-on-org-93][Fix org-ql-view--link-open on Org 9.3+]]
 - [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
@@ -239,13 +238,6 @@ However, there might still be a useful idea here somewhere...
 ** MAYBE [#C] Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
-
-** NEXT [#A] Make dynamic blocks warn about sexp queries
-:PROPERTIES:
-:milestone: 0.5
-:END:
-
-[2020-11-12 Thu 05:22]  I guess to be super-extra careful, just in case someone had =org-update-all-dblocks= in the =before-save-hook= or something.
 
 ** PROJECT [#A] Compatibility with Org 9.4 custom link changes          :bug:
 :PROPERTIES:
@@ -1418,6 +1410,18 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
               :volatile t
               :action #'helm-org-goto-marker))))
 #+END_SRC
+
+** DONE [#A] Make dynamic blocks warn about sexp queries
+:PROPERTIES:
+:milestone: 0.5
+:END:
+:LOGBOOK:
+CLOCK: [2020-11-16 Mon 22:56]--[2020-11-17 Tue 00:25] =>  1:29
+:END:
+
+[2020-11-12 Thu 05:22]  I guess to be super-extra careful, just in case someone had =org-update-all-dblocks= in the =before-save-hook= or something.
+
+[2020-11-17 Tue 00:25]  It warns and the warning is tested.
 
 ** DONE [#A] Add Emacs 27.1 to =test.yml=
 :PROPERTIES:
