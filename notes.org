@@ -89,6 +89,7 @@
 - [[#partial-match-for-property-queries][Partial match for property queries]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
+- [[#org-ql-block-let-org-agenda-format-its-output][org-ql-block: Let org-agenda format its output]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
@@ -214,6 +215,10 @@ As discussed [[https://www.reddit.com/r/emacs/comments/cnrt2d/orgqlblock_integra
 I should benchmark it to see how much difference it makes, because all those ~fset~ calls on each heading isn't free.  But if a macro were used to rewrite the built-in predicates to their full versions, all of that could be avoided...
 
 ** TODO [#C] Update commentary
+
+** MAYBE org-ql-block: Let org-agenda format its output
+
+[2020-11-16 Mon 22:12]  As suggested by Kevin J. Foley.  See [[https://github.com/alphapapa/org-ql/pull/113#issuecomment-728674220][#113]].  It might actually be simple to do and might work very well.
 
 ** MAYBE [#C] Overlay-based caching inspired by org-num-mode
 
