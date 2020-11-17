@@ -275,7 +275,9 @@ For example, an org-ql dynamic block header could look like:
   (-let* (((&plist :query :columns :sort :ts-format :take) params)
           (query (cl-etypecase query
                    (string (org-ql--plain-query query))
-                   (t query)))
+                   (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
+                    (org-ql--ask-unsafe-query query)
+                    query)))
           (columns (or columns '(heading todo (priority "P"))))
           ;; MAYBE: Custom column functions.
           (format-fns

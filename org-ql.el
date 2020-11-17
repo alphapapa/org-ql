@@ -137,6 +137,24 @@ This list should not contain any duplicates."))
   ;; TODO: Add info manual link.
   :link '(url-link "https://github.com/alphapapa/org-ql"))
 
+(defcustom org-ql-ask-unsafe-queries t
+  "Ask before running a query that could run arbitrary code.
+Org QL queries in sexp form can contain arbitrary expressions.
+When opening an \"org-ql-search:\" link or updating a dynamic
+block that contains a query in sexp form, and this option is
+non-nil, the user will be prompted for confirmation before
+opening the link.
+
+This variable may be set file-locally to disable this warning in
+files that the user assumes are safe (e.g. of known provenance).
+Users who are entirely unconcerned about this issue may disable
+the option globally (at their own risk, however minimal it
+probably is).
+
+See Info node `(org-ql)Queries'."
+  :type 'boolean
+  :risky t)
+
 ;;;; Macros
 
 (cl-defmacro org-ql--defpred (name args docstring &rest body)
@@ -530,6 +548,19 @@ from within ELEMENT's buffer."
                           (plist-put it :org-hd-marker marker))))
     (setf (cadr element) properties)
     element))
+
+(defun org-ql--ask-unsafe-query (query)
+  "Signal an error if user rejects running QUERY.
+If `org-ql-view-ask-unsafe-links' is nil, does nothing and
+returns nil."
+  (when org-ql-ask-unsafe-queries
+    (let ((query-string (propertize (cl-etypecase query
+                                      (list (prin1-to-string query))
+                                      (string query))
+                                    'face 'font-lock-warning-face)))
+      (unless (yes-or-no-p (concat "Query is in sexp form and could contain arbitrary code: "
+                                   query-string " Execute it? "))
+        (user-error "Query aborted by user")))))
 
 ;;;;; Query processing
 

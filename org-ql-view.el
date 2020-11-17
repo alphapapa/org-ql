@@ -97,23 +97,6 @@ Based on `org-agenda-mode-map'.")
   "Options for `org-ql-view'."
   :group 'org-ql)
 
-(defcustom org-ql-view-ask-unsafe-links t
-  "Ask before opening a link that could run arbitrary code.
-Org QL queries in sexp form can contain arbitrary expressions.
-When opening an \"org-ql-search:\" link that contains a query in
-sexp form, and this option is non-nil, the user will be prompted
-for confirmation before opening the link.
-
-This variable may be set file-locally to disable this warning in
-files that the user assumes are safe (e.g. of known provenance).
-Users who are entirely unconcerned about this issue may disable
-the option globally (at their own risk, however minimal it
-probably is).
-
-See Info node `(org-ql)Queries'."
-  :type 'boolean
-  :risky t)
-
 (defcustom org-ql-view-display-buffer-action nil
   "Action argument passed through `pop-to-buffer' to `display-buffer', which see."
   :type '(cons function alist))
@@ -644,18 +627,10 @@ protocol.  See, e.g. `org-ql-view--link-store'."
                 (stringp buffers-files)
                 (cl-every #'stringp buffers-files))
       (error "CAUTION: Link not opened because unsafe buffers-files parameter detected: %s" buffers-files))
-    (when (and org-ql-view-ask-unsafe-links
-               (or (string-match (rx bol (0+ space) "(") query)
-                   (listp query)))
-      ;; Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
-      (let ((query-string (propertize (cl-etypecase query
-                                        (list (prin1-to-string query))
-                                        (string query))
-                                      ;; FIXME: The face doesn't seem to be displayed.
-                                      'face 'font-lock-warning-face)))
-        (unless (yes-or-no-p (concat "Query is in sexp form and could contain arbitrary code: "
-                                     query-string " Execute it? "))
-          (user-error "Query aborted by user"))))
+    (when (or (listp query)
+              (string-match (rx bol (0+ space) "(") query))
+      ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
+      (org-ql--ask-unsafe-query query))
     (org-ql-search buffers-files query
       :sort sort
       :super-groups groups

@@ -1422,7 +1422,7 @@ RESULTS should be a list of strings as returned by
           (org-mode)))
 
       (cl-flet* ((open-link-in
-                  (link buffer)
+                  (link buffer input)
                   ;; Org REDUCED THE NUMBER OF ARGUMENTS TO `org-open-link-from-string'!  That BREAKS BACKWARD
                   ;; COMPATIBILITY!  So I have to make my own function so these tests can work across Org versions!
                   (with-current-buffer buffer
@@ -1431,9 +1431,12 @@ RESULTS should be a list of strings as returned by
                     (insert "* TODO Test heading\n\n")
                     (insert link)
                     (backward-char 1)
-                    (org-open-at-point)))
+                    (with-simulated-input input
+                      (org-open-at-point))))
+
                  (var-after-link-save-open
-                  (var buffers-files query &key sort super-groups (buffer link-buffer) (input "RET"))
+                  (var buffers-files query &key sort super-groups
+                       (buffer link-buffer) (store-input "RET") open-input)
                   (org-ql-search buffers-files query
                     :super-groups super-groups
                     :sort sort :title title :buffer view-buffer)
@@ -1441,26 +1444,53 @@ RESULTS should be a list of strings as returned by
                     (cl-assert (member '("org-ql-search" :follow org-ql-view--link-open :store org-ql-view--link-store)
                                        org-link-parameters)
                                t)
-                    (with-simulated-input input
+                    (with-simulated-input store-input
                       ;; Avoid writing "Stored: ..." to test output.
                       (let ((inhibit-message t))
                         (call-interactively #'org-store-link nil)))
                     (kill-buffer))
                   (cl-assert (and org-stored-links (caar org-stored-links)) t)
-                  (open-link-in (caar org-stored-links) buffer)
+                  (open-link-in (caar org-stored-links) buffer open-input)
                   (with-current-buffer (get-buffer (concat "*Org QL View: " title "*"))
                     (prog1 (buffer-local-value var (current-buffer))
                       (kill-buffer)))))
 
         (describe "Queries"
           :var ((string-query "todo:TODO regexp:heading")
-                (sexp-query '(and (todo "TODO") (regexp "heading"))))
-          (it "Sexps match"
-            (expect (var-after-link-save-open 'org-ql-view-query temp-filenames sexp-query) :to-equal sexp-query))
-          (it "Strings match"
-            ;; NOTE: This test includes the string query being replaced with its sexp form after the query is run.
-            (expect (var-after-link-save-open 'org-ql-view-query temp-filenames string-query)
-                    :to-equal sexp-query)))
+                (string-query-in-sexp-form '(and (todo "TODO") (regexp "heading")))
+                ;; NOTE: The sexp query must be one that `org-ql--query-sexp-to-string'
+                ;; can't convert to a string.
+                (sexp-query '(or (todo "TODO") (regexp "heading"))))
+
+          (describe "in sexp form"
+
+            (describe "prompt when `org-ql-ask-unsafe-queries' is non-nil"
+              :var ((org-ql-ask-unsafe-queries t))
+
+              (it "and signal an error when rejected by user"
+                (expect (var-after-link-save-open 'org-ql-view-query temp-filenames sexp-query
+                                                  :open-input "no RET")
+                        :to-throw 'user-error '("Query aborted by user")))
+              (it "and run when approved by user"
+                (expect (var-after-link-save-open 'org-ql-view-query temp-filenames sexp-query
+                                                  :open-input "yes RET")
+                        :to-equal sexp-query)))
+
+            (it "don't prompt when `org-ql-ask-unsafe-queries' is nil"
+              (let ((org-ql-ask-unsafe-queries nil))
+                (expect (var-after-link-save-open 'org-ql-view-query temp-filenames sexp-query)
+                        :to-equal sexp-query)))
+
+            (it "match after restoring"
+              (let ((org-ql-ask-unsafe-queries nil)) ; Disable safety check for this test.
+                (expect (var-after-link-save-open 'org-ql-view-query temp-filenames sexp-query)
+                        :to-equal sexp-query))))
+
+          (describe "in string form"
+            (it "match after restoring"
+              ;; NOTE: This test includes the string query being replaced with its sexp form after the query is run.
+              (expect (var-after-link-save-open 'org-ql-view-query temp-filenames string-query)
+                      :to-equal string-query-in-sexp-form))))
 
         (describe "Grouping"
           :var ((query '(and (todo "TODO") (regexp "heading")))
@@ -1487,11 +1517,11 @@ RESULTS should be a list of strings as returned by
                 (one-filename (car temp-filenames)))
           (it "Can search a file by filename"
             (expect (var-after-link-save-open 'org-ql-view-buffers-files one-filename query
-                                              :input "M-n M-n RET")
+                                              :store-input "M-n M-n RET")
                     :to-equal one-filename))
           (it "Can search multiple files by filename"
             (expect (var-after-link-save-open 'org-ql-view-buffers-files temp-filenames query
-                                              :input "M-n M-n RET")
+                                              :store-input "M-n M-n RET")
                     :to-equal temp-filenames))
           (it "Can search buffer containing the link"
             ;; This is sort-of a special case because of how the test link-opening function works.
