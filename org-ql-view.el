@@ -569,9 +569,10 @@ dates in the past, and negative for dates in the future."
   ;; FIXME: `pcase-let*' is easier to use to destructure this, but if I use
   ;; that, I want to use map 2.1 for the extra convenience, but I can't force
   ;; that to be installed into the makem.sh sandbox, so I just use `-let*' here.
-  (-let* ((org-ql-view-plist (car (bookmark-get-bookmark-record bookmark)))
+  (-let* ((record (bookmark-get-bookmark-record bookmark))
+          ((&alist 'org-ql-view-plist) record)
           ((&plist :buffers-files :query :super-groups :narrow :sort :title)
-           (cdr org-ql-view-plist))
+           org-ql-view-plist)
           (super-groups (cl-etypecase super-groups
                           (symbol (symbol-value super-groups))
                           (list super-groups))))
