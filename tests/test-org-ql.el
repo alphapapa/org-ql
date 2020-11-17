@@ -1406,6 +1406,34 @@ RESULTS should be a list of strings as returned by
                                                      (mapcar #'find-file-noselect temp-filenames) query)
                     :to-equal temp-filenames)))))
 
+    (describe "Dynamic blocks"
+      (describe "warn about sexp queries"
+
+        (cl-flet ((test-dblock
+                   (&optional input) (with-current-buffer (get-buffer-create "*TEST DBLOCK*")
+                                       (erase-buffer)
+                                       (org-mode)
+                                       (insert "* TODO Heading 1\n\n"
+                                               "#+BEGIN: org-ql :query (or (todo) (regexp \"Heading\")) :columns (todo)\n"
+                                               "#+END:")
+                                       (goto-char (point-min))
+                                       (forward-line 2)
+                                       (with-simulated-input input
+                                         (org-dblock-update))
+                                       (kill-buffer))))
+
+          (it "when org-ql-ask-unsafe-queries is non-nil"
+            ;; TODO: Should the query be converted to string form if possible and only warn if not?
+            (let ((org-ql-ask-unsafe-queries t))
+              (expect (test-dblock "no RET")
+                      :to-throw 'user-error '("Query aborted by user"))))
+
+          (it "unless org-ql-ask-unsafe-queries is nil"
+            ;; TODO: Should the query be converted to string form if possible and only warn if not?
+            (let ((org-ql-ask-unsafe-queries nil))
+              (expect (test-dblock)
+                      :not :to-throw))))))
+
     (describe "Links"
       ;; Not sure if this binding works.
       :var ((title "ORG-QL-TEST")
