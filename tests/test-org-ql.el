@@ -1514,6 +1514,42 @@ RESULTS should be a list of strings as returned by
                 (expect (var-after-link-save-open 'org-ql-view-query temp-filenames sexp-query)
                         :to-equal sexp-query))))
 
+          (describe "in raw sexp form"
+            ;; These tests guard against manually constructed queries, which could
+            ;; theoretically be different than the ones resulting from storing links (i.e. they
+            ;; might have encoding).  These tests probably aren't necessary, but it's good to
+            ;; be extra careful, because an evil sexp could be harmful if eval'ed.
+            :var ((raw-link "[[org-ql-search:(todo \"TODO\")]]"))
+
+            (describe "prompt when `org-ql-ask-unsafe-queries' is non-nil"
+              :var ((org-ql-ask-unsafe-queries t))
+
+              (it "and signal an error when rejected by user"
+                (expect (open-link-in raw-link link-buffer "no RET")
+                        :to-throw 'user-error '("Query aborted by user")))
+              (it "and run when approved by user"
+                (expect (open-link-in raw-link link-buffer "yes RET")
+                        :not :to-throw)))
+
+            (it "don't prompt when `org-ql-ask-unsafe-queries' is nil"
+              (let ((org-ql-ask-unsafe-queries nil))
+                (expect (open-link-in raw-link link-buffer "no RET")
+                        :not :to-throw)))
+
+            (it "match after restoring"
+              (let ((org-ql-ask-unsafe-queries nil) ; Disable safety check for this test.
+                    (org-ql-view-buffer view-buffer))
+                (expect (open-link-in raw-link link-buffer "no RET")
+                        :not :to-throw)
+                (expect (buffer-local-value 'org-ql-view-query view-buffer)
+                        :to-equal '(todo "TODO"))))
+
+            (it "could be evil when not prompted about"
+              ;; This test confirms what *could* happen if these checks weren't in place.
+              (let ((org-ql-ask-unsafe-queries nil))
+                (expect (open-link-in "[[org-ql-search:(error \"EVIL!\")]]" link-buffer nil)
+                        :to-throw 'error '("EVIL!")))))
+
           (describe "in string form"
             (it "match after restoring"
               ;; NOTE: This test includes the string query being replaced with its sexp form after the query is run.
