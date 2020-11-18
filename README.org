@@ -475,6 +475,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Acknowledgments*
 +  [[https://github.com/tpeacock19][tpeacock19]] for extensive help testing new features in this version.
 
+** 0.4.8
+
+*Fixed*
++  Multiple sorters not preserved when refreshing views.  (Fixes [[https://github.com/alphapapa/org-ql/issues/136][#136]], [[https://github.com/alphapapa/org-ql/pull/137][#137]].  Thanks to [[https://github.com/natrys][Imran Khan]].)
+
 ** 0.4.7
 
 *Fixed*
