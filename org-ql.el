@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.4.6
+;; Version: 0.4.8
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (org "9.0") (org-super-agenda "1.2-pre") (ov "1.0.6") (peg "0.6") (s "1.12.0") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -1456,7 +1456,7 @@ PREDICATES is a list of one or more sorting methods, including:
                                                                              ;; Put at end of list if not found
                                                                              (1+ (length org-todo-keywords-1)))))))
                                      (-flatten-n 1 (-map #'cdr sorted-groups)))))
-    (cl-loop for pred in (nreverse predicates)
+    (cl-loop for pred in (reverse predicates)
              do (setq items (if (eq pred 'todo)
                                 (sort-by-todo-keyword items)
                               (-sort (sorter pred) items)))
