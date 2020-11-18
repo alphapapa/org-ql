@@ -92,6 +92,7 @@
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
 - [[#org-ql-block-let-org-agenda-format-its-output][org-ql-block: Let org-agenda format its output]]
+- [[#omnifocus-like-screencasts][OmniFocus-like screencasts]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
@@ -227,6 +228,10 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 ** MAYBE org-ql-block: Let org-agenda format its output
 
 [2020-11-16 Mon 22:12]  As suggested by Kevin J. Foley.  See [[https://github.com/alphapapa/org-ql/pull/113#issuecomment-728674220][#113]].  It might actually be simple to do and might work very well.
+
+** MAYBE OmniFocus-like screencasts
+
+[2020-11-18 Wed 03:03]  Looking at OmniFocus's web site now, their short videos showing features demonstrate a lot of features that exist in org-ql already.  After implementing section-based views, it would be cool to make some short demos showing similar features.
 
 ** MAYBE [#C] Overlay-based caching inspired by org-num-mode
 
