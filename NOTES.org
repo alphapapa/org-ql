@@ -1907,7 +1907,22 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 
 * Checklists
 
+** Release template
+
++  [ ] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
++  [ ] Changelog entry
++  [ ] Update version numbers
+     -  [ ] =org-ql.el=
+     -  [ ] =helm-org-ql.el=
+     -  [ ] =README.org=
++  [ ] Tag and sign
++  [ ] Push
++  [ ] Merge to master
+
 ** Commit
+:PROPERTIES:
+:ID:       d8d7b88e-5737-437e-af76-2253f8340de3
+:END:
 
 *** Fix
 
@@ -1916,6 +1931,18 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 +  [ ] Lint
 +  [ ] Test
 +  [ ] Commit and push
+
+** DONE Release 0.4.9
+
++  [X] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
++  [X] Changelog entry
++  [X] Update version numbers
+     -  [X] =org-ql.el=
+     -  [X] =helm-org-ql.el= (N/A)
+     -  [X] =README.org=
++  [X] Tag and sign
++  [X] Push
++  [X] Merge to master
 
 * Examples / testing
 :PROPERTIES:
