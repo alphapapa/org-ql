@@ -475,6 +475,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Acknowledgments*
 +  [[https://github.com/tpeacock19][tpeacock19]] for extensive help testing new features in this version.
 
+** 0.4.9
+
+*Fixed*
++  Agenda restriction in =org-ql-block=.  (Fixes [[https://github.com/alphapapa/org-ql/issues/84][#84]].  Thanks to [[https://github.com/yantar92][Ihor Radchenko]].)
+
 ** 0.4.8
 
 *Fixed*
