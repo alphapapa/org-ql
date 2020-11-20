@@ -23,7 +23,7 @@
 #+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
 | P |   M | Keyword | Heading                                        |
 |---+-----+---------+------------------------------------------------|
-| A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
+| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -40,8 +40,8 @@
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
 | P |   M | Todo    | Heading                                                      |
 |---+-----+---------+--------------------------------------------------------------|
-| A | 0.5 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-| A | 0.5 | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
+| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
+| A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
 | A | 0.5 | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
 | A | 0.5 | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
 | A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                         |
@@ -52,8 +52,8 @@
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
 |   M | P | Heading                                               |
 |-----+---+-------------------------------------------------------|
-| 0.5 | A | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]        |
-| 0.5 | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]               |
+| 0.6 | A | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]        |
+|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]               |
 | 0.5 | A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                  |
 |     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                  |
 |     | B | [[Move this notes file into an orphan =meta/notes= branch][Move this notes file into an orphan =meta/notes= branch]] |
@@ -66,10 +66,10 @@
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
 |      M | P | Todo    | Heading                                                      |
 |--------+---+---------+--------------------------------------------------------------|
-|    0.5 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-|    0.5 | A | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
+|    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
 |    0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
 |    0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
+|    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]             |
 |    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
 |    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
 | future | C | MAYBE   | [[Alternative parsing libraries][Alternative parsing libraries]]                                |
@@ -247,7 +247,7 @@ When tag inheritance is enabled, and the given tags aren't file-level tags, we c
 
 ** PROJECT [#A] Compatibility with Org 9.4 custom link changes          :bug:
 :PROPERTIES:
-:milestone: 0.5
+:milestone: 0.6
 :END:
 
 [2020-11-13 Fri 22:36]  From [[https://www.orgmode.org/Changes.html][the changelog]]:
@@ -267,7 +267,6 @@ Unfortunately it does not say what the new, required second argument is.
 
 ** PROJECT [#A] Convert simple sexp queries to non-sexp
 :PROPERTIES:
-:milestone: 0.5
 :END:
 
 [2020-11-11 Wed 00:28]  This will be very helpful for storing links.  Surely simple ones won't be too hard...
@@ -367,6 +366,9 @@ Unfortunately it does not say what the new, required second argument is.
 [2020-11-11 Wed 19:13]  Seems to be working properly.  One more thing to do though, I think:
 
 *** TODO [#B] Use string queries in view headers when possible
+:PROPERTIES:
+:milestone: 0.6
+:END:
 
 Maybe make it an option to automatically convert them when possible, because if a user wanted to add complexity to a string query, he'd have to rewrite it as a sexp.
 
