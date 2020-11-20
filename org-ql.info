@@ -318,10 +318,13 @@ File: README.info,  Node: Queries,  Next: Functions / Macros,  Prev: Commands,  
 ===========
 
    • • • • 
-   An org-ql query is a lisp form which may contain arbitrary lisp
-forms, as well as certain built-in predicates.  It is byte-compiled into
-a predicate function which is tested with point on each heading in an
-Org buffer; when it returns non-nil, the heading matches the query.
+   An org-ql query is a Lisp expression which may contain arbitrary
+expressions, as well as calling certain built-in predicates.  It is
+byte-compiled into a predicate function which is tested with point on
+each heading in an Org buffer; when it returns non-nil, the heading
+matches the query.  When possible, certain built-in predicates are
+optimized away to whole-buffer regular expression searches, which are
+much faster to search for than testing the predicate on each heading.
 
    *Notes:*
    • Bare strings like ‘"string"’ are automatically converted to
@@ -1342,40 +1345,40 @@ Node: org-ql-view-sidebar6349
 Node: org-ql-view-recent-items6705
 Node: org-ql-sparse-tree7189
 Node: Queries7989
-Node: Non-sexp query syntax8897
-Node: General predicates10604
-Node: Ancestor/descendant predicates16017
-Node: Date/time predicates17145
-Node: Functions / Macros19800
-Node: Agenda-like views20055
-Node: Listing / acting-on results21460
-Node: Dynamic block26655
-Node: Links29353
-Node: Tips30040
-Node: Changelog30358
-Node: 05-pre31042
-Node: 04932281
-Node: 04832559
-Node: 04732906
-Node: 04633301
-Node: 04533701
-Node: 04434060
-Node: 04334417
-Node: 04234612
-Node: 04134771
-Node: 0435012
-Node: 03238945
-Node: 03139324
-Node: 0339521
-Node: 02342496
-Node: 02242724
-Node: 02142992
-Node: 0243191
-Node: 0147226
-Node: Notes47327
-Node: Comparison with Org Agenda searches47489
-Node: org-sidebar48361
-Node: License48640
+Node: Non-sexp query syntax9100
+Node: General predicates10807
+Node: Ancestor/descendant predicates16220
+Node: Date/time predicates17348
+Node: Functions / Macros20003
+Node: Agenda-like views20258
+Node: Listing / acting-on results21663
+Node: Dynamic block26858
+Node: Links29556
+Node: Tips30243
+Node: Changelog30561
+Node: 05-pre31245
+Node: 04932484
+Node: 04832762
+Node: 04733109
+Node: 04633504
+Node: 04533904
+Node: 04434263
+Node: 04334620
+Node: 04234815
+Node: 04134974
+Node: 0435215
+Node: 03239148
+Node: 03139527
+Node: 0339724
+Node: 02342699
+Node: 02242927
+Node: 02143195
+Node: 0243394
+Node: 0147429
+Node: Notes47530
+Node: Comparison with Org Agenda searches47692
+Node: org-sidebar48564
+Node: License48843
 
 End Tag Table
 

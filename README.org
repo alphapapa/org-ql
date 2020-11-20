@@ -165,7 +165,7 @@ Show a sparse tree for ~QUERY~ in ~BUFFER~ and return number of results.  The tr
 - [[#datetime-predicates][Date/time predicates]]
 :END:
 
-An =org-ql= query is a lisp form which may contain arbitrary lisp forms, as well as certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.
+An =org-ql= query is a Lisp expression which may contain arbitrary expressions, as well as calling certain built-in predicates.  It is byte-compiled into a predicate function which is tested with point on each heading in an Org buffer; when it returns non-nil, the heading matches the query.  When possible, certain built-in predicates are optimized away to whole-buffer regular expression searches, which are much faster to search for than testing the predicate on each heading.
 
 *Notes:*
 +  Bare strings like ~"string"~ are automatically converted to ~(regexp "string")~ predicates.
