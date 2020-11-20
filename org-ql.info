@@ -607,7 +607,20 @@ File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,
 4.3.2 Listing / acting-on results
 ---------------------------------
 
-  1. Function: ‘org-ql-select’
+  1. Caching
+
+     Org QL uses a per-buffer cache to speed up subsequent searches.
+     It’s keyed on query expressions, which means that, for the same
+     query in the same buffer, if the buffer has not been modified since
+     the last time the query was run, the cached result will be
+     returned, and the query will not be evaluated in that buffer again.
+
+     Therefore, since query expressions are not guaranteed to be
+     evaluated when these functions are called, they should be free of
+     side effects.  Any side effects should be done in the action
+     expression instead.
+
+  2. Function: ‘org-ql-select’
 
      _Arguments:_ ‘(buffers-or-files query &key action narrow sort)’
 
@@ -667,7 +680,7 @@ File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,
             '(todo "WAITING"))
           ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
 
-  2. Function: ‘org-ql-query’
+  3. Function: ‘org-ql-query’
 
      _Arguments:_ ‘(&key (select 'element-with-markers) from where
      order-by narrow)’
@@ -712,7 +725,7 @@ File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,
             :where '(todo "WAITING"))
           ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
 
-  3. Macro: ‘org-ql’
+  4. Macro: ‘org-ql’
 
      _Arguments:_ ‘(buffers-or-files query &key sort narrow markers
      action)’
@@ -1336,33 +1349,33 @@ Node: Date/time predicates17145
 Node: Functions / Macros19800
 Node: Agenda-like views20055
 Node: Listing / acting-on results21460
-Node: Dynamic block26062
-Node: Links28760
-Node: Tips29447
-Node: Changelog29765
-Node: 05-pre30449
-Node: 04931688
-Node: 04831966
-Node: 04732313
-Node: 04632708
-Node: 04533108
-Node: 04433467
-Node: 04333824
-Node: 04234019
-Node: 04134178
-Node: 0434419
-Node: 03238352
-Node: 03138731
-Node: 0338928
-Node: 02341903
-Node: 02242131
-Node: 02142399
-Node: 0242598
-Node: 0146633
-Node: Notes46734
-Node: Comparison with Org Agenda searches46896
-Node: org-sidebar47768
-Node: License48047
+Node: Dynamic block26655
+Node: Links29353
+Node: Tips30040
+Node: Changelog30358
+Node: 05-pre31042
+Node: 04932281
+Node: 04832559
+Node: 04732906
+Node: 04633301
+Node: 04533701
+Node: 04434060
+Node: 04334417
+Node: 04234612
+Node: 04134771
+Node: 0435012
+Node: 03238945
+Node: 03139324
+Node: 0339521
+Node: 02342496
+Node: 02242724
+Node: 02142992
+Node: 0243191
+Node: 0147226
+Node: Notes47327
+Node: Comparison with Org Agenda searches47489
+Node: org-sidebar48361
+Node: License48640
 
 End Tag Table
 
