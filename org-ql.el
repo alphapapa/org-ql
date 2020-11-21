@@ -193,14 +193,14 @@ See Info node `(org-ql)Queries'."
           (->> predicates
                (--map (plist-get (cdr it) :preambles))
                (-flatten-n 1)
-               (--map (pcase-let* ((`(,matcher ,(map (:predicate predicate) (:regexp regexp) (:case-fold case-fold)))
-                                    it))
-                        `(,matcher
-                          ,(when regexp
-                             `(setq org-ql-preamble ,regexp))
-                          (setq preamble-case-fold ,case-fold)
-                          ;; NOTE: Even when `predicate' is nil, it must be returned in the pcase form.
-                          ',predicate))))))
+               (--map (pcase-let* ((`(,pattern ,exp) it))
+                        `(,pattern
+                          (pcase-let* (((map (:regexp regexp) (:case-fold case-fold) (:predicate predicate))
+                                        ,exp))
+                            (setf org-ql-preamble regexp
+                                  preamble-case-fold case-fold)
+                            ;; NOTE: Even when `predicate' is nil, it must be returned in the pcase form.
+                            predicate)))))))
     (fset 'org-ql--query-preamble-new
           `(lambda (query)
              "FIXME"
@@ -1198,7 +1198,7 @@ parseable by `parse-time-string' which may omit the time value."
                                   (ts-apply :hour 0 :minute 0 :second 0))))
                    `(clocked :from ,from))))
   :preambles ((`(,predicate-names . ,_)
-               (:regexp org-ql-clock-regexp :predicate predicate :case-fold nil)))
+               (list :regexp org-ql-clock-regexp :predicate predicate :case-fold nil)))
   :predicate (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
 
 (org-ql-define-predicate category (&rest categories)
@@ -1222,7 +1222,7 @@ Without arguments, return non-nil if buffer is file-backed."
 With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strings)."
   ;; TODO: Can we make a preamble for plain (todo) queries?
   :preambles ((`(,predicate-names . ,(and todo-keywords (guard todo-keywords)))
-               (:case-fold nil :regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol)) t))))
+               (list :case-fold nil :regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol)) t))))
   :predicate (when-let ((state (org-get-todo-state)))
                (cl-typecase keywords
                  (null (not (member state org-done-keywords)))
@@ -1234,35 +1234,6 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   "Return non-nil if entry's TODO keyword is in `org-done-keywords'."
   ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   :predicate (or (apply #'org-ql--predicate-todo org-done-keywords)))
-
-(org-ql-define-predicate (tags tags-all tags&) (&rest tags)
-  ;; NOTE: tags-all and tags& are "virtual" predicates that are handled by query pre-processing.
-  "Return non-nil if current heading has one or more of TAGS (a list of strings).
-Tests both inherited and local tags."
-  :normalizers ((`(,predicate-names . ,tags) `(and ,@(--map `(tags ,it) tags)))
-                ;; MAYBE: -all versions for inherited and local.
-                ;; Inherited and local predicate aliases.
-
-
-
-                )
-  :preambles ((`(,predicate-names . ,tags)
-               ;; When searching for local, non-inherited tags, we can
-               ;; search directly to headings containing one of the tags.
-               (:regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (1+ not-newline)
-                                            ":" (or ,@tags) ":")
-                                      t))))
-  :predicate (cl-macrolet ((tags-p (tags)
-                                   `(and ,tags
-                                         (not (eq 'org-ql-nil ,tags)))))
-               (-let* (((inherited local) (org-ql--tags-at (point))))
-                 (cl-typecase tags
-                   (null (or (tags-p inherited)
-                             (tags-p local)))
-                   (otherwise (or (when (tags-p inherited)
-                                    (seq-intersection tags inherited))
-                                  (when (tags-p local)
-                                    (seq-intersection tags local))))))))
 
 (org-ql-define-predicate (outline-path olp) (&rest regexps)
   "Return non-nil if current node's outline path matches all of REGEXPS.
@@ -1306,6 +1277,24 @@ contiguous segment of the outline path:
                  `(outline-path-segment ,@(mapcar #'regexp-quote strings))))
   :predicate (org-ql--infix-p regexps (org-ql--value-at (point) #'org-ql--outline-path)))
 
+(org-ql-define-predicate (tags tags-all tags&) (&rest tags)
+  ;; NOTE: tags-all and tags& are "virtual" predicates that are handled by query pre-processing.
+  "Return non-nil if current heading has one or more of TAGS (a list of strings).
+Tests both inherited and local tags."
+  ;; MAYBE: -all versions for inherited and local.
+  :normalizers ((`(,predicate-names . ,tags) `(and ,@(--map `(tags ,it) tags))))
+  :predicate (cl-macrolet ((tags-p (tags)
+                                   `(and ,tags
+                                         (not (eq 'org-ql-nil ,tags)))))
+               (-let* (((inherited local) (org-ql--tags-at (point))))
+                 (cl-typecase tags
+                   (null (or (tags-p inherited)
+                             (tags-p local)))
+                   (otherwise (or (when (tags-p inherited)
+                                    (seq-intersection tags inherited))
+                                  (when (tags-p local)
+                                    (seq-intersection tags local))))))))
+
 (org-ql-define-predicate (tags-inherited tags-i itags) (&rest tags)
   "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any inherited tags."
@@ -1327,9 +1316,9 @@ If TAGS is nil, return non-nil if heading has any local tags."
   :preambles ((`(,predicate-names . ,tags)
                ;; When searching for local, non-inherited tags, we can
                ;; search directly to headings containing one of the tags.
-               (:regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (1+ not-newline)
-                                            ":" (or ,@tags) ":")
-                                      t))))
+               (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (1+ not-newline)
+                                                 ":" (or ,@tags) ":")
+                                           t))))
   :predicate (cl-macrolet ((tags-p (tags)
                                    `(and ,tags
                                          (not (eq 'org-ql-nil ,tags)))))
@@ -1384,9 +1373,9 @@ COMPARATOR may be `<', `<=', `>', or `>='."
                                ('> `(>= ,(1+ num) "*"))
                                ('>= `(>= ,num "*"))
                                ((pred integerp) `(repeat ,comparator-or-num ,num "*")))))
-                 (:regexp (rx-to-string `(seq bol ,repeat " ") t))))
+                 (list :regexp (rx-to-string `(seq bol ,repeat " ") t))))
               (`(,predicate-names ,num)
-               (:regexp (rx-to-string `(seq bol (repeat ,num "*") " ") t))))
+               (list :regexp (rx-to-string `(seq bol (repeat ,num "*") " ") t))))
   ;; NOTE: It might be necessary to take into account `org-odd-levels'; see docstring for
   ;; `org-outline-level'.
   :predicate (when-let ((outline-level (org-outline-level)))
