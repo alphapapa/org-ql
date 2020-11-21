@@ -32,6 +32,7 @@
 | M | P | Keyword  | Heading                                                            |
 |---+---+----------+--------------------------------------------------------------------|
 |   | B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
+|   |   | UNDERWAY | [[Convert all predicates to new macro][Convert all predicates to new macro]]                                |
 |   |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
 #+END:
 
@@ -47,9 +48,9 @@
 | A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                         |
 #+END:
 
-** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
+** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
-#+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
+#+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
 |   M | P | Heading                                               |
 |-----+---+-------------------------------------------------------|
 | 0.6 | A | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]        |
@@ -58,21 +59,21 @@
 |     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                  |
 |     | B | [[Move this notes file into an orphan =meta/notes= branch][Move this notes file into an orphan =meta/notes= branch]] |
 |     | B | [[Outline path predicate][Outline path predicate]]                                |
-| 0.6 | B | [[Group tag support][Group tag support]]                                     |
+|     | B | [[Document the sorting functions][Document the sorting functions]]                        |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
-|      M | P | Todo    | Heading                                                      |
-|--------+---+---------+--------------------------------------------------------------|
-|    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-|    0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
-|    0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
-|    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]             |
-|    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
-|    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
-| future | C | MAYBE   | [[Alternative parsing libraries][Alternative parsing libraries]]                                |
+|   M | P | Todo    | Heading                                                      |
+|-----+---+---------+--------------------------------------------------------------|
+| 0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
+| 0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
+| 0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
+| 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]             |
+| 0.6 | B | PROJECT | [[Define predicates with a macro][Define predicates with a macro]]                               |
+| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
+| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
 #+END:
 
 * [#A] Tasks
@@ -96,6 +97,7 @@
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
+- [[#define-predicates-with-a-macro][Define predicates with a macro]]
 - [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
@@ -164,9 +166,9 @@ e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse
 
 #+BEGIN_SRC org
   ,* [[https://github.com/fniessen/org-html-themes][org-html-themes: Framework including two themes, Bigblow and ReadTheOrg]]
-    :PROPERTIES:
-    :author:   Fabrice Niessen
-    :END:
+  ,:PROPERTIES:
+  ,:author:   Fabrice Niessen
+  ,:END:
 
 #+END_SRC
 
@@ -462,6 +464,17 @@ For the query expression:
 
 [2020-11-11 Wed 23:27]  That's all the parameters and all the types that I can think to test.
 
+
+** PROJECT [#B] Define predicates with a macro
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
+[2020-11-21 Sat 16:40]  i.e. the macro defines the predicate, preamble, and normalizer in one form.  WIP on the =wip/define-predicate= branch.  Seems to be working well so far.
+
+*** TODO Run tests
+
+*** UNDERWAY Convert all predicates to new macro
 
 ** PROJECT [#B] Move this notes file into an orphan =meta/notes= branch
 
@@ -3788,6 +3801,9 @@ mapcar                                                        30          0.0041
 [2020-01-04 Sat 09:03]
 
 ** [[gnus:gmane.emacs.orgmode#CAJ51EToLCm5zDLKu8XeuqEWrLhHZF+OoNkviPSivZbFttzF8=A@mail.gmail.com][John Kitchin on rewriting the Org agenda code]]                 :Emacs:Org:
+:PROPERTIES:
+:archive.is: http://archive.is/33R9M
+:END:
 
 [2019-10-28 Mon 08:28]  Originally from [[id:90a68535-2403-4ba9-a117-60be1862628f][this entry in my notes]].
 
@@ -3817,9 +3833,6 @@ Thoughts?
 
 John
 #+END_QUOTE
-:PROPERTIES:
-:archive.is: http://archive.is/33R9M
-:END:
 
 + [[https://github.com/m00natic/cl-fdbq][GitHub - m00natic/cl-fdbq: SQL-like operations over fixed field DBs]]
 
