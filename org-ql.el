@@ -157,32 +157,146 @@ See Info node `(org-ql)Queries'."
 
 ;;;; Macros
 
-(cl-defmacro org-ql--defpred (name args docstring &rest body)
+(defvar org-ql-preambles nil)
+(defvar org-ql-normalizers nil)
+(defvar org-ql-defpred-defer nil)
+(defvar org-ql-predicate-list nil)
+
+(defun org-ql--define-normalizers (normalizers)
+  "FIXME"
+  (fset 'org-ql--normalize-query
+        `(lambda (query)
+           "FIXME"
+           (cl-labels ((rec (element)
+                            (pcase element
+                              (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
+                              (`(and . ,clauses) `(and ,@(mapcar #'rec clauses)))
+                              (`(not . ,clauses) `(not ,@(mapcar #'rec clauses)))
+                              (`(when ,condition . ,clauses) `(when ,(rec condition)
+                                                                ,@(mapcar #'rec clauses)))
+                              (`(unless ,condition . ,clauses) `(unless ,(rec condition)
+                                                                  ,@(mapcar #'rec clauses)))
+                              ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
+                              ((pred stringp) `(regexp ,element))
+                              ,@normalizers
+                              ;; Any other form: passed through unchanged.
+                              (_ element))))
+             (rec query)))))
+
+(defun org-ql--define-preambles (preambles)
+  "FIXME"
+  ;; NOTE: I don't how the `list' symbol ends up in the list, but anyway...
+  (setf preambles (--map (pcase-let* ((`(,matcher ,props) it)
+                                      (`(,_ . ,(map (:predicate predicate) (:regexp regexp) (:case-fold case-fold))) props))
+                           `(,matcher
+                             ,(when regexp
+                                `(setq org-ql-preamble ,regexp))
+                             (setq preamble-case-fold ,case-fold)
+                             ;; NOTE: Even when `predicate' is nil, it must be returned in the pcase form.
+                             ',predicate))
+                         preambles))
+  (fset 'org-ql--query-preamble-new
+        `(lambda (query)
+           "FIXME"
+           (pcase org-ql-use-preamble
+             ('nil (list :query query :preamble nil))
+             (_ (let ((preamble-case-fold t)
+                      org-ql-preamble)
+                  (cl-labels ((rec (element)
+                                   (or (when org-ql-preamble
+                                         ;; Only one preamble is allowed
+                                         element)
+                                       (pcase element
+                                         (`(or _) element)
+
+                                         ,@preambles
+
+                                         ;; (`(clocked . ,_)
+                                         ;;  (setq org-ql-preamble org-ql-clock-regexp)
+                                         ;;  element)
+
+                                         (`(and . ,rest)
+                                          (let ((clauses (mapcar #'rec rest)))
+                                            `(and ,@(-non-nil clauses))))
+                                         (_ element)))))
+                    (setq query (pcase (mapcar #'rec (list query))
+                                  ((or `(nil)
+                                       `((nil))
+                                       `((and))
+                                       `((or)))
+                                   t)
+                                  (query (-flatten-n 1 query))))
+                    (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold))))))))
+
+(cl-defmacro org-ql-define-predicate (name args docstring &key predicate preamble normalizer)
   "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
 NAME may be a symbol or a list of symbols: if a list, the first
 is used as the name and the rest are aliases.  ARGS is a
 `cl-defun'-style argument list.  DOCSTRING is the function's
 docstring.  BODY is the body of the predicate.
 
+FIXME
+
 Predicates will be called with point on the beginning of an Org
 heading and should return non-nil if the heading's entry is a
 match."
-  (declare (debug ([&or symbolp listp] listp stringp def-body))
-           (indent defun))
+  ;; FIXME: Debug form.
+  (declare ;; (debug ([&or symbolp listp] listp stringp def-body))
+   (indent defun))
   (let* ((aliases (when (listp name)
                     (cdr name)))
          (name (cl-etypecase name
                  (list (car name))
                  (atom name)))
          (fn-name (intern (concat "org-ql--predicate-" (symbol-name name))))
-         (pred-name (intern (symbol-name name))))
+         (predicate-name (intern (symbol-name name)))
+         (predicate-names (delq nil (cons predicate-name aliases)))
+         (normalizer (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names))))
+                                normalizer))
+         (preamble (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names)))
+                                    (cons 'predicate predicate))
+                              preamble)))
     `(progn
        (cl-eval-when (compile load eval)
 	 ;; When compiling, the predicate must be added to `org-ql-predicates' before `org-ql--def-plain-query-fn'
 	 ;; is called to define `org-ql--plain-query'.  Otherwise, `org-ql--plain-query' seems to work properly
 	 ;; when interpreted but not always when the file is byte-compiled.
-	 (push (list :name ',pred-name :aliases ',aliases :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates))
-       (cl-defun ,fn-name ,args ,docstring ,@body))))
+         (setf (map-elt org-ql-predicate-list ',predicate-name)
+               ;; (list :aliases ',aliases :fn ',fn-name :docstring ,docstring :args ',args
+               ;;       :normalizer ',normalizer :preamble ',preamble)
+               `(:aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
+                          :normalizer ,',normalizer :preamble ,',preamble))
+         (unless org-ql-defpred-defer
+           (org-ql--define-normalizers (--map (plist-get it :normalizer) (mapcar #'cdr org-ql-predicate-list)))
+           (org-ql--define-preambles (--map (plist-get it :preamble) (mapcar #'cdr org-ql-predicate-list)))
+           (org-ql--def-plain-query-fn)))
+       (cl-defun ,fn-name ,args ,docstring ,predicate))))
+
+(org-ql-define-predicate (clocked c) (&key from to _on)
+  ;; NOTE: _on is pre-processed
+  "Return non-nil if current entry was clocked in given period.
+If no arguments are specified, return non-nil if entry has any
+timestamp.
+
+If FROM, return non-nil if entry has a timestamp on or after
+FROM.
+
+If TO, return non-nil if entry has a timestamp on or before TO.
+
+If ON, return non-nil if entry has a timestamp on date ON.
+
+FROM, TO, and ON should be either `ts' structs, or strings
+parseable by `parse-time-string' which may omit the time value."
+  :normalizer (`(,predicate-names
+                 ,(and num-days (pred numberp)))
+               ;; (clocked) and (closed) implicitly look into the past.
+               (let ((from (->> (ts-now)
+                                (ts-adjust 'day (* -1 num-days))
+                                (ts-apply :hour 0 :minute 0 :second 0))))
+                 `(clocked :from ,from)))
+  :preamble (`(,predicate-names . ,_)
+             (list :regexp org-ql-clock-regexp :predicate predicate :case-fold nil))
+  :predicate (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
 
 ;; TODO: Mark as obsolete/deprecated.
 ;;;###autoload
