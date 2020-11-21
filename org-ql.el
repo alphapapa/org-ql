@@ -1388,11 +1388,7 @@ COMPARATOR may be `<', `<=', `>', or `>='."
                  ((pred symbolp) ;; Compare with function
                   (funcall level-or-comparator outline-level level)))))
 
-;;;;;; Old definitions
-
-;; MAYBE: Preambles for outline-path predicates.  Not sure if possible without complicated logic.
-
-(org-ql--defpred link (&rest args)
+(org-ql-define-predicate link (&rest args)
   ;; User-facing argument form: (&optional description-or-target &key description target regexp-p).
   "Return non-nil if current heading contains a link matching arguments.
 DESCRIPTION-OR-TARGET is matched against the link's description
@@ -1405,37 +1401,61 @@ any link is found."
   ;; "FOO")" in the view header, which would be ugly.  So, since preambles are expected to be
   ;; enabled nearly all of the time, in which case this function won't be called anyway, it's
   ;; probably not worth rewriting code all over the place to fix this.
-  (let* (plist description-or-target description target regexp-p)
-    (if (not (keywordp (car args)))
-        (setf description-or-target (car args)
-              plist (cdr args))
-      (setf plist args))
-    (setf description (plist-get plist :description)
-          target (plist-get plist :description)
-          regexp-p (plist-get plist :regexp-p))
-    (unless regexp-p
-      ;; NOTE: It would also be preferable to avoid regexp-quoting every time this predicate
-      ;; is called.  Ideally that would be handled in the query pre-processing step.  However,
-      ;; handling that properly, in combination with preparing the query preamble and whether
-      ;; REGEXP-P is enabled, is also complicated, so let's not.
-      (when description-or-target
-        (setf description-or-target (regexp-quote description-or-target)))
-      (when description
-        (setf description (regexp-quote description)))
-      (when target
-        (setf target (regexp-quote target))))
-    (when (re-search-forward org-ql-link-regexp (org-entry-end-position) t)
-      (pcase description-or-target
-        ('nil (and (or (null target)
-                       (string-match-p target (match-string 1)))
-                   (or (null description)
-                       (string-match-p description (match-string org-ql-link-description-group)))))
-        (_ (if (and description target)
-               (and (string-match-p target (match-string 1))
-                    (string-match-p description (match-string org-ql-link-description-group)))
-             (or (string-match-p description-or-target (match-string 1))
-                 (string-match-p description-or-target
-                                 (match-string org-ql-link-description-group)))))))))
+  :preambles ((`(,predicate-names)
+               (list :regexp ;; Match a link with a target and optionally a description.
+                     (rx (or bol (1+ blank))
+                         "[[" (1+ (not (any "]"))) "]"
+                         (optional (seq "[" (0+ (not (any "]"))) "]"))
+                         "]"
+                         (or eol blank))))
+              (`(,predicate-names ,(and description-or-target
+                                        (guard (not (keywordp description-or-target)))))
+               (list :regexp (org-ql--link-regexp :description-or-target
+                                                  (regexp-quote description-or-target)))
+               nil)
+              (`(,predicate-names . ,plist)
+               (list :regexp (org-ql--link-regexp
+                              :description
+                              (when (plist-get plist :description)
+                                (regexp-quote (plist-get plist :description)))
+                              :target (when (plist-get plist :target)
+                                        (regexp-quote (plist-get plist :target)))))
+               nil))
+  :predicate (let* (plist description-or-target description target regexp-p)
+               (if (not (keywordp (car args)))
+                   (setf description-or-target (car args)
+                         plist (cdr args))
+                 (setf plist args))
+               (setf description (plist-get plist :description)
+                     target (plist-get plist :description)
+                     regexp-p (plist-get plist :regexp-p))
+               (unless regexp-p
+                 ;; NOTE: It would also be preferable to avoid regexp-quoting every time this predicate
+                 ;; is called.  Ideally that would be handled in the query pre-processing step.  However,
+                 ;; handling that properly, in combination with preparing the query preamble and whether
+                 ;; REGEXP-P is enabled, is also complicated, so let's not.
+                 (when description-or-target
+                   (setf description-or-target (regexp-quote description-or-target)))
+                 (when description
+                   (setf description (regexp-quote description)))
+                 (when target
+                   (setf target (regexp-quote target))))
+               (when (re-search-forward org-ql-link-regexp (org-entry-end-position) t)
+                 (pcase description-or-target
+                   ('nil (and (or (null target)
+                                  (string-match-p target (match-string 1)))
+                              (or (null description)
+                                  (string-match-p description (match-string org-ql-link-description-group)))))
+                   (_ (if (and description target)
+                          (and (string-match-p target (match-string 1))
+                               (string-match-p description (match-string org-ql-link-description-group)))
+                        (or (string-match-p description-or-target (match-string 1))
+                            (string-match-p description-or-target
+                                            (match-string org-ql-link-description-group)))))))))
+
+;;;;;; Old definitions
+
+;; MAYBE: Preambles for outline-path predicates.  Not sure if possible without complicated logic.
 
 (org-ql--defpred priority (&rest args)
   "Return non-nil if current heading has a certain priority.
