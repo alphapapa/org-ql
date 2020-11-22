@@ -134,7 +134,7 @@ This list should not contain any duplicates."))
 (defgroup org-ql nil
   "Customization for `org-ql'."
   :group 'org
-  ;; TODO: Add info manual link.
+  :link '(custom-manual "(org-ql)Usage")
   :link '(url-link "https://github.com/alphapapa/org-ql"))
 
 (defcustom org-ql-ask-unsafe-queries t
