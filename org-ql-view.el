@@ -578,7 +578,7 @@ dates in the past, and negative for dates in the future."
 ;; than `org-ql-view' saved views, the link type is "org-ql-search".
 
 (org-link-set-parameters "org-ql-search"
-                         :follow #'org-ql-view--link-open
+                         :follow #'org-ql-view--link-follow
                          :store #'org-ql-view--link-store)
 
 ;; We require the URL libraries in the functions to hopefully avoid
@@ -588,7 +588,7 @@ dates in the past, and negative for dates in the future."
   (require 'url-parse)
   (require 'url-util))
 
-(defun org-ql-view--link-open (path)
+(defun org-ql-view--link-follow (path)
   "Open Org QL query for current buffer at PATH.
 PATH should be the part of an \"org-ql-search:\" URL after the
 protocol.  See, e.g. `org-ql-view--link-store'."
