@@ -882,6 +882,12 @@ File: README.info,  Node: 05-pre,  Next: 049,  Up: Changelog
      our cache, and it removes the need for a compatibility alias for
      Org versions before 9.3.
 
+   *Deprecated*
+   • Macro org-ql is marked obsolete.  It will be removed in v0.7.
+     Functions org-ql-select and org-ql-query should be used instead.
+     (The macro serves only to confuse with regard to quoting
+     arguments.)
+
    *Acknowledgments*
    • tpeacock19 (https://github.com/tpeacock19) for extensive help
      testing new features in this version.
@@ -1357,28 +1363,28 @@ Node: Links29556
 Node: Tips30243
 Node: Changelog30561
 Node: 05-pre31245
-Node: 04932484
-Node: 04832762
-Node: 04733109
-Node: 04633504
-Node: 04533904
-Node: 04434263
-Node: 04334620
-Node: 04234815
-Node: 04134974
-Node: 0435215
-Node: 03239148
-Node: 03139527
-Node: 0339724
-Node: 02342699
-Node: 02242927
-Node: 02143195
-Node: 0243394
-Node: 0147429
-Node: Notes47530
-Node: Comparison with Org Agenda searches47692
-Node: org-sidebar48564
-Node: License48843
+Node: 04932719
+Node: 04832997
+Node: 04733344
+Node: 04633739
+Node: 04534139
+Node: 04434498
+Node: 04334855
+Node: 04235050
+Node: 04135209
+Node: 0435450
+Node: 03239383
+Node: 03139762
+Node: 0339959
+Node: 02342934
+Node: 02243162
+Node: 02143430
+Node: 0243629
+Node: 0147664
+Node: Notes47765
+Node: Comparison with Org Agenda searches47927
+Node: org-sidebar48799
+Node: License49078
 
 End Tag Table
 

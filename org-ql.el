@@ -184,12 +184,12 @@ match."
 	 (push (list :name ',pred-name :aliases ',aliases :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates))
        (cl-defun ,fn-name ,args ,docstring ,@body))))
 
-;; TODO: Mark as obsolete/deprecated.
 ;;;###autoload
 (cl-defmacro org-ql (buffers-or-files query &key sort narrow action)
   "Expands into a call to `org-ql-select' with the same arguments.
 For convenience, arguments should be unquoted."
-  (declare (indent defun))
+  (declare (indent defun)
+           (obsolete "Please use functions `org-ql-select' or `org-ql-query' instead" "org-ql 0.5"))
   `(org-ql-select ,buffers-or-files
      ',query
      :action ',action

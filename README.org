@@ -478,6 +478,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Internal*
 +  When formatting entries for Org QL View buffers, use internal function for retrieving heading tags.  This improves speed by using our cache, and it removes the need for a compatibility alias for Org versions before 9.3.
 
+*Deprecated*
++  Macro =org-ql= is marked obsolete.  It will be removed in v0.7.  Functions =org-ql-select= and =org-ql-query= should be used instead.  (The macro serves only to confuse with regard to quoting arguments.)
+
 *Acknowledgments*
 +  [[https://github.com/tpeacock19][tpeacock19]] for extensive help testing new features in this version.
 
