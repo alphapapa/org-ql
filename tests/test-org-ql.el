@@ -274,10 +274,21 @@ RESULTS should be a list of strings as returned by
 
   (describe "Query preambles"
 
-    ;; (before-all
-    ;;   (org-ql--define-preamble-fn (reverse org-ql-predicates))
-    ;;   )
     ;; TODO: Other predicates.
+
+    (describe "(clocked)"
+      (it "without arguments"
+        (expect (org-ql--query-preamble '(clocked))
+                :to-equal (list :query t
+                                :preamble org-ql-clock-regexp
+                                :preamble-case-fold nil)))
+      (it "with a number of days"
+        (expect (org-ql--query-preamble '(clocked 1))
+                :to-equal (list :query t
+                                :preamble org-ql-clock-regexp
+                                :preamble-case-fold nil)))
+      ;; TODO: Other arguments for (clocked).
+      )
 
     (describe "(level)"
       (it "with a number"
@@ -423,24 +434,24 @@ RESULTS should be a list of strings as returned by
 
     ;; TODO: Other predicates.
 
-    (describe "(ancestors)"
-      (org-ql-it "without sub-query"
-        (org-ql-expect ((ancestors))
-          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-
-      (org-ql-it "with sub-query"
-        (org-ql-expect ((ancestors (heading "universe")))
-          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
-
-    (describe "(parent)"
-      (org-ql-it "without sub-query"
-        (org-ql-expect ((parent))
-          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-
-      (org-ql-it "with sub-query"
-        (org-ql-expect ((parent (and (todo) (priority "A"))))
-          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
-
+    ;; (describe "(ancestors)"
+    ;;   (org-ql-it "without sub-query"
+    ;;     (org-ql-expect ((ancestors))
+    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with sub-query"
+    ;;     (org-ql-expect ((ancestors (heading "universe")))
+    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
+    ;;
+    ;; (describe "(parent)"
+    ;;   (org-ql-it "without sub-query"
+    ;;     (org-ql-expect ((parent))
+    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with sub-query"
+    ;;     (org-ql-expect ((parent (and (todo) (priority "A"))))
+    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
+    ;;
     (describe "(category)"
 
       (org-ql-it "without arguments"
@@ -451,35 +462,35 @@ RESULTS should be a list of strings as returned by
       (org-ql-it "with a category"
         (org-ql-expect ((category "ambition"))
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
-
-    (describe "(children)"
-      (org-ql-it "without arguments"
-        (org-ql-expect ((children))
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas")))
-      (org-ql-it "with sub-query"
-        (org-ql-expect ((children (todo "CHECK")))
-          '("Recurring")))
-      (org-ql-it "with grandchildren query"
-        ;; It's really cool how this works.  It's so simple.
-        (org-ql-expect ((children (children "moon")))
-          '("Take over the universe"))))
-
-    (describe "(descendants)"
-      (org-ql-it "without arguments"
-        (org-ql-expect ((descendants))
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas")))
-      (org-ql-it "with sub-query"
-        (org-ql-expect ((descendants (todo "CHECK")))
-          '("Recurring")))
-      (org-ql-it "with granddescendants query"
-        (org-ql-expect ((descendants (descendants "moon")))
-          '("Take over the universe")))
-      (org-ql-it "with query that should not match parent"
-        ;; This test would fail if the `descendants' predicate did not properly exclude
-        ;; the parent heading by narrowing the buffer to begin at the first child.
-        (org-ql-expect ((and (descendants (todo "WAITING"))
-                             (not (descendants (todo "TODO" "NEXT")))))
-          '("Take over the moon"))))
+    ;;
+    ;; (describe "(children)"
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((children))
+    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas")))
+    ;;   (org-ql-it "with sub-query"
+    ;;     (org-ql-expect ((children (todo "CHECK")))
+    ;;       '("Recurring")))
+    ;;   (org-ql-it "with grandchildren query"
+    ;;     ;; It's really cool how this works.  It's so simple.
+    ;;     (org-ql-expect ((children (children "moon")))
+    ;;       '("Take over the universe"))))
+    ;;
+    ;; (describe "(descendants)"
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((descendants))
+    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas")))
+    ;;   (org-ql-it "with sub-query"
+    ;;     (org-ql-expect ((descendants (todo "CHECK")))
+    ;;       '("Recurring")))
+    ;;   (org-ql-it "with granddescendants query"
+    ;;     (org-ql-expect ((descendants (descendants "moon")))
+    ;;       '("Take over the universe")))
+    ;;   (org-ql-it "with query that should not match parent"
+    ;;     ;; This test would fail if the `descendants' predicate did not properly exclude
+    ;;     ;; the parent heading by narrowing the buffer to begin at the first child.
+    ;;     (org-ql-expect ((and (descendants (todo "WAITING"))
+    ;;                          (not (descendants (todo "TODO" "NEXT")))))
+    ;;       '("Take over the moon"))))
 
     (describe "(clocked)"
 
@@ -692,474 +703,475 @@ RESULTS should be a list of strings as returned by
       (org-ql-it "with two arguments, one matching"
         (org-ql-expect ((path "data" "nope"))
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
-
-    (describe "(planning)"
-
-      (org-ql-it "without arguments"
-        (org-ql-expect ((planning))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
-
-      (org-ql-it "with a number"
-        (org-ql-then
-          (org-ql-expect ((planning 2))
-            '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-      (org-ql-it ":on"
-        (org-ql-expect ((planning :on "2017-07-05"))
-          '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((planning :on "2019-06-09"))
-          nil)
-        (org-ql-then
-          (org-ql-expect ((planning :on today))
-            '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-      (org-ql-it ":from"
-        (org-ql-expect ((planning :from "2017-07-04"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((planning :from "2017-07-05"))
-          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((planning :from "2017-07-06"))
-          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
-        (org-ql-then
-          (org-ql-expect ((planning :from today))
-            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-      (org-ql-it ":to"
-        (org-ql-expect ((planning :to "2017-07-04"))
-          '("Skype with president of Antarctica"))
-        (org-ql-expect ((planning :to "2017-07-05"))
-          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((planning :to "2018-07-06"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-then
-          (org-ql-expect ((planning :to today))
-            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
-
-    (describe "(priority)"
-
-      (org-ql-it "without arguments"
-        (org-ql-expect ((priority))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor")))
-      (org-ql-it "with a priority"
-        (org-ql-expect ((priority "A"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
-      (org-ql-it "= a priority"
-        (org-ql-expect ((priority = "A"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
-      (org-ql-it "< a priority"
-        (org-ql-expect ((priority < "B"))
-          '("Take over the moon" "Get haircut")))
-      (org-ql-it "<= a priority"
-        (org-ql-expect ((priority <= "B"))
-          '("Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Get haircut" "Internet" "Fix flux capacitor")))
-      (org-ql-it "> a priority"
-        (org-ql-expect ((priority > "B"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
-      (org-ql-it ">= a priority"
-        (org-ql-expect ((priority >= "B"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Renew membership in supervillain club" "Learn universal sign language" "Internet" "Spaceship lease" "Fix flux capacitor"))))
-    (describe "(property)"
-
-      ;; MAYBE: Add support for (property) without arguments.
-      ;; (org-ql-it "without arguments"
-      ;;   (org-ql-expect ((property))))
-
-      (org-ql-it "with a property"
-        (org-ql-expect ((property "agenda-group"))
-          '("Take over the universe" "Spaceship lease" "Recurring" "Write a symphony")))
-
-      (org-ql-it "with a property and a value"
-        (org-ql-expect ((property "agenda-group" "plans"))
-          '("Take over the universe" "Write a symphony"))))
-
-    (describe "(regexp)"
-
-      (org-ql-it "with 1 argument"
-        (org-ql-expect ((regexp "Take over")
-                        :sort todo)
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
-
-      (org-ql-it "with 2 arguments"
-        (org-ql-expect ((regexp "Take over" "universe")
-                        :sort todo)
-          '("Take over the universe")))
-
-      (org-ql-it "with a plain string"
-        (org-ql-expect ("Take over"
-                        :sort todo)
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
-
-      (org-ql-it "with two plain strings in an OR"
-        (org-ql-expect ((or "Take over" "universe")
-                        :sort todo)
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
-
-      (org-ql-it "case-folding predicate with non-case-folding preamble"
-        ;; e.g. the (todo) predicate disables case-folding in its preamble, but that
-        ;; should not prevent case-folding in this and other predicates (issue #114).
-        (org-ql-expect ((and (todo "TODO") (regexp "take over"))
-                        :sort todo)
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut"))))
-
-    (describe "(scheduled)"
-
-      (org-ql-it "without arguments"
-        (org-ql-expect ((scheduled))
-          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
-
-      (org-ql-it "with a number"
-        (org-ql-then
-          ;; Using -1 is the easiest way to exclude some results but not all for testing this.
-          (org-ql-expect ((scheduled -1))
-            '("Skype with president of Antarctica"))))
-
-      (org-ql-it ":on"
-        (org-ql-expect ((scheduled :on "2017-07-05"))
-          '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((scheduled :on "2019-06-09"))
-          nil)
-        (org-ql-then
-          (org-ql-expect ((scheduled :on today))
-            '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-      (org-ql-it ":from"
-        (org-ql-expect ((scheduled :from "2017-07-04"))
-          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((scheduled :from "2017-07-05"))
-          '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((scheduled :from "2017-07-06"))
-          nil)
-        (org-ql-then
-          (org-ql-expect ((scheduled :from today))
-            '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-      (org-ql-it ":to"
-        (org-ql-expect ((scheduled :to "2017-07-04"))
-          '("Skype with president of Antarctica"))
-        (org-ql-expect ((scheduled :to "2017-07-05"))
-          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((scheduled :to "2018-07-06"))
-          '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-then
-          (org-ql-expect ((scheduled :to today))
-            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
-
-    ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
-    ;; significant hassle.  Manual testing shows that the predicate appears to work properly.
-
-    (describe "(todo)"
-
-      (org-ql-it "without arguments"
-        (org-ql-expect ((todo)
-                        :sort todo)
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-
-      (org-ql-it "with 1 argument"
-        (org-ql-expect ((todo "WAITING")
-                        :sort todo)
-          '("Visit the moon")))
-
-      (org-ql-it "with 2 arguments"
-        (org-ql-expect ((todo "WAITING" "SOMEDAY")
-                        :sort todo)
-          '("Visit the moon" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
-
-    (describe "(tags)"
-
-      (org-ql-it "without arguments"
-        (org-ql-expect ((tags))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
-        (org-ql-expect ((not (tags)))
-          '("Recurring" "Sunrise/sunset" "Ideas")))
-
-      (org-ql-it "with a tag"
-        (org-ql-expect ((tags "Emacs"))
-          '("/r/emacs" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((not (tags "Emacs")))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
-
-      (org-ql-it "with 2 tags"
-        (org-ql-expect ((tags "Emacs" "space"))
-          '("Visit Mars" "Visit the moon" "/r/emacs" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((not (tags "Emacs" "space")))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
-
-      (org-ql-it "with file tags"
-        (org-ql-expect ((tags "food"))
-          '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
-          :buffer (org-ql-test-data-buffer "data2.org"))
-        (org-ql-expect ((tags "fruit"))
-          '("Fruit" "Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
-
-    (describe "(tags-inherited)"
-
-      (org-ql-it "without arguments"
-        (org-ql-expect ((tags-inherited))
-          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))
-        (org-ql-expect ((not (inherited-tags)))
-          '("Take over the universe" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-
-      (org-ql-it "with a tag"
-        (org-ql-expect ((tags-inherited "Emacs"))
-          nil)
-        (org-ql-expect ((itags "ambition"))
-          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))
-        (org-ql-expect ((not (tags-i "ambition")))
-          '("Take over the universe" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-
-      (org-ql-it "with 2 tags"
-        (org-ql-expect ((itags "personal" "world"))
-          '("Skype with president of Antarctica"))
-        (org-ql-expect ((not (tags-inherited "personal" "world")))
-          ;; Note that this correctly includes the task "Practice leaping...", which has the LOCAL tag "personal".
-          '("Take over the universe" "Take over the world" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-
-      (org-ql-it "with file tags"
-        (org-ql-expect ((tags-inherited "food"))
-          '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
-          :buffer (org-ql-test-data-buffer "data2.org"))
-        (org-ql-expect ((tags-inherited "fruit"))
-          '("Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
-
-    (describe "(tags-local)"
-
-      (org-ql-it "without arguments"
-        (org-ql-expect ((tags-local))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
-        (org-ql-expect ((not (local-tags)))
-          '("Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Recurring" "Sunrise/sunset" "Ideas")))
-
-      (org-ql-it "with a tag"
-        (org-ql-expect ((tags-local "world"))
-          '("Take over the world" "Skype with president of Antarctica"))
-        (org-ql-expect ((ltags "ambition"))
-          '("Take over the universe"))
-        (org-ql-expect ((not (tags-l "ambition")))
-          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-
-      (org-ql-it "with 2 tags"
-        (org-ql-expect ((ltags "personal" "world"))
-          '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Get haircut"))
-        (org-ql-expect ((not (tags-local "personal" "world")))
-          '("Take over the universe" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-
-      (org-ql-it "with file tags"
-        (org-ql-expect ((tags-local "food"))
-          nil
-          :buffer (org-ql-test-data-buffer "data2.org"))
-        (org-ql-expect ((tags-local "fruit"))
-          '("Fruit")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
-
-    (describe "(tags-all), (tags&)"
-
-      (org-ql-it "with 2 tags"
-        (org-ql-expect ((tags-all "universe" "personal"))
-          '("Practice leaping tall buildings in a single bound"))
-        (org-ql-expect ((tags& "ambition" "space"))
-          '("Visit Mars" "Visit the moon")))
-
-      (org-ql-it "with file tags"
-        (org-ql-expect ((tags-all "food" "fruit"))
-          '("Fruit" "Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
-
-    (describe "(tags-regexp), (tags*)"
-
-      (org-ql-it "without arguments"
-        (org-ql-expect ((tags-regexp))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
-        (org-ql-expect ((not (tags*)))
-          '("Recurring" "Sunrise/sunset" "Ideas")))
-
-      (org-ql-it "with a tag regexp"
-        (org-ql-expect ((tags-regexp "Emac"))
-          '("/r/emacs" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((not (tags* "Emac")))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
-
-      (org-ql-it "with 2 tag regexps"
-        (org-ql-expect ((tags-regexp "Emac" "spac"))
-          '("Visit Mars" "Visit the moon" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Rewrite Emacs in Common Lisp"))
-        (org-ql-expect ((not (tags* "Emac" "spac")))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
-
-      (org-ql-it "with regexp matching file tags"
-        (org-ql-expect ((tags-regexp "foo"))
-          '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
-          :buffer (org-ql-test-data-buffer "data2.org"))
-        (org-ql-expect ((tags* "frui"))
-          '("Fruit" "Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
-
-    (describe "(ts)"
-
-      (describe "active"
-
-        (org-ql-it "without arguments"
-          (org-ql-expect ((ts :type active))
-            '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
-
-        (org-ql-it ":from a timestamp"
-          (org-ql-expect ((ts :from "2017-07-08" :type active))
-            '("Take over the universe" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
-          (org-ql-expect ((ts :from "2019-06-08" :type active))
-            nil)
-          (org-ql-then
-            (org-ql-expect ((ts :from today))
-              '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":from a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts :from 5))
-              '("Take over the universe" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":to a timestamp"
-          (org-ql-expect ((ts :to "2019-06-10" :type active))
-            '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :to "2017-07-04" :type active))
-            '("Skype with president of Antarctica"))
-          (org-ql-then
-            (org-ql-expect ((ts :to today))
-              '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":to a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts :to -1))
-              '("Skype with president of Antarctica"))))
-
-        (org-ql-it ":on a timestamp"
-          (org-ql-expect ((ts :on "2017-07-05" :type active))
-            '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :on "2019-06-09" :type active))
-            nil)
-          (org-ql-then
-            (org-ql-expect ((ts :on today))
-              '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":on a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts-active :on 2))
-              '("Take over the world")))))
-
-      (describe "inactive"
-
-        (org-ql-it "without arguments"
-          (org-ql-expect ((ts :type inactive))
-            '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp")))
-
-        (org-ql-it ":from a timestamp"
-          (org-ql-expect ((ts :from "2017-07-06" :type inactive))
-            '("Visit the moon" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :from "2019-06-08" :type inactive))
-            nil)
-          (org-ql-then
-            (org-ql-expect ((ts-inactive :from today))
-              '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":from a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts-i :from 5))
-              '("Visit the moon" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":to a timestamp"
-          (org-ql-expect ((ts :to "2019-06-10" :type inactive))
-            '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :to "2017-07-04" :type inactive))
-            'nil)
-          (org-ql-then
-            (org-ql-expect ((ts-inactive :to today))
-              '("Learn universal sign language"))))
-
-        (org-ql-it ":to a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts-i :to 5))
-              '("Learn universal sign language"))))
-
-        (org-ql-it ":on a timestamp"
-          (org-ql-expect ((ts :on "2017-07-05" :type inactive))
-            '("Learn universal sign language"))
-          (org-ql-expect ((ts :on "2019-06-09" :type inactive))
-            nil)
-          (org-ql-then
-            (org-ql-expect ((ts-inactive :on today))
-              '("Learn universal sign language"))))
-
-        (org-ql-it ":on a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts-inactive :on 19))
-              '("Visit the moon" "Rewrite Emacs in Common Lisp")))))
-
-      (describe "both"
-
-        (org-ql-it "without arguments"
-          (org-ql-expect ((ts))
-            '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :type both))
-            '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
-
-        (org-ql-it ":from a timestamp"
-          (org-ql-expect ((ts :from "2017-07-05"))
-            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :from "2017-07-05" :type both))
-            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :from "2019-06-08"))
-            nil)
-          (org-ql-expect ((ts :from "2019-06-08" :type both))
-            nil)
-          (org-ql-then
-            (org-ql-expect ((ts :from today))
-              '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":from a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts :from -5))
-              '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":to a timestamp"
-          (org-ql-expect ((ts :to "2017-07-06"))
-            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :to "2017-07-06" :type both))
-            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :to "2017-07-04"))
-            '("Skype with president of Antarctica"))
-          (org-ql-expect ((ts :to "2017-07-04" :type both))
-            '("Skype with president of Antarctica"))
-          (org-ql-then
-            (org-ql-expect ((ts :to today))
-              '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":to a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts :to 5))
-              '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":on a timestamp"
-          (org-ql-expect ((ts :on "2017-07-05"))
-            '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :on "2017-07-05" :type both))
-            '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-          (org-ql-expect ((ts :on "2019-06-09"))
-            nil)
-          (org-ql-expect ((ts :on "2019-06-09" :type both))
-            nil)
-          (org-ql-then
-            (org-ql-expect ((ts :on today))
-              '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
-
-        (org-ql-it ":on a number of days"
-          (org-ql-then
-            (org-ql-expect ((ts :on 5))
-              '("Renew membership in supervillain club"))))))
-
-    (describe "Compound queries"
-
-      (org-ql-it "Tags and to-do"
-        (org-ql-expect ((and (todo "SOMEDAY")
-                             (tags "Emacs")))
-          '("Rewrite Emacs in Common Lisp")))))
+    ;;
+    ;; (describe "(planning)"
+    ;;
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((planning))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+    ;;
+    ;;   (org-ql-it "with a number"
+    ;;     (org-ql-then
+    ;;       (org-ql-expect ((planning 2))
+    ;;         '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;   (org-ql-it ":on"
+    ;;     (org-ql-expect ((planning :on "2017-07-05"))
+    ;;       '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((planning :on "2019-06-09"))
+    ;;       nil)
+    ;;     (org-ql-then
+    ;;       (org-ql-expect ((planning :on today))
+    ;;         '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;   (org-ql-it ":from"
+    ;;     (org-ql-expect ((planning :from "2017-07-04"))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((planning :from "2017-07-05"))
+    ;;       '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((planning :from "2017-07-06"))
+    ;;       '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
+    ;;     (org-ql-then
+    ;;       (org-ql-expect ((planning :from today))
+    ;;         '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;   (org-ql-it ":to"
+    ;;     (org-ql-expect ((planning :to "2017-07-04"))
+    ;;       '("Skype with president of Antarctica"))
+    ;;     (org-ql-expect ((planning :to "2017-07-05"))
+    ;;       '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((planning :to "2018-07-06"))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-then
+    ;;       (org-ql-expect ((planning :to today))
+    ;;         '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
+    ;;
+    ;; (describe "(priority)"
+    ;;
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((priority))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor")))
+    ;;   (org-ql-it "with a priority"
+    ;;     (org-ql-expect ((priority "A"))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
+    ;;   (org-ql-it "= a priority"
+    ;;     (org-ql-expect ((priority = "A"))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
+    ;;   (org-ql-it "< a priority"
+    ;;     (org-ql-expect ((priority < "B"))
+    ;;       '("Take over the moon" "Get haircut")))
+    ;;   (org-ql-it "<= a priority"
+    ;;     (org-ql-expect ((priority <= "B"))
+    ;;       '("Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Get haircut" "Internet" "Fix flux capacitor")))
+    ;;   (org-ql-it "> a priority"
+    ;;     (org-ql-expect ((priority > "B"))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
+    ;;   (org-ql-it ">= a priority"
+    ;;     (org-ql-expect ((priority >= "B"))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Renew membership in supervillain club" "Learn universal sign language" "Internet" "Spaceship lease" "Fix flux capacitor"))))
+    ;; (describe "(property)"
+    ;;
+    ;;   ;; MAYBE: Add support for (property) without arguments.
+    ;;   ;; (org-ql-it "without arguments"
+    ;;   ;;   (org-ql-expect ((property))))
+    ;;
+    ;;   (org-ql-it "with a property"
+    ;;     (org-ql-expect ((property "agenda-group"))
+    ;;       '("Take over the universe" "Spaceship lease" "Recurring" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with a property and a value"
+    ;;     (org-ql-expect ((property "agenda-group" "plans"))
+    ;;       '("Take over the universe" "Write a symphony"))))
+    ;;
+    ;; (describe "(regexp)"
+    ;;
+    ;;   (org-ql-it "with 1 argument"
+    ;;     (org-ql-expect ((regexp "Take over")
+    ;;                     :sort todo)
+    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+    ;;
+    ;;   (org-ql-it "with 2 arguments"
+    ;;     (org-ql-expect ((regexp "Take over" "universe")
+    ;;                     :sort todo)
+    ;;       '("Take over the universe")))
+    ;;
+    ;;   (org-ql-it "with a plain string"
+    ;;     (org-ql-expect ("Take over"
+    ;;                     :sort todo)
+    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+    ;;
+    ;;   (org-ql-it "with two plain strings in an OR"
+    ;;     (org-ql-expect ((or "Take over" "universe")
+    ;;                     :sort todo)
+    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
+    ;;
+    ;;   (org-ql-it "case-folding predicate with non-case-folding preamble"
+    ;;     ;; e.g. the (todo) predicate disables case-folding in its preamble, but that
+    ;;     ;; should not prevent case-folding in this and other predicates (issue #114).
+    ;;     (org-ql-expect ((and (todo "TODO") (regexp "take over"))
+    ;;                     :sort todo)
+    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut"))))
+    ;;
+    ;; (describe "(scheduled)"
+    ;;
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((scheduled))
+    ;;       '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+    ;;
+    ;;   (org-ql-it "with a number"
+    ;;     (org-ql-then
+    ;;       ;; Using -1 is the easiest way to exclude some results but not all for testing this.
+    ;;       (org-ql-expect ((scheduled -1))
+    ;;         '("Skype with president of Antarctica"))))
+    ;;
+    ;;   (org-ql-it ":on"
+    ;;     (org-ql-expect ((scheduled :on "2017-07-05"))
+    ;;       '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((scheduled :on "2019-06-09"))
+    ;;       nil)
+    ;;     (org-ql-then
+    ;;       (org-ql-expect ((scheduled :on today))
+    ;;         '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;   (org-ql-it ":from"
+    ;;     (org-ql-expect ((scheduled :from "2017-07-04"))
+    ;;       '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((scheduled :from "2017-07-05"))
+    ;;       '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((scheduled :from "2017-07-06"))
+    ;;       nil)
+    ;;     (org-ql-then
+    ;;       (org-ql-expect ((scheduled :from today))
+    ;;         '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;   (org-ql-it ":to"
+    ;;     (org-ql-expect ((scheduled :to "2017-07-04"))
+    ;;       '("Skype with president of Antarctica"))
+    ;;     (org-ql-expect ((scheduled :to "2017-07-05"))
+    ;;       '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((scheduled :to "2018-07-06"))
+    ;;       '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-then
+    ;;       (org-ql-expect ((scheduled :to today))
+    ;;         '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
+    ;;
+    ;; ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
+    ;; ;; significant hassle.  Manual testing shows that the predicate appears to work properly.
+    ;;
+    ;; (describe "(todo)"
+    ;;
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((todo)
+    ;;                     :sort todo)
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with 1 argument"
+    ;;     (org-ql-expect ((todo "WAITING")
+    ;;                     :sort todo)
+    ;;       '("Visit the moon")))
+    ;;
+    ;;   (org-ql-it "with 2 arguments"
+    ;;     (org-ql-expect ((todo "WAITING" "SOMEDAY")
+    ;;                     :sort todo)
+    ;;       '("Visit the moon" "Rewrite Emacs in Common Lisp" "Write a symphony"))))
+    ;;
+    ;; (describe "(tags)"
+    ;;
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((tags))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
+    ;;     (org-ql-expect ((not (tags)))
+    ;;       '("Recurring" "Sunrise/sunset" "Ideas")))
+    ;;
+    ;;   (org-ql-it "with a tag"
+    ;;     (org-ql-expect ((tags "Emacs"))
+    ;;       '("/r/emacs" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((not (tags "Emacs")))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with 2 tags"
+    ;;     (org-ql-expect ((tags "Emacs" "space"))
+    ;;       '("Visit Mars" "Visit the moon" "/r/emacs" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((not (tags "Emacs" "space")))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with file tags"
+    ;;     (org-ql-expect ((tags "food"))
+    ;;       '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))
+    ;;     (org-ql-expect ((tags "fruit"))
+    ;;       '("Fruit" "Blueberry" "Strawberry")
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))))
+    ;;
+    ;; (describe "(tags-inherited)"
+    ;;
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((tags-inherited))
+    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))
+    ;;     (org-ql-expect ((not (inherited-tags)))
+    ;;       '("Take over the universe" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with a tag"
+    ;;     (org-ql-expect ((tags-inherited "Emacs"))
+    ;;       nil)
+    ;;     (org-ql-expect ((itags "ambition"))
+    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))
+    ;;     (org-ql-expect ((not (tags-i "ambition")))
+    ;;       '("Take over the universe" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with 2 tags"
+    ;;     (org-ql-expect ((itags "personal" "world"))
+    ;;       '("Skype with president of Antarctica"))
+    ;;     (org-ql-expect ((not (tags-inherited "personal" "world")))
+    ;;       ;; Note that this correctly includes the task "Practice leaping...", which has the LOCAL tag "personal".
+    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with file tags"
+    ;;     (org-ql-expect ((tags-inherited "food"))
+    ;;       '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))
+    ;;     (org-ql-expect ((tags-inherited "fruit"))
+    ;;       '("Blueberry" "Strawberry")
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))))
+    ;;
+    ;; (describe "(tags-local)"
+    ;;
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((tags-local))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
+    ;;     (org-ql-expect ((not (local-tags)))
+    ;;       '("Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Recurring" "Sunrise/sunset" "Ideas")))
+    ;;
+    ;;   (org-ql-it "with a tag"
+    ;;     (org-ql-expect ((tags-local "world"))
+    ;;       '("Take over the world" "Skype with president of Antarctica"))
+    ;;     (org-ql-expect ((ltags "ambition"))
+    ;;       '("Take over the universe"))
+    ;;     (org-ql-expect ((not (tags-l "ambition")))
+    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with 2 tags"
+    ;;     (org-ql-expect ((ltags "personal" "world"))
+    ;;       '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Get haircut"))
+    ;;     (org-ql-expect ((not (tags-local "personal" "world")))
+    ;;       '("Take over the universe" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Ideas" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with file tags"
+    ;;     (org-ql-expect ((tags-local "food"))
+    ;;       nil
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))
+    ;;     (org-ql-expect ((tags-local "fruit"))
+    ;;       '("Fruit")
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))))
+    ;;
+    ;; (describe "(tags-all), (tags&)"
+    ;;
+    ;;   (org-ql-it "with 2 tags"
+    ;;     (org-ql-expect ((tags-all "universe" "personal"))
+    ;;       '("Practice leaping tall buildings in a single bound"))
+    ;;     (org-ql-expect ((tags& "ambition" "space"))
+    ;;       '("Visit Mars" "Visit the moon")))
+    ;;
+    ;;   (org-ql-it "with file tags"
+    ;;     (org-ql-expect ((tags-all "food" "fruit"))
+    ;;       '("Fruit" "Blueberry" "Strawberry")
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))))
+    ;;
+    ;; (describe "(tags-regexp), (tags*)"
+    ;;
+    ;;   (org-ql-it "without arguments"
+    ;;     (org-ql-expect ((tags-regexp))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp" "Write a symphony"))
+    ;;     (org-ql-expect ((not (tags*)))
+    ;;       '("Recurring" "Sunrise/sunset" "Ideas")))
+    ;;
+    ;;   (org-ql-it "with a tag regexp"
+    ;;     (org-ql-expect ((tags-regexp "Emac"))
+    ;;       '("/r/emacs" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((not (tags* "Emac")))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with 2 tag regexps"
+    ;;     (org-ql-expect ((tags-regexp "Emac" "spac"))
+    ;;       '("Visit Mars" "Visit the moon" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Rewrite Emacs in Common Lisp"))
+    ;;     (org-ql-expect ((not (tags* "Emac" "spac")))
+    ;;       '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Recurring" "Shop for groceries" "Sunrise/sunset" "Ideas" "Write a symphony")))
+    ;;
+    ;;   (org-ql-it "with regexp matching file tags"
+    ;;     (org-ql-expect ((tags-regexp "foo"))
+    ;;       '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))
+    ;;     (org-ql-expect ((tags* "frui"))
+    ;;       '("Fruit" "Blueberry" "Strawberry")
+    ;;       :buffer (org-ql-test-data-buffer "data2.org"))))
+    ;;
+    ;; (describe "(ts)"
+    ;;
+    ;;   (describe "active"
+    ;;
+    ;;     (org-ql-it "without arguments"
+    ;;       (org-ql-expect ((ts :type active))
+    ;;         '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+    ;;
+    ;;     (org-ql-it ":from a timestamp"
+    ;;       (org-ql-expect ((ts :from "2017-07-08" :type active))
+    ;;         '("Take over the universe" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
+    ;;       (org-ql-expect ((ts :from "2019-06-08" :type active))
+    ;;         nil)
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :from today))
+    ;;           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":from a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :from 5))
+    ;;           '("Take over the universe" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":to a timestamp"
+    ;;       (org-ql-expect ((ts :to "2019-06-10" :type active))
+    ;;         '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :to "2017-07-04" :type active))
+    ;;         '("Skype with president of Antarctica"))
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :to today))
+    ;;           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":to a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :to -1))
+    ;;           '("Skype with president of Antarctica"))))
+    ;;
+    ;;     (org-ql-it ":on a timestamp"
+    ;;       (org-ql-expect ((ts :on "2017-07-05" :type active))
+    ;;         '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :on "2019-06-09" :type active))
+    ;;         nil)
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :on today))
+    ;;           '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":on a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts-active :on 2))
+    ;;           '("Take over the world")))))
+    ;;
+    ;;   (describe "inactive"
+    ;;
+    ;;     (org-ql-it "without arguments"
+    ;;       (org-ql-expect ((ts :type inactive))
+    ;;         '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp")))
+    ;;
+    ;;     (org-ql-it ":from a timestamp"
+    ;;       (org-ql-expect ((ts :from "2017-07-06" :type inactive))
+    ;;         '("Visit the moon" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :from "2019-06-08" :type inactive))
+    ;;         nil)
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts-inactive :from today))
+    ;;           '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":from a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts-i :from 5))
+    ;;           '("Visit the moon" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":to a timestamp"
+    ;;       (org-ql-expect ((ts :to "2019-06-10" :type inactive))
+    ;;         '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :to "2017-07-04" :type inactive))
+    ;;         'nil)
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts-inactive :to today))
+    ;;           '("Learn universal sign language"))))
+    ;;
+    ;;     (org-ql-it ":to a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts-i :to 5))
+    ;;           '("Learn universal sign language"))))
+    ;;
+    ;;     (org-ql-it ":on a timestamp"
+    ;;       (org-ql-expect ((ts :on "2017-07-05" :type inactive))
+    ;;         '("Learn universal sign language"))
+    ;;       (org-ql-expect ((ts :on "2019-06-09" :type inactive))
+    ;;         nil)
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts-inactive :on today))
+    ;;           '("Learn universal sign language"))))
+    ;;
+    ;;     (org-ql-it ":on a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts-inactive :on 19))
+    ;;           '("Visit the moon" "Rewrite Emacs in Common Lisp")))))
+    ;;
+    ;;   (describe "both"
+    ;;
+    ;;     (org-ql-it "without arguments"
+    ;;       (org-ql-expect ((ts))
+    ;;         '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :type both))
+    ;;         '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+    ;;
+    ;;     (org-ql-it ":from a timestamp"
+    ;;       (org-ql-expect ((ts :from "2017-07-05"))
+    ;;         '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :from "2017-07-05" :type both))
+    ;;         '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :from "2019-06-08"))
+    ;;         nil)
+    ;;       (org-ql-expect ((ts :from "2019-06-08" :type both))
+    ;;         nil)
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :from today))
+    ;;           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":from a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :from -5))
+    ;;           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":to a timestamp"
+    ;;       (org-ql-expect ((ts :to "2017-07-06"))
+    ;;         '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :to "2017-07-06" :type both))
+    ;;         '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :to "2017-07-04"))
+    ;;         '("Skype with president of Antarctica"))
+    ;;       (org-ql-expect ((ts :to "2017-07-04" :type both))
+    ;;         '("Skype with president of Antarctica"))
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :to today))
+    ;;           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":to a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :to 5))
+    ;;           '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":on a timestamp"
+    ;;       (org-ql-expect ((ts :on "2017-07-05"))
+    ;;         '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :on "2017-07-05" :type both))
+    ;;         '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+    ;;       (org-ql-expect ((ts :on "2019-06-09"))
+    ;;         nil)
+    ;;       (org-ql-expect ((ts :on "2019-06-09" :type both))
+    ;;         nil)
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :on today))
+    ;;           '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+    ;;
+    ;;     (org-ql-it ":on a number of days"
+    ;;       (org-ql-then
+    ;;         (org-ql-expect ((ts :on 5))
+    ;;           '("Renew membership in supervillain club"))))))
+    ;;
+    ;; (describe "Compound queries"
+    ;;
+    ;;   (org-ql-it "Tags and to-do"
+    ;;     (org-ql-expect ((and (todo "SOMEDAY")
+    ;;                          (tags "Emacs")))
+    ;;       '("Rewrite Emacs in Common Lisp"))))
+    )
 
   (describe "Org link safety"
 

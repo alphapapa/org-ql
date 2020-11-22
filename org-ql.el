@@ -125,7 +125,9 @@ the value returned by it at that node.")
 
 (eval-and-compile
   (defvar org-ql-predicates
-    (list (cons 'org-back-to-heading (list :name 'org-back-to-heading :fn (symbol-function 'org-back-to-heading))))
+    ;; FIXME: Is this remapping still necessary?  It was mapping `org-back-to-heading'
+    ;; to itself until now, so maybe I broke it and it doesn't matter anymore.
+    (list (cons 'org-back-to-heading (list :name 'org-back-to-heading :fn (symbol-function 'outline-back-to-heading))))
     "Plist of predicates, their corresponding functions, and their docstrings.
 This list should not contain any duplicates."))
 
@@ -285,17 +287,14 @@ PREDICATES should be the value of `org-ql-predicates'."
   (let* ((preamble-patterns
           (-flatten-n 1 (-non-nil
                          ;; NOTE: Using -let instead of pcase-let here because I can't make map 2.1 install in the test sandbox.
-                         (--map (-let* (((&plist :preambles :fn) (cdr it)))
+                         (--map (-let* (((&plist :preambles) (cdr it)))
                                   (--map (pcase-let* ((`(,pattern ,exp) it))
                                            `(,pattern
-                                             (-let* (((&plist :regexp :case-fold :predicate) ,exp))
+                                             (-let* (((&plist :regexp :case-fold :query) ,exp))
                                                (setf org-ql-preamble regexp
                                                      preamble-case-fold case-fold)
                                                ;; NOTE: Even when `predicate' is nil, it must be returned in the pcase form.
-                                               ;; MAYBE: Rather than returning the "canonical" predicate, allow any predicate form,
-                                               ;; which would be more flexible.  OTOH it would make writing the tests a bit more work.
-                                               (when predicate
-                                                 ',fn))))
+                                               query)))
                                          preambles))
                                 predicates)))))
     (fset 'org-ql--query-preamble
@@ -328,6 +327,7 @@ PREDICATES should be the value of `org-ql-predicates'."
                                          `((and))
                                          `((or)))
                                      t)
+                                    (`(t) t)
                                     (query (-flatten-n 1 query))))
                       (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold)))))))))
 
@@ -1294,14 +1294,14 @@ priority B)."
                (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
                                                  ,regexp)
                                            'no-group)
-                     :predicate predicate))
+                     :query query))
               (`(,predicate-names . ,regexps)
                ;; Multiple regexps: use preamble to match against first
                ;; regexp, then let the predicate match the rest.
                (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
                                                  ,(car regexps))
                                            'no-group)
-                     :predicate predicate)))
+                     :query query)))
   ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
   :predicate (let ((heading (org-get-heading 'no-tags 'no-todo)))
                (--all? (string-match it heading) regexps)))
@@ -1515,9 +1515,10 @@ parseable by `parse-time-string' which may omit the time value."
                                   (ts-adjust 'day (* -1 num-days))
                                   (ts-apply :hour 0 :minute 0 :second 0))))
                    `(clocked :from ,from))))
-  :preambles ((`(,predicate-names . ,_)
-               ;; FIXME
-               (list :regexp org-ql-clock-regexp :predicate )))
+  :preambles ((`(,predicate-names ,(pred numberp))
+               (list :regexp org-ql-clock-regexp :query t))
+              (`(,predicate-names)
+               (list :regexp org-ql-clock-regexp :query t)))
   :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
 
@@ -1546,7 +1547,7 @@ parseable by `parse-time-string' which may omit the time value."
                    `(closed :from ,from))))
   :preambles ((`(,predicate-names . ,_)
                ;;  Predicate still needs testing.
-               (list :regexp org-closed-time-regexp :predicate t)))
+               (list :regexp org-closed-time-regexp :query query)))
   :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1
                         :limit (line-end-position 2)))
@@ -1581,7 +1582,7 @@ parseable by `parse-time-string' which may omit the time value."
                    `(deadline :to ,to))))
   ;; FIXME: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
   :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-deadline-time-regexp :predicate predicate)))
+               (list :regexp org-deadline-time-regexp :query query)))
   :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1
                         :limit (line-end-position 2)))
@@ -1589,7 +1590,7 @@ parseable by `parse-time-string' which may omit the time value."
 (org-ql-define-predicate deadline-warning (&key from to)
   "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods."
   :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-deadline-time-regexp :predicate predicate)))
+               (list :regexp org-deadline-time-regexp :query query)))
   :predicate
   (save-excursion
     (forward-line 1)
@@ -1710,7 +1711,7 @@ of the line after the heading."
                      ;; Predicate needs testing only when args are present.
                      :predicate (-let (((&keys :from :to :on) rest))
                                   (when (or from to on)
-                                    predicate)))))
+                                    t)))))
   ;; TODO: DRY this with the clocked predicate.
   :predicate
   (cl-macrolet ((next-timestamp ()
