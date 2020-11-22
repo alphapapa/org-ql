@@ -779,7 +779,10 @@ PREDICATES should be the value of `org-ql-predicates'."
     (fset 'org-ql--normalize-query
           (byte-compile
            `(lambda (query)
-              "FIXME"
+              "Return normalized form of QUERY expression.
+This function is defined by calling
+`org-ql--define-normalize-query-fn', which uses normalizer forms
+defined in `org-ql-predicates' by calling `org-ql-defpred'."
               (cl-labels ((rec (element)
                                (pcase element
                                  (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
@@ -817,7 +820,24 @@ PREDICATES should be the value of `org-ql-predicates'."
                                 predicates)))))
     (fset 'org-ql--query-preamble
           `(lambda (query)
-             "FIXME"
+             "Return preamble data plist for QUERY.
+The plist has the following keys:
+
+  :preamble Regexp to search the Org buffer for to find potential
+            matches.  If the regexp doesn't guarantee a match to
+            QUERY, the :query key should be an appropriate query
+            expression to test against the heading (i.e. usually
+            QUERY again).
+
+  :preamble-case-fold What to bind variable `case-fold-search' to
+                      around the regexp search.
+
+  :query The query expression to use instead of QUERY (or QUERY
+         again, when appropriate).
+
+This function is defined by calling
+`org-ql--define-query-preamble-fn', which uses preamble forms
+defined in `org-ql-predicates' by calling `org-ql-defpred'."
              (pcase org-ql-use-preamble
                ('nil (list :query query :preamble nil))
                (_ (let ((preamble-case-fold t)
@@ -830,10 +850,6 @@ PREDICATES should be the value of `org-ql-predicates'."
                                            (`(or _) element)
 
                                            ,@preamble-patterns
-
-                                           ;; (`(clocked . ,_)
-                                           ;;  (setq org-ql-preamble org-ql-clock-regexp)
-                                           ;;  element)
 
                                            (`(and . ,rest)
                                             (let ((clauses (mapcar #'rec rest)))
@@ -892,6 +908,7 @@ to variables bound in the pattern:
 
   :regexp     Regular expression which searches directly to a
               potential match.
+
   :case-fold  Bound to `case-fold-search' around the regexp search.
 
   :query      Expression which should replace the query expression,
