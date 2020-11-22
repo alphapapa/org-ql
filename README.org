@@ -75,6 +75,8 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
 # These links work on GitHub's Org renderer but not in Org.
 
+If user search bare string, the predicate ~org-ql-plain-string-predicate~ will be used by default.
+
 Feedback on these APIs is welcome.  Eventually, after being tested and polished, they will be considered stable. 
 
 # TODO: Find a way to get these examples included in the info manual.
@@ -531,6 +533,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 /Note:/ The next release, 0.5, may include changes which will require minor updates to written queries (e.g. a few predicates may be renamed).  Users who wish to avoid those changes happening unexpectedly in their configs should avoid upgrading =org-ql= beyond 0.4 automatically, as they will be pushed to the =master= branch when ready.
 
 *Added*
++  *Variable*
+     -  ~org-ql-plain-string-predicate~, which will be used when user search bare string.
 +  *Commands*
      -  ~helm-org-ql-views~, which shows one of ~org-ql-views~ selected with Helm.
      -  ~org-ql-search~ can search files in ~org-directory~; customization options are available in the ~org-ql-search~ group.
