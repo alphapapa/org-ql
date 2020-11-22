@@ -331,7 +331,7 @@ PREDICATES should be the value of `org-ql-predicates'."
                                     (query (-flatten-n 1 query))))
                       (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold)))))))))
 
-(cl-defmacro org-ql-defpred (name args docstring &key predicate preambles normalizers)
+(cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers)
   "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
 NAME may be a symbol or a list of symbols: if a list, the first
 is used as the name and the rest are aliases.  ARGS is a
@@ -356,8 +356,7 @@ match."
          (predicate-names (delq nil (cons predicate-name aliases)))
          (normalizers (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names))))
                                  normalizers))
-         (preambles (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names)))
-                                     (cons 'predicate predicate))
+         (preambles (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names))))
                                preambles)))
     `(progn
        (cl-eval-when (compile load eval)
@@ -372,7 +371,7 @@ match."
            ;; NOTE: Reversing is important!
            (org-ql--define-preamble-fn (reverse org-ql-predicates))
            (org-ql--def-query-string-to-sexp-fn))
-         (cl-defun ,fn-name ,args ,docstring ,predicate)))))
+         (cl-defun ,fn-name ,args ,docstring ,body)))))
 
 ;; TODO: Mark as obsolete/deprecated.
 ;;;###autoload
@@ -931,21 +930,21 @@ Arguments STRING, POS, FILL, and LEVEL are according to
 
 (org-ql-defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
-  :predicate (when-let ((category (org-get-category (point))))
-               (cl-typecase categories
-                 (null t)
-                 (otherwise (member category categories)))))
+  :body (when-let ((category (org-get-category (point))))
+          (cl-typecase categories
+            (null t)
+            (otherwise (member category categories)))))
 
 (org-ql-defpred done ()
   "Return non-nil if entry's TODO keyword is in `org-done-keywords'."
   ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
-  :predicate (or (apply #'org-ql--predicate-todo org-done-keywords)))
+  :body (or (apply #'org-ql--predicate-todo org-done-keywords)))
 
 (org-ql-defpred habit ()
   "Return non-nil if entry is a habit."
   :preambles ((`(,predicate-names)
                (list :regexp  (rx bol (0+ space) ":STYLE:" (1+ space) "habit" (0+ space) eol))))
-  :predicate (org-is-habit-p))
+  :body (org-is-habit-p))
 
 (org-ql-defpred (heading h) (&rest regexps)
   "Return non-nil if current entry's heading matches all REGEXPS (regexp strings)."
@@ -968,8 +967,8 @@ Arguments STRING, POS, FILL, and LEVEL are according to
                                            'no-group)
                      :query query)))
   ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
-  :predicate (let ((heading (org-get-heading 'no-tags 'no-todo)))
-               (--all? (string-match it heading) regexps)))
+  :body (let ((heading (org-get-heading 'no-tags 'no-todo)))
+          (--all? (string-match it heading) regexps)))
 
 (org-ql-defpred level (level-or-comparator &optional level)
   "Return non-nil if current heading's outline level matches arguments.
@@ -1003,15 +1002,15 @@ COMPARATOR may be `<', `<=', `>', or `>='."
                      :case-fold t)))
   ;; NOTE: It might be necessary to take into account `org-odd-levels'; see docstring for
   ;; `org-outline-level'.
-  :predicate (when-let ((outline-level (org-outline-level)))
-               (pcase level-or-comparator
-                 ((pred numberp) (pcase level
-                                   ('nil ;; Equality
-                                    (= outline-level level-or-comparator))
-                                   ((pred numberp) ;; Between two levels
-                                    (>= level-or-comparator outline-level level))))
-                 ((pred symbolp) ;; Compare with function
-                  (funcall level-or-comparator outline-level level)))))
+  :body (when-let ((outline-level (org-outline-level)))
+          (pcase level-or-comparator
+            ((pred numberp) (pcase level
+                              ('nil ;; Equality
+                               (= outline-level level-or-comparator))
+                              ((pred numberp) ;; Between two levels
+                               (>= level-or-comparator outline-level level))))
+            ((pred symbolp) ;; Compare with function
+             (funcall level-or-comparator outline-level level)))))
 
 (org-ql-defpred link (&rest args)
   ;; User-facing argument form: (&optional description-or-target &key description target regexp-p).
@@ -1046,37 +1045,37 @@ any link is found."
                               :target (when (plist-get plist :target)
                                         (regexp-quote (plist-get plist :target)))))
                nil))
-  :predicate (let* (plist description-or-target description target regexp-p)
-               (if (not (keywordp (car args)))
-                   (setf description-or-target (car args)
-                         plist (cdr args))
-                 (setf plist args))
-               (setf description (plist-get plist :description)
-                     target (plist-get plist :description)
-                     regexp-p (plist-get plist :regexp-p))
-               (unless regexp-p
-                 ;; NOTE: It would also be preferable to avoid regexp-quoting every time this predicate
-                 ;; is called.  Ideally that would be handled in the query pre-processing step.  However,
-                 ;; handling that properly, in combination with preparing the query preamble and whether
-                 ;; REGEXP-P is enabled, is also complicated, so let's not.
-                 (when description-or-target
-                   (setf description-or-target (regexp-quote description-or-target)))
-                 (when description
-                   (setf description (regexp-quote description)))
-                 (when target
-                   (setf target (regexp-quote target))))
-               (when (re-search-forward org-ql-link-regexp (org-entry-end-position) t)
-                 (pcase description-or-target
-                   ('nil (and (or (null target)
-                                  (string-match-p target (match-string 1)))
-                              (or (null description)
-                                  (string-match-p description (match-string org-ql-link-description-group)))))
-                   (_ (if (and description target)
-                          (and (string-match-p target (match-string 1))
-                               (string-match-p description (match-string org-ql-link-description-group)))
-                        (or (string-match-p description-or-target (match-string 1))
-                            (string-match-p description-or-target
-                                            (match-string org-ql-link-description-group)))))))))
+  :body (let* (plist description-or-target description target regexp-p)
+          (if (not (keywordp (car args)))
+              (setf description-or-target (car args)
+                    plist (cdr args))
+            (setf plist args))
+          (setf description (plist-get plist :description)
+                target (plist-get plist :description)
+                regexp-p (plist-get plist :regexp-p))
+          (unless regexp-p
+            ;; NOTE: It would also be preferable to avoid regexp-quoting every time this predicate
+            ;; is called.  Ideally that would be handled in the query pre-processing step.  However,
+            ;; handling that properly, in combination with preparing the query preamble and whether
+            ;; REGEXP-P is enabled, is also complicated, so let's not.
+            (when description-or-target
+              (setf description-or-target (regexp-quote description-or-target)))
+            (when description
+              (setf description (regexp-quote description)))
+            (when target
+              (setf target (regexp-quote target))))
+          (when (re-search-forward org-ql-link-regexp (org-entry-end-position) t)
+            (pcase description-or-target
+              ('nil (and (or (null target)
+                             (string-match-p target (match-string 1)))
+                         (or (null description)
+                             (string-match-p description (match-string org-ql-link-description-group)))))
+              (_ (if (and description target)
+                     (and (string-match-p target (match-string 1))
+                          (string-match-p description (match-string org-ql-link-description-group)))
+                   (or (string-match-p description-or-target (match-string 1))
+                       (string-match-p description-or-target
+                                       (match-string org-ql-link-description-group)))))))))
 
 ;; MAYBE: Preambles for outline-path predicates.  Not sure if possible without complicated logic.
 
@@ -1095,9 +1094,9 @@ the following queries:
   :normalizers ((`(,predicate-names . ,strings)
                  ;; Regexp quote headings.
                  `(outline-path ,@(mapcar #'regexp-quote strings))))
-  :predicate (let ((entry-olp (org-ql--value-at (point) #'org-ql--outline-path)))
-               (cl-loop for h in regexps
-                        always (cl-member h entry-olp :test #'string-match))))
+  :body (let ((entry-olp (org-ql--value-at (point) #'org-ql--outline-path)))
+          (cl-loop for h in regexps
+                   always (cl-member h entry-olp :test #'string-match))))
 
 (org-ql-defpred (outline-path-segment olps) (&rest regexps)
   "Return non-nil if current node's outline path matches segment REGEXPS.
@@ -1120,16 +1119,16 @@ contiguous segment of the outline path:
   :normalizers ((`(,(or 'outline-path-segment 'olps) . ,strings)
                  ;; Regexp quote headings.
                  `(outline-path-segment ,@(mapcar #'regexp-quote strings))))
-  :predicate (org-ql--infix-p regexps (org-ql--value-at (point) #'org-ql--outline-path)))
+  :body (org-ql--infix-p regexps (org-ql--value-at (point) #'org-ql--outline-path)))
 
 (org-ql-defpred path (&rest regexps)
   "Return non-nil if current heading's buffer's filename path matches any of REGEXPS (regexp strings).
 Without arguments, return non-nil if buffer is file-backed."
-  :predicate (when (buffer-file-name)
-               (cl-typecase regexps
-                 (null t)
-                 (list (cl-loop for regexp in regexps
-                                thereis (string-match regexp (buffer-file-name)))))))
+  :body (when (buffer-file-name)
+          (cl-typecase regexps
+            (null t)
+            (list (cl-loop for regexp in regexps
+                           thereis (string-match regexp (buffer-file-name)))))))
 
 (org-ql-defpred priority (&rest args)
   "Return non-nil if current heading has a certain priority.
@@ -1186,7 +1185,7 @@ priority B)."
     (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank)
                                       (optional (1+ upper) (1+ blank))
                                       "[#" (or ,@letters) "]") t))))
-  :predicate
+  :body
   (when-let* ((item-priority (save-excursion
                                (save-match-data
                                  ;; TODO: Is the save-match-data above necessary?
@@ -1233,7 +1232,7 @@ priority B)."
                (list :regexp (rx-to-string `(seq bol (0+ space) ":" ,property ":" (1+ space)
                                                  (minimal-match (1+ not-newline)) eol))
                      :query query)))
-  :predicate
+  :body
   (pcase property
     ('nil (user-error "Property matcher requires a PROPERTY argument"))
     (_ (pcase value
@@ -1254,7 +1253,7 @@ priority B)."
               (`(,predicate-names . ,regexps)
                ;; Search for first regexp, then confirm with predicate.
                (list :case-fold t :regexp (car regexps) :query query)))
-  :predicate
+  :body
   (let ((end (or (save-excursion
                    (outline-next-heading))
                  (point-max))))
@@ -1289,8 +1288,8 @@ language."
   :preambles ((`(,predicate-names . ,args)
                (list :regexp (org-ql--format-src-block-regexp (plist-get args :lang))
                      ;; Always check contents with predicate.
-                     :predicate predicate)))
-  :predicate
+                     :query query)))
+  :body
   (catch 'return
     (save-excursion
       (save-match-data
@@ -1316,17 +1315,17 @@ language."
   "Return non-nil if current heading has one or more of TAGS (a list of strings).
 Tests both inherited and local tags."
   ;; MAYBE: -all versions for inherited and local.
-  :predicate (cl-macrolet ((tags-p (tags)
-                                   `(and ,tags
-                                         (not (eq 'org-ql-nil ,tags)))))
-               (-let* (((inherited local) (org-ql--tags-at (point))))
-                 (cl-typecase tags
-                   (null (or (tags-p inherited)
-                             (tags-p local)))
-                   (otherwise (or (when (tags-p inherited)
-                                    (seq-intersection tags inherited))
-                                  (when (tags-p local)
-                                    (seq-intersection tags local))))))))
+  :body (cl-macrolet ((tags-p (tags)
+                              `(and ,tags
+                                    (not (eq 'org-ql-nil ,tags)))))
+          (-let* (((inherited local) (org-ql--tags-at (point))))
+            (cl-typecase tags
+              (null (or (tags-p inherited)
+                        (tags-p local)))
+              (otherwise (or (when (tags-p inherited)
+                               (seq-intersection tags inherited))
+                             (when (tags-p local)
+                               (seq-intersection tags local))))))))
 
 (org-ql-defpred (tags-all tags&) (&rest tags)
   "Return non-nil if current heading has all of TAGS (a list of strings).
@@ -1334,7 +1333,7 @@ Tests both inherited and local tags."
   ;; MAYBE: -all versions for inherited and local.
   :normalizers ((`(,predicate-names) `(tags))
                 (`(,predicate-names . ,tags) `(and ,@(--map `(tags ,it) tags))))
-  :predicate (apply #'org-ql--predicate-tags tags))
+  :body (apply #'org-ql--predicate-tags tags))
 
 (org-ql-defpred (tags-inherited inherited-tags tags-i itags) (&rest tags)
   "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
@@ -1343,14 +1342,14 @@ If TAGS is nil, return non-nil if heading has any inherited tags."
                  `(tags-inherited ,@tags))
                 (`(,predicate-names)
                  `(tags-inherited)))
-  :predicate (cl-macrolet ((tags-p (tags)
-                                   `(and ,tags
-                                         (not (eq 'org-ql-nil ,tags)))))
-               (-let* (((inherited _) (org-ql--tags-at (point))))
-                 (cl-typecase tags
-                   (null (tags-p inherited))
-                   (otherwise (when (tags-p inherited)
-                                (seq-intersection tags inherited)))))))
+  :body (cl-macrolet ((tags-p (tags)
+                              `(and ,tags
+                                    (not (eq 'org-ql-nil ,tags)))))
+          (-let* (((inherited _) (org-ql--tags-at (point))))
+            (cl-typecase tags
+              (null (tags-p inherited))
+              (otherwise (when (tags-p inherited)
+                           (seq-intersection tags inherited)))))))
 
 (org-ql-defpred (tags-local local-tags tags-l ltags) (&rest tags)
   "Return non-nil if current heading's local tags include one or more of TAGS (a list of strings).
@@ -1364,35 +1363,35 @@ If TAGS is nil, return non-nil if heading has any local tags."
                                                  ":" (or ,@tags) ":")
                                            t)
                      :query t)))
-  :predicate (cl-macrolet ((tags-p (tags)
-                                   `(and ,tags
-                                         (not (eq 'org-ql-nil ,tags)))))
-               (-let* (((_ local) (org-ql--tags-at (point))))
-                 (cl-typecase tags
-                   (null (tags-p local))
-                   (otherwise (when (tags-p local)
-                                (seq-intersection tags local)))))))
+  :body (cl-macrolet ((tags-p (tags)
+                              `(and ,tags
+                                    (not (eq 'org-ql-nil ,tags)))))
+          (-let* (((_ local) (org-ql--tags-at (point))))
+            (cl-typecase tags
+              (null (tags-p local))
+              (otherwise (when (tags-p local)
+                           (seq-intersection tags local)))))))
 
 (org-ql-defpred (tags-regexp tags*) (&rest regexps)
   "Return non-nil if current heading has tags matching one or more of REGEXPS.
 Tests both inherited and local tags."
   :normalizers ((`(,predicate-names . ,regexps)
                  `(tags-regexp ,@regexps)))
-  :predicate (cl-macrolet ((tags-p (tags)
-                                   `(and ,tags
-                                         (not (eq 'org-ql-nil ,tags)))))
-               (-let* (((inherited local) (org-ql--tags-at (point))))
-                 (cl-typecase regexps
-                   (null (or (tags-p inherited)
-                             (tags-p local)))
-                   (otherwise (or (when (tags-p inherited)
-                                    (cl-loop for tag in inherited
-                                             thereis (cl-loop for regexp in regexps
-                                                              thereis (string-match regexp tag))))
-                                  (when (tags-p local)
-                                    (cl-loop for tag in local
-                                             thereis (cl-loop for regexp in regexps
-                                                              thereis (string-match regexp tag))))))))))
+  :body (cl-macrolet ((tags-p (tags)
+                              `(and ,tags
+                                    (not (eq 'org-ql-nil ,tags)))))
+          (-let* (((inherited local) (org-ql--tags-at (point))))
+            (cl-typecase regexps
+              (null (or (tags-p inherited)
+                        (tags-p local)))
+              (otherwise (or (when (tags-p inherited)
+                               (cl-loop for tag in inherited
+                                        thereis (cl-loop for regexp in regexps
+                                                         thereis (string-match regexp tag))))
+                             (when (tags-p local)
+                               (cl-loop for tag in local
+                                        thereis (cl-loop for regexp in regexps
+                                                         thereis (string-match regexp tag))))))))))
 
 (org-ql-defpred todo (&rest keywords)
   "Return non-nil if current heading is a TODO item.
@@ -1400,12 +1399,12 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   ;; TODO: Can we make a preamble for plain (todo) queries?
   :preambles ((`(,predicate-names . ,(and todo-keywords (guard todo-keywords)))
                (list :case-fold nil :regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol)) t))))
-  :predicate (when-let ((state (org-get-todo-state)))
-               (cl-typecase keywords
-                 (null (not (member state org-done-keywords)))
-                 (list (member state keywords))
-                 (symbol (member state (symbol-value keywords)))
-                 (otherwise (user-error "Invalid todo keywords: %s" keywords)))))
+  :body (when-let ((state (org-get-todo-state)))
+          (cl-typecase keywords
+            (null (not (member state org-done-keywords)))
+            (list (member state keywords))
+            (symbol (member state (symbol-value keywords)))
+            (otherwise (user-error "Invalid todo keywords: %s" keywords)))))
 
 ;;;;;; Ancestor/descendant
 
@@ -1429,7 +1428,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   "Return non-nil if any of current entry's ancestors satisfy PREDICATE."
   :normalizers ((`(,predicate-names ,query) `(ancestors ,(org-ql--query-predicate (rec query))))
                 (`(,predicate-names) '(ancestors (lambda () t))))
-  :predicate
+  :body
   (org-with-wide-buffer
    (cl-loop while (org-up-heading-safe)
             thereis (org-ql--value-at (point) predicate))))
@@ -1438,7 +1437,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   "Return non-nil if the current entry's parent satisfies PREDICATE."
   :normalizers ((`(,predicate-names ,query) `(parent ,(org-ql--query-predicate (rec query))))
                 (`(,predicate-names) '(parent (lambda () t))))
-  :predicate
+  :body
   (org-with-wide-buffer
    (when (org-up-heading-safe)
      (org-ql--value-at (point) predicate))))
@@ -1454,7 +1453,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   ;; Quote children queries so the user doesn't have to.
   :normalizers ((`(,predicate-names ,query) `(children ',query))
                 (`(,predicate-names) '(children (lambda () t))))
-  :predicate
+  :body
   (org-with-wide-buffer
    ;; Widening is needed if inside an "ancestors" query
    (org-narrow-to-subtree)
@@ -1480,7 +1479,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   ;; which avoids calling `org-ql-select' recursively and its associated overhead.
   :normalizers ((`(,predicate-names ,query) `(descendants ',query))
                 (`(,predicate-names) '(descendants (lambda () t))))
-  :predicate
+  :body
   (org-with-wide-buffer
    (org-narrow-to-subtree)
    (when (org-goto-first-child)
@@ -1532,7 +1531,7 @@ parseable by `parse-time-string' which may omit the time value."
                (list :regexp org-ql-clock-regexp :query t))
               (`(,predicate-names)
                (list :regexp org-ql-clock-regexp :query t)))
-  :predicate
+  :body
   (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
 
 (org-ql-defpred closed (&key from to _on)
@@ -1561,7 +1560,7 @@ parseable by `parse-time-string' which may omit the time value."
   :preambles ((`(,predicate-names . ,_)
                ;;  Predicate still needs testing.
                (list :regexp org-closed-time-regexp :query query)))
-  :predicate
+  :body
   (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1
                         :limit (line-end-position 2)))
 
@@ -1596,7 +1595,7 @@ parseable by `parse-time-string' which may omit the time value."
   ;; FIXME: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-deadline-time-regexp :query query)))
-  :predicate
+  :body
   (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1
                         :limit (line-end-position 2)))
 
@@ -1604,7 +1603,7 @@ parseable by `parse-time-string' which may omit the time value."
   "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods."
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-deadline-time-regexp :query query)))
-  :predicate
+  :body
   (save-excursion
     (forward-line 1)
     (when (re-search-forward org-deadline-time-regexp (line-end-position) t)
@@ -1652,7 +1651,7 @@ parseable by `parse-time-string' which may omit the time value."
                    `(planning :to ,to))))
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-ql-planning-regexp :query query)))
-  :predicate
+  :body
   (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1
                         :limit (line-end-position 2)))
 
@@ -1680,7 +1679,7 @@ parseable by `parse-time-string' which may omit the time value."
                    `(scheduled :to ,to))))
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-scheduled-time-regexp :query query)))
-  :predicate
+  :body
   (org-ql--predicate-ts :from from :to to :regexp org-scheduled-time-regexp :match-group 1
                         :limit (line-end-position 2)))
 
@@ -1726,7 +1725,7 @@ of the line after the heading."
                               (when (or from to on)
                                 query)))))
   ;; TODO: DRY this with the clocked predicate.
-  :predicate
+  :body
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward regexp limit t)
                                    (ts-parse-org (match-string match-group))))
