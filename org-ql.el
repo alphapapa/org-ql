@@ -770,7 +770,7 @@ manually; see the definition of `org-ql-defpred').")
 ;; worth it to do this ugly stuff here, in one place, so the
 ;; `org-ql-defpred' macro becomes easy to use.
 
-(defun org-ql--define-normalize-query (predicates)
+(defun org-ql--define-normalize-query-fn (predicates)
   "Define function `org-ql--normalize-query' for PREDICATES.
 PREDICATES should be the value of `org-ql-predicates'."
   (let ((normalizer-patterns (->> predicates
@@ -798,7 +798,7 @@ PREDICATES should be the value of `org-ql-predicates'."
                                  (_ element))))
                 (rec query)))))))
 
-(defun org-ql--define-preamble-fn (predicates)
+(defun org-ql--define-query-preamble-fn (predicates)
   "Define function `org-ql--query-preamble' for PREDICATES.
 PREDICATES should be the value of `org-ql-predicates'."
   ;; NOTE: I don't how the `list' symbol ends up in the list, but anyway...
@@ -874,7 +874,7 @@ in the definitions of the functions `org-ql--query-preamble' and
 redefined when this macro is expanded, unless variable
 `org-ql-defpred-defer' is non-nil, in which case those functions
 should be redefined manually after defining predicates by calling
-`org-ql--define-preamble-fn' and `org-ql--define-normalize-query'.
+`org-ql--define-query-preamble-fn' and `org-ql--define-normalize-query-fn'.
 
 NORMALIZERS are used to normalize query expressions to standard
 forms.  For example, when the predicate has aliases, the aliases
@@ -951,8 +951,8 @@ It would be expanded to:
                      :normalizers ,',normalizers :preambles ,',preambles))
        (unless org-ql-defpred-defer
          ;; Reversing preserves the order in which predicates were defined.
-         (org-ql--define-normalize-query (reverse org-ql-predicates))
-         (org-ql--define-preamble-fn (reverse org-ql-predicates))
+         (org-ql--define-normalize-query-fn (reverse org-ql-predicates))
+         (org-ql--define-query-preamble-fn (reverse org-ql-predicates))
          ;; FIXME: Pass an argument to `org-ql--def-query-string-to-sexp-fn' too.
          (org-ql--def-query-string-to-sexp-fn)))))
 
@@ -1824,8 +1824,8 @@ of the line after the heading."
   (setf org-ql-defpred-defer nil)
   ;; Reversing preserves the order in which they were defined.
   ;; Generally it shouldn't matter, but it might...
-  (org-ql--define-normalize-query (reverse org-ql-predicates))
-  (org-ql--define-preamble-fn (reverse org-ql-predicates))
+  (org-ql--define-normalize-query-fn (reverse org-ql-predicates))
+  (org-ql--define-query-preamble-fn (reverse org-ql-predicates))
   (org-ql--def-query-string-to-sexp-fn))
 
 ;;;;; Sorting
