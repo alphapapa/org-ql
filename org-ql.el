@@ -699,19 +699,18 @@ Arguments STRING, POS, FILL, and LEVEL are according to
   ;; the function correctly, apparently because `org-ql-predicates'
   ;; ends up being not defined correctly at expansion time.
 
-  (defun org-ql--def-query-string-to-sexp-fn ()
-    "Define function `org-ql--query-string-to-sexp'.
-Builds the PEG expression using predicates defined in
-`org-ql-predicates' and `org-ql-predicates-extra-aliases'."
-    (let* ((predicates (--map (symbol-name (plist-get (cdr it) :name))
-                              org-ql-predicates))
-           (aliases (->> org-ql-predicates
-                         (-map #'cdr)
-                         (--map (plist-get it :aliases))
+  (defun org-ql--def-query-string-to-sexp-fn (predicates)
+    "Define function `org-ql--query-string-to-sexp' according to PREDICATES.
+Builds the PEG expression using PREDICATES (which should be the
+value of `org-ql-predicates')."
+    (let* ((names (--map (symbol-name (plist-get (cdr it) :name))
+                         predicates))
+           (aliases (->> predicates
+                         (--map (plist-get (cdr it) :aliases))
                          -non-nil
                          -flatten
                          (-map #'symbol-name)))
-           (predicates (->> (append predicates aliases)
+           (predicates (->> (append names aliases)
                             -uniq
                             ;; Sort the keywords longest-first to work around what seems to be an
                             ;; obscure bug in `peg': when one keyword is a substring of another,
@@ -961,8 +960,9 @@ It would be expanded to:
                                  normalizers))
          (preambles (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names))))
                                preambles)))
-    `(cl-eval-when (compile load eval)
-       (cl-defun ,fn-name ,args ,docstring ,body)
+    `(progn
+       (cl-eval-when (compile load eval)
+         (cl-defun ,fn-name ,args ,docstring ,body))
        (setf (map-elt org-ql-predicates ',predicate-name)
              `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
                      :normalizers ,',normalizers :preambles ,',preambles))
@@ -970,8 +970,7 @@ It would be expanded to:
          ;; Reversing preserves the order in which predicates were defined.
          (org-ql--define-normalize-query-fn (reverse org-ql-predicates))
          (org-ql--define-query-preamble-fn (reverse org-ql-predicates))
-         ;; FIXME: Pass an argument to `org-ql--def-query-string-to-sexp-fn' too.
-         (org-ql--def-query-string-to-sexp-fn)))))
+         (org-ql--def-query-string-to-sexp-fn (reverse org-ql-predicates))))))
 
 (defmacro org-ql--from-to-on ()
   "For internal use.
@@ -1836,14 +1835,13 @@ of the line after the heading."
             (from (test-timestamps (ts<= from next-ts)))
             (to (test-timestamps (ts<= next-ts to)))))))
 
-(cl-eval-when (compile load eval)
-  ;; Predicates defined: stop deferring and define normalizer and preamble functions now.
-  (setf org-ql-defpred-defer nil)
-  ;; Reversing preserves the order in which they were defined.
-  ;; Generally it shouldn't matter, but it might...
-  (org-ql--define-normalize-query-fn (reverse org-ql-predicates))
-  (org-ql--define-query-preamble-fn (reverse org-ql-predicates))
-  (org-ql--def-query-string-to-sexp-fn))
+;; Predicates defined: stop deferring and define normalizer and preamble functions now.
+(setf org-ql-defpred-defer nil)
+;; Reversing preserves the order in which they were defined.
+;; Generally it shouldn't matter, but it might...
+(org-ql--define-normalize-query-fn (reverse org-ql-predicates))
+(org-ql--define-query-preamble-fn (reverse org-ql-predicates))
+(org-ql--def-query-string-to-sexp-fn (reverse org-ql-predicates))
 
 ;;;;; Sorting
 
