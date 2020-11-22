@@ -434,24 +434,24 @@ RESULTS should be a list of strings as returned by
 
     ;; TODO: Other predicates.
 
-    ;; (describe "(ancestors)"
-    ;;   (org-ql-it "without sub-query"
-    ;;     (org-ql-expect ((ancestors))
-    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-    ;;
-    ;;   (org-ql-it "with sub-query"
-    ;;     (org-ql-expect ((ancestors (heading "universe")))
-    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
-    ;;
-    ;; (describe "(parent)"
-    ;;   (org-ql-it "without sub-query"
-    ;;     (org-ql-expect ((parent))
-    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
-    ;;
-    ;;   (org-ql-it "with sub-query"
-    ;;     (org-ql-expect ((parent (and (todo) (priority "A"))))
-    ;;       '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
-    ;;
+    (describe "(ancestors)"
+      (org-ql-it "without sub-query"
+        (org-ql-expect ((ancestors))
+          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+
+      (org-ql-it "with sub-query"
+        (org-ql-expect ((ancestors (heading "universe")))
+          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
+
+    (describe "(parent)"
+      (org-ql-it "without sub-query"
+        (org-ql-expect ((parent))
+          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Rewrite Emacs in Common Lisp" "Write a symphony")))
+
+      (org-ql-it "with sub-query"
+        (org-ql-expect ((parent (and (todo) (priority "A"))))
+          '("Take over the world" "Skype with president of Antarctica" "Take over Mars" "Take over the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
+
     (describe "(category)"
 
       (org-ql-it "without arguments"
@@ -462,35 +462,35 @@ RESULTS should be a list of strings as returned by
       (org-ql-it "with a category"
         (org-ql-expect ((category "ambition"))
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language"))))
-    ;;
-    ;; (describe "(children)"
-    ;;   (org-ql-it "without arguments"
-    ;;     (org-ql-expect ((children))
-    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas")))
-    ;;   (org-ql-it "with sub-query"
-    ;;     (org-ql-expect ((children (todo "CHECK")))
-    ;;       '("Recurring")))
-    ;;   (org-ql-it "with grandchildren query"
-    ;;     ;; It's really cool how this works.  It's so simple.
-    ;;     (org-ql-expect ((children (children "moon")))
-    ;;       '("Take over the universe"))))
-    ;;
-    ;; (describe "(descendants)"
-    ;;   (org-ql-it "without arguments"
-    ;;     (org-ql-expect ((descendants))
-    ;;       '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas")))
-    ;;   (org-ql-it "with sub-query"
-    ;;     (org-ql-expect ((descendants (todo "CHECK")))
-    ;;       '("Recurring")))
-    ;;   (org-ql-it "with granddescendants query"
-    ;;     (org-ql-expect ((descendants (descendants "moon")))
-    ;;       '("Take over the universe")))
-    ;;   (org-ql-it "with query that should not match parent"
-    ;;     ;; This test would fail if the `descendants' predicate did not properly exclude
-    ;;     ;; the parent heading by narrowing the buffer to begin at the first child.
-    ;;     (org-ql-expect ((and (descendants (todo "WAITING"))
-    ;;                          (not (descendants (todo "TODO" "NEXT")))))
-    ;;       '("Take over the moon"))))
+
+    (describe "(children)"
+      (org-ql-it "without arguments"
+        (org-ql-expect ((children))
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas")))
+      (org-ql-it "with sub-query"
+        (org-ql-expect ((children (todo "CHECK")))
+          '("Recurring")))
+      (org-ql-it "with grandchildren query"
+        ;; It's really cool how this works.  It's so simple.
+        (org-ql-expect ((children (children "moon")))
+          '("Take over the universe"))))
+
+    (describe "(descendants)"
+      (org-ql-it "without arguments"
+        (org-ql-expect ((descendants))
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Recurring" "Ideas")))
+      (org-ql-it "with sub-query"
+        (org-ql-expect ((descendants (todo "CHECK")))
+          '("Recurring")))
+      (org-ql-it "with granddescendants query"
+        (org-ql-expect ((descendants (descendants "moon")))
+          '("Take over the universe")))
+      (org-ql-it "with query that should not match parent"
+        ;; This test would fail if the `descendants' predicate did not properly exclude
+        ;; the parent heading by narrowing the buffer to begin at the first child.
+        (org-ql-expect ((and (descendants (todo "WAITING"))
+                             (not (descendants (todo "TODO" "NEXT")))))
+          '("Take over the moon"))))
 
     (describe "(clocked)"
 
