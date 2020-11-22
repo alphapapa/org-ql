@@ -283,22 +283,21 @@ PREDICATES should be the value of `org-ql-predicates'."
 PREDICATES should be the value of `org-ql-predicates'."
   ;; NOTE: I don't how the `list' symbol ends up in the list, but anyway...
   (let* ((preamble-patterns
-          (-flatten-n 1
-                      (-non-nil
-                       (--map (pcase-let* (((map (:preambles preambles) (:fn fn)) (cdr it)))
-                                (--map (pcase-let* ((`(,pattern ,exp) it))
-                                         `(,pattern
-                                           (pcase-let* (((map (:regexp regexp) (:case-fold case-fold) (:predicate predicate))
-                                                         ,exp))
-                                             (setf org-ql-preamble regexp
-                                                   preamble-case-fold case-fold)
-                                             ;; NOTE: Even when `predicate' is nil, it must be returned in the pcase form.
-                                             ;; MAYBE: Rather than returning the "canonical" predicate, allow any predicate form,
-                                             ;; which would be more flexible.  OTOH it would make writing the tests a bit more work.
-                                             (when predicate
-                                               ,fn))))
-                                       preambles))
-                              predicates)))))
+          (-flatten-n 1 (-non-nil
+                         ;; NOTE: Using -let instead of pcase-let here because I can't make map 2.1 install in the test sandbox.
+                         (--map (-let* (((&plist :preambles :fn) (cdr it)))
+                                  (--map (pcase-let* ((`(,pattern ,exp) it))
+                                           `(,pattern
+                                             (-let* (((&plist :regexp :case-fold :predicate) ,exp))
+                                               (setf org-ql-preamble regexp
+                                                     preamble-case-fold case-fold)
+                                               ;; NOTE: Even when `predicate' is nil, it must be returned in the pcase form.
+                                               ;; MAYBE: Rather than returning the "canonical" predicate, allow any predicate form,
+                                               ;; which would be more flexible.  OTOH it would make writing the tests a bit more work.
+                                               (when predicate
+                                                 ',fn))))
+                                         preambles))
+                                predicates)))))
     (fset 'org-ql--query-preamble
           `(lambda (query)
              "FIXME"
@@ -1101,9 +1100,11 @@ COMPARATOR may be `<', `<=', `>', or `>='."
                                ('> `(>= ,(1+ num) "*"))
                                ('>= `(>= ,num "*"))
                                ((pred integerp) `(repeat ,comparator-or-num ,num "*")))))
-                 (list :regexp (rx-to-string `(seq bol ,repeat " ") t))))
+                 (list :regexp (rx-to-string `(seq bol ,repeat " ") t)
+                       :case-fold t)))
               (`(,predicate-names ,num)
-               (list :regexp (rx-to-string `(seq bol (repeat ,num "*") " ") t))))
+               (list :regexp (rx-to-string `(seq bol (repeat ,num "*") " ") t)
+                     :case-fold t)))
   ;; NOTE: It might be necessary to take into account `org-odd-levels'; see docstring for
   ;; `org-outline-level'.
   :predicate (when-let ((outline-level (org-outline-level)))
@@ -1545,7 +1546,7 @@ parseable by `parse-time-string' which may omit the time value."
                    `(closed :from ,from))))
   :preambles ((`(,predicate-names . ,_)
                ;;  Predicate still needs testing.
-               (list :regexp org-closed-time-regexp :predicate predicate)))
+               (list :regexp org-closed-time-regexp :predicate t)))
   :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1
                         :limit (line-end-position 2)))

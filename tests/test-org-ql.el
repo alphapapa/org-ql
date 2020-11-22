@@ -50,7 +50,7 @@ Set at runtime by test suite.")
                               ('org-ql 'org-ql)
                               ('org-ql-expect t)
                               ('org-ql--query-preamble 'query-preamble)
-                              ('org-ql--pre-process-query t)
+                              ('org-ql--normalize-query t)
                               (_ nil)))
             (result (pcase sexp
                       (`(org-ql-expect ,args)
@@ -63,7 +63,7 @@ Set at runtime by test suite.")
                                                           :action (org-ql-test-org-get-heading))))
                       (`(org-ql . _) (org-ql-test--format-result--ql sexp))
                       (`(org-ql--query-preamble  . _) (org-ql-test--format-result--query-preamble sexp))
-                      (`(org-ql--pre-process-query . _) (format "'%S" (eval sexp)))
+                      (`(org-ql--normalize-query . _) (format "'%S" (eval sexp)))
                       (_ nil))))
       (progn
         (backward-char 1)
@@ -221,59 +221,62 @@ RESULTS should be a list of strings as returned by
 
     (describe "(level)"
       (it "with one level"
-        (expect (org-ql--pre-process-query '(level "1"))
+        (expect (org-ql--normalize-query '(level "1"))
                 :to-equal '(level 1)))
       (it "with two levels"
-        (expect (org-ql--pre-process-query '(level "1" "2"))
+        (expect (org-ql--normalize-query '(level "1" "2"))
                 :to-equal '(level 1 2)))
       (it "with a comparator and a level"
-        (expect (org-ql--pre-process-query '(level ">" "1"))
+        (expect (org-ql--normalize-query '(level ">" "1"))
                 :to-equal '(level > 1))))
 
     (describe "(link)"
       (it "with one argument"
-        (expect (org-ql--pre-process-query '(link "DESC-OR-TARGET"))
+        (expect (org-ql--normalize-query '(link "DESC-OR-TARGET"))
                 :to-equal '(link "DESC-OR-TARGET")))
       (it "with one argument and :regexp-p"
-        (expect (org-ql--pre-process-query '(link "DESC-OR-TARGET" :regexp-p t))
+        (expect (org-ql--normalize-query '(link "DESC-OR-TARGET" :regexp-p t))
                 :to-equal '(link "DESC-OR-TARGET" :regexp-p t)))
       (it "with keyword arguments"
-        (expect (org-ql--pre-process-query '(link :description "DESCRIPTION" :target "TARGET"
-                                                  :regexp-p t))
+        (expect (org-ql--normalize-query '(link :description "DESCRIPTION" :target "TARGET"
+                                                :regexp-p t))
                 :to-equal '(link :description "DESCRIPTION" :target "TARGET"
                                  :regexp-p t))))
 
-    (expect (org-ql--pre-process-query '(and "string1" "string2"))
+    (expect (org-ql--normalize-query '(and "string1" "string2"))
             :to-equal '(and (regexp "string1") (regexp "string2")))
-    (expect (org-ql--pre-process-query '(or "string1" "string2"))
+    (expect (org-ql--normalize-query '(or "string1" "string2"))
             :to-equal '(or (regexp "string1") (regexp "string2")))
-    (expect (org-ql--pre-process-query '(and (todo "TODO")
-                                             (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(and (todo "TODO")
+                                           (or "string1" "string2")))
             :to-equal '(and (todo "TODO") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--pre-process-query '(when (todo "TODO")
-                                          (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(when (todo "TODO")
+                                        (or "string1" "string2")))
             :to-equal '(when (todo "TODO") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--pre-process-query '(when "string-cond1"
-                                          (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(when "string-cond1"
+                                        (or "string1" "string2")))
             :to-equal '(when (regexp "string-cond1") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--pre-process-query '(when (and "string-cond1" "string-cond2")
-                                          (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(when (and "string-cond1" "string-cond2")
+                                        (or "string1" "string2")))
             :to-equal '(when (and (regexp "string-cond1") (regexp "string-cond2")) (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--pre-process-query '(unless (and "stringcondition1" "stringcond2")
-                                          (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(unless (and "stringcondition1" "stringcond2")
+                                        (or "string1" "string2")))
             :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2"))))
 
-    (expect (org-ql--pre-process-query '(or (ts-active :on "2019-01-01")
-                                            (ts-a :on "2019-01-01")
-                                            (ts-inactive :on "2019-01-01")
-                                            (ts-i :on "2019-01-01")))
+    (expect (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
+                                          (ts-a :on "2019-01-01")
+                                          (ts-inactive :on "2019-01-01")
+                                          (ts-i :on "2019-01-01")))
             :to-equal '(or (ts :type active :on "2019-01-01")
                            (ts :type active :on "2019-01-01")
                            (ts :type inactive :on "2019-01-01")
                            (ts :type inactive :on "2019-01-01"))))
 
-  (describe "Query optimizing"
+  (describe "Query preambles"
 
+    ;; (before-all
+    ;;   (org-ql--define-preamble-fn (reverse org-ql-predicates))
+    ;;   )
     ;; TODO: Other predicates.
 
     (describe "(level)"
