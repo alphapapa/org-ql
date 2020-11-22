@@ -896,7 +896,11 @@ PREDICATES should be the value of `org-ql-predicates'."
                                      t)
                                     (`(t) t)
                                     (query (-flatten-n 1 query))))
-                      (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold)))))))))
+                      (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold)))))))
+    ;; For some reason, byte-compiling the backquoted lambda form directly causes a warning
+    ;; that `query' refers to an unbound variable, even though that's not the case, and the
+    ;; function still works.  But to avoid the warning, we byte-compile it afterward.
+    (byte-compile 'org-ql--query-preamble)))
 
 (cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers)
   "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
@@ -1792,8 +1796,11 @@ of the line after the heading."
                                ('inactive org-ql-tsr-regexp-inactive))
                      ;; Predicate needs testing only when args are present.
                      :query (-let (((&keys :from :to :on) rest))
-                              (when (or from to on)
-                                query)))))
+                              ;; FIXME: This used to be (when (or from to on) query), but that doesn't seem right, so I
+                              ;; changed it to this if, and the tests pass either way.  Might deserve a little scrutiny.
+                              (if (or from to on)
+                                  query
+                                t)))))
   ;; TODO: DRY this with the clocked predicate.
   :body
   (cl-macrolet ((next-timestamp ()
