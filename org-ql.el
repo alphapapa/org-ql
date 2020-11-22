@@ -826,25 +826,26 @@ PREDICATES should be the value of `org-ql-predicates'."
                                   (--map (plist-get (cdr it) :normalizers))
                                   (-flatten-n 1))))
     (fset 'org-ql--normalize-query
-          `(lambda (query)
-             "FIXME"
-             (cl-labels ((rec (element)
-                              (pcase element
-                                (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
-                                (`(and . ,clauses) `(and ,@(mapcar #'rec clauses)))
-                                (`(not . ,clauses) `(not ,@(mapcar #'rec clauses)))
-                                (`(when ,condition . ,clauses) `(when ,(rec condition)
-                                                                  ,@(mapcar #'rec clauses)))
-                                (`(unless ,condition . ,clauses) `(unless ,(rec condition)
-                                                                    ,@(mapcar #'rec clauses)))
-                                ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
-                                ((pred stringp) `(regexp ,element))
+          (byte-compile
+           `(lambda (query)
+              "FIXME"
+              (cl-labels ((rec (element)
+                               (pcase element
+                                 (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
+                                 (`(and . ,clauses) `(and ,@(mapcar #'rec clauses)))
+                                 (`(not . ,clauses) `(not ,@(mapcar #'rec clauses)))
+                                 (`(when ,condition . ,clauses) `(when ,(rec condition)
+                                                                   ,@(mapcar #'rec clauses)))
+                                 (`(unless ,condition . ,clauses) `(unless ,(rec condition)
+                                                                     ,@(mapcar #'rec clauses)))
+                                 ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
+                                 ((pred stringp) `(regexp ,element))
 
-                                ,@normalizer-patterns
+                                 ,@normalizer-patterns
 
-                                ;; Any other form: passed through unchanged.
-                                (_ element))))
-               (rec query))))))
+                                 ;; Any other form: passed through unchanged.
+                                 (_ element))))
+                (rec query)))))))
 
 (defun org-ql--define-preamble-fn (predicates)
   "Define function `org-ql--query-preamble' for PREDICATES.
