@@ -159,100 +159,6 @@ See Info node `(org-ql)Queries'."
 
 ;;;; Macros
 
-;;;;; Plain query parsing
-
-;; This section implements parsing of "plain," non-Lisp queries using the `peg'
-;; library.  NOTE: This needs to appear after the predicates are defined.
-
-;; TODO: Rename "plain" to "string", or something like that.
-
-(require 'peg)
-
-;; Fix compiler warnings probably caused by `peg' not using lexical-binding.
-;; TODO: File bug report upstream.
-(defvar peg-errors nil)
-(defvar peg-stack nil)
-
-(defmacro org-ql--peg-parse-string (rules string &optional noerror)
-  "Parse STRING according to RULES."
-  ;; This sentence was in the docstring but Checkdoc is complaining,
-  ;; so moving it to a comment: "If NOERROR is non-nil, push nil
-  ;; resp. t if the parse failed resp. succeded instead of signaling
-  ;; an error."
-
-  ;; Unfortunately, this macro was moved to peg-tests.el, so we copy it here.
-  `(with-temp-buffer
-     (insert ,string)
-     (goto-char (point-min))
-     ,(if noerror
-	  (let ((entry (make-symbol "entry"))
-		(start (caar rules)))
-	    `(peg-parse (,entry (or (and ,start `(-- t)) ""))
-			. ,rules))
-	`(peg-parse . ,rules))))
-
-(cl-eval-when (compile load eval)
-  ;; This `eval-when' is necessary, otherwise the macro does not define
-  ;; the function correctly, apparently because `org-ql-predicates'
-  ;; ends up being not defined correctly at expansion time.
-
-  (defun org-ql--def-query-string-to-sexp-fn ()
-    "Define function `org-ql--query-string-to-sexp'.
-Builds the PEG expression using predicates defined in
-`org-ql-predicates' and `org-ql-predicates-extra-aliases'."
-    (let* ((predicates (--map (symbol-name (plist-get (cdr it) :name))
-                              org-ql-predicates))
-           (aliases (->> org-ql-predicates
-                         (-map #'cdr)
-                         (--map (plist-get it :aliases))
-                         -non-nil
-                         -flatten
-                         (-map #'symbol-name)))
-           (predicates (->> (append predicates aliases)
-                            -uniq
-                            ;; Sort the keywords longest-first to work around what seems to be an
-                            ;; obscure bug in `peg': when one keyword is a substring of another,
-                            ;; and the shorter one is listed first, the shorter one fails to match.
-                            (-sort (-on #'> #'length)))))
-      (fset 'org-ql--query-string-to-sexp
-            (byte-compile
-             `(cl-function
-               (lambda (input &optional (boolean 'and))
-                 "Return query parsed from plain query string INPUT.
-Multiple predicates are combined with BOOLEAN."
-                 (unless (s-blank-str? input)
-                   (let* ((query (org-ql--peg-parse-string
-                                  ((query (+ term
-                                             (opt (+ (syntax-class whitespace) (any)))))
-                                   (term (or (and negation (list positive-term)
-                                                  ;; This is a bit confusing, but it seems to work.  There's probably a better way.
-                                                  `(pred -- (list 'not (car pred))))
-                                             positive-term))
-                                   (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
-                                                      (and predicate-without-args `(pred -- (list (intern pred))))
-                                                      (and plain-string `(s -- (list 'regexp s)))))
-                                   (plain-string (or quoted-arg unquoted-arg))
-                                   (predicate-with-args (substring predicate) ":" args)
-                                   (predicate-without-args (substring predicate) ":")
-                                   (predicate (or ,@predicates))
-                                   (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
-                                   (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
-                                   (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
-                                   (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
-                                   (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
-                                   (negation "!")
-                                   (separator "," ))
-                                  input 'noerror)))
-                     ;; Discard the t that `peg-parse-string' always returns as the first
-                     ;; element.  I don't know what it means, but we don't want it.
-                     (if (> (length (cdr query)) 1)
-                         (cons boolean (nreverse (cdr query)))
-                       (cadr query)))))))))))
-
-;;;;; Predicate definition
-
-
-
 ;; TODO: Mark as obsolete/deprecated.
 ;;;###autoload
 (cl-defmacro org-ql (buffers-or-files query &key sort narrow action)
@@ -721,49 +627,6 @@ respectively."
                       "#+end_src")
                 t))
 
-(defmacro org-ql--from-to-on ()
-  "For internal use.
-Expands into a form that processes arguments to timestamp-related
-predicates."
-  ;; Several attempts to use `cl-macrolet' and `cl-symbol-macrolet' failed, so I
-  ;; resorted to this top-level macro.  It will do for now.
-  `(progn
-     (when on
-       (setq from on
-             to on))
-     (when from
-       (setq from (pcase from
-                    ((or 'today "today") (->> (ts-now)
-                                              (ts-apply :hour 0 :minute 0 :second 0)))
-                    ((pred numberp) (->> (ts-now)
-                                         (ts-adjust 'day from)
-                                         (ts-apply :hour 0 :minute 0 :second 0)))
-                    ((and (pred stringp)
-                          (guard (ignore-errors (cl-parse-integer from))))
-                     ;; The `pcase' `let' pattern doesn't bind values in the
-                     ;; body forms, so we have to parse the integer again.
-                     (->> (ts-now)
-                          (ts-adjust 'day (cl-parse-integer from))
-                          (ts-apply :hour 0 :minute 0 :second 0)))
-                    ((pred stringp) (ts-parse-fill 'begin from))
-                    ((pred ts-p) from))))
-     (when to
-       (setq to (pcase to
-                  ((or 'today "today") (->> (ts-now)
-                                            (ts-apply :hour 23 :minute 59 :second 59)))
-                  ((pred numberp) (->> (ts-now)
-                                       (ts-adjust 'day to)
-                                       (ts-apply :hour 23 :minute 59 :second 59)))
-                  ((and (pred stringp)
-                        (guard (ignore-errors (cl-parse-integer to))))
-                   ;; The `pcase' `let' pattern doesn't bind values in the
-                   ;; body forms, so we have to parse the integer again.
-                   (->> (ts-now)
-                        (ts-adjust 'day (cl-parse-integer to))
-                        (ts-apply :hour 23 :minute 59 :second 59)))
-                  ((pred stringp) (ts-parse-fill 'end to))
-                  ((pred ts-p) to))))))
-
 (defun org-ql--byte-compile-warning (_string _pos _fill level)
   "Signal an `org-ql-invalid-query' error.
 Arguments STRING, POS, FILL, and LEVEL are according to
@@ -800,6 +663,94 @@ Arguments STRING, POS, FILL, and LEVEL are according to
                                                             ('active org-tsr-regexp)
                                                             ('inactive org-ql-tsr-regexp-inactive)))))
           ,query)))))
+
+;;;;; String query parsing
+
+;; This section implements parsing of "plain," non-Lisp queries using the `peg'
+;; library.  NOTE: This needs to appear after the predicates are defined.
+
+(require 'peg)
+
+;; Fix compiler warnings probably caused by `peg' not using lexical-binding.
+;; TODO: File bug report upstream.
+(defvar peg-errors nil)
+(defvar peg-stack nil)
+
+(defmacro org-ql--peg-parse-string (rules string &optional noerror)
+  "Parse STRING according to RULES."
+  ;; This sentence was in the docstring but Checkdoc is complaining,
+  ;; so moving it to a comment: "If NOERROR is non-nil, push nil
+  ;; resp. t if the parse failed resp. succeded instead of signaling
+  ;; an error."
+
+  ;; Unfortunately, this macro was moved to peg-tests.el, so we copy it here.
+  `(with-temp-buffer
+     (insert ,string)
+     (goto-char (point-min))
+     ,(if noerror
+	  (let ((entry (make-symbol "entry"))
+		(start (caar rules)))
+	    `(peg-parse (,entry (or (and ,start `(-- t)) ""))
+			. ,rules))
+	`(peg-parse . ,rules))))
+
+(cl-eval-when (compile load eval)
+  ;; This `eval-when' is necessary, otherwise the macro does not define
+  ;; the function correctly, apparently because `org-ql-predicates'
+  ;; ends up being not defined correctly at expansion time.
+
+  (defun org-ql--def-query-string-to-sexp-fn ()
+    "Define function `org-ql--query-string-to-sexp'.
+Builds the PEG expression using predicates defined in
+`org-ql-predicates' and `org-ql-predicates-extra-aliases'."
+    (let* ((predicates (--map (symbol-name (plist-get (cdr it) :name))
+                              org-ql-predicates))
+           (aliases (->> org-ql-predicates
+                         (-map #'cdr)
+                         (--map (plist-get it :aliases))
+                         -non-nil
+                         -flatten
+                         (-map #'symbol-name)))
+           (predicates (->> (append predicates aliases)
+                            -uniq
+                            ;; Sort the keywords longest-first to work around what seems to be an
+                            ;; obscure bug in `peg': when one keyword is a substring of another,
+                            ;; and the shorter one is listed first, the shorter one fails to match.
+                            (-sort (-on #'> #'length)))))
+      (fset 'org-ql--query-string-to-sexp
+            (byte-compile
+             `(cl-function
+               (lambda (input &optional (boolean 'and))
+                 "Return query parsed from plain query string INPUT.
+Multiple predicates are combined with BOOLEAN."
+                 (unless (s-blank-str? input)
+                   (let* ((query (org-ql--peg-parse-string
+                                  ((query (+ term
+                                             (opt (+ (syntax-class whitespace) (any)))))
+                                   (term (or (and negation (list positive-term)
+                                                  ;; This is a bit confusing, but it seems to work.  There's probably a better way.
+                                                  `(pred -- (list 'not (car pred))))
+                                             positive-term))
+                                   (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
+                                                      (and predicate-without-args `(pred -- (list (intern pred))))
+                                                      (and plain-string `(s -- (list 'regexp s)))))
+                                   (plain-string (or quoted-arg unquoted-arg))
+                                   (predicate-with-args (substring predicate) ":" args)
+                                   (predicate-without-args (substring predicate) ":")
+                                   (predicate (or ,@predicates))
+                                   (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
+                                   (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
+                                   (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
+                                   (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
+                                   (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
+                                   (negation "!")
+                                   (separator "," ))
+                                  input 'noerror)))
+                     ;; Discard the t that `peg-parse-string' always returns as the first
+                     ;; element.  I don't know what it means, but we don't want it.
+                     (if (> (length (cdr query)) 1)
+                         (cons boolean (nreverse (cdr query)))
+                       (cadr query)))))))))))
 
 ;;;;; Predicate definition
 
@@ -1004,6 +955,49 @@ It would be expanded to:
          (org-ql--define-preamble-fn (reverse org-ql-predicates))
          ;; FIXME: Pass an argument to `org-ql--def-query-string-to-sexp-fn' too.
          (org-ql--def-query-string-to-sexp-fn)))))
+
+(defmacro org-ql--from-to-on ()
+  "For internal use.
+Expands into a form that processes arguments to timestamp-related
+predicates."
+  ;; Several attempts to use `cl-macrolet' and `cl-symbol-macrolet' failed, so I
+  ;; resorted to this top-level macro.  It will do for now.
+  `(progn
+     (when on
+       (setq from on
+             to on))
+     (when from
+       (setq from (pcase from
+                    ((or 'today "today") (->> (ts-now)
+                                              (ts-apply :hour 0 :minute 0 :second 0)))
+                    ((pred numberp) (->> (ts-now)
+                                         (ts-adjust 'day from)
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
+                    ((and (pred stringp)
+                          (guard (ignore-errors (cl-parse-integer from))))
+                     ;; The `pcase' `let' pattern doesn't bind values in the
+                     ;; body forms, so we have to parse the integer again.
+                     (->> (ts-now)
+                          (ts-adjust 'day (cl-parse-integer from))
+                          (ts-apply :hour 0 :minute 0 :second 0)))
+                    ((pred stringp) (ts-parse-fill 'begin from))
+                    ((pred ts-p) from))))
+     (when to
+       (setq to (pcase to
+                  ((or 'today "today") (->> (ts-now)
+                                            (ts-apply :hour 23 :minute 59 :second 59)))
+                  ((pred numberp) (->> (ts-now)
+                                       (ts-adjust 'day to)
+                                       (ts-apply :hour 23 :minute 59 :second 59)))
+                  ((and (pred stringp)
+                        (guard (ignore-errors (cl-parse-integer to))))
+                   ;; The `pcase' `let' pattern doesn't bind values in the
+                   ;; body forms, so we have to parse the integer again.
+                   (->> (ts-now)
+                        (ts-adjust 'day (cl-parse-integer to))
+                        (ts-apply :hour 23 :minute 59 :second 59)))
+                  ((pred stringp) (ts-parse-fill 'end to))
+                  ((pred ts-p) to))))))
 
 ;;;;;; Predicates
 
