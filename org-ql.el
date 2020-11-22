@@ -1269,9 +1269,12 @@ priority B)."
   "Return non-nil if current entry matches all of REGEXPS (regexp strings)."
   :normalizers ((`(,predicate-names . ,args)
                  `(regexp ,@args)))
-  :preambles ((`(,predicate-names . ,regexps)
+  ;; MAYBE: Separate case-sensitive (Regexp) predicate.
+  :preambles ((`(,predicate-names ,regexp)
+               (list :case-fold t :regexp regexp :query t))
+              (`(,predicate-names . ,regexps)
                ;; Search for first regexp, then confirm with predicate.
-               (list :regexp (car regexps) :predicate predicate)))
+               (list :case-fold t :regexp (car regexps) :query query)))
   :predicate
   (let ((end (or (save-excursion
                    (outline-next-heading))
@@ -1322,7 +1325,7 @@ priority B)."
                ;; because the regexp could match a string not inside a property drawer.
                (list :regexp (rx-to-string `(seq bol (0+ space) ":" ,property ":"
                                                  (1+ space) ,value (0+ space) eol))
-                     :predicate predicate))
+                     :query query))
               (`(,predicate-names ,property)
                ;; We do NOT return nil, because the predicate still needs to be tested,
                ;; because the regexp could match a string not inside a property drawer.
@@ -1330,7 +1333,7 @@ priority B)."
                ;; A line like ":ID: " without any other text does not match.
                (list :regexp (rx-to-string `(seq bol (0+ space) ":" ,property ":" (1+ space)
                                                  (minimal-match (1+ not-newline)) eol))
-                     :predicate predicate)))
+                     :query query)))
   :predicate
   (pcase property
     ('nil (user-error "Property matcher requires a PROPERTY argument"))
@@ -1638,7 +1641,7 @@ parseable by `parse-time-string' which may omit the time value."
                                 (ts-apply :hour 23 :minute 59 :second 59))))
                    `(planning :to ,to))))
   :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-ql-planning-regexp :predicate predicate)))
+               (list :regexp org-ql-planning-regexp :query query)))
   :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1
                         :limit (line-end-position 2)))
@@ -1666,7 +1669,7 @@ parseable by `parse-time-string' which may omit the time value."
                                 (ts-apply :hour 23 :minute 59 :second 59))))
                    `(scheduled :to ,to))))
   :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-scheduled-time-regexp :predicate predicate)))
+               (list :regexp org-scheduled-time-regexp :query query)))
   :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-scheduled-time-regexp :match-group 1
                         :limit (line-end-position 2)))
@@ -1709,9 +1712,9 @@ of the line after the heading."
                                ('active org-tsr-regexp)
                                ('inactive org-ql-tsr-regexp-inactive))
                      ;; Predicate needs testing only when args are present.
-                     :predicate (-let (((&keys :from :to :on) rest))
-                                  (when (or from to on)
-                                    t)))))
+                     :query (-let (((&keys :from :to :on) rest))
+                              (when (or from to on)
+                                query)))))
   ;; TODO: DRY this with the clocked predicate.
   :predicate
   (cl-macrolet ((next-timestamp ()
