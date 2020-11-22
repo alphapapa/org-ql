@@ -1731,8 +1731,8 @@ element should be a regexp string."
 
 ;; Fix compiler warnings probably caused by `peg' not using lexical-binding.
 ;; TODO: File bug report upstream.
-(defvar peg-errors nil)
-(defvar peg-stack nil)
+(defvar peg-errors)
+(defvar peg-stack)
 
 (defmacro org-ql--peg-parse-string (rules string &optional noerror)
   "Parse STRING according to RULES."
