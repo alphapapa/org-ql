@@ -1025,7 +1025,7 @@ Tests both inherited and local tags."
   ;; MAYBE: -all versions for inherited and local.
   :normalizers ((`(,predicate-names) `(tags))
                 (`(,predicate-names . ,tags) `(and ,@(--map `(tags ,it) tags))))
-  :predicate #'org-ql--predicate-tags)
+  :predicate (apply #'org-ql--predicate-tags tags))
 
 (org-ql-define-predicate (tags-inherited inherited-tags tags-i itags) (&rest tags)
   "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
