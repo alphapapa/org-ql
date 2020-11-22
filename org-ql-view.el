@@ -588,10 +588,13 @@ dates in the past, and negative for dates in the future."
   (require 'url-parse)
   (require 'url-util))
 
-(defun org-ql-view--link-follow (path)
+(defun org-ql-view--link-follow (path &optional _ignored)
   "Open Org QL query for current buffer at PATH.
 PATH should be the part of an \"org-ql-search:\" URL after the
-protocol.  See, e.g. `org-ql-view--link-store'."
+protocol.  See, e.g. `org-ql-view--link-store'.
+
+The optional, second argument is temporarily _IGNORED for
+purposes of compatibility with changes in Org 9.4."
   (require 'url-parse)
   (require 'url-util)
   (when (version<= "9.3" (org-version))
