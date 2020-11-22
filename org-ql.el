@@ -125,7 +125,7 @@ the value returned by it at that node.")
 
 (eval-and-compile
   (defvar org-ql-predicates
-    (list (list :name 'org-back-to-heading :fn (symbol-function 'org-back-to-heading)))
+    (list (cons 'org-back-to-heading (list :name 'org-back-to-heading :fn (symbol-function 'org-back-to-heading))))
     "Plist of predicates, their corresponding functions, and their docstrings.
 This list should not contain any duplicates."))
 
@@ -156,6 +156,94 @@ See Info node `(org-ql)Queries'."
   :risky t)
 
 ;;;; Macros
+
+;;;;; Plain query parsing
+
+;; This section implements parsing of "plain," non-Lisp queries using the `peg'
+;; library.  NOTE: This needs to appear after the predicates are defined.
+
+;; TODO: Rename "plain" to "string", or something like that.
+
+(require 'peg)
+
+;; Fix compiler warnings probably caused by `peg' not using lexical-binding.
+;; TODO: File bug report upstream.
+(defvar peg-errors nil)
+(defvar peg-stack nil)
+
+(defmacro org-ql--peg-parse-string (rules string &optional noerror)
+  "Parse STRING according to RULES."
+  ;; This sentence was in the docstring but Checkdoc is complaining,
+  ;; so moving it to a comment: "If NOERROR is non-nil, push nil
+  ;; resp. t if the parse failed resp. succeded instead of signaling
+  ;; an error."
+
+  ;; Unfortunately, this macro was moved to peg-tests.el, so we copy it here.
+  `(with-temp-buffer
+     (insert ,string)
+     (goto-char (point-min))
+     ,(if noerror
+	  (let ((entry (make-symbol "entry"))
+		(start (caar rules)))
+	    `(peg-parse (,entry (or (and ,start `(-- t)) ""))
+			. ,rules))
+	`(peg-parse . ,rules))))
+
+(cl-eval-when (compile load eval)
+  ;; This `eval-when' is necessary, otherwise the macro does not define
+  ;; the function correctly, apparently because `org-ql-predicates'
+  ;; ends up being not defined correctly at expansion time.
+
+  (defmacro org-ql--def-plain-query-fn ()
+    "Define function `org-ql--plain-query'.
+Builds the PEG expression using predicates defined in
+`org-ql-predicates' and `org-ql-predicates-extra-aliases'."
+    (let* ((predicates (--map (symbol-name (plist-get it :name))
+                              org-ql-predicates))
+           (aliases (->> org-ql-predicates
+                         (--map (plist-get it :aliases))
+                         -non-nil
+                         -flatten
+                         (-map #'symbol-name)))
+           (predicates (->> (append predicates aliases)
+                            -uniq
+                            ;; Sort the keywords longest-first to work around what seems to be an
+                            ;; obscure bug in `peg': when one keyword is a substring of another,
+                            ;; and the shorter one is listed first, the shorter one fails to match.
+                            (-sort (-on #'> #'length)))))
+      `(cl-defun org-ql--plain-query (input &optional (boolean 'and))
+         "Return query parsed from plain query string INPUT.
+Multiple predicates are combined with BOOLEAN."
+         (unless (s-blank-str? input)
+           (let* ((query (org-ql--peg-parse-string
+                          ((query (+ term
+                                     (opt (+ (syntax-class whitespace) (any)))))
+                           (term (or (and negation (list positive-term)
+                                          ;; This is a bit confusing, but it seems to work.  There's probably a better way.
+                                          `(pred -- (list 'not (car pred))))
+                                     positive-term))
+                           (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
+                                              (and predicate-without-args `(pred -- (list (intern pred))))
+                                              (and plain-string `(s -- (list 'regexp s)))))
+                           (plain-string (or quoted-arg unquoted-arg))
+                           (predicate-with-args (substring predicate) ":" args)
+                           (predicate-without-args (substring predicate) ":")
+                           (predicate (or ,@predicates))
+                           (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
+                           (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
+                           (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
+                           (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
+                           (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
+                           (negation "!")
+                           (separator "," ))
+                          input 'noerror)))
+             ;; Discard the t that `peg-parse-string' always returns as the first
+             ;; element.  I don't know what it means, but we don't want it.
+             (if (> (length (cdr query)) 1)
+                 (cons boolean (nreverse (cdr query)))
+               (cadr query))))))))
+
+;;;;; Predicate definition
 
 (defvar org-ql-preambles nil)
 (defvar org-ql-normalizers nil)
@@ -267,15 +355,15 @@ match."
 	 ;; When compiling, the predicate must be added to `org-ql-predicates' before `org-ql--def-plain-query-fn'
 	 ;; is called to define `org-ql--plain-query'.  Otherwise, `org-ql--plain-query' seems to work properly
 	 ;; when interpreted but not always when the file is byte-compiled.
-         (setf (map-elt org-ql-predicate-list ',predicate-name)
-               `(:aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
-                          :normalizers ,',normalizers :preambles ,',preambles))
+         (setf (map-elt org-ql-predicates ',predicate-name)
+               `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
+                       :normalizers ,',normalizers :preambles ,',preambles))
          (unless org-ql-defpred-defer
            (org-ql--define-normalizers (--map (plist-get it :normalizers) (mapcar #'cdr org-ql-predicate-list)))
            ;; NOTE: Reversing is important!
            (org-ql--define-preamble-fn (reverse org-ql-predicate-list))
-           (org-ql--def-plain-query-fn)))
-       (cl-defun ,fn-name ,args ,docstring ,predicate))))
+           (org-ql--def-plain-query-fn))
+         (cl-defun ,fn-name ,args ,docstring ,predicate)))))
 
 ;; TODO: Mark as obsolete/deprecated.
 ;;;###autoload
@@ -470,13 +558,15 @@ If NARROW is non-nil, buffer will not be widened."
   (let (orig-fns)
     (--each org-ql-predicates
       ;; Save original function mappings.
-      (let ((name (plist-get it :name)))
+      (let* ((it (cdr it))
+             (name (plist-get it :name)))
         (push (list :name name :fn (symbol-function name)) orig-fns)))
     (unwind-protect
         (progn
           (--each org-ql-predicates
             ;; Set predicate functions.
-            (fset (plist-get it :name) (plist-get it :fn)))
+            (let ((it (cdr it)))
+              (fset (plist-get it :name) (plist-get it :fn))))
           ;; Run query.
           (save-excursion
             (save-restriction
@@ -1175,31 +1265,8 @@ Arguments STRING, POS, FILL, and LEVEL are according to
 
 ;;;;; Predicates
 
-(org-ql-define-predicate (clocked c) (&key from to _on)
-  ;; NOTE: _on is pre-processed
-  "Return non-nil if current entry was clocked in given period.
-If no arguments are specified, return non-nil if entry has any
-timestamp.
-
-If FROM, return non-nil if entry has a timestamp on or after
-FROM.
-
-If TO, return non-nil if entry has a timestamp on or before TO.
-
-If ON, return non-nil if entry has a timestamp on date ON.
-
-FROM, TO, and ON should be either `ts' structs, or strings
-parseable by `parse-time-string' which may omit the time value."
-  :normalizers ((`(,predicate-names
-                   ,(and num-days (pred numberp)))
-                 ;; (clocked) and (closed) implicitly look into the past.
-                 (let ((from (->> (ts-now)
-                                  (ts-adjust 'day (* -1 num-days))
-                                  (ts-apply :hour 0 :minute 0 :second 0))))
-                   `(clocked :from ,from))))
-  :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-ql-clock-regexp :predicate predicate :case-fold nil)))
-  :predicate (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
+(cl-eval-when (compile load eval)
+  (setf org-ql-defpred-defer t))
 
 (org-ql-define-predicate category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
@@ -1996,6 +2063,15 @@ of the line after the heading."
             (from (test-timestamps (ts<= from next-ts)))
             (to (test-timestamps (ts<= next-ts to)))))))
 
+;; Predicates defined: stop deferring and call functions to process them.
+(cl-eval-when (compile load eval)
+  (setf org-ql-defpred-defer nil)
+  ;; FIXME: Make `org-ql--define-normalizers' take `org-ql-predicate-list' as its argument.
+  (org-ql--define-normalizers (--map (plist-get it :normalizers) (mapcar #'cdr org-ql-predicate-list)))
+  ;; NOTE: Reversing is important!
+  (org-ql--define-preamble-fn (reverse org-ql-predicate-list))
+  (org-ql--def-plain-query-fn))
+
 ;;;;; Sorting
 
 ;; TODO: These appear to work properly, but it would be good to have tests for them.
@@ -2088,94 +2164,6 @@ element should be a regexp string."
                             for l in list
                             always (string-match i l))
            do (pop list)))
-
-;;;;; Plain query parsing
-
-;; This section implements parsing of "plain," non-Lisp queries using the `peg'
-;; library.  NOTE: This needs to appear after the predicates are defined.
-
-;; TODO: Rename "plain" to "string", or something like that.
-
-(require 'peg)
-
-;; Fix compiler warnings probably caused by `peg' not using lexical-binding.
-;; TODO: File bug report upstream.
-(defvar peg-errors)
-(defvar peg-stack)
-
-(defmacro org-ql--peg-parse-string (rules string &optional noerror)
-  "Parse STRING according to RULES."
-  ;; This sentence was in the docstring but Checkdoc is complaining,
-  ;; so moving it to a comment: "If NOERROR is non-nil, push nil
-  ;; resp. t if the parse failed resp. succeded instead of signaling
-  ;; an error."
-
-  ;; Unfortunately, this macro was moved to peg-tests.el, so we copy it here.
-  `(with-temp-buffer
-     (insert ,string)
-     (goto-char (point-min))
-     ,(if noerror
-	  (let ((entry (make-symbol "entry"))
-		(start (caar rules)))
-	    `(peg-parse (,entry (or (and ,start `(-- t)) ""))
-			. ,rules))
-	`(peg-parse . ,rules))))
-
-(cl-eval-when (compile load eval)
-  ;; This `eval-when' is necessary, otherwise the macro does not define
-  ;; the function correctly, apparently because `org-ql-predicates'
-  ;; ends up being not defined correctly at expansion time.
-
-  (defmacro org-ql--def-plain-query-fn ()
-    "Define function `org-ql--plain-query'.
-Builds the PEG expression using predicates defined in
-`org-ql-predicates' and `org-ql-predicates-extra-aliases'."
-    (let* ((predicates (--map (symbol-name (plist-get it :name))
-                              org-ql-predicates))
-           (aliases (->> org-ql-predicates
-                         (--map (plist-get it :aliases))
-                         -non-nil
-                         -flatten
-                         (-map #'symbol-name)))
-           (predicates (->> (append predicates aliases)
-                            -uniq
-                            ;; Sort the keywords longest-first to work around what seems to be an
-                            ;; obscure bug in `peg': when one keyword is a substring of another,
-                            ;; and the shorter one is listed first, the shorter one fails to match.
-                            (-sort (-on #'> #'length)))))
-      `(cl-defun org-ql--plain-query (input &optional (boolean 'and))
-         "Return query parsed from plain query string INPUT.
-Multiple predicates are combined with BOOLEAN."
-         (unless (s-blank-str? input)
-           (let* ((query (org-ql--peg-parse-string
-                          ((query (+ term
-                                     (opt (+ (syntax-class whitespace) (any)))))
-                           (term (or (and negation (list positive-term)
-                                          ;; This is a bit confusing, but it seems to work.  There's probably a better way.
-                                          `(pred -- (list 'not (car pred))))
-                                     positive-term))
-                           (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
-                                              (and predicate-without-args `(pred -- (list (intern pred))))
-                                              (and plain-string `(s -- (list 'regexp s)))))
-                           (plain-string (or quoted-arg unquoted-arg))
-                           (predicate-with-args (substring predicate) ":" args)
-                           (predicate-without-args (substring predicate) ":")
-                           (predicate (or ,@predicates))
-                           (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
-                           (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
-                           (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
-                           (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
-                           (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
-                           (negation "!")
-                           (separator "," ))
-                          input 'noerror)))
-             ;; Discard the t that `peg-parse-string' always returns as the first
-             ;; element.  I don't know what it means, but we don't want it.
-             (if (> (length (cdr query)) 1)
-                 (cons boolean (nreverse (cdr query)))
-               (cadr query)))))))
-
-  (org-ql--def-plain-query-fn))
 
 ;; And now we go the other direction...
 
