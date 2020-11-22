@@ -194,13 +194,14 @@ See Info node `(org-ql)Queries'."
   ;; the function correctly, apparently because `org-ql-predicates'
   ;; ends up being not defined correctly at expansion time.
 
-  (defmacro org-ql--def-plain-query-fn ()
+  (defun org-ql--def-plain-query-fn ()
     "Define function `org-ql--plain-query'.
 Builds the PEG expression using predicates defined in
 `org-ql-predicates' and `org-ql-predicates-extra-aliases'."
-    (let* ((predicates (--map (symbol-name (plist-get it :name))
+    (let* ((predicates (--map (symbol-name (plist-get (cdr it) :name))
                               org-ql-predicates))
            (aliases (->> org-ql-predicates
+                         (-map #'cdr)
                          (--map (plist-get it :aliases))
                          -non-nil
                          -flatten
@@ -211,37 +212,40 @@ Builds the PEG expression using predicates defined in
                             ;; obscure bug in `peg': when one keyword is a substring of another,
                             ;; and the shorter one is listed first, the shorter one fails to match.
                             (-sort (-on #'> #'length)))))
-      `(cl-defun org-ql--plain-query (input &optional (boolean 'and))
-         "Return query parsed from plain query string INPUT.
+      (fset 'org-ql--plain-query
+            (byte-compile
+             `(cl-function
+               (lambda (input &optional (boolean 'and))
+                 "Return query parsed from plain query string INPUT.
 Multiple predicates are combined with BOOLEAN."
-         (unless (s-blank-str? input)
-           (let* ((query (org-ql--peg-parse-string
-                          ((query (+ term
-                                     (opt (+ (syntax-class whitespace) (any)))))
-                           (term (or (and negation (list positive-term)
-                                          ;; This is a bit confusing, but it seems to work.  There's probably a better way.
-                                          `(pred -- (list 'not (car pred))))
-                                     positive-term))
-                           (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
-                                              (and predicate-without-args `(pred -- (list (intern pred))))
-                                              (and plain-string `(s -- (list 'regexp s)))))
-                           (plain-string (or quoted-arg unquoted-arg))
-                           (predicate-with-args (substring predicate) ":" args)
-                           (predicate-without-args (substring predicate) ":")
-                           (predicate (or ,@predicates))
-                           (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
-                           (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
-                           (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
-                           (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
-                           (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
-                           (negation "!")
-                           (separator "," ))
-                          input 'noerror)))
-             ;; Discard the t that `peg-parse-string' always returns as the first
-             ;; element.  I don't know what it means, but we don't want it.
-             (if (> (length (cdr query)) 1)
-                 (cons boolean (nreverse (cdr query)))
-               (cadr query))))))))
+                 (unless (s-blank-str? input)
+                   (let* ((query (org-ql--peg-parse-string
+                                  ((query (+ term
+                                             (opt (+ (syntax-class whitespace) (any)))))
+                                   (term (or (and negation (list positive-term)
+                                                  ;; This is a bit confusing, but it seems to work.  There's probably a better way.
+                                                  `(pred -- (list 'not (car pred))))
+                                             positive-term))
+                                   (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
+                                                      (and predicate-without-args `(pred -- (list (intern pred))))
+                                                      (and plain-string `(s -- (list 'regexp s)))))
+                                   (plain-string (or quoted-arg unquoted-arg))
+                                   (predicate-with-args (substring predicate) ":" args)
+                                   (predicate-without-args (substring predicate) ":")
+                                   (predicate (or ,@predicates))
+                                   (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
+                                   (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
+                                   (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
+                                   (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
+                                   (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
+                                   (negation "!")
+                                   (separator "," ))
+                                  input 'noerror)))
+                     ;; Discard the t that `peg-parse-string' always returns as the first
+                     ;; element.  I don't know what it means, but we don't want it.
+                     (if (> (length (cdr query)) 1)
+                         (cons boolean (nreverse (cdr query)))
+                       (cadr query)))))))))))
 
 ;;;;; Predicate definition
 
