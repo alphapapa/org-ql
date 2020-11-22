@@ -32,7 +32,6 @@
 | M | P | Keyword  | Heading                                                            |
 |---+---+----------+--------------------------------------------------------------------|
 |   | B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
-|   |   | UNDERWAY | [[Convert all predicates to new macro][Convert all predicates to new macro]]                                |
 |   |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
 #+END:
 
@@ -57,9 +56,9 @@
 |     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]               |
 | 0.5 | A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                  |
 |     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                  |
+| 0.6 | B | [[Define predicates with a macro][Define predicates with a macro]]                        |
 |     | B | [[Move this notes file into an orphan =meta/notes= branch][Move this notes file into an orphan =meta/notes= branch]] |
 |     | B | [[Outline path predicate][Outline path predicate]]                                |
-|     | B | [[Document the sorting functions][Document the sorting functions]]                        |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
@@ -472,9 +471,13 @@ For the query expression:
 
 [2020-11-21 Sat 16:40]  i.e. the macro defines the predicate, preamble, and normalizer in one form.  WIP on the =wip/define-predicate= branch.  Seems to be working well so far.
 
-*** TODO Run tests
+[2020-11-22 Sun 17:17]  Everything is converted, everything works, and all the tests pass.  Worked out just as I hoped.  Will merge for 0.6.
 
-*** UNDERWAY Convert all predicates to new macro
+*** TODO Merge new defpred into master
+
+*** DONE Run tests
+
+*** DONE Convert all predicates to new macro
 
 ** PROJECT [#B] Move this notes file into an orphan =meta/notes= branch
 
