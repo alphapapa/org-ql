@@ -410,20 +410,19 @@ It would be expanded to:
                                  normalizers))
          (preambles (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names))))
                                preambles)))
-    `(progn
-       (cl-eval-when (compile load eval)
-	 ;; When compiling, the predicate must be added to `org-ql-predicates' before `org-ql--def-query-string-to-sexp-fn'
-	 ;; is called to define `org-ql--query-string-to-sexp'.  Otherwise, `org-ql--query-string-to-sexp' seems to work properly
-	 ;; when interpreted but not always when the file is byte-compiled.
-         (setf (map-elt org-ql-predicates ',predicate-name)
-               `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
-                       :normalizers ,',normalizers :preambles ,',preambles))
-         (unless org-ql-defpred-defer
-           (org-ql--define-normalize-query (reverse org-ql-predicates))
-           ;; NOTE: Reversing is important!
-           (org-ql--define-preamble-fn (reverse org-ql-predicates))
-           (org-ql--def-query-string-to-sexp-fn))
-         (cl-defun ,fn-name ,args ,docstring ,body)))))
+    `(cl-eval-when (compile load eval)
+       ;; When compiling, the predicate must be added to `org-ql-predicates' before `org-ql--def-query-string-to-sexp-fn'
+       ;; is called to define `org-ql--query-string-to-sexp'.  Otherwise, `org-ql--query-string-to-sexp' seems to work properly
+       ;; when interpreted but not always when the file is byte-compiled.
+       (setf (map-elt org-ql-predicates ',predicate-name)
+             `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
+                     :normalizers ,',normalizers :preambles ,',preambles))
+       (unless org-ql-defpred-defer
+         (org-ql--define-normalize-query (reverse org-ql-predicates))
+         ;; NOTE: Reversing is important!
+         (org-ql--define-preamble-fn (reverse org-ql-predicates))
+         (org-ql--def-query-string-to-sexp-fn))
+       (cl-defun ,fn-name ,args ,docstring ,body))))
 
 ;; TODO: Mark as obsolete/deprecated.
 ;;;###autoload
