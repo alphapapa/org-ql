@@ -249,34 +249,34 @@ Multiple predicates are combined with BOOLEAN."
 
 ;;;;; Predicate definition
 
-(defvar org-ql-preambles nil)
-(defvar org-ql-normalizers nil)
 (defvar org-ql-defpred-defer nil)
-(defvar org-ql-predicate-list nil)
 
-(defun org-ql--define-normalizers (normalizers)
-  "FIXME"
-  (setf normalizers (mapcar #'car (delq nil normalizers)))
-  (fset 'org-ql--normalize-query
-        `(lambda (query)
-           "FIXME"
-           (cl-labels ((rec (element)
-                            (pcase element
-                              (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
-                              (`(and . ,clauses) `(and ,@(mapcar #'rec clauses)))
-                              (`(not . ,clauses) `(not ,@(mapcar #'rec clauses)))
-                              (`(when ,condition . ,clauses) `(when ,(rec condition)
-                                                                ,@(mapcar #'rec clauses)))
-                              (`(unless ,condition . ,clauses) `(unless ,(rec condition)
+(defun org-ql--define-normalize-query (predicates)
+  "Define function `org-ql--normalize-query' for PREDICATES.
+PREDICATES should be the value of `org-ql-predicates'."
+  (let ((normalizer-patterns (->> predicates
+                                  (--map (plist-get (cdr it) :normalizers))
+                                  (-flatten-n 1))))
+    (fset 'org-ql--normalize-query
+          `(lambda (query)
+             "FIXME"
+             (cl-labels ((rec (element)
+                              (pcase element
+                                (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
+                                (`(and . ,clauses) `(and ,@(mapcar #'rec clauses)))
+                                (`(not . ,clauses) `(not ,@(mapcar #'rec clauses)))
+                                (`(when ,condition . ,clauses) `(when ,(rec condition)
                                                                   ,@(mapcar #'rec clauses)))
-                              ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
-                              ((pred stringp) `(regexp ,element))
+                                (`(unless ,condition . ,clauses) `(unless ,(rec condition)
+                                                                    ,@(mapcar #'rec clauses)))
+                                ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
+                                ((pred stringp) `(regexp ,element))
 
-                              ,@normalizers
+                                ,@normalizer-patterns
 
-                              ;; Any other form: passed through unchanged.
-                              (_ element))))
-             (rec query)))))
+                                ;; Any other form: passed through unchanged.
+                                (_ element))))
+               (rec query))))))
 
 (defun org-ql--define-preamble-fn (predicates)
   "FIXME"
@@ -363,9 +363,9 @@ match."
                `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
                        :normalizers ,',normalizers :preambles ,',preambles))
          (unless org-ql-defpred-defer
-           (org-ql--define-normalizers (--map (plist-get it :normalizers) (mapcar #'cdr org-ql-predicate-list)))
+           (org-ql--define-normalize-query (reverse org-ql-predicates))
            ;; NOTE: Reversing is important!
-           (org-ql--define-preamble-fn (reverse org-ql-predicate-list))
+           (org-ql--define-preamble-fn (reverse org-ql-predicates))
            (org-ql--def-plain-query-fn))
          (cl-defun ,fn-name ,args ,docstring ,predicate)))))
 
@@ -2070,10 +2070,10 @@ of the line after the heading."
 ;; Predicates defined: stop deferring and call functions to process them.
 (cl-eval-when (compile load eval)
   (setf org-ql-defpred-defer nil)
-  ;; FIXME: Make `org-ql--define-normalizers' take `org-ql-predicate-list' as its argument.
-  (org-ql--define-normalizers (--map (plist-get it :normalizers) (mapcar #'cdr org-ql-predicate-list)))
+  ;; FIXME: Make `org-ql--define-normalize-query' take `org-ql-predicates' as its argument.
+  (org-ql--define-normalize-query (reverse org-ql-predicates))
   ;; NOTE: Reversing is important!
-  (org-ql--define-preamble-fn (reverse org-ql-predicate-list))
+  (org-ql--define-preamble-fn (reverse org-ql-predicates))
   (org-ql--def-plain-query-fn))
 
 ;;;;; Sorting
