@@ -334,18 +334,70 @@ PREDICATES should be the value of `org-ql-predicates'."
 (cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers)
   "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
 NAME may be a symbol or a list of symbols: if a list, the first
-is used as the name and the rest are aliases.  ARGS is a
+is used as NAME and the rest are aliases (which should be
+normalized to the name using NORMALIZERS).  ARGS is a
 `cl-defun'-style argument list.  DOCSTRING is the function's
 docstring.  BODY is the body of the predicate.
 
-FIXME
+Predicate bodies will be evaluated with point on the beginning of
+an Org heading and should return non-nil if the heading's entry
+is a match.
 
-Predicates will be called with point on the beginning of an Org
-heading and should return non-nil if the heading's entry is a
-match."
-  ;; FIXME: Debug form.
-  (declare ;; (debug ([&or symbolp listp] listp stringp def-body))
-   (indent defun))
+PREAMBLES and NORMALIZERS are lists of `pcase' forms matched
+against Org QL query sexps.
+
+NORMALIZERS are used to normalize queries to standard forms.  For
+example, predicate aliases are replaced with predicate names.
+Also, predicate arguments may be put into a more optimal form so
+that the predicate has less work to do at query time.
+
+PREAMBLES refer to regular expressions which may be used to
+search through a buffer directly to a potential match (rather
+than testing the predicate body on each heading).  (Naming things
+is hard.)  In each `pcase' form in PREAMBLES, the expression
+should be a plist with the following keys, each value of which
+should be an expression which may refer to variables bound in the
+pattern:
+
+  :regexp     Regular expression which searches directly to a
+              potential match.
+  :case-fold  Bound to `case-fold-search' around the regexp search.
+
+  :query      Expression which should replace the query, or `query'
+              if it should not be changed (e.g. if the regexp is
+              insufficient to determine whether a heading
+              matches, in which case the predicate's body needs
+              to be tested on the heading).
+
+For convenience, within the `pcase' patterns, the symbol
+`predicate-names' is a special form which is replaced with a
+pattern matching any of the predicate's name and aliases.  For
+example, if NAME were:
+
+  (heading h)
+
+Then if NORMALIZERS were:
+
+  ((`(,predicate-names . ,args)
+  `(heading ,@args)))
+
+It would be expanded to:
+
+  ((`(,(or 'heading 'h) . ,args)
+  `(heading ,@args)))"
+  ;; NOTE: The debug form works, completely!  For example, use `edebug-defun'
+  ;; on the `heading' predicate, then evaluate this form:
+  ;; (let* ((query '(heading "HEADING"))
+  ;;        (normalized (org-ql--normalize-query query))
+  ;;        (preamble (org-ql--query-preamble normalized)))
+  ;;   (list :query query
+  ;;         :normalized normalized
+  ;;         :preamble preamble))
+  (declare (debug ([&or symbolp listp] listp stringp
+                   &rest [&or [":body" def-body]
+                              [":normalizers" (&rest (sexp def-body))]
+                              [":preambles" (&rest (sexp def-body))]]))
+           (indent defun))
   (let* ((aliases (when (listp name)
                     (cdr name)))
          (name (cl-etypecase name
@@ -943,7 +995,7 @@ Arguments STRING, POS, FILL, and LEVEL are according to
 (org-ql-defpred habit ()
   "Return non-nil if entry is a habit."
   :preambles ((`(,predicate-names)
-               (list :regexp  (rx bol (0+ space) ":STYLE:" (1+ space) "habit" (0+ space) eol))))
+               (list :regexp (rx bol (0+ space) ":STYLE:" (1+ space) "habit" (0+ space) eol))))
   :body (org-is-habit-p))
 
 (org-ql-defpred (heading h) (&rest regexps)
