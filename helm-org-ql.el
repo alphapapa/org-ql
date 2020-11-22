@@ -173,7 +173,7 @@ Is transformed into this query:
       (interactive)
       (let ((buffers-files (with-current-buffer (helm-buffer-get)
                              helm-org-ql-buffers-files))
-            (query (org-ql--plain-query helm-pattern)))
+            (query (org-ql--query-string-to-sexp helm-pattern)))
         (helm-run-after-exit #'org-ql-search buffers-files query)))
 
 ;;;###autoload
@@ -189,7 +189,7 @@ Is transformed into this query:
       ;; Expansion of `helm-build-sync-source' macro.
       (helm-make-source name 'helm-source-sync
         :candidates (lambda ()
-                      (let* ((query (org-ql--plain-query helm-pattern))
+                      (let* ((query (org-ql--query-string-to-sexp helm-pattern))
                              (window-width (window-width (helm-window))))
                         (when query
                           (with-current-buffer (helm-buffer-get)

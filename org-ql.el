@@ -196,8 +196,8 @@ See Info node `(org-ql)Queries'."
   ;; the function correctly, apparently because `org-ql-predicates'
   ;; ends up being not defined correctly at expansion time.
 
-  (defun org-ql--def-plain-query-fn ()
-    "Define function `org-ql--plain-query'.
+  (defun org-ql--def-query-string-to-sexp-fn ()
+    "Define function `org-ql--query-string-to-sexp'.
 Builds the PEG expression using predicates defined in
 `org-ql-predicates' and `org-ql-predicates-extra-aliases'."
     (let* ((predicates (--map (symbol-name (plist-get (cdr it) :name))
@@ -214,7 +214,7 @@ Builds the PEG expression using predicates defined in
                             ;; obscure bug in `peg': when one keyword is a substring of another,
                             ;; and the shorter one is listed first, the shorter one fails to match.
                             (-sort (-on #'> #'length)))))
-      (fset 'org-ql--plain-query
+      (fset 'org-ql--query-string-to-sexp
             (byte-compile
              `(cl-function
                (lambda (input &optional (boolean 'and))
@@ -361,8 +361,8 @@ match."
                                preambles)))
     `(progn
        (cl-eval-when (compile load eval)
-	 ;; When compiling, the predicate must be added to `org-ql-predicates' before `org-ql--def-plain-query-fn'
-	 ;; is called to define `org-ql--plain-query'.  Otherwise, `org-ql--plain-query' seems to work properly
+	 ;; When compiling, the predicate must be added to `org-ql-predicates' before `org-ql--def-query-string-to-sexp-fn'
+	 ;; is called to define `org-ql--query-string-to-sexp'.  Otherwise, `org-ql--query-string-to-sexp' seems to work properly
 	 ;; when interpreted but not always when the file is byte-compiled.
          (setf (map-elt org-ql-predicates ',predicate-name)
                `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
@@ -371,7 +371,7 @@ match."
            (org-ql--define-normalize-query (reverse org-ql-predicates))
            ;; NOTE: Reversing is important!
            (org-ql--define-preamble-fn (reverse org-ql-predicates))
-           (org-ql--def-plain-query-fn))
+           (org-ql--def-query-string-to-sexp-fn))
          (cl-defun ,fn-name ,args ,docstring ,predicate)))))
 
 ;; TODO: Mark as obsolete/deprecated.
@@ -1747,7 +1747,7 @@ of the line after the heading."
   ;; Generally it shouldn't matter, but it might...
   (org-ql--define-normalize-query (reverse org-ql-predicates))
   (org-ql--define-preamble-fn (reverse org-ql-predicates))
-  (org-ql--def-plain-query-fn))
+  (org-ql--def-query-string-to-sexp-fn))
 
 ;;;;; Sorting
 

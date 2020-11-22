@@ -158,7 +158,7 @@ necessary."
                                 ;; Read sexp query.
                                 (read query)
                               ;; Parse non-sexp query into sexp query.
-                              (org-ql--plain-query query)))
+                              (org-ql--query-string-to-sexp query)))
                     (list query)))
            (results (org-ql-select buffers-files query
                       :action 'element-with-markers
@@ -273,7 +273,7 @@ For example, an org-ql dynamic block header could look like:
   #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
   (-let* (((&plist :query :columns :sort :ts-format :take) params)
           (query (cl-etypecase query
-                   (string (org-ql--plain-query query))
+                   (string (org-ql--query-string-to-sexp query))
                    (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
                     (org-ql--ask-unsafe-query query)
                     query)))
