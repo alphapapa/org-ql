@@ -1453,11 +1453,7 @@ any link is found."
                             (string-match-p description-or-target
                                             (match-string org-ql-link-description-group)))))))))
 
-;;;;;; Old definitions
-
-;; MAYBE: Preambles for outline-path predicates.  Not sure if possible without complicated logic.
-
-(org-ql--defpred priority (&rest args)
+(org-ql-define-predicate priority (&rest args)
   "Return non-nil if current heading has a certain priority.
 ARGS may be either a list of one or more priority letters as
 strings, or a comparator function symbol followed by a priority
@@ -1477,6 +1473,42 @@ priority B)."
   ;; value.  We do this because it doesn't seem very useful or intuitive for a
   ;; query like (priority "B") to match an item that has no priority cookie.
   ;; TODO: Convert priority arg(s) to numeric values in pre-processing.
+  :normalizers
+  ((`(,predicate-names ,(and (or '= '< '> '<= '>=) comparator) ,letter)
+    ;; Quote comparator.
+    `(priority ',comparator ,letter)))
+
+  :preambles
+  (;; NOTE: This only accepts A, B, or C.  I haven't seen
+   ;; other priorities in the wild, so this will do for now.
+   (`(,predicate-names)
+    ;; Any priority cookie.
+    (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl) "[#" (in "ABC") "]") t)))
+   (`(,predicate-names ,(and (or ''= ''< ''> ''<= ''>=) comparator) ,letter)
+    ;; Comparator and priority letter.
+    ;; NOTE: The double-quoted comparators.  See below.
+    (let* ((priority-letters '("A" "B" "C"))
+           (index (-elem-index letter priority-letters))
+           ;; NOTE: Higher priority == lower number.
+           ;; NOTE: Because we need to support both preamble-based queries and
+           ;; regular predicate ones, we work around an idiosyncrasy of query
+           ;; pre-processing by accepting both quoted and double-quoted comparator
+           ;; function symbols.  Not the most elegant solution, but it works.
+           (priorities (s-join "" (pcase comparator
+                                    ((or '= ''=) (list letter))
+                                    ((or '> ''>) (cl-subseq priority-letters 0 index))
+                                    ((or '>= ''>=) (cl-subseq priority-letters 0 (1+ index)))
+                                    ((or '< ''<) (cl-subseq priority-letters (1+ index)))
+                                    ((or '<= ''<=) (cl-subseq priority-letters index))))))
+      (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (optional (1+ upper) (1+ blank))
+                                        "[#" (in ,priorities) "]") t))))
+   (`(,predicate-names . ,letters)
+    ;; One or more priorities.
+    ;; MAYBE: Disable case-folding.
+    (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank)
+                                      (optional (1+ upper) (1+ blank))
+                                      "[#" (or ,@letters) "]") t))))
+  :predicate
   (when-let* ((item-priority (save-excursion
                                (save-match-data
                                  ;; TODO: Is the save-match-data above necessary?
@@ -1498,12 +1530,20 @@ priority B)."
        (cl-loop for priority-arg in args
                 thereis (= item-priority (* 1000 (- org-lowest-priority (string-to-char priority-arg)))))))))
 
-(org-ql--defpred habit ()
+(org-ql-define-predicate habit ()
   "Return non-nil if entry is a habit."
-  (org-is-habit-p))
+  :preambles ((`(,predicate-names)
+               (list :regexp  (rx bol (0+ space) ":STYLE:" (1+ space) "habit" (0+ space) eol))))
+  :predicate (org-is-habit-p))
 
-(org-ql--defpred (regexp r) (&rest regexps)
+(org-ql-define-predicate (regexp r) (&rest regexps)
   "Return non-nil if current entry matches all of REGEXPS (regexp strings)."
+  :normalizers ((`(,predicate-names . ,args)
+                 `(regexp ,@args)))
+  :preambles ((`(,predicate-names . ,regexps)
+               ;; Search for first regexp, then confirm with predicate.
+               (list :regexp (car regexps) :predicate predicate)))
+  :predicate
   (let ((end (or (save-excursion
                    (outline-next-heading))
                  (point-max))))
@@ -1513,14 +1553,56 @@ priority B)."
                always (save-excursion
                         (re-search-forward regexp end t))))))
 
-(org-ql--defpred (heading h) (&rest regexps)
+(org-ql-define-predicate (heading h) (&rest regexps)
   "Return non-nil if current entry's heading matches all REGEXPS (regexp strings)."
+  :normalizers ((`(,predicate-names . ,args)
+                 ;; "h" alias.
+                 `(heading ,@args)))
+  ;; MAYBE: Adjust regexp to avoid matching in tag list.
+  :preambles ((`(,predicate-names ,regexp)
+               ;; Only one regexp: match with preamble, then let predicate confirm (because
+               ;; the match could be in e.g. the tags rather than the heading text).
+               (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
+                                                 ,regexp)
+                                           'no-group)
+                     :predicate predicate))
+              (`(,predicate-names . ,regexps)
+               ;; Multiple regexps: use preamble to match against first
+               ;; regexp, then let the predicate match the rest.
+               (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
+                                                 ,(car regexps))
+                                           'no-group)
+                     :predicate predicate)))
   ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
-  (let ((heading (org-get-heading 'no-tags 'no-todo)))
-    (--all? (string-match it heading) regexps)))
+  :predicate (let ((heading (org-get-heading 'no-tags 'no-todo)))
+               (--all? (string-match it heading) regexps)))
 
-(org-ql--defpred property (property &optional value)
+(org-ql-define-predicate property (property &optional value)
   "Return non-nil if current entry has PROPERTY (a string), and optionally VALUE (a string)."
+  :normalizers ((`(,predicate-names ,property . ,value)
+                 ;; Convert keyword property arguments to strings.  Non-sexp
+                 ;; queries result in keyword property arguments (because to do
+                 ;; otherwise would require ugly special-casing in the parsing).
+                 (when (keywordp property)
+                   (setf property (substring (symbol-name property) 1)))
+                 (cons 'property (cons property value))))
+  ;; MAYBE: Should case folding be disabled for properties?  What about values?
+  ;; MAYBE: Support (property) without args.
+  :preambles ((`(,predicate-names ,property ,value)
+               ;; We do NOT return nil, because the predicate still needs to be tested,
+               ;; because the regexp could match a string not inside a property drawer.
+               (list :regexp (rx-to-string `(seq bol (0+ space) ":" ,property ":"
+                                                 (1+ space) ,value (0+ space) eol))
+                     :predicate predicate))
+              (`(,predicate-names ,property)
+               ;; We do NOT return nil, because the predicate still needs to be tested,
+               ;; because the regexp could match a string not inside a property drawer.
+               ;; NOTE: The preamble only matches if there appears to be a value.
+               ;; A line like ":ID: " without any other text does not match.
+               (list :regexp (rx-to-string `(seq bol (0+ space) ":" ,property ":" (1+ space)
+                                                 (minimal-match (1+ not-newline)) eol))
+                     :predicate predicate)))
+  :predicate
   (pcase property
     ('nil (user-error "Property matcher requires a PROPERTY argument"))
     (_ (pcase value
@@ -1531,10 +1613,33 @@ priority B)."
           ;; Check that PROPERTY has VALUE
           (string-equal value (org-entry-get (point) property 'selective)))))))
 
-(org-ql--defpred src (&key regexps lang)
+(org-ql-define-predicate src (&key regexps lang)
   "Return non-nil if current entry contains an Org source block matching all of REGEXPS.
 If keyword argument LANG is non-nil, the block must be in that
 language."
+  :normalizers ((`(,predicate-names . ,args)
+                 ;; Rewrite to use keyword args.
+                 (-let (regexps lang keyword-index)
+                   (cond ((plist-get args :lang)
+                          ;; Lang given first, or only lang given.
+                          (setf lang (plist-get args :lang)
+                                regexps (seq-difference args (list :lang lang))))
+                         ((setf keyword-index (-find-index #'keywordp args))
+                          ;; Regexps and lang given.
+                          (setf lang (plist-get (cl-subseq args keyword-index) :lang)
+                                regexps (cl-subseq args 0 keyword-index)))
+                         (t ;; Only regexps given.
+                          (setf regexps args)))
+                   (when regexps
+                     ;; This feels awkward and wrong, but we have to quote lists
+                     ;; and avoid quoting nil.  There must be a better way.
+                     (setf regexps `(',regexps)))
+                   `(src :lang ,lang :regexps ,@regexps))))
+  :preambles ((`(,predicate-names . ,args)
+               (list :regexp (org-ql--format-src-block-regexp (plist-get args :lang))
+                     ;; Always check contents with predicate.
+                     :predicate predicate)))
+  :predicate
   (catch 'return
     (save-excursion
       (save-match-data
@@ -1556,6 +1661,10 @@ language."
             ;; No regexps to check: return non-nil.
             t))))))
 
+;;;;;; Old definitions
+
+;; MAYBE: Preambles for outline-path predicates.  Not sure if possible without complicated logic.
+
 ;;;;;; Ancestor/descendant
 
 ;; These predicates search ancestor and descendant headings for sub-queries.
@@ -1574,14 +1683,20 @@ language."
 ;; rather than user-facing, since their arguments are predicates provided
 ;; automatically by `--pre-process-query'.
 
-(org-ql--defpred ancestors (predicate)
+(org-ql-define-predicate ancestors (predicate)
   "Return non-nil if any of current entry's ancestors satisfy PREDICATE."
+  :normalizers ((`(,predicate-names ,query) `(ancestors ,(org-ql--query-predicate (rec query))))
+                (`(,predicate-names) '(ancestors (lambda () t))))
+  :predicate
   (org-with-wide-buffer
    (cl-loop while (org-up-heading-safe)
             thereis (org-ql--value-at (point) predicate))))
 
-(org-ql--defpred parent (predicate)
+(org-ql-define-predicate parent (predicate)
   "Return non-nil if the current entry's parent satisfies PREDICATE."
+  :normalizers ((`(,predicate-names ,query) `(parent ,(org-ql--query-predicate (rec query))))
+                (`(,predicate-names) '(parent (lambda () t))))
+  :predicate
   (org-with-wide-buffer
    (when (org-up-heading-safe)
      (org-ql--value-at (point) predicate))))
@@ -1592,8 +1707,12 @@ language."
 ;; on the Org file being searched and the sub-query, performance could be better or
 ;; worse.  It should be benchmarked extensively before so changing the implementation.
 
-(org-ql--defpred children (query)
+(org-ql-define-predicate children (query)
   "Return non-nil if current entry has children matching QUERY."
+  ;; Quote children queries so the user doesn't have to.
+  :normalizers ((`(,predicate-names ,query) `(children ',query))
+                (`(,predicate-names) '(children (lambda () t))))
+  :predicate
   (org-with-wide-buffer
    ;; Widening is needed if inside an "ancestors" query
    (org-narrow-to-subtree)
@@ -1613,10 +1732,13 @@ language."
            :action (lambda ()
                      (throw 'found t))))))))
 
-(org-ql--defpred descendants (query)
+(org-ql-define-predicate descendants (query)
   "Return non-nil if current entry has descendants matching QUERY."
   ;; TODO: This could probably be rewritten like the `ancestors' predicate,
   ;; which avoids calling `org-ql-select' recursively and its associated overhead.
+  :normalizers ((`(,predicate-names ,query) `(descendants ',query))
+                (`(,predicate-names) '(descendants (lambda () t))))
+  :predicate
   (org-with-wide-buffer
    (org-narrow-to-subtree)
    (when (org-goto-first-child)
@@ -1641,7 +1763,7 @@ language."
 ;; TODO: Update the macro to define a user-facing docstring so I don't
 ;; have to manually update the documentation.
 
-(org-ql--defpred clocked (&key from to _on)
+(org-ql-define-predicate clocked (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1658,9 +1780,18 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
+  :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                 ;; (clocked) and (closed) implicitly look into the past.
+                 (let ((from (->> (ts-now)
+                                  (ts-adjust 'day (* -1 num-days))
+                                  (ts-apply :hour 0 :minute 0 :second 0))))
+                   `(clocked :from ,from))))
+  :preambles ((`(,predicate-names . ,_)
+               (list :regexp  org-ql-clock-regexp :predicate predicate)))
+  :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
 
-(org-ql--defpred closed (&key from to _on)
+(org-ql-define-predicate closed (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1677,10 +1808,20 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
+  :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                 ;; (clocked) and (closed) implicitly look into the past.
+                 (let ((from (->> (ts-now)
+                                  (ts-adjust 'day (* -1 num-days))
+                                  (ts-apply :hour 0 :minute 0 :second 0))))
+                   `(closed :from ,from))))
+  :preambles ((`(,predicate-names . ,_)
+               ;;  Predicate still needs testing.
+               (list :regexp org-closed-time-regexp :predicate predicate)))
+  :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1
                         :limit (line-end-position 2)))
 
-(org-ql--defpred deadline (&key from to _on)
+(org-ql-define-predicate deadline (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1697,11 +1838,29 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
+  :normalizers ((`(,predicate-names auto)
+                 ;; Use `org-deadline-warning-days' as the :to arg.
+                 (let ((to (->> (ts-now)
+                                (ts-adjust 'day org-deadline-warning-days)
+                                (ts-apply :hour 23 :minute 59 :second 59))))
+                   `(deadline-warning :to ,to)))
+                (`(,predicate-names ,(and num-days (pred numberp)))
+                 (let ((to (->> (ts-now)
+                                (ts-adjust 'day num-days)
+                                (ts-apply :hour 23 :minute 59 :second 59))))
+                   `(deadline :to ,to))))
+  ;; FIXME: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
+  :preambles ((`(,predicate-names . ,_)
+               (list :regexp org-deadline-time-regexp :predicate predicate)))
+  :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1
                         :limit (line-end-position 2)))
 
-(org-ql--defpred deadline-warning (&key from to)
+(org-ql-define-predicate deadline-warning (&key from to)
   "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods."
+  :preambles ((`(,predicate-names . ,_)
+               (list :regexp org-deadline-time-regexp :predicate predicate)))
+  :predicate
   (save-excursion
     (forward-line 1)
     (when (re-search-forward org-deadline-time-regexp (line-end-position) t)
@@ -1716,7 +1875,7 @@ parseable by `parse-time-string' which may omit the time value."
               ((_timestamp (&keys :warning-value :warning-unit)) deadline-ts-element)
               (ts (ts-parse-org-element deadline-ts-element)))
         (pcase warning-unit
-          ('nil  ;; Deadline has no warning unit: compare with ts passed in.
+          ('nil ;; Deadline has no warning unit: compare with ts passed in.
            (cond ((and from to) (ts-in from to ts))
                  (from (ts<= from ts))
                  (to (ts<= ts to))))
@@ -1725,7 +1884,7 @@ parseable by `parse-time-string' which may omit the time value."
            (ts<= (->> ts (ts-adjust unit (- warning-value))) org-ql--today))
           ('week (ts<= (->> ts (ts-adjust 'day (* -7 warning-value))) org-ql--today)))))))
 
-(org-ql--defpred planning (&key from to _on)
+(org-ql-define-predicate planning (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1742,10 +1901,18 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
+  :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                 (let ((to (->> (ts-now)
+                                (ts-adjust 'day num-days)
+                                (ts-apply :hour 23 :minute 59 :second 59))))
+                   `(planning :to ,to))))
+  :preambles ((`(,predicate-names . ,_)
+               (list :regexp org-ql-planning-regexp :predicate predicate)))
+  :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1
                         :limit (line-end-position 2)))
 
-(org-ql--defpred scheduled (&key from to _on)
+(org-ql-define-predicate scheduled (&key from to _on)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1762,10 +1929,18 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
+  :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                 (let ((to (->> (ts-now)
+                                (ts-adjust 'day num-days)
+                                (ts-apply :hour 23 :minute 59 :second 59))))
+                   `(scheduled :to ,to))))
+  :preambles ((`(,predicate-names . ,_)
+               (list :regexp org-scheduled-time-regexp :predicate predicate)))
+  :predicate
   (org-ql--predicate-ts :from from :to to :regexp org-scheduled-time-regexp :match-group 1
                         :limit (line-end-position 2)))
 
-(org-ql--defpred (ts ts-active ts-a ts-inactive ts-i)
+(org-ql-define-predicate (ts ts-active ts-a ts-inactive ts-i)
   (&key from to _on regexp (match-group 0) (limit (org-entry-end-position)))
   ;; NOTE: Arguments to this predicate are pre-processed in `org-ql--pre-process-query'.
   ;; The underscore before `on' prevents "unused lexical variable" warnings due to the
@@ -1794,7 +1969,20 @@ the end of the entry, i.e. the position returned by
 `org-entry-end-position', but for certain searches it should be
 bound to a different positiion, e.g. for planning lines, the end
 of the line after the heading."
+  ;; TODO: Define active/inactive ones separately.
+  :normalizers ((`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
+                (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
+  :preambles ((`(,predicate-names . ,rest)
+               (list :regexp (pcase (plist-get rest :type)
+                               ((or 'nil 'both) org-tsr-regexp-both)
+                               ('active org-tsr-regexp)
+                               ('inactive org-ql-tsr-regexp-inactive))
+                     ;; Predicate needs testing only when args are present.
+                     :predicate (-let (((&keys :from :to :on) rest))
+                                  (when (or from to on)
+                                    predicate)))))
   ;; TODO: DRY this with the clocked predicate.
+  :predicate
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward regexp limit t)
                                    (ts-parse-org (match-string match-group))))
