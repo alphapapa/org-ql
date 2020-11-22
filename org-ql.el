@@ -1003,12 +1003,10 @@ contiguous segment of the outline path:
                  `(outline-path-segment ,@(mapcar #'regexp-quote strings))))
   :predicate (org-ql--infix-p regexps (org-ql--value-at (point) #'org-ql--outline-path)))
 
-(org-ql-define-predicate (tags tags-all tags&) (&rest tags)
-  ;; NOTE: tags-all and tags& are "virtual" predicates that are handled by query pre-processing.
+(org-ql-define-predicate (tags) (&rest tags)
   "Return non-nil if current heading has one or more of TAGS (a list of strings).
 Tests both inherited and local tags."
   ;; MAYBE: -all versions for inherited and local.
-  :normalizers ((`(,predicate-names . ,tags) `(and ,@(--map `(tags ,it) tags))))
   :predicate (cl-macrolet ((tags-p (tags)
                                    `(and ,tags
                                          (not (eq 'org-ql-nil ,tags)))))
@@ -1021,11 +1019,21 @@ Tests both inherited and local tags."
                                   (when (tags-p local)
                                     (seq-intersection tags local))))))))
 
-(org-ql-define-predicate (tags-inherited tags-i itags) (&rest tags)
+(org-ql-define-predicate (tags-all tags&) (&rest tags)
+  "Return non-nil if current heading has all of TAGS (a list of strings).
+Tests both inherited and local tags."
+  ;; MAYBE: -all versions for inherited and local.
+  :normalizers ((`(,predicate-names) `(tags))
+                (`(,predicate-names . ,tags) `(and ,@(--map `(tags ,it) tags))))
+  :predicate #'org-ql--predicate-tags)
+
+(org-ql-define-predicate (tags-inherited inherited-tags tags-i itags) (&rest tags)
   "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any inherited tags."
   :normalizers ((`(,predicate-names . ,tags)
-                 `(tags-inherited ,@tags)))
+                 `(tags-inherited ,@tags))
+                (`(,predicate-names)
+                 `(tags-inherited)))
   :predicate (cl-macrolet ((tags-p (tags)
                                    `(and ,tags
                                          (not (eq 'org-ql-nil ,tags)))))
@@ -1035,16 +1043,18 @@ If TAGS is nil, return non-nil if heading has any inherited tags."
                    (otherwise (when (tags-p inherited)
                                 (seq-intersection tags inherited)))))))
 
-(org-ql-define-predicate (tags-local tags-l ltags) (&rest tags)
+(org-ql-define-predicate (tags-local local-tags tags-l ltags) (&rest tags)
   "Return non-nil if current heading's local tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any local tags."
-  :normalizers ((`(,predicate-names . ,tags) `(tags-local ,@tags)))
-  :preambles ((`(,predicate-names . ,tags)
+  :normalizers ((`(,predicate-names) `(tags-local))
+                (`(,predicate-names . ,tags) `(tags-local ,@tags)))
+  :preambles ((`(,predicate-names . ,(and tags (guard tags)))
                ;; When searching for local, non-inherited tags, we can
                ;; search directly to headings containing one of the tags.
                (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (1+ not-newline)
                                                  ":" (or ,@tags) ":")
-                                           t))))
+                                           t)
+                     :query t)))
   :predicate (cl-macrolet ((tags-p (tags)
                                    `(and ,tags
                                          (not (eq 'org-ql-nil ,tags)))))
