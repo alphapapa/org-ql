@@ -1059,7 +1059,6 @@ The following forms are accepted:
 COMPARATOR may be `<', `<=', `>', or `>='."
   :normalizers ((`(,predicate-names . ,args)
                  ;; Arguments could be given as strings (e.g. from a non-Lisp query).
-                 ;; FIXME: Uh...
                  `(level ,@(--map (pcase it
                                     ((or "<" "<=" ">" ">=" "=")
                                      (intern it))
@@ -1670,7 +1669,7 @@ parseable by `parse-time-string' which may omit the time value."
                                 (ts-adjust 'day num-days)
                                 (ts-apply :hour 23 :minute 59 :second 59))))
                    `(deadline :to ,to))))
-  ;; FIXME: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
+  ;; NOTE: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-deadline-time-regexp :query query)))
   :body
@@ -1790,7 +1789,7 @@ the end of the entry, i.e. the position returned by
 `org-entry-end-position', but for certain searches it should be
 bound to a different positiion, e.g. for planning lines, the end
 of the line after the heading."
-  ;; TODO: Define active/inactive ones separately.
+  ;; MAYBE: Define active/inactive ones separately?
   :normalizers ((`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
                 (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
   :preambles ((`(,predicate-names . ,rest)
