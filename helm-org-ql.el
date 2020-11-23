@@ -1,4 +1,4 @@
-;;; helm-org-ql.el --- Helm commands for org-ql  -*- lexical-binding: t; -*-
+;;; helm-org-ql.el --- Helm support for org-ql  -*- lexical-binding: t; -*-
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/org-ql
@@ -64,16 +64,15 @@ Based on `helm-map'.")
     :action (list (cons "Show view" #'org-ql-view)))
   "Helm source for `org-ql-views'.")
 
-(with-no-warnings
-  ;; Silence compiler warning: "‘make-variable-buffer-local’ not called at toplevel"
-  (defvar-local helm-org-ql-buffers-files nil
-    "Used for `helm-org-ql-save'."))
+(defvar-local helm-org-ql-buffers-files nil
+  "Used for `helm-org-ql-save'.")
 
 ;;;; Customization
 
 (defgroup helm-org-ql nil
   "Options for `helm-org-ql'."
-  :group 'org-ql)
+  :group 'org-ql
+  :group 'helm)
 
 (defcustom helm-org-ql-reverse-paths t
   "Whether to reverse Org outline paths in `helm-org-ql' results."
@@ -174,6 +173,7 @@ Is transformed into this query:
 
 ;;;; Functions
 
+;;;###autoload
 (cl-defun helm-org-ql-source (buffers-files &key (name "helm-org-ql"))
   "Return Helm source named NAME that searches BUFFERS-FILES with `helm-org-ql'."
   ;; Expansion of `helm-build-sync-source' macro.
@@ -214,7 +214,7 @@ WINDOW-WIDTH should be the width of the Helm window."
          (path (if helm-org-ql-reverse-paths
                    (concat heading "\\" (s-join "\\" (nreverse path)))
                  (concat (s-join "/" path) "/" heading))))
-    (cons (concat prefix path) (point-marker)))))
+    (cons (concat prefix path) (point-marker))))
 
 ;;;; Footer
 
