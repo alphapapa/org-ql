@@ -31,8 +31,8 @@ on:
   pull_request:
   push:
     # Comment out this section to enable testing of all branches.
-    branches:
-      - master
+    # branches:
+    #   - master
 
 jobs:
   build:
