@@ -463,7 +463,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.6-pre
 
-Nothing new yet.
+*Internal*
++  Predicates are now defined more cleanly with a macro that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.
 
 ** 0.5
 

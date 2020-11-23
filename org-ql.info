@@ -859,7 +859,10 @@ File: README.info,  Node: 06-pre,  Next: 05,  Up: Changelog
 5.1 0.6-pre
 ===========
 
-Nothing new yet.
+*Internal*
+   • Predicates are now defined more cleanly with a macro that
+     consolidates functionality related to each predicate.  This will
+     also allow users to more easily define custom predicates.
 
 
 File: README.info,  Node: 05,  Next: 049,  Prev: 06-pre,  Up: Changelog
@@ -1373,29 +1376,29 @@ Node: Links29568
 Node: Tips30255
 Node: Changelog30573
 Node: 06-pre31269
-Node: 0531375
-Node: 04932852
-Node: 04833126
-Node: 04733473
-Node: 04633868
-Node: 04534268
-Node: 04434627
-Node: 04334984
-Node: 04235179
-Node: 04135340
-Node: 0435581
-Node: 03239514
-Node: 03139893
-Node: 0340090
-Node: 02343065
-Node: 02243293
-Node: 02143561
-Node: 0243760
-Node: 0147795
-Node: Notes47896
-Node: Comparison with Org Agenda searches48058
-Node: org-sidebar48930
-Node: License49209
+Node: 0531567
+Node: 04933044
+Node: 04833318
+Node: 04733665
+Node: 04634060
+Node: 04534460
+Node: 04434819
+Node: 04335176
+Node: 04235371
+Node: 04135532
+Node: 0435773
+Node: 03239706
+Node: 03140085
+Node: 0340282
+Node: 02343257
+Node: 02243485
+Node: 02143753
+Node: 0243952
+Node: 0147987
+Node: Notes48088
+Node: Comparison with Org Agenda searches48250
+Node: org-sidebar49122
+Node: License49401
 
 End Tag Table
 
