@@ -50,15 +50,15 @@
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-|   M | P | Heading                                               |
-|-----+---+-------------------------------------------------------|
-|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]               |
-|     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                  |
-| 0.6 | B | [[Define predicates with a macro][Define predicates with a macro]]                        |
-|     | B | [[Move this notes file into an orphan =meta/notes= branch][Move this notes file into an orphan =meta/notes= branch]] |
-|     | B | [[Outline path predicate][Outline path predicate]]                                |
-|     | B | [[Document the sorting functions][Document the sorting functions]]                        |
-|     | B | [[Recursive queries][Recursive queries]]                                     |
+|   M | P | Heading                                 |
+|-----+---+-----------------------------------------|
+|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]] |
+|     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                    |
+| 0.6 | B | [[Define predicates with a macro][Define predicates with a macro]]          |
+|     | B | [[Outline path predicate][Outline path predicate]]                  |
+|     | B | [[Document the sorting functions][Document the sorting functions]]          |
+|     | B | [[Recursive queries][Recursive queries]]                       |
+|     | B | [[Timeline view][Timeline view]]                           |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
@@ -96,7 +96,6 @@
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#define-predicates-with-a-macro][Define predicates with a macro]]
-- [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#group-tag-support][Group tag support]]
@@ -117,6 +116,7 @@
 - [[#fix-org-ql-view--link-open-on-org-93][Fix org-ql-view--link-open on Org 9.3+]]
 - [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
 - [[#helm-command][Helm command]]
+- [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
 - [[#byte-compile-lambdas][Byte-compile lambdas]]
 - [[#documentfigure-out-tag-inheritance][Document/figure out tag inheritance]]
@@ -394,10 +394,6 @@ Maybe make it an option to automatically convert them when possible, because if 
 *** DONE Run tests
 
 *** DONE Convert all predicates to new macro
-
-** PROJECT [#B] Move this notes file into an orphan =meta/notes= branch
-
-[2020-11-12 Thu 03:17]  Will probably have to merge or delete some WIP branches first, otherwise they'll probably get conflicts.
 
 ** PROJECT [#B] Outline path predicate
 
@@ -1138,6 +1134,10 @@ Appears to be another implementation of magit-section-like expandable sections. 
 
 [2020-11-12 Thu 03:23]  A command to do this would be very helpful.  (Yes, I entered this idea twice.  I should use my own systems better, apparently.  But that's what this package is all about, right?)
 
+**** NEXT Lookup Org function to create dynamic blocks
+
+**** NEXT Write function to save view to dynamic block
+
 *** DONE [#A] Implement dynamic blocks
 
 +  *Tasks*
@@ -1689,6 +1689,12 @@ Well, a bit of fiddling (lots of trial-and-error required) produced this:
 #+END_SRC
 
 That seems pretty usable!
+
+** DONE [#B] Move this notes file into an orphan =meta/notes= branch
+
+[2020-11-12 Thu 03:17]  Will probably have to merge or delete some WIP branches first, otherwise they'll probably get conflicts.
+
+[2020-11-22 Sun 19:40]  Did this a day or two ago.  Didn't rebase all the WIP branches, but they shouldn't be any trouble.
 
 ** DONE [#B] Quickly change sorting/grouping in search views
 
