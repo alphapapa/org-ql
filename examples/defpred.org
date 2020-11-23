@@ -1,0 +1,305 @@
+#+TITLE: Org QL Custom Predicates Tutorial
+#+OPTIONS: author:nil creator:nil created:nil date:nil num:nil title:t
+
+[2020-11-22 Sun 22:35]  Imagine you have weekly meetings with other people, and during the week you take notes about items to discuss at each meeting.  When the time for a meeting comes, you want to quickly and easily search for all of the items to discuss at the meeting.
+
+You've been experimenting with different ways to track such data in Org.  You've tried using tags, but some of the names in question conflict with other tags in your data (e.g. someone's named Charles, but you also work with a firm named Charles, Inc., and you'd prefer to continue using the tag =Charles= for entries about that firm), so you've been using tags like ~:personNAME:~, which seems awkward.  You've tried using a ~:person: NAME~ property on entries, which has the advantage of not cluttering the tags list, but also the disadvantage of not being readily visible in an outline.  
+
+So you haven't decided on a long-term solution, but the meetings aren't going to wait--you need to search that data now, and you have a mix of both tags and properties in your entries.  What you need is to be able to search for all of the entries about Alice (which you've tagged ~:personAlice:~) when you're meeting with her, and all of the entries about Bob (which have the property ~:person: Bob~) when you're meeting with him  What do you do?
+
+* Contents
+:PROPERTIES:
+:TOC:      :include siblings :ignore this
+:END:
+:CONTENTS:
+- [[#a-custom-person-predicate][A custom (person) predicate]]
+- [[#searching-for-multiple-people-at-once][Searching for multiple people at once]]
+- [[#normalizing-queries-to-rewrite-arguments][Normalizing queries to rewrite arguments]]
+- [[#non-sexp-query-syntax][Non-sexp query syntax]]
+- [[#using-multiple-predicates][Using multiple predicates]]
+- [[#predicate-aliases][Predicate aliases]]
+- [[#appendix-anaphoric-macros][Appendix: Anaphoric macros]]
+:END:
+
+* A custom ~(person)~ predicate
+
+Enter =org-ql= custom search predicates.  Let's start simple, by defining a predicate to search for just the ~:person:~ property, one person at a time.  The predicate will take one argument, a person's name, and search for that property.  It would look like this:
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-defpred person (name)
+    "Search for entries with the \"person\" property being NAME."
+    :body (property "person" name))
+#+END_SRC
+
+Now let's see what results we get for searching this file for entries about Bob:
+
+#+BEGIN_SRC elisp :results list :exports both :cache yes
+  (org-ql-query :select '(org-get-heading :no-tags)
+                :from (current-buffer)
+                :where '(person "Bob"))
+#+END_SRC
+
+#+RESULTS[c11a4ce2c4f179d7487c9b46eff9f72766bc2bc4]:
+- [#C] Missing sticky notes
+- [#C] Dirty dishes in sink
+- [#A] Stinky coffee breath
+
+Hmm, looks like we need to remind Bob to do wash out his mug and take some mints after lunch.  Now what do we need to talk with Alice about?
+
+#+BEGIN_SRC elisp :results list :exports both :cache yes
+  (org-ql-query :select '(org-get-heading :no-tags)
+                :from (current-buffer)
+                :where '(person "Alice"))
+#+END_SRC
+
+#+RESULTS[1f12f437042bbc077a4696d707805c1367f2ca3d]:
+#+BEGIN_EXAMPLE
+
+#+END_EXAMPLE
+
+Nothing?  Oh, right, Alice's entries use the ~:personAlice:~ tag, so we'll also need to also search those kind of entries.  Let's make the predicate do that too:
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-defpred person (name)
+    "Search for entries with the \"person\" property being NAME or having the tag \"personNAME\"."
+    :body (or (property "person" name)
+              (tags (concat "person" name))))
+#+END_SRC
+
+How about now?
+
+#+BEGIN_SRC elisp :results list :exports both :cache yes
+  (org-ql-query :select '(org-get-heading :no-tags)
+                :from (current-buffer)
+                :where '(person "Alice"))
+#+END_SRC
+
+#+RESULTS[1f12f437042bbc077a4696d707805c1367f2ca3d]:
+- [#A] Loud pet parakeet
+- [#C] Missing sticky notes
+- [#C] Dirty dishes in sink
+
+Hmm, I thought we already told her to leave Polly at home.
+
+* Searching for multiple people at once
+
+Oh, wait, this week is shortened due to holidays, so we're having a combined meeting.  How do we search for entries about both of them?  Well, this is the obvious solution:
+
+#+BEGIN_SRC elisp :results list :exports both :cache yes
+  (org-ql-query :select '(org-get-heading :no-tags)
+                :from (current-buffer)
+                :where '(or (person "Alice")
+                            (person "Bob")))
+#+END_SRC
+
+#+RESULTS[4e4c75bde4fbceaadb076a53410c1625d1283e06]:
+- [#A] Loud pet parakeet
+- [#C] Missing sticky notes
+- [#C] Dirty dishes in sink
+- [#A] Stinky coffee breath
+
+And that works fine.  But it seems like a lot to type.  Could we make the =person= predicate accept multiple names instead?
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-defpred person (&rest names)
+    "Search for entries about any of NAMES."
+    :body (cl-loop for name in names
+                   thereis (or (property "person" name)
+                               (tags (concat "person" name)))))
+#+END_SRC
+
+#+BEGIN_SRC elisp :results list :exports both :cache yes
+  (org-ql-query :select '(org-get-heading :no-tags)
+                :from (current-buffer)
+                :where '(person "Alice" "Bob"))
+#+END_SRC
+
+#+RESULTS[4f5971c56616f01d8d3c28a66ef380495ee3e158]:
+- [#A] Loud pet parakeet
+- [#C] Missing sticky notes
+- [#C] Dirty dishes in sink
+- [#A] Stinky coffee breath
+
+That was easy!
+
+* Normalizing queries to rewrite arguments
+
+Now, all this is well and good if you don't have hundreds of thousands of Org entries in your files.  But what if you do?  All that =concat='ing happening on every entry could add up, and the query might take a few seconds.  What if we could do that stringing-along just once, before running the query?
+
+In fact, we can, using a query normalizer.  Normalizers are =pcase= forms (I /know/) that normalize query expressions before execution.  We can use one to rewrite the query ahead of time.  Watch this:
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-defpred person (&rest names)
+    "Search for entries about any of NAMES."
+    :normalizers ((`(person . ,names)
+                   `(or (tags ,@(cl-loop for name in names
+                                         collect (concat "person" name)))
+                        ,@(cl-loop for name in names
+                                   collect `(property "person" ,name)))))
+    :body (cl-loop for name in names
+                   thereis (or (property "person" name)
+                               (tags (concat "person" name)))))
+#+END_SRC
+
+Now, don't faint from all the backquoting and unquoting--it's just Lisp, nothing to be afraid of!  Let's slow down a moment and see what the normalized query looks like to be sure we're doing it correctly:
+
+#+BEGIN_SRC elisp :results code :exports both :cache yes
+  (org-ql--normalize-query '(person "Alice" "Bob"))
+#+END_SRC
+
+#+RESULTS[ebc46fff31b72359353dda539a26c95b7d650df2]:
+#+BEGIN_SRC elisp
+  (or (tags "personAlice" "personBob")
+      (property "person" "Alice")
+      (property "person" "Bob"))
+#+END_SRC
+
+And, as they say, Bob's your uncle!  Even if he isn't, let's see if it works:
+
+#+BEGIN_SRC elisp :results list :exports both :cache yes
+  (org-ql-query :select '(org-get-heading :no-tags)
+                :from (current-buffer)
+                :where '(person "Alice" "Bob"))
+#+END_SRC
+
+#+RESULTS[4f5971c56616f01d8d3c28a66ef380495ee3e158]:
+-  [#A] Loud pet parakeet
+-  [#C] Missing sticky notes
+-  [#C] Dirty dishes in sink
+-  [#A] Stinky coffee breath
+
+Yep, same result as the non-normalized query.  And look at how much simpler it is to write ~(person "Alice" "Bob")~ than to write ~(or (tags "personAlice" "personBob") (property "person" "Alice") (property "person" "Bob"))~.
+
+* Non-sexp query syntax
+
+But wait, that's not all!  If you order now, we'll throw in non-sexp query syntax for free!  That's right, your search could be as simple as typing ~person:Alice,Bob~!
+
+#+BEGIN_SRC elisp :results none :exports code
+  (org-ql-search (current-buffer) "person:Alice,Bob")
+#+END_SRC
+
+Don't believe me?  Well, you see, queries in this syntax are automatically converted to the sexp syntax, like:
+
+#+BEGIN_SRC elisp :results code :exports both :cache yes
+  (org-ql--query-string-to-sexp "person:Alice,Bob")
+#+END_SRC
+
+#+RESULTS[a60655544956644605c23c152570185c329faa87]:
+#+BEGIN_SRC elisp
+  (person "Alice" "Bob")
+#+END_SRC
+
+But that happens automatically when you use a search command like =org-ql-search=.  If you have =org-ql= installed already, you could even click this link:  [[org-ql-search:person:Alice,Bob][Alice or Bob]].  Which, in Org syntax, looks like:
+
+#+BEGIN_SRC org
+  [[org-ql-search:person:Alice,Bob]]
+#+END_SRC
+
+And that would open an Agenda Mode buffer that looks like this:
+
+#+BEGIN_EXAMPLE
+  Query: (person "Alice" "Bob")  In:meetings.org
+    [#A] Loud pet parakeet                                           :personAlice:
+    [#C] Missing sticky notes                                        :personAlice:
+    [#C] Dirty dishes in sink                                        :personAlice:
+    [#A] Stinky coffee breath 
+#+END_EXAMPLE
+
+* Using multiple predicates
+
+Oops, you forgot that there's a birthday party in 20 minutes, so you only have time to talk about the highest priority items at this joint meeting today.
+
+No problem, let's just select high-priority items:
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-search (current-buffer) "person:Alice,Bob priority:A")
+#+END_SRC
+
+#+BEGIN_EXAMPLE
+  Query: (and (person "Alice" "Bob") (priority "A"))  In:meetings.org
+    [#A] Loud pet parakeet                                           :personAlice:
+    [#A] Stinky coffee breath 
+#+END_EXAMPLE
+
+* Predicate aliases
+
+And, you know what, if you're just so busy that you don't even have time to type the word =person=, you can add an abbreviated alias, =p=, like this:
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-defpred (person p) (&rest names)
+    "Search for entries about any of NAMES."
+    :normalizers ((`(,predicate-names . ,names)
+                   `(or (tags ,@(cl-loop for name in names
+                                         collect (concat "person" name)))
+                        ,@(cl-loop for name in names
+                                   collect `(property "person" ,name)))))
+    :body (cl-loop for name in names
+                   thereis (or (property "person" name)
+                               (tags (concat "person" name)))))
+#+END_SRC
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-search (current-buffer) "p:Alice,Bob priority:A")
+#+END_SRC
+
+#+BEGIN_EXAMPLE
+  Query: (and (person "Alice" "Bob") (priority "A"))  In:meetings.org
+    [#A] Loud pet parakeet                                           :personAlice:
+    [#A] Stinky coffee breath 
+#+END_EXAMPLE
+
+(It's up to you to remember whether =p= means =person= or =priority=, but code can't solve everything.)
+
+* Appendix: Anaphoric macros
+
+Finally, if you're a Lisper who appreciates anaphora, you might prefer a more syntactically concise definition of the predicate using Dash macros:
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-defpred (person p) (&rest names)
+    "Search for entries about any of NAMES."
+    :normalizers ((`(,predicate-names . ,names)
+                   `(or (tags ,@(--map `(concat "person" ,it) names))
+                        ,@(--map `(property "person" ,it) names))))
+    :body (--any (or (property "person" name)
+                     (tags (concat "person" name)))
+                 names))
+#+END_SRC
+
+Let's make sure it works:
+
+#+BEGIN_SRC elisp :results list :exports both :cache yes
+  (org-ql-query :select '(org-get-heading :no-tags)
+                :from (current-buffer)
+                :where '(person "Alice" "Bob"))
+#+END_SRC
+
+#+RESULTS[4f5971c56616f01d8d3c28a66ef380495ee3e158]:
+- [#A] Loud pet parakeet
+- [#C] Missing sticky notes
+- [#C] Dirty dishes in sink
+- [#A] Stinky coffee breath
+
+Have fun making custom search predicates!
+
+* Example data
+:PROPERTIES:
+:TOC:      :ignore (this descendants)
+:END:
+
+** [#A] Loud pet parakeet                                      :personAlice:
+
+** [#C] Missing sticky notes                                   :personAlice:
+:PROPERTIES:
+:person:   Bob
+:END:
+
+** [#C] Dirty dishes in sink                                   :personAlice:
+:PROPERTIES:
+:person:   Bob
+:END:
+
+** [#A] Stinky coffee breath
+:PROPERTIES:
+:person:   Bob
+:END:
+
