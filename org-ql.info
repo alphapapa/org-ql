@@ -28,6 +28,8 @@ org-ql
 Installation
 
 * Quelpa::
+* Helm support::
+
 
 
 Usage
@@ -100,7 +102,8 @@ syntax styles: Lisp-like sexps and search engine-like keywords.
 
    It includes three libraries: The org-ql library is flexible and may
 be used as a backend for other tools.  The libraries org-ql-search and
-helm-org-ql provide interactive search commands and saved views.
+helm-org-ql (a separate package) provide interactive search commands and
+saved views.
 
 
 File: README.info,  Node: Contents,  Next: Screenshots,  Prev: Top,  Up: Top
@@ -121,24 +124,21 @@ File: README.info,  Node: Installation,  Next: Usage,  Prev: Screenshots,  Up: T
 3 Installation
 **************
 
-The package may be installed directly from MELPA
+The package org-ql may be installed directly from MELPA
 (https://melpa.org/#/org-ql) or with other tools like Quelpa
 (https://framagit.org/steckerhalter/quelpa).
 
    After installation, you can use the commands without additional
-configuration.  _Note: The command helm-org-ql only works if the package
-helm-org is installed; Helm is not a dependency of this package, so it’s
-not automatically installed._
-
-   To use the functions and macros in your own Elisp code, use libraries
-org-ql and org-ql-view.
+configuration.  To use the functions and macros in your own Elisp code,
+use libraries org-ql and org-ql-view.
 
 * Menu:
 
 * Quelpa::
+* Helm support::
 
 
-File: README.info,  Node: Quelpa,  Up: Installation
+File: README.info,  Node: Quelpa,  Next: Helm support,  Up: Installation
 
 3.1 Quelpa
 ==========
@@ -152,7 +152,21 @@ easy:
   2. Add this form to your init file:
 
      (use-package org-ql
-       :quelpa (org-ql :fetcher github :repo "alphapapa/org-ql"))
+       :quelpa (org-ql :fetcher github :repo "alphapapa/org-ql"
+                 :files (:defaults (:exclude "helm-org-ql.el"))))
+
+
+File: README.info,  Node: Helm support,  Prev: Quelpa,  Up: Installation
+
+3.2 Helm support
+================
+
+The command helm-org-ql is available in the package helm-org-ql.  It may
+be installed from MELPA, or with Quelpa, like so:
+
+     (use-package helm-org-ql
+       :quelpa (helm-org-ql :fetcher github :repo "alphapapa/org-ql"
+                            :files ("helm-org-ql.el")))
 
 
 File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
@@ -250,11 +264,10 @@ File: README.info,  Node: helm-org-ql,  Next: org-ql-view,  Prev: org-ql-search,
 4.1.2 helm-org-ql
 -----------------
 
-_Note: This command uses ._
+_Note: This command uses .  It is available separately in the package
+helm-org-ql._
 
-   This command displays matches with Helm.  *Note:* Helm is not a
-package dependency, so this command only works if the package helm-org
-is installed.
+   This command displays matches with Helm.
 
    • Press C-x C-s in the Helm session to save the results to an
      org-ql-search buffer.
@@ -950,6 +963,10 @@ File: README.info,  Node: 06-pre,  Next: 05,  Up: Changelog
    • Macro org-ql-defpred, used to define search predicates.  (See
      tutorial (examples/defpred.org).)
 
+   *Changed*
+   • Helm support (including the command helm-org-ql) has been moved to
+     a separate package, helm-org-ql.
+
    *Internal*
    • Predicates are now defined more cleanly with a macro
      (org-ql-defpred) that consolidates functionality related to each
@@ -1443,55 +1460,56 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1628
-Node: Screenshots1751
-Node: Installation1869
-Node: Quelpa2507
-Node: Usage2950
-Node: Commands3348
-Node: org-ql-search3821
-Node: helm-org-ql5471
-Node: org-ql-view5883
-Node: org-ql-view-sidebar6383
-Node: org-ql-view-recent-items6739
-Node: org-ql-sparse-tree7223
-Node: Queries8023
-Node: Non-sexp query syntax9134
-Node: General predicates10841
-Node: Ancestor/descendant predicates16254
-Node: Date/time predicates17382
-Node: Functions / Macros20037
-Node: Agenda-like views20335
-Node: Listing / acting-on results21740
-Node: Custom predicates27362
-Node: Dynamic block30853
-Node: Links33551
-Node: Tips34238
-Node: Changelog34556
-Node: 06-pre35252
-Node: 0535692
-Node: 04937169
-Node: 04837443
-Node: 04737790
-Node: 04638185
-Node: 04538585
-Node: 04438944
-Node: 04339301
-Node: 04239496
-Node: 04139657
-Node: 0439898
-Node: 03243831
-Node: 03144210
-Node: 0344407
-Node: 02347382
-Node: 02247610
-Node: 02147878
-Node: 0248077
-Node: 0152112
-Node: Notes52213
-Node: Comparison with Org Agenda searches52375
-Node: org-sidebar53247
-Node: License53526
+Node: Contents1667
+Node: Screenshots1790
+Node: Installation1908
+Node: Quelpa2404
+Node: Helm support2932
+Node: Usage3323
+Node: Commands3721
+Node: org-ql-search4194
+Node: helm-org-ql5844
+Node: org-ql-view6204
+Node: org-ql-view-sidebar6704
+Node: org-ql-view-recent-items7060
+Node: org-ql-sparse-tree7544
+Node: Queries8344
+Node: Non-sexp query syntax9455
+Node: General predicates11162
+Node: Ancestor/descendant predicates16575
+Node: Date/time predicates17703
+Node: Functions / Macros20358
+Node: Agenda-like views20656
+Node: Listing / acting-on results22061
+Node: Custom predicates27683
+Node: Dynamic block31174
+Node: Links33872
+Node: Tips34559
+Node: Changelog34877
+Node: 06-pre35573
+Node: 0536139
+Node: 04937616
+Node: 04837890
+Node: 04738237
+Node: 04638632
+Node: 04539032
+Node: 04439391
+Node: 04339748
+Node: 04239943
+Node: 04140104
+Node: 0440345
+Node: 03244278
+Node: 03144657
+Node: 0344854
+Node: 02347829
+Node: 02248057
+Node: 02148325
+Node: 0248524
+Node: 0152559
+Node: Notes52660
+Node: Comparison with Org Agenda searches52822
+Node: org-sidebar53694
+Node: License53973
 
 End Tag Table
 

@@ -9,7 +9,7 @@
 
 This package provides a query language for Org files.  It offers two syntax styles: Lisp-like sexps and search engine-like keywords.
 
-It includes three libraries: The =org-ql= library is flexible and may be used as a backend for other tools.  The libraries =org-ql-search= and =helm-org-ql= provide interactive search commands and saved views.
+It includes three libraries: The =org-ql= library is flexible and may be used as a backend for other tools.  The libraries =org-ql-search= and =helm-org-ql= (a separate package) provide interactive search commands and saved views.
 
 * Contents
 :PROPERTIES:
@@ -38,11 +38,9 @@ It includes three libraries: The =org-ql= library is flexible and may be used as
 :TOC:      ignore-children
 :END:
 
-The package may be installed directly from [[https://melpa.org/#/org-ql][MELPA]] or with other tools like [[https://framagit.org/steckerhalter/quelpa][Quelpa]].
+The package =org-ql= may be installed directly from [[https://melpa.org/#/org-ql][MELPA]] or with other tools like [[https://framagit.org/steckerhalter/quelpa][Quelpa]].
 
-After installation, you can use the commands without additional configuration.  /Note: The command =helm-org-ql= only works if the package =helm-org= is installed; Helm is not a dependency of this package, so it's not automatically installed./
-
-To use the functions and macros in your own Elisp code, use libraries =org-ql= and =org-ql-view=.
+After installation, you can use the commands without additional configuration.  To use the functions and macros in your own Elisp code, use libraries =org-ql= and =org-ql-view=.
 
 ** Quelpa
 
@@ -53,7 +51,18 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
 #+BEGIN_SRC elisp
   (use-package org-ql
-    :quelpa (org-ql :fetcher github :repo "alphapapa/org-ql"))
+    :quelpa (org-ql :fetcher github :repo "alphapapa/org-ql"
+              :files (:defaults (:exclude "helm-org-ql.el"))))
+#+END_SRC
+
+** Helm support
+
+The command =helm-org-ql= is available in the package =helm-org-ql=.  It may be installed from MELPA, or with Quelpa, like so:
+
+#+BEGIN_SRC elisp
+  (use-package helm-org-ql
+    :quelpa (helm-org-ql :fetcher github :repo "alphapapa/org-ql"
+                         :files ("helm-org-ql.el")))
 #+END_SRC
 
 * Usage
@@ -123,9 +132,9 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 
 *** helm-org-ql
 
-/Note: This command uses [[#non-sexp-query-syntax][non-sexp queries]]./
+/Note: This command uses [[#non-sexp-query-syntax][non-sexp queries]].  It is available separately in the package =helm-org-ql=./
 
-This command displays matches with Helm.  *Note:* Helm is not a package dependency, so this command only works if the package =helm-org= is installed.
+This command displays matches with Helm.
 
 +  Press =C-x C-s= in the Helm session to save the results to an =org-ql-search= buffer.
 
@@ -509,6 +518,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Added*
 +  Macro =org-ql-defpred=, used to define search predicates.  (See [[file:examples/defpred.org][tutorial]].)
+
+*Changed*
++  Helm support (including the command =helm-org-ql=) has been moved to a separate package, =helm-org-ql=.
 
 *Internal*
 +  Predicates are now defined more cleanly with a macro (=org-ql-defpred=) that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.
