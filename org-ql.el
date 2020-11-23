@@ -990,7 +990,8 @@ It would be expanded to:
     `(progn
        (cl-eval-when (compile load eval)
          (cl-defun ,fn-name ,args ,docstring ,body))
-       (setf (map-elt org-ql-predicates ',predicate-name)
+       ;; SOMEDAY: Use `map-elt' here, after map 2.1 can be automatically installed in CI sandbox...
+       (setf (alist-get ',predicate-name org-ql-predicates)
              `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
                      :normalizers ,',normalizers :preambles ,',preambles))
        (unless org-ql-defpred-defer
