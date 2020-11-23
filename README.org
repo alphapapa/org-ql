@@ -1,4 +1,7 @@
 #+TITLE: org-ql
+#+OPTIONS: author:nil creator:nil created:nil date:nil num:nil title:t broken-links:mark d:nil
+#+SETUPFILE: export/setup/theme-darksun-local.setup
+#+EXPORT_FILE_NAME: worktree/meta/web/index.html
 
 # NOTE: Using =BEGIN_HTML= for this causes TeX/info export to fail, but this HTML block works.
 # #+HTML: <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
@@ -11,7 +14,7 @@ This package provides a query language for Org files.  It offers two syntax styl
 
 It includes three libraries: The =org-ql= library is flexible and may be used as a backend for other tools.  The libraries =org-ql-search= and =helm-org-ql= (a separate package) provide interactive search commands and saved views.
 
-* Contents
+* Contents                                                         :noexport:
 :PROPERTIES:
 :TOC:      :include siblings :depth 0 :ignore this :force depth
 :END:
@@ -25,13 +28,13 @@ It includes three libraries: The =org-ql= library is flexible and may be used as
 
 * Screenshots
 
-[[images/org-ql-search.gif]]
+[[file:images/org-ql-search.gif]]
 
-[[images/org-ql-view-dispatch.gif]]
+[[file:images/org-ql-view-dispatch.gif]]
 
-[[images/helm-org-ql.gif]]
+[[file:images/helm-org-ql.gif]]
 
-[[images/org-ql-view-sidebar.gif]]
+[[file:images/org-ql-view-sidebar.gif]]
 
 * Installation
 :PROPERTIES:
@@ -87,7 +90,7 @@ The command =helm-org-ql= is available in the package =helm-org-ql=.  It may be 
 Feedback on these APIs is welcome.  Eventually, after being tested and polished, they will be considered stable. 
 
 # TODO: Find a way to get these examples included in the info manual.
-Lisp code examples are in [[examples.org]].
+Lisp code examples are in [[file:examples.org][examples.org]]
 
 ** Commands
 :PROPERTIES:
@@ -95,14 +98,14 @@ Lisp code examples are in [[examples.org]].
 :END:
 
 +  *Showing an agenda-like view:*
-     -  [[#org-ql-search][org-ql-search]] (command)
-     -  [[#org-ql-view][org-ql-view]] (command)
-     -  [[#org-ql-view-sidebar][org-ql-view-sidebar]] (command)
-     -  [[#org-ql-view-recent-items][org-ql-view-recent-items]] (command)
+     -  [[org-ql-search][org-ql-search]] (command)
+     -  [[*org-ql-view][org-ql-view]] (command)
+     -  [[*org-ql-view-sidebar][org-ql-view-sidebar]] (command)
+     -  [[*org-ql-view-recent-items][org-ql-view-recent-items]] (command)
 +  *Showing a tree in a buffer:*
-     -  [[#org-ql-sparse-tree][org-ql-sparse-tree]] (command)
+     -  [[*org-ql-sparse-tree][org-ql-sparse-tree]] (command)
 +  *Showing results with Helm*:
-     -  [[#helm-org-ql][helm-org-ql]] (command)
+     -  [[*helm-org-ql][helm-org-ql]] (command)
 
 *** org-ql-search
 

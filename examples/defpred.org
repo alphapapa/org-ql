@@ -1,6 +1,7 @@
 #+TITLE: Org QL Custom Predicates Tutorial
 #+OPTIONS: author:nil creator:nil created:nil date:nil num:nil title:t broken-links:t
-#+SETUPFILE: export/setup/theme-darksun-local.setup
+#+SETUPFILE: ../export/setup/theme-darksun-local.setup
+#+EXPORT_FILE_NAME: ../worktree/meta/web/defpred.html
 
 [2020-11-22 Sun 22:35]  Imagine you have weekly meetings with other people, and during the week you take notes about items to discuss at each meeting.  When the time for a meeting comes, you want to quickly and easily search for all of the items to discuss at the meeting.
 
