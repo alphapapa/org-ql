@@ -305,9 +305,9 @@ The variable =org-ql-block-header= may be bound to a string to use as the block 
 
 **** Caching
 
-Org QL uses a per-buffer cache to speed up subsequent searches.  It's keyed on query expressions, which means that, for the same query in the same buffer, if the buffer has not been modified since the last time the query was run, the cached result will be returned, and the query will not be evaluated in that buffer again.
+Org QL uses a per-buffer cache to speed up subsequent searches.  It's keyed on query expressions and match actions, which means that, for the same query and same match action in the same buffer, if the buffer has not been modified since the last time the query was run, the cached match-action result will be returned, and the query will not be evaluated in that buffer again.
 
-Therefore, since query expressions are not guaranteed to be evaluated when these functions are called, they should be free of side effects.  Any side effects should be done in the action expression instead.
+Therefore, since neither query expressions nor match actions are guaranteed to be evaluated when the following functions are called, they should be free of side effects.  Or, if a side effect is required, the cache should be invalidated (e.g. by incrementing the buffer's modified tick, or by using a query expression or match action that has yet to be cached).  /Note: Future improvements will allow the cache to be more easily disabled or cleared./
 
 **** Function: ~org-ql-select~
 

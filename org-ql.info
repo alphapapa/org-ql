@@ -617,15 +617,19 @@ File: README.info,  Node: Listing / acting-on results,  Next: Custom predicates,
   1. Caching
 
      Org QL uses a per-buffer cache to speed up subsequent searches.
-     It’s keyed on query expressions, which means that, for the same
-     query in the same buffer, if the buffer has not been modified since
-     the last time the query was run, the cached result will be
-     returned, and the query will not be evaluated in that buffer again.
+     It’s keyed on query expressions and match actions, which means
+     that, for the same query and same match action in the same buffer,
+     if the buffer has not been modified since the last time the query
+     was run, the cached match-action result will be returned, and the
+     query will not be evaluated in that buffer again.
 
-     Therefore, since query expressions are not guaranteed to be
-     evaluated when these functions are called, they should be free of
-     side effects.  Any side effects should be done in the action
-     expression instead.
+     Therefore, since neither query expressions nor match actions are
+     guaranteed to be evaluated when the following functions are called,
+     they should be free of side effects.  Or, if a side effect is
+     required, the cache should be invalidated (e.g.  by incrementing
+     the buffer’s modified tick, or by using a query expression or match
+     action that has yet to be cached).  _Note: Future improvements will
+     allow the cache to be more easily disabled or cleared._
 
   2. Function: ‘org-ql-select’
 
@@ -1457,35 +1461,35 @@ Node: Date/time predicates17382
 Node: Functions / Macros20037
 Node: Agenda-like views20335
 Node: Listing / acting-on results21740
-Node: Custom predicates26961
-Node: Dynamic block30452
-Node: Links33150
-Node: Tips33837
-Node: Changelog34155
-Node: 06-pre34851
-Node: 0535291
-Node: 04936768
-Node: 04837042
-Node: 04737389
-Node: 04637784
-Node: 04538184
-Node: 04438543
-Node: 04338900
-Node: 04239095
-Node: 04139256
-Node: 0439497
-Node: 03243430
-Node: 03143809
-Node: 0344006
-Node: 02346981
-Node: 02247209
-Node: 02147477
-Node: 0247676
-Node: 0151711
-Node: Notes51812
-Node: Comparison with Org Agenda searches51974
-Node: org-sidebar52846
-Node: License53125
+Node: Custom predicates27281
+Node: Dynamic block30772
+Node: Links33470
+Node: Tips34157
+Node: Changelog34475
+Node: 06-pre35171
+Node: 0535611
+Node: 04937088
+Node: 04837362
+Node: 04737709
+Node: 04638104
+Node: 04538504
+Node: 04438863
+Node: 04339220
+Node: 04239415
+Node: 04139576
+Node: 0439817
+Node: 03243750
+Node: 03144129
+Node: 0344326
+Node: 02347301
+Node: 02247529
+Node: 02147797
+Node: 0247996
+Node: 0152031
+Node: Notes52132
+Node: Comparison with Org Agenda searches52294
+Node: org-sidebar53166
+Node: License53445
 
 End Tag Table
 
