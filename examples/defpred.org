@@ -204,7 +204,7 @@ But wait, that's not all!  If you order now, we'll throw in non-sexp query synta
   (org-ql-search (current-buffer) "person:Alice,Bob")
 #+END_SRC
 
-Don't believe me?  Well, you see, queries in this syntax are automatically converted to the sexp syntax, like:
+Don't believe me?  Well, you see, queries in this syntax are converted to the sexp syntax, like:
 
 #+BEGIN_SRC elisp :results code :exports both :cache yes
   (org-ql--query-string-to-sexp "person:Alice,Bob")
@@ -215,7 +215,7 @@ Don't believe me?  Well, you see, queries in this syntax are automatically conve
   (person "Alice" "Bob")
 #+END_SRC
 
-But that happens automatically when you use a search command like =org-ql-search=.  If you have =org-ql= installed already, you could even click this link:  [[org-ql-search:person:Alice,Bob][Alice or Bob]].  Which, in Org syntax, looks like:
+And that happens automatically when you use a search command like =org-ql-search=.  If you have =org-ql= installed already, you could even click this link:  [[org-ql-search:person:Alice,Bob][Alice or Bob]].  Which, in Org syntax, looks like:
 
 #+BEGIN_SRC org
   [[org-ql-search:person:Alice,Bob]]
@@ -286,8 +286,8 @@ Finally, if you're a Lisper who appreciates anaphora, you might prefer a more sy
     :normalizers ((`(,predicate-names . ,names)
                    `(or (tags ,@(--map `(concat "person" ,it) names))
                         ,@(--map `(property "person" ,it) names))))
-    :body (--any (or (property "person" name)
-                     (tags (concat "person" name)))
+    :body (--any (or (property "person" it)
+                     (tags (concat "person" it)))
                  names))
 #+END_SRC
 
