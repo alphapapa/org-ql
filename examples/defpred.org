@@ -164,7 +164,7 @@ Can we do that?  In fact, we can, by using a query normalizer.  Normalizers are 
                                    collect `(property "person" ,name)))))
     :body (cl-loop for name in names
                    thereis (or (property "person" name)
-                               (tags (concat "person" name)))))
+                               (tags name))))
 #+END_SRC
 
 Now, don't faint from all the backquoting and unquoting--it's just Lisp, nothing to be afraid of!  Let's slow down a moment and see what the normalized query looks like to be sure we're doing it correctly:
