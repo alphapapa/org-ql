@@ -3,7 +3,7 @@
 # * makem.sh --- Script to aid building and testing Emacs Lisp packages
 
 # URL: https://github.com/alphapapa/makem.sh
-# Version: 0.2
+# Version: 0.2.1
 
 # * Commentary:
 
@@ -422,8 +422,9 @@ function package-main-file {
 function dependencies {
     # Echo list of package dependencies.
 
-    # Search package headers.
-    egrep -i '^;; Package-Requires: ' $(files-project-feature) $(files-project-test) \
+    # Search package headers.  Use -a so grep won't think that an Elisp file containing
+    # control characters (rare, but sometimes necessary) is binary and refuse to search it.
+    egrep -a -i '^;; Package-Requires: ' $(files-project-feature) $(files-project-test) \
         | egrep -o '\([^([:space:]][^)]*\)' \
         | egrep -o '^[^[:space:])]+' \
         | sed -r 's/\(//g' \
