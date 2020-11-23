@@ -3,7 +3,7 @@
 
 [2020-11-22 Sun 22:35]  Imagine you have weekly meetings with other people, and during the week you take notes about items to discuss at each meeting.  When the time for a meeting comes, you want to quickly and easily search for all of the items to discuss at the meeting.
 
-You've been experimenting with different ways to track such data in Org.  You've tried using tags, but some of the names in question conflict with other tags in your data (e.g. someone's named Charles, but you also work with a firm named Charles, Inc., and you'd prefer to continue using the tag =Charles= for entries about that firm), so you've been using tags like ~:personNAME:~, which seems awkward.  You've tried using a ~:person: NAME~ property on entries, which has the advantage of not cluttering the tags list, but also the disadvantage of not being readily visible in an outline.  
+You've been experimenting with different ways to track such data in Org.  You've tried using tags, but some of the names in question conflict with other tags in your data (e.g. someone's named Charles, but you also work with a firm named Charles, Inc., and you'd prefer to continue using the tag =Charles= for entries about that firm), so you've been using tags like ~:personNAME:~, which seems awkward.  You've tried using a ~:person: NAME~ property on entries, which has the advantage of not cluttering the tags list, but also the disadvantage of not being readily visible in an outline.
 
 So you haven't decided on a long-term solution, but the meetings aren't going to wait--you need to search that data now, and you have a mix of both tags and properties in your entries.  What you need is to be able to search for all of the entries about Alice (which you've tagged ~:personAlice:~) when you're meeting with her, and all of the entries about Bob (which have the property ~:person: Bob~) when you're meeting with him  What do you do?
 
@@ -51,7 +51,7 @@ Enter =org-ql= custom search predicates.  Let's start simple, by defining a pred
     :body (property "person" name))
 #+END_SRC
 
-Now let's see what results we get for searching this file for entries about Bob:
+Now, let's see what results we get for searching this file for entries about Bob:
 
 #+BEGIN_SRC elisp :results list :exports both :cache yes
   (org-ql-query :select '(org-get-heading :no-tags)
@@ -77,7 +77,7 @@ Hmm, looks like we need to remind Bob to wash his mug and take some mints after 
 
 #+END_EXAMPLE
 
-Nothing?  Oh, right, Alice's entries use the ~:personAlice:~ tag, so we'll also need to also search those kind of entries.  Let's make the predicate do that too:
+Nothing?  Oh, right, Alice's entries use the ~:personAlice:~ tag, so we'll also need to search those kind of entries.  Let's make the predicate do that, too:
 
 #+BEGIN_SRC elisp :results silent :exports code
   (org-ql-defpred person (name)
