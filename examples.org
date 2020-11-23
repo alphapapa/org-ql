@@ -5,6 +5,7 @@
 :TOC:      :include siblings :ignore this
 :END:
 :CONTENTS:
+- [[#custom-predicates][Custom predicates]]
 - [[#agenda-like-view][Agenda-like view]]
 - [[#entries-from-the-past-week][Entries from the past week]]
 - [[#find-entries-matching-a-certain-custom_id][Find entries matching a certain CUSTOM_ID]]
@@ -17,6 +18,10 @@
 - [[#subproject-and-subtask-queries][Subproject and subtask queries]]
 - [[#task-list-for-files-in-subdirectories][Task list for files in subdirectories]]
 :END:
+
+* Custom predicates
+
++ [[file:examples/defpred.org][Custom predicate tutorial]]
 
 * Agenda-like view
 

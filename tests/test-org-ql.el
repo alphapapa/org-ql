@@ -50,7 +50,7 @@ Set at runtime by test suite.")
                               ('org-ql 'org-ql)
                               ('org-ql-expect t)
                               ('org-ql--query-preamble 'query-preamble)
-                              ('org-ql--pre-process-query t)
+                              ('org-ql--normalize-query t)
                               (_ nil)))
             (result (pcase sexp
                       (`(org-ql-expect ,args)
@@ -63,7 +63,7 @@ Set at runtime by test suite.")
                                                           :action (org-ql-test-org-get-heading))))
                       (`(org-ql-select . _) (org-ql-test--format-result--ql sexp))
                       (`(org-ql--query-preamble  . _) (org-ql-test--format-result--query-preamble sexp))
-                      (`(org-ql--pre-process-query . _) (format "'%S" (eval sexp)))
+                      (`(org-ql--normalize-query . _) (format "'%S" (eval sexp)))
                       (_ nil))))
       (progn
         (backward-char 1)
@@ -222,60 +222,74 @@ RESULTS should be a list of strings as returned by
 
     (describe "(level)"
       (it "with one level"
-        (expect (org-ql--pre-process-query '(level "1"))
+        (expect (org-ql--normalize-query '(level "1"))
                 :to-equal '(level 1)))
       (it "with two levels"
-        (expect (org-ql--pre-process-query '(level "1" "2"))
+        (expect (org-ql--normalize-query '(level "1" "2"))
                 :to-equal '(level 1 2)))
       (it "with a comparator and a level"
-        (expect (org-ql--pre-process-query '(level ">" "1"))
+        (expect (org-ql--normalize-query '(level ">" "1"))
                 :to-equal '(level > 1))))
 
     (describe "(link)"
       (it "with one argument"
-        (expect (org-ql--pre-process-query '(link "DESC-OR-TARGET"))
+        (expect (org-ql--normalize-query '(link "DESC-OR-TARGET"))
                 :to-equal '(link "DESC-OR-TARGET")))
       (it "with one argument and :regexp-p"
-        (expect (org-ql--pre-process-query '(link "DESC-OR-TARGET" :regexp-p t))
+        (expect (org-ql--normalize-query '(link "DESC-OR-TARGET" :regexp-p t))
                 :to-equal '(link "DESC-OR-TARGET" :regexp-p t)))
       (it "with keyword arguments"
-        (expect (org-ql--pre-process-query '(link :description "DESCRIPTION" :target "TARGET"
-                                                  :regexp-p t))
+        (expect (org-ql--normalize-query '(link :description "DESCRIPTION" :target "TARGET"
+                                                :regexp-p t))
                 :to-equal '(link :description "DESCRIPTION" :target "TARGET"
                                  :regexp-p t))))
 
-    (expect (org-ql--pre-process-query '(and "string1" "string2"))
+    (expect (org-ql--normalize-query '(and "string1" "string2"))
             :to-equal '(and (regexp "string1") (regexp "string2")))
-    (expect (org-ql--pre-process-query '(or "string1" "string2"))
+    (expect (org-ql--normalize-query '(or "string1" "string2"))
             :to-equal '(or (regexp "string1") (regexp "string2")))
-    (expect (org-ql--pre-process-query '(and (todo "TODO")
-                                             (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(and (todo "TODO")
+                                           (or "string1" "string2")))
             :to-equal '(and (todo "TODO") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--pre-process-query '(when (todo "TODO")
-                                          (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(when (todo "TODO")
+                                        (or "string1" "string2")))
             :to-equal '(when (todo "TODO") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--pre-process-query '(when "string-cond1"
-                                          (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(when "string-cond1"
+                                        (or "string1" "string2")))
             :to-equal '(when (regexp "string-cond1") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--pre-process-query '(when (and "string-cond1" "string-cond2")
-                                          (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(when (and "string-cond1" "string-cond2")
+                                        (or "string1" "string2")))
             :to-equal '(when (and (regexp "string-cond1") (regexp "string-cond2")) (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--pre-process-query '(unless (and "stringcondition1" "stringcond2")
-                                          (or "string1" "string2")))
+    (expect (org-ql--normalize-query '(unless (and "stringcondition1" "stringcond2")
+                                        (or "string1" "string2")))
             :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2"))))
 
-    (expect (org-ql--pre-process-query '(or (ts-active :on "2019-01-01")
-                                            (ts-a :on "2019-01-01")
-                                            (ts-inactive :on "2019-01-01")
-                                            (ts-i :on "2019-01-01")))
+    (expect (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
+                                          (ts-a :on "2019-01-01")
+                                          (ts-inactive :on "2019-01-01")
+                                          (ts-i :on "2019-01-01")))
             :to-equal '(or (ts :type active :on "2019-01-01")
                            (ts :type active :on "2019-01-01")
                            (ts :type inactive :on "2019-01-01")
                            (ts :type inactive :on "2019-01-01"))))
 
-  (describe "Query optimizing"
+  (describe "Query preambles"
 
     ;; TODO: Other predicates.
+
+    (describe "(clocked)"
+      (it "without arguments"
+        (expect (org-ql--query-preamble '(clocked))
+                :to-equal (list :query t
+                                :preamble org-ql-clock-regexp
+                                :preamble-case-fold nil)))
+      (it "with a number of days"
+        (expect (org-ql--query-preamble '(clocked 1))
+                :to-equal (list :query t
+                                :preamble org-ql-clock-regexp
+                                :preamble-case-fold nil)))
+      ;; TODO: Other arguments for (clocked).
+      )
 
     (describe "(level)"
       (it "with a number"
@@ -314,60 +328,60 @@ RESULTS should be a list of strings as returned by
     ;; TODO: Other predicates.
 
     (it "Negated terms"
-      (expect (org-ql--plain-query "todo: !todo:CHECK,SOMEDAY")
+      (expect (org-ql--query-string-to-sexp "todo: !todo:CHECK,SOMEDAY")
               :to-equal '(and (todo) (not (todo "CHECK" "SOMEDAY"))))
-      (expect (org-ql--plain-query "!todo:CHECK,SOMEDAY todo:")
+      (expect (org-ql--query-string-to-sexp "!todo:CHECK,SOMEDAY todo:")
               :to-equal '(and (not (todo "CHECK" "SOMEDAY")) (todo)))
-      (expect (org-ql--plain-query "tags:universe !moon")
+      (expect (org-ql--query-string-to-sexp "tags:universe !moon")
               :to-equal '(and (tags "universe") (not (regexp "moon"))))
-      (expect (org-ql--plain-query "!moon tags:universe")
+      (expect (org-ql--query-string-to-sexp "!moon tags:universe")
               :to-equal '(and (not (regexp "moon")) (tags "universe")))
-      (expect (org-ql--plain-query "mars !ts:on=today")
+      (expect (org-ql--query-string-to-sexp "mars !ts:on=today")
               :to-equal '(and (regexp "mars") (not (ts :on "today"))))
-      (expect (org-ql--plain-query "!\"quoted phrase\"")
+      (expect (org-ql--query-string-to-sexp "!\"quoted phrase\"")
               :to-equal '(not (regexp "quoted phrase"))))
     (it "Regexp predicates"
-      (expect (org-ql--plain-query "scheduled")
+      (expect (org-ql--query-string-to-sexp "scheduled")
               ;; No colon after keyword, so not a predicate query.
               :to-equal '(regexp "scheduled"))
-      (expect (org-ql--plain-query "\"quoted phrase\"")
+      (expect (org-ql--query-string-to-sexp "\"quoted phrase\"")
               :to-equal '(regexp "quoted phrase"))
-      (expect (org-ql--plain-query "regexp:word")
+      (expect (org-ql--query-string-to-sexp "regexp:word")
               :to-equal '(regexp "word"))
-      (expect (org-ql--plain-query "regexp:\"quoted phrase\"")
+      (expect (org-ql--query-string-to-sexp "regexp:\"quoted phrase\"")
               :to-equal '(regexp "quoted phrase")))
     (it "Timestamp-based predicates"
-      (expect (org-ql--plain-query "scheduled:on=2017-07-07")
+      (expect (org-ql--query-string-to-sexp "scheduled:on=2017-07-07")
               :to-equal '(scheduled :on "2017-07-07"))
-      (expect (org-ql--plain-query "deadline:from=2017-07-07,to=2017-07-09")
+      (expect (org-ql--query-string-to-sexp "deadline:from=2017-07-07,to=2017-07-09")
               :to-equal '(deadline :from "2017-07-07" :to "2017-07-09"))
-      (expect (org-ql--plain-query "planning:from=2017-07-07")
+      (expect (org-ql--query-string-to-sexp "planning:from=2017-07-07")
               :to-equal '(planning :from "2017-07-07"))
-      (expect (org-ql--plain-query "closed:from=2017-07-07")
+      (expect (org-ql--query-string-to-sexp "closed:from=2017-07-07")
               :to-equal '(closed :from "2017-07-07"))
-      (expect (org-ql--plain-query "ts-active:to=2017-07-07")
+      (expect (org-ql--query-string-to-sexp "ts-active:to=2017-07-07")
               :to-equal '(ts-active :to "2017-07-07"))
-      (expect (org-ql--plain-query "ts-inactive:to=2017-07-07")
+      (expect (org-ql--query-string-to-sexp "ts-inactive:to=2017-07-07")
               :to-equal '(ts-inactive :to "2017-07-07"))
-      (expect (org-ql--plain-query "ts-a:to=2017-07-07")
+      (expect (org-ql--query-string-to-sexp "ts-a:to=2017-07-07")
               :to-equal '(ts-a :to "2017-07-07"))
-      (expect (org-ql--plain-query "ts-i:on=2017-07-07")
+      (expect (org-ql--query-string-to-sexp "ts-i:on=2017-07-07")
               :to-equal '(ts-i :on "2017-07-07"))
-      (expect (org-ql--plain-query "ts:")
+      (expect (org-ql--query-string-to-sexp "ts:")
               :to-equal '(ts))
-      (expect (org-ql--plain-query "clocked:")
+      (expect (org-ql--query-string-to-sexp "clocked:")
               :to-equal '(clocked)))
     (it "To-do predicates"
-      (expect (org-ql--plain-query "todo:")
+      (expect (org-ql--query-string-to-sexp "todo:")
               :to-equal '(todo))
-      (expect (org-ql--plain-query "todo:TODO")
+      (expect (org-ql--query-string-to-sexp "todo:TODO")
               :to-equal '(todo "TODO"))
-      (expect (org-ql--plain-query "todo:TODO,SOMEDAY")
+      (expect (org-ql--query-string-to-sexp "todo:TODO,SOMEDAY")
               :to-equal '(todo "TODO" "SOMEDAY")))
     (it "Compound queries"
-      (expect (org-ql--plain-query "todo:SOMEDAY ts-a:from=2020-01-01,to=2021-01-01")
+      (expect (org-ql--query-string-to-sexp "todo:SOMEDAY ts-a:from=2020-01-01,to=2021-01-01")
               :to-equal '(and (todo "SOMEDAY") (ts-a :from "2020-01-01" :to "2021-01-01")))
-      (expect (org-ql--plain-query "regexp:\"quoted phrase\" todo:SOMEDAY")
+      (expect (org-ql--query-string-to-sexp "regexp:\"quoted phrase\" todo:SOMEDAY")
               :to-equal '(and (regexp "quoted phrase") (todo "SOMEDAY")))))
 
   (describe "Convert sexp queries to non-sexp queries"
@@ -842,9 +856,9 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ('(scheduled :to today))
             '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
 
-    ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
-    ;; significant hassle.  Manual testing shows that the predicate appears to work properly.
-
+    ;; ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
+    ;; ;; significant hassle.  Manual testing shows that the predicate appears to work properly.
+    ;;
     (describe "(todo)"
 
       (org-ql-it "without arguments"

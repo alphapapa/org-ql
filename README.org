@@ -258,15 +258,19 @@ The following predicates, in addition to the keyword arguments, can also take a 
 
 ** Functions / Macros
 :PROPERTIES:
-:TOC:      ignore-children
+:TOC:     :include descendants
 :END:
-
--  [[#agenda-like-views][Agenda-like views]]
-  -  [[#function-org-ql-block][Function: org-ql-block]]
--  [[#listing--acting-on-results][Listing / acting-on results]]
-  -  [[#function-org-ql-select][Function: org-ql-select]]
-  -  [[#function-org-ql-query][Function: org-ql-query]]
-  -  [[#macro-org-ql][Macro: org-ql]]
+:CONTENTS:
+- [[#agenda-like-views][Agenda-like views]]
+  - [[#function-org-ql-block][Function: org-ql-block]]
+- [[#listing--acting-on-results][Listing / acting-on results]]
+  - [[#caching][Caching]]
+  - [[#function-org-ql-select][Function: org-ql-select]]
+  - [[#function-org-ql-query][Function: org-ql-query]]
+  - [[#macro-org-ql][Macro: org-ql]]
+- [[#custom-predicates][Custom predicates]]
+  - [[#macro-org-ql-defpred][Macro: org-ql-defpred]]
+:END:
 
 *** Agenda-like views
 
@@ -405,6 +409,44 @@ Examples:
 
 Expands into a call to ~org-ql-select~ with the same arguments.  For convenience, arguments should be unquoted.
 
+*** Custom predicates
+
++ See: [[file:examples/defpred.org][Custom predicate tutorial]]
+
+**** Macro: =org-ql-defpred=
+
+/Arguments:/ ~(name args docstring &key body preambles normalizers)~
+
+Define an ~org-ql~ selector predicate named ~org-ql--predicate-NAME~.  ~NAME~ may be a symbol or a list of symbols: if a list, the first is used as ~NAME~ and the rest are aliases.  ~A~ function is only created for ~NAME~, not for aliases, so a normalizer should be used to replace aliases with ~NAME~ in queries (keep reading).
+
+~ARGS~ is a ~cl-defun~-style argument list.  ~DOCSTRING~ is the function's docstring.
+
+~BODY~ is the body of the predicate.  It will be evaluated with point on the beginning of an Org heading and should return non-nil if the heading's entry is a match.
+
+~PREAMBLES~ and ~NORMALIZERS~ are lists of ~pcase~ forms matched against Org ~QL~ query sexps.  They are spliced into ~pcase~ forms in the definitions of the functions ~org-ql--query-preamble~ and ~org-ql--normalize-query~, which see.  Those functions are redefined when this macro is expanded, unless variable ~org-ql-defpred-defer~ is non-nil, in which case those functions should be redefined manually after defining predicates by calling ~org-ql--define-query-preamble-fn~ and ~org-ql--define-normalize-query-fn~.
+
+~NORMALIZERS~ are used to normalize query expressions to standard forms.  For example, when the predicate has aliases, the aliases should be replaced with predicate names using a normalizer.  Also, predicate arguments may be put into a more optimal form so that the predicate has less work to do at query time.
+
+~PREAMBLES~ refer to regular expressions which may be used to search through a buffer directly to a potential match rather than testing the predicate body on each heading.  (Naming things is hard.)  In each ~pcase~ form in ~PREAMBLES~, the ~pcase~ expression (not the pattern) should be a plist with the following keys, each value of which should be an expression which may refer to variables bound in the pattern:
+
+~:regexp~ Regular expression which searches directly to a potential match.
+
+~:case-fold~ Bound to ~case-fold-search~ around the regexp search.
+
+~:query~ Expression which should replace the query expression, or ~query~ if it should not be changed (e.g. if the regexp is insufficient to determine whether a heading matches, in which case the predicate's body needs to be tested on the heading).  If the regexp guarantees a match, this may be simply ~t~, leaving the query expression with no work to do, which improves performance.
+
+For convenience, within the ~pcase~ patterns, the symbol ~predicate-names~ is a special form which is replaced with a pattern matching any of the predicate's name and aliases.  For example, if ~NAME~ were:
+
+~(heading h)~
+
+Then if ~NORMALIZERS~ were:
+
+~((`(,predicate-names . ,args) `(heading ,@args)))~
+
+It would be expanded to:
+
+~((`(,(or 'heading 'h) . ,args) `(heading ,@args)))~
+
 ** Dynamic block
 
 Org QL provides a dynamic block that lists entries in the current document matching a query.  In the header, these parameters are supported:
@@ -463,7 +505,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.6-pre
 
-Nothing new yet.
+*Added*
++  Macro =org-ql-defpred=, used to define search predicates.  (See [[file:examples/defpred.org][tutorial]].)
+
+*Internal*
++  Predicates are now defined more cleanly with a macro (=org-ql-defpred=) that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.
 
 ** 0.5
 

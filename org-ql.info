@@ -63,6 +63,7 @@ Functions / Macros
 
 * Agenda-like views::
 * Listing / acting-on results::
+* Custom predicates::
 
 Changelog
 
@@ -565,11 +566,13 @@ File: README.info,  Node: Functions / Macros,  Next: Dynamic block,  Prev: Queri
 
    • 
         • • 
-        • • • 
+        • • • • • 
+        • 
 * Menu:
 
 * Agenda-like views::
 * Listing / acting-on results::
+* Custom predicates::
 
 
 File: README.info,  Node: Agenda-like views,  Next: Listing / acting-on results,  Up: Functions / Macros
@@ -606,7 +609,7 @@ File: README.info,  Node: Agenda-like views,  Next: Listing / acting-on results,
      the block header, otherwise the header is formed automatically.
 
 
-File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,  Up: Functions / Macros
+File: README.info,  Node: Listing / acting-on results,  Next: Custom predicates,  Prev: Agenda-like views,  Up: Functions / Macros
 
 4.3.2 Listing / acting-on results
 ---------------------------------
@@ -738,6 +741,84 @@ File: README.info,  Node: Listing / acting-on results,  Prev: Agenda-like views,
      For convenience, arguments should be unquoted.
 
 
+File: README.info,  Node: Custom predicates,  Prev: Listing / acting-on results,  Up: Functions / Macros
+
+4.3.3 Custom predicates
+-----------------------
+
+   • See: Custom predicate tutorial (examples/defpred.org)
+
+  1. Macro: org-ql-defpred
+
+     _Arguments:_ ‘(name args docstring &key body preambles
+     normalizers)’
+
+     Define an ‘org-ql’ selector predicate named
+     ‘org-ql--predicate-NAME’.  ‘NAME’ may be a symbol or a list of
+     symbols: if a list, the first is used as ‘NAME’ and the rest are
+     aliases.  ‘A’ function is only created for ‘NAME’, not for aliases,
+     so a normalizer should be used to replace aliases with ‘NAME’ in
+     queries (keep reading).
+
+     ‘ARGS’ is a ‘cl-defun’-style argument list.  ‘DOCSTRING’ is the
+     function’s docstring.
+
+     ‘BODY’ is the body of the predicate.  It will be evaluated with
+     point on the beginning of an Org heading and should return non-nil
+     if the heading’s entry is a match.
+
+     ‘PREAMBLES’ and ‘NORMALIZERS’ are lists of ‘pcase’ forms matched
+     against Org ‘QL’ query sexps.  They are spliced into ‘pcase’ forms
+     in the definitions of the functions ‘org-ql--query-preamble’ and
+     ‘org-ql--normalize-query’, which see.  Those functions are
+     redefined when this macro is expanded, unless variable
+     ‘org-ql-defpred-defer’ is non-nil, in which case those functions
+     should be redefined manually after defining predicates by calling
+     ‘org-ql--define-query-preamble-fn’ and
+     ‘org-ql--define-normalize-query-fn’.
+
+     ‘NORMALIZERS’ are used to normalize query expressions to standard
+     forms.  For example, when the predicate has aliases, the aliases
+     should be replaced with predicate names using a normalizer.  Also,
+     predicate arguments may be put into a more optimal form so that the
+     predicate has less work to do at query time.
+
+     ‘PREAMBLES’ refer to regular expressions which may be used to
+     search through a buffer directly to a potential match rather than
+     testing the predicate body on each heading.  (Naming things is
+     hard.)  In each ‘pcase’ form in ‘PREAMBLES’, the ‘pcase’ expression
+     (not the pattern) should be a plist with the following keys, each
+     value of which should be an expression which may refer to variables
+     bound in the pattern:
+
+     ‘:regexp’ Regular expression which searches directly to a potential
+     match.
+
+     ‘:case-fold’ Bound to ‘case-fold-search’ around the regexp search.
+
+     ‘:query’ Expression which should replace the query expression, or
+     ‘query’ if it should not be changed (e.g.  if the regexp is
+     insufficient to determine whether a heading matches, in which case
+     the predicate’s body needs to be tested on the heading).  If the
+     regexp guarantees a match, this may be simply ‘t’, leaving the
+     query expression with no work to do, which improves performance.
+
+     For convenience, within the ‘pcase’ patterns, the symbol
+     ‘predicate-names’ is a special form which is replaced with a
+     pattern matching any of the predicate’s name and aliases.  For
+     example, if ‘NAME’ were:
+
+     ‘(heading h)’
+
+     Then if ‘NORMALIZERS’ were:
+
+     ‘((`(,predicate-names . ,args) `(heading ,@args)))’
+
+     It would be expanded to:
+
+     ‘((`(,(or 'heading 'h) . ,args) `(heading ,@args)))’
+
+
 File: README.info,  Node: Dynamic block,  Next: Links,  Prev: Functions / Macros,  Up: Usage
 
 4.4 Dynamic block
@@ -859,7 +940,15 @@ File: README.info,  Node: 06-pre,  Next: 05,  Up: Changelog
 5.1 0.6-pre
 ===========
 
-Nothing new yet.
+*Added*
+   • Macro org-ql-defpred, used to define search predicates.  (See
+     tutorial (examples/defpred.org).)
+
+   *Internal*
+   • Predicates are now defined more cleanly with a macro
+     (org-ql-defpred) that consolidates functionality related to each
+     predicate.  This will also allow users to more easily define custom
+     predicates.
 
 
 File: README.info,  Node: 05,  Next: 049,  Prev: 06-pre,  Up: Changelog
@@ -1348,54 +1437,55 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1606
-Node: Screenshots1729
-Node: Installation1847
-Node: Quelpa2485
-Node: Usage2928
-Node: Commands3326
-Node: org-ql-search3799
-Node: helm-org-ql5449
-Node: org-ql-view5861
-Node: org-ql-view-sidebar6361
-Node: org-ql-view-recent-items6717
-Node: org-ql-sparse-tree7201
-Node: Queries8001
-Node: Non-sexp query syntax9112
-Node: General predicates10819
-Node: Ancestor/descendant predicates16232
-Node: Date/time predicates17360
-Node: Functions / Macros20015
-Node: Agenda-like views20270
-Node: Listing / acting-on results21675
-Node: Dynamic block26870
-Node: Links29568
-Node: Tips30255
-Node: Changelog30573
-Node: 06-pre31269
-Node: 0531375
-Node: 04932852
-Node: 04833126
-Node: 04733473
-Node: 04633868
-Node: 04534268
-Node: 04434627
-Node: 04334984
-Node: 04235179
-Node: 04135340
-Node: 0435581
-Node: 03239514
-Node: 03139893
-Node: 0340090
-Node: 02343065
-Node: 02243293
-Node: 02143561
-Node: 0243760
-Node: 0147795
-Node: Notes47896
-Node: Comparison with Org Agenda searches48058
-Node: org-sidebar48930
-Node: License49209
+Node: Contents1628
+Node: Screenshots1751
+Node: Installation1869
+Node: Quelpa2507
+Node: Usage2950
+Node: Commands3348
+Node: org-ql-search3821
+Node: helm-org-ql5471
+Node: org-ql-view5883
+Node: org-ql-view-sidebar6383
+Node: org-ql-view-recent-items6739
+Node: org-ql-sparse-tree7223
+Node: Queries8023
+Node: Non-sexp query syntax9134
+Node: General predicates10841
+Node: Ancestor/descendant predicates16254
+Node: Date/time predicates17382
+Node: Functions / Macros20037
+Node: Agenda-like views20335
+Node: Listing / acting-on results21740
+Node: Custom predicates26961
+Node: Dynamic block30452
+Node: Links33150
+Node: Tips33837
+Node: Changelog34155
+Node: 06-pre34851
+Node: 0535291
+Node: 04936768
+Node: 04837042
+Node: 04737389
+Node: 04637784
+Node: 04538184
+Node: 04438543
+Node: 04338900
+Node: 04239095
+Node: 04139256
+Node: 0439497
+Node: 03243430
+Node: 03143809
+Node: 0344006
+Node: 02346981
+Node: 02247209
+Node: 02147477
+Node: 0247676
+Node: 0151711
+Node: Notes51812
+Node: Comparison with Org Agenda searches51974
+Node: org-sidebar52846
+Node: License53125
 
 End Tag Table
 

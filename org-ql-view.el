@@ -775,7 +775,7 @@ When opened, the link searches the buffer it's opened from."
                   ;; Read sexp query.
                   (read query)
                 ;; Parse non-sexp query into sexp query.
-                (org-ql--plain-query query)))))
+                (org-ql--query-string-to-sexp query)))))
 
 (define-infix-command org-ql-view--transient-in ()
   :description (lambda () (org-ql-view--format-transient-lisp-argument "In buffers/files" org-ql-view-buffers-files))
