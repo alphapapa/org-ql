@@ -1,0 +1,264 @@
+* {
+    border-color: #657b83;
+}
+a {
+    color: #268bd2 !important;
+}
+a:visited {
+    color: #6c71c4 !important;
+}
+body {
+    background-color: #002b36 !important;
+    color: #839496 !important;
+    font-family: Libre Baskerville, serif;
+}
+html {
+    background-color: #002b36 !important;
+}
+input,
+textarea {
+    background-color: #073642 !important;
+    color: #839496 !important;
+}
+blockquote,
+code,
+pre {
+    background-color: #073642 !important;
+    border: 1px solid #094352 !important;
+    border-radius: 2px;
+    box-shadow: none;
+    color: #839496 !important;
+}
+code {
+    font-size: 1.2em;
+}
+img {
+    margin: 0.5em;
+}
+.buttons {
+    background-color: #073642 !important;
+    color: #93a1a1 !important;
+    font-family: sans-serif;
+    font-size: 1.5rem;
+}
+.hsReviewPanel {
+    display: none;
+}
+.title {
+    border: 0;
+}
+#postamble {
+    display: none;
+}
+#banner {
+    text-align: center;
+}
+#tabs {
+    background-color: #073642 !important;
+    float: left;
+    margin: 0px 0px 20px 0px;
+    padding: 0;
+    width: 100%;
+    font-family: sans-serif;
+}
+#tabs ul {
+    margin: 0;
+    padding: 0;
+}
+#tabs li {
+    float: left;
+    list-style-type: none;
+    margin: 0px 2px 0px 0px;
+    padding: 0px 0px 0px 0px;
+    white-space: nowrap;
+}
+#tabs li a {
+    display: block;
+    font-size: 120%;
+    font-weight: bold;
+    margin: 0;
+    padding: 4px 10px 4px 10px;
+    text-decoration: none;
+}
+#tabs li a:hover {
+    color: #90c5eb !important;
+}
+#tabs li.ui-tabs-active a {
+    background-color: #094352 !important;
+    color: #59a9e1 !important;
+}
+#content {
+    clear: both;
+    width: 80%;
+}
+#content > p {
+    margin: 1em;
+}
+#content > div > h2 {
+    margin: 0.25rem;
+}
+#postamble {
+    text-align: right;
+}
+blockquote {
+    background-color: #073642 !important;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+    padding-top: 0.01em;
+    padding-bottom: 0.01em;
+    overflow: hidden;
+    margin-left: 0;
+}
+.outline-text-2,
+.outline-text-3,
+.outline-text-4,
+.outline-text-5,
+.outline-text-6 {
+    padding-left: 4%;
+}
+.outline-3 {
+    padding-left: 4%;
+}
+.outline-4 {
+    padding-left: 4%;
+}
+.outline-5 {
+    padding-left: 4%;
+}
+.outline-6 {
+    padding-left: 4%;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: sans-serif;
+    border-bottom: 2px solid;
+    border-color: #094352 !important;
+}
+a:hover {
+    text-decoration: underline;
+}
+#search {
+    display: block;
+    float: right;
+}
+.tag {
+    background-color: #002b36 !important;
+    color: #93a1a1 !important;
+    border: 0px;
+}
+.tag span {
+    background-color: #094352 !important;
+    margin: 0.25em;
+    padding: 0.25em;
+}
+#table-of-contents {
+    display: table;
+    float: right;
+}
+#table-of-contents h2 {
+    display: none;
+}
+#table-of-contents li {
+    list-style-type: none;
+}
+#table-of-contents a:hover {
+    text-decoration: underline;
+}
+#minitoc {
+    background-color: #073642 !important;
+    position: fixed;
+    top: 0px;
+    right: -5px;
+    padding: 0.5em;
+    z-index: 200;
+    width: 18%;
+    word-wrap: normal;
+    overflow: hidden;
+}
+#minitoc ul {
+    margin: 0.5em;
+    padding-left: 1em;
+}
+#minitoc h2 {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 110%;
+}
+#minitoc a {
+    display: block;
+    font-family: sans-serif;
+    text-decoration: none;
+}
+#minitoc a:hover {
+    text-decoration: underline;
+}
+/* #minitoc a { */
+/*   display: none; */
+/* } */
+#minitoc:hover a {
+    display: block;
+}
+#toTop {
+    top: -100px;
+    position: fixed;
+    text-align: center;
+    z-index: 999;
+    display: none;
+}
+#toTop:hover {
+    text-decoration: underline;
+}
+#left-panel-wrapper {
+    display: none;
+    position: fixed;
+    z-index: 200;
+}
+#left-panel-contents {
+    display: none;
+    position: fixed;
+    text-align: left;
+    top: 0;
+    z-index: 200;
+}
+#left-panel-button {
+    transform: rotate(90deg);
+    left: -23px;
+    position: fixed;
+    top: 50%;
+    z-index: 200;
+}
+#right-panel-wrapper {
+    position: fixed;
+    z-index: 200;
+}
+#right-panel-contents {
+    display: none;
+    z-index: 200;
+    position: fixed;
+    text-align: left;
+    top: 0;
+}
+.snippet-copy-to-clipboard {
+    display: none;
+    position: absolute;
+    left: 50px;
+    top: 50px;
+}
+.org-ol > li,
+.org-dl > dt {
+    margin-top: 0.5em;
+}
+.org-ul {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+.org-ul li {
+    margin-top: 0.5em;
+}
+.org-ul > li > a {
+    font-family: sans-serif;
+}

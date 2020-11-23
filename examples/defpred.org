@@ -1,5 +1,6 @@
 #+TITLE: Org QL Custom Predicates Tutorial
-#+OPTIONS: author:nil creator:nil created:nil date:nil num:nil title:t
+#+OPTIONS: author:nil creator:nil created:nil date:nil num:nil title:t broken-links:t
+#+SETUPFILE: export/setup/theme-darksun-local.setup
 
 [2020-11-22 Sun 22:35]  Imagine you have weekly meetings with other people, and during the week you take notes about items to discuss at each meeting.  When the time for a meeting comes, you want to quickly and easily search for all of the items to discuss at the meeting.
 
@@ -7,7 +8,7 @@ You've been experimenting with different ways to track such data in Org.  You've
 
 So you haven't decided on a long-term solution, but the meetings aren't going to wait--you need to search that data now, and you have a mix of both tags and properties in your entries.  What you need is to be able to search for all of the entries about Alice (which you've tagged ~:personAlice:~) when you're meeting with her, and all of the entries about Bob (which have the property ~:person: Bob~) when you're meeting with him.  What do you do?
 
-* Contents
+* Contents                                                         :noexport:
 :PROPERTIES:
 :TOC:      :include siblings :ignore this
 :END:
@@ -130,6 +131,8 @@ And that works fine.  But it seems like a lot to type.  Could we make the =perso
                                (tags (concat "person" name)))))
 #+END_SRC
 
+Now let's search again:
+
 #+BEGIN_SRC elisp :results list :exports both :cache yes
   (org-ql-query :select '(org-get-heading :no-tags)
                 :from (current-buffer)
@@ -243,6 +246,8 @@ No problem, let's just select high-priority items:
   (org-ql-search (current-buffer) "person:Alice,Bob priority:A")
 #+END_SRC
 
+Which shows:
+
 #+BEGIN_EXAMPLE
   Query: (and (person "Alice" "Bob") (priority "A"))  In:meetings.org
     [#A] Loud pet parakeet                                           :personAlice:
@@ -266,9 +271,13 @@ And, you know what, if you're just so busy that you don't even have time to type
                                (tags (concat "person" name)))))
 #+END_SRC
 
+Let's try it:
+
 #+BEGIN_SRC elisp :results silent :exports code
   (org-ql-search (current-buffer) "p:Alice,Bob priority:A")
 #+END_SRC
+
+And that shows:
 
 #+BEGIN_EXAMPLE
   Query: (and (person "Alice" "Bob") (priority "A"))  In:meetings.org

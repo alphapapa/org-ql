@@ -1,0 +1,17 @@
+# -*- mode: org; -*-
+
+# The files that hide sections and display a navbar and ToC are commented out.
+
+# #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="export/styles/darksun/css/htmlize.css"/>
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="export/styles/darksun/css/darksun.css"/>
+# #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="export/styles/darksun/css/hideshow.css"/>
+
+#+HTML_HEAD: <script type="text/javascript" src="export/styles/darksun/js/jquery-1.11.0.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="export/styles/darksun/js/jquery-ui-1.10.2.min.js"></script>
+
+#+HTML_HEAD: <script type="text/javascript" src="export/styles/darksun/js/jquery.localscroll-min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="export/styles/darksun/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="export/styles/darksun/js/jquery.zclip.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="export/styles/darksun/js/darksun.js"></script>
+# #+HTML_HEAD: <script type="text/javascript" src="export/styles/darksun/js/hideshow.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="export/styles/lib/js/jquery.stickytableheaders.min.js"></script>

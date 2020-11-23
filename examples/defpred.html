@@ -1,0 +1,766 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-11-23 Mon 03:31 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Org QL Custom Predicates Tutorial</title>
+<meta name="generator" content="Org mode" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="export/styles/darksun/css/darksun.css"/>
+<script type="text/javascript" src="export/styles/darksun/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="export/styles/darksun/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="export/styles/darksun/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="export/styles/darksun/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="export/styles/darksun/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="export/styles/darksun/js/darksun.js"></script>
+<script type="text/javascript" src="export/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Org QL Custom Predicates Tutorial</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Using%20built-in%20predicates">Using built-in predicates</a></li>
+<li><a href="#A%20custom%20~%28person%29~%20predicate">A custom <code>(person)</code> predicate</a></li>
+<li><a href="#Searching%20for%20multiple%20people%20at%20once">Searching for multiple people at once</a></li>
+<li><a href="#Normalizing%20queries%20to%20rewrite%20arguments">Normalizing queries to rewrite arguments</a></li>
+<li><a href="#Non-sexp%20query%20syntax">Non-sexp query syntax</a></li>
+<li><a href="#Using%20multiple%20predicates">Using multiple predicates</a></li>
+<li><a href="#Predicate%20aliases">Predicate aliases</a></li>
+<li><a href="#Be%20formless">Be formless</a></li>
+<li><a href="#Conclusion">Conclusion</a></li>
+<li><a href="#Appendix%3A%20Anaphoric%20macros">Appendix: Anaphoric macros</a></li>
+<li><a href="#Example%20data">Example data</a>
+<ul>
+<li><a href="#Loud%20pet%20parakeet">Loud pet parakeet&#xa0;&#xa0;&#xa0;<span class="tag"><span class="personAlice">personAlice</span></span></a></li>
+<li><a href="#Missing%20sticky%20notes">Missing sticky notes&#xa0;&#xa0;&#xa0;<span class="tag"><span class="personAlice">personAlice</span></span></a></li>
+<li><a href="#Dirty%20dishes%20in%20sink">Dirty dishes in sink&#xa0;&#xa0;&#xa0;<span class="tag"><span class="personAlice">personAlice</span></span></a></li>
+<li><a href="#Stinky%20coffee%20breath">Stinky coffee breath</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+<span class="timestamp-wrapper"><span class="timestamp">[2020-11-22 Sun 22:35]  </span></span>  Imagine you have weekly meetings with other people, and during the week you take notes about items to discuss at each meeting.  When the time for a meeting comes, you want to quickly and easily search for all of the items to discuss at the meeting.
+</p>
+
+<p>
+You've been experimenting with different ways to track such data in Org.  You've tried using tags, but some of the names in question conflict with other tags in your data (e.g. someone's named Charles, but you also work with a firm named Charles, Inc., and you'd prefer to continue using the tag <code>Charles</code> for entries about that firm), so you've been using tags like <code>:personNAME:</code>, which seems awkward.  You've tried using a <code>:person: NAME</code> property on entries, which has the advantage of not cluttering the tags list, but also the disadvantage of not being readily visible in an outline.
+</p>
+
+<p>
+So you haven't decided on a long-term solution, but the meetings aren't going to wait&#x2013;you need to search that data now, and you have a mix of both tags and properties in your entries.  What you need is to be able to search for all of the entries about Alice (which you've tagged <code>:personAlice:</code>) when you're meeting with her, and all of the entries about Bob (which have the property <code>:person: Bob</code>) when you're meeting with him.  What do you do?
+</p>
+
+<div id="outline-container-Using%20built-in%20predicates" class="outline-2">
+<h2 id="Using%20built-in%20predicates">Using built-in predicates</h2>
+<div class="outline-text-2" id="text-Using%20built-in%20predicates">
+<p>
+You could start by using built-in Org QL predicates to search your data.  For example:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e; font-weight: bold;">or</span><span style="color: #78880e;"> (</span><span style="color: #3d8b85; text-decoration: underline;">tags</span><span style="color: #3d8b85;"> </span><span style="color: #65bc957591ca;">"personAlice"</span><span style="color: #78880e;">)</span>
+                          <span style="color: #78880e;">(</span><span style="color: #3d8b85; text-decoration: underline;">property</span><span style="color: #3d8b85;"> </span><span style="color: #65bc957591ca;">"person"</span> <span style="color: #65bc957591ca;">"Bob"</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[#A] Loud pet parakeet</li>
+<li>[#C] Missing sticky notes</li>
+<li>[#C] Dirty dishes in sink</li>
+<li>[#A] Stinky coffee breath</li>
+</ul>
+
+<p>
+That was easy enough, but it's not very&#x2026;semantic.  You have to think about the implementation details: Alice uses tags, Bob uses properties, and what if Charlie uses both?  It starts to feel complicated, and it's a lot to type out every time.  Is there an easier way?
+</p>
+</div>
+</div>
+
+<div id="outline-container-A%20custom%20~%28person%29~%20predicate" class="outline-2">
+<h2 id="A%20custom%20~%28person%29~%20predicate">A custom <code>(person)</code> predicate</h2>
+<div class="outline-text-2" id="text-A%20custom%20~%28person%29~%20predicate">
+<p>
+Enter <code>org-ql</code> custom search predicates.  Let's start simple, by defining a predicate to search for just the <code>:person:</code> property, one person at a time.  The predicate will take one argument, a person's name, and search for that property.  It would look like this:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">org-ql-defpred</span><span style="color: #3d85b7;"> person (</span><span style="color: #78880e;">name</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #73139976b41e;">"Search for entries with the \"person\" property being NAME."</span>
+  <span style="color: #3d85b7; font-weight: bold;">:body</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">property</span><span style="color: #78880e;"> </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #78880e;">name</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Now, let's see what results we get for searching this file for entries about Bob:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">person </span><span style="color: #921da24c26e6;">"Bob"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[#C] Missing sticky notes</li>
+<li>[#C] Dirty dishes in sink</li>
+<li>[#A] Stinky coffee breath</li>
+</ul>
+
+<p>
+Hmm, looks like we need to remind Bob to wash his mug and take some mints after lunch.  Now what do we need to discuss with Alice?
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">person </span><span style="color: #921da24c26e6;">"Alice"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<pre class="example">
+</pre>
+
+<p>
+Nothing?  Oh, right, Alice's entries use the <code>:personAlice:</code> tag, so we'll also need to search those kind of entries.  Let's make the predicate do that, too:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">org-ql-defpred</span><span style="color: #3d85b7;"> person (</span><span style="color: #78880e;">name</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #73139976b41e;">"Search for entries with the \"person\" property being NAME or having the tag \"personNAME\"."</span>
+  <span style="color: #3d85b7; font-weight: bold;">:body</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; font-weight: bold;">or</span><span style="color: #78880e;"> (</span><span style="color: #3d8b85; text-decoration: underline;">property</span><span style="color: #3d8b85;"> </span><span style="color: #65bc957591ca;">"person"</span> <span style="color: #3d8b85;">name</span><span style="color: #78880e;">)</span>
+            <span style="color: #78880e;">(</span><span style="color: #3d8b85; text-decoration: underline;">tags</span><span style="color: #3d8b85;"> (</span><span style="color: #a17e11; text-decoration: underline;">concat</span><span style="color: #a17e11;"> </span><span style="color: #b86396762cce;">"person"</span> <span style="color: #a17e11;">name</span><span style="color: #3d8b85;">)</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+How about now?
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">person </span><span style="color: #921da24c26e6;">"Alice"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[#A] Loud pet parakeet</li>
+<li>[#C] Missing sticky notes</li>
+<li>[#C] Dirty dishes in sink</li>
+</ul>
+
+<p>
+Hmm, I thought we already told her to leave Polly at home.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Searching%20for%20multiple%20people%20at%20once" class="outline-2">
+<h2 id="Searching%20for%20multiple%20people%20at%20once">Searching for multiple people at once</h2>
+<div class="outline-text-2" id="text-Searching%20for%20multiple%20people%20at%20once">
+<p>
+Oh, wait, this week is shortened due to holidays, so we're having a combined meeting.  How do we search for entries about either of them?  Well, this is the obvious solution:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e; font-weight: bold;">or</span><span style="color: #78880e;"> (</span><span style="color: #3d8b85;">person </span><span style="color: #65bc957591ca;">"Alice"</span><span style="color: #78880e;">)</span>
+                          <span style="color: #78880e;">(</span><span style="color: #3d8b85;">person </span><span style="color: #65bc957591ca;">"Bob"</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[#A] Loud pet parakeet</li>
+<li>[#C] Missing sticky notes</li>
+<li>[#C] Dirty dishes in sink</li>
+<li>[#A] Stinky coffee breath</li>
+</ul>
+
+<p>
+And that works fine.  But it seems like a lot to type.  Could we make the <code>person</code> predicate accept multiple names instead?
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">org-ql-defpred</span><span style="color: #3d85b7;"> person (</span><span style="color: #78880e;">&amp;rest</span><span style="color: #78880e;"> names</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #73139976b41e;">"Search for entries about any of NAMES."</span>
+  <span style="color: #3d85b7; font-weight: bold;">:body</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; font-weight: bold;">cl-loop</span><span style="color: #78880e;"> for name in names</span>
+<span style="color: #78880e;">                 thereis (</span><span style="color: #3d8b85; font-weight: bold;">or</span><span style="color: #3d8b85;"> (</span><span style="color: #a17e11; text-decoration: underline;">property</span><span style="color: #a17e11;"> </span><span style="color: #b86396762cce;">"person"</span> <span style="color: #a17e11;">name</span><span style="color: #3d8b85;">)</span>
+                             <span style="color: #3d8b85;">(</span><span style="color: #a17e11; text-decoration: underline;">tags</span><span style="color: #a17e11;"> (</span><span style="color: #3d85b7; text-decoration: underline;">concat</span><span style="color: #3d85b7;"> </span><span style="color: #73139976b41e;">"person"</span> <span style="color: #3d85b7;">name</span><span style="color: #a17e11;">)</span><span style="color: #3d8b85;">)</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Now let's search again:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">person </span><span style="color: #921da24c26e6;">"Alice"</span> <span style="color: #921da24c26e6;">"Bob"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[#A] Loud pet parakeet</li>
+<li>[#C] Missing sticky notes</li>
+<li>[#C] Dirty dishes in sink</li>
+<li>[#A] Stinky coffee breath</li>
+</ul>
+
+<p>
+That was easy!
+</p>
+</div>
+</div>
+
+<div id="outline-container-Normalizing%20queries%20to%20rewrite%20arguments" class="outline-2">
+<h2 id="Normalizing%20queries%20to%20rewrite%20arguments">Normalizing queries to rewrite arguments</h2>
+<div class="outline-text-2" id="text-Normalizing%20queries%20to%20rewrite%20arguments">
+<p>
+Now, all this is well and good if you don't have hundreds of thousands of Org entries in your files.  But what if you do?  All that <code>concat</code>'ing happening on every entry could add up, and the query might take a few seconds.  What if we could do that stringing-along just once, before running the query?  We want to turn our <code>(person "Alice" "Bob")</code> query into this, with the <code>:personNAME:</code> strings already made and the per-person <code>(property ...)</code> predicates also included:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">or</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">tags</span><span style="color: #78880e;"> </span><span style="color: #921da24c26e6;">"personAlice"</span> <span style="color: #921da24c26e6;">"personBob"</span><span style="color: #3d85b7;">)</span>
+    <span style="color: #3d85b7;">(</span><span style="color: #78880e; text-decoration: underline;">property</span><span style="color: #78880e;"> </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #921da24c26e6;">"Alice"</span><span style="color: #3d85b7;">)</span>
+    <span style="color: #3d85b7;">(</span><span style="color: #78880e; text-decoration: underline;">property</span><span style="color: #78880e;"> </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #921da24c26e6;">"Bob"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Can we do that?  In fact, we can, by using a query normalizer.  Normalizers are <code>pcase</code> forms (I <i>know</i>) that normalize query expressions before execution.  We can use one to rewrite the query ahead of time, like this:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">org-ql-defpred</span><span style="color: #3d85b7;"> person (</span><span style="color: #78880e;">&amp;rest</span><span style="color: #78880e;"> names</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #73139976b41e;">"Search for entries about any of NAMES."</span>
+  <span style="color: #3d85b7; font-weight: bold;">:normalizers</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e;">(</span><span style="color: #3d8b85;">`(</span><span style="color: #a17e11;">person . ,names</span><span style="color: #3d8b85;">)</span>
+                 <span style="color: #3d8b85;">`(</span><span style="color: #a17e11; font-weight: bold;">or</span><span style="color: #a17e11;"> (</span><span style="color: #3d85b7; text-decoration: underline;">tags</span><span style="color: #3d85b7;"> ,@(</span><span style="color: #78880e; font-weight: bold;">cl-loop</span><span style="color: #78880e;"> for name in names</span>
+<span style="color: #78880e;">                                       collect (</span><span style="color: #3d8b85; text-decoration: underline;">concat</span><span style="color: #3d8b85;"> </span><span style="color: #65bc957591ca;">"person"</span> <span style="color: #3d8b85;">name</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+                      <span style="color: #a17e11;">,@(</span><span style="color: #3d85b7; font-weight: bold;">cl-loop</span><span style="color: #3d85b7;"> for name in names</span>
+<span style="color: #3d85b7;">                                 collect `(</span><span style="color: #78880e;">property </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #78880e;">,name</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span><span style="color: #3d8b85;">)</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #3d85b7; font-weight: bold;">:body</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; font-weight: bold;">cl-loop</span><span style="color: #78880e;"> for name in names</span>
+<span style="color: #78880e;">                 thereis (</span><span style="color: #3d8b85; font-weight: bold;">or</span><span style="color: #3d8b85;"> (</span><span style="color: #a17e11; text-decoration: underline;">property</span><span style="color: #a17e11;"> </span><span style="color: #b86396762cce;">"person"</span> <span style="color: #a17e11;">name</span><span style="color: #3d8b85;">)</span>
+                             <span style="color: #3d8b85;">(</span><span style="color: #a17e11; text-decoration: underline;">tags</span><span style="color: #a17e11;"> name</span><span style="color: #3d8b85;">)</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Now, don't faint from all the backquoting and unquoting&#x2013;it's just Lisp, nothing to be afraid of!  Let's slow down a moment and see what the normalized query looks like to be sure we're doing it correctly:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql--normalize-query</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">person </span><span style="color: #921da24c26e6;">"Alice"</span> <span style="color: #921da24c26e6;">"Bob"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">or</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">tags</span><span style="color: #78880e;"> </span><span style="color: #921da24c26e6;">"personAlice"</span> <span style="color: #921da24c26e6;">"personBob"</span><span style="color: #3d85b7;">)</span>
+    <span style="color: #3d85b7;">(</span><span style="color: #78880e; text-decoration: underline;">property</span><span style="color: #78880e;"> </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #921da24c26e6;">"Alice"</span><span style="color: #3d85b7;">)</span>
+    <span style="color: #3d85b7;">(</span><span style="color: #78880e; text-decoration: underline;">property</span><span style="color: #78880e;"> </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #921da24c26e6;">"Bob"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+And, as they say, Bob's your uncle!  Or even if he isn't, let's see if it works:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">person </span><span style="color: #921da24c26e6;">"Alice"</span> <span style="color: #921da24c26e6;">"Bob"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[#A] Loud pet parakeet</li>
+<li>[#C] Missing sticky notes</li>
+<li>[#C] Dirty dishes in sink</li>
+<li>[#A] Stinky coffee breath</li>
+</ul>
+
+<p>
+Yep, same result as the non-normalized query.  And look at how much simpler it is to write <code>(person "Alice" "Bob")</code> than to write <code>(or (tags "personAlice" "personBob") (property "person" "Alice") (property "person" "Bob"))</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Non-sexp%20query%20syntax" class="outline-2">
+<h2 id="Non-sexp%20query%20syntax">Non-sexp query syntax</h2>
+<div class="outline-text-2" id="text-Non-sexp%20query%20syntax">
+<p>
+But wait, that's not all!  If you order now, we'll throw in non-sexp query syntax for free!  That's right, your search could be as simple as typing <code>person:Alice,Bob</code>!
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-search</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span> <span style="color: #73139976b41e;">"person:Alice,Bob"</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Don't believe me?  Well, you see, queries in this syntax are converted to the sexp syntax, like:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql--query-string-to-sexp</span><span style="color: #3d85b7;"> </span><span style="color: #73139976b41e;">"person:Alice,Bob"</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7;">person </span><span style="color: #73139976b41e;">"Alice"</span> <span style="color: #73139976b41e;">"Bob"</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+And that happens automatically when you use a search command like <code>org-ql-search</code>.  If you have <code>org-ql</code> installed already, you could even click this link:  <a href="person:Alice,Bob">Alice or Bob</a>.  Which, in Org syntax, looks like:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-org"><span style="color: #b58900; text-decoration: underline;"><a href="org-ql-search:person:Alice,Bob">org-ql-search:person:Alice,Bob</a></span>
+</pre>
+</div>
+
+<p>
+And that would open an Agenda Mode buffer that looks like this:
+</p>
+
+<pre class="example">
+Query: (person "Alice" "Bob")  In:meetings.org
+  [#A] Loud pet parakeet                                           :personAlice:
+  [#C] Missing sticky notes                                        :personAlice:
+  [#C] Dirty dishes in sink                                        :personAlice:
+  [#A] Stinky coffee breath
+</pre>
+</div>
+</div>
+
+<div id="outline-container-Using%20multiple%20predicates" class="outline-2">
+<h2 id="Using%20multiple%20predicates">Using multiple predicates</h2>
+<div class="outline-text-2" id="text-Using%20multiple%20predicates">
+<p>
+Oops, you forgot that there's a birthday party in 20 minutes, so you only have time to talk about the highest priority items at this joint meeting today.
+</p>
+
+<p>
+No problem, let's just select high-priority items:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-search</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span> <span style="color: #73139976b41e;">"person:Alice,Bob priority:A"</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Which shows:
+</p>
+
+<pre class="example">
+Query: (and (person "Alice" "Bob") (priority "A"))  In:meetings.org
+  [#A] Loud pet parakeet                                           :personAlice:
+  [#A] Stinky coffee breath
+</pre>
+</div>
+</div>
+
+<div id="outline-container-Predicate%20aliases" class="outline-2">
+<h2 id="Predicate%20aliases">Predicate aliases</h2>
+<div class="outline-text-2" id="text-Predicate%20aliases">
+<p>
+And, you know what, if you're just so busy that you don't even have time to type the word <code>person</code>, you can add an abbreviated alias, <code>p</code>, like this:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">org-ql-defpred</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e;">person p</span><span style="color: #3d85b7;">)</span> <span style="color: #3d85b7;">(</span><span style="color: #78880e;">&amp;rest</span><span style="color: #78880e;"> names</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #73139976b41e;">"Search for entries about any of NAMES."</span>
+  <span style="color: #3d85b7; font-weight: bold;">:normalizers</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e;">(</span><span style="color: #3d8b85;">`(</span><span style="color: #a17e11;">,predicate-names . ,names</span><span style="color: #3d8b85;">)</span>
+                 <span style="color: #3d8b85;">`(</span><span style="color: #a17e11; font-weight: bold;">or</span><span style="color: #a17e11;"> (</span><span style="color: #3d85b7; text-decoration: underline;">tags</span><span style="color: #3d85b7;"> ,@(</span><span style="color: #78880e; font-weight: bold;">cl-loop</span><span style="color: #78880e;"> for name in names</span>
+<span style="color: #78880e;">                                       collect (</span><span style="color: #3d8b85; text-decoration: underline;">concat</span><span style="color: #3d8b85;"> </span><span style="color: #65bc957591ca;">"person"</span> <span style="color: #3d8b85;">name</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+                      <span style="color: #a17e11;">,@(</span><span style="color: #3d85b7; font-weight: bold;">cl-loop</span><span style="color: #3d85b7;"> for name in names</span>
+<span style="color: #3d85b7;">                                 collect `(</span><span style="color: #78880e;">property </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #78880e;">,name</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span><span style="color: #3d8b85;">)</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #3d85b7; font-weight: bold;">:body</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; font-weight: bold;">cl-loop</span><span style="color: #78880e;"> for name in names</span>
+<span style="color: #78880e;">                 thereis (</span><span style="color: #3d8b85; font-weight: bold;">or</span><span style="color: #3d8b85;"> (</span><span style="color: #a17e11; text-decoration: underline;">property</span><span style="color: #a17e11;"> </span><span style="color: #b86396762cce;">"person"</span> <span style="color: #a17e11;">name</span><span style="color: #3d8b85;">)</span>
+                             <span style="color: #3d8b85;">(</span><span style="color: #a17e11; text-decoration: underline;">tags</span><span style="color: #a17e11;"> (</span><span style="color: #3d85b7; text-decoration: underline;">concat</span><span style="color: #3d85b7;"> </span><span style="color: #73139976b41e;">"person"</span> <span style="color: #3d85b7;">name</span><span style="color: #a17e11;">)</span><span style="color: #3d8b85;">)</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Let's try it:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-search</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span> <span style="color: #73139976b41e;">"p:Alice,Bob priority:A"</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+And that shows:
+</p>
+
+<pre class="example">
+Query: (and (person "Alice" "Bob") (priority "A"))  In:meetings.org
+  [#A] Loud pet parakeet                                           :personAlice:
+  [#A] Stinky coffee breath
+</pre>
+
+<p>
+(It's up to you to remember whether <code>p</code> means <code>person</code> or <code>priority</code>, but code can't solve everything.)
+</p>
+</div>
+</div>
+
+<div id="outline-container-Be%20formless" class="outline-2">
+<h2 id="Be%20formless">Be formless</h2>
+<div class="outline-text-2" id="text-Be%20formless">
+<p>
+We can even go a step further: since the normalizer rewrites the query to call the <code>property</code> and <code>tags</code> predicates instead, this <code>person</code> predicate doesn't even need a body form!
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">org-ql-defpred</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e;">person p</span><span style="color: #3d85b7;">)</span> <span style="color: #3d85b7;">(</span><span style="color: #78880e;">&amp;rest</span><span style="color: #78880e;"> names</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #73139976b41e;">"Search for entries about any of NAMES."</span>
+  <span style="color: #3d85b7; font-weight: bold;">:normalizers</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e;">(</span><span style="color: #3d8b85;">`(</span><span style="color: #a17e11;">,predicate-names . ,names</span><span style="color: #3d8b85;">)</span>
+                 <span style="color: #3d8b85;">`(</span><span style="color: #a17e11; font-weight: bold;">or</span><span style="color: #a17e11;"> (</span><span style="color: #3d85b7; text-decoration: underline;">tags</span><span style="color: #3d85b7;"> ,@(</span><span style="color: #78880e; font-weight: bold;">cl-loop</span><span style="color: #78880e;"> for name in names</span>
+<span style="color: #78880e;">                                       collect (</span><span style="color: #3d8b85; text-decoration: underline;">concat</span><span style="color: #3d8b85;"> </span><span style="color: #65bc957591ca;">"person"</span> <span style="color: #3d8b85;">name</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+                      <span style="color: #a17e11;">,@(</span><span style="color: #3d85b7; font-weight: bold;">cl-loop</span><span style="color: #3d85b7;"> for name in names</span>
+<span style="color: #3d85b7;">                                 collect `(</span><span style="color: #78880e;">property </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #78880e;">,name</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span><span style="color: #3d8b85;">)</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Will it still work?
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">person </span><span style="color: #921da24c26e6;">"Alice"</span> <span style="color: #921da24c26e6;">"Bob"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[#A] Loud pet parakeet</li>
+<li>[#C] Missing sticky notes</li>
+<li>[#C] Dirty dishes in sink</li>
+<li>[#A] Stinky coffee breath</li>
+</ul>
+
+<p>
+It does!
+</p>
+</div>
+</div>
+
+<div id="outline-container-Conclusion" class="outline-2">
+<h2 id="Conclusion">Conclusion</h2>
+<div class="outline-text-2" id="text-Conclusion">
+<p>
+In this tutorial, we've gone from having to write lengthy, complex query expressions for accommodating idiosyncratic requirements, to being able to write simple query expressions that abstract away ugly details, to rewriting those query expressions into a more optimal form before a search is even run.  The end result is an Org Query Language that is customized to meet your specific needs.
+</p>
+
+<p>
+What new custom predicates will you write next?
+</p>
+</div>
+</div>
+
+<div id="outline-container-Appendix%3A%20Anaphoric%20macros" class="outline-2">
+<h2 id="Appendix%3A%20Anaphoric%20macros">Appendix: Anaphoric macros</h2>
+<div class="outline-text-2" id="text-Appendix%3A%20Anaphoric%20macros">
+<p>
+Finally, if you're a Lisper who appreciates anaphora, you might prefer a more syntactically concise definition of the predicate using Dash macros:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; font-weight: bold;">org-ql-defpred</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e;">person p</span><span style="color: #3d85b7;">)</span> <span style="color: #3d85b7;">(</span><span style="color: #78880e;">&amp;rest</span><span style="color: #78880e;"> names</span><span style="color: #3d85b7;">)</span>
+  <span style="color: #73139976b41e;">"Search for entries about any of NAMES."</span>
+  <span style="color: #3d85b7; font-weight: bold;">:normalizers</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e;">(</span><span style="color: #3d8b85;">`(</span><span style="color: #a17e11;">,predicate-names . ,names</span><span style="color: #3d8b85;">)</span>
+                 <span style="color: #3d8b85;">`(</span><span style="color: #a17e11; font-weight: bold;">or</span><span style="color: #a17e11;"> (</span><span style="color: #3d85b7; text-decoration: underline;">tags</span><span style="color: #3d85b7;"> ,@(</span><span style="color: #78880e; font-weight: bold;">--map</span><span style="color: #78880e;"> `(</span><span style="color: #3d8b85;">concat </span><span style="color: #65bc957591ca;">"person"</span> <span style="color: #3d8b85;">,</span><span style="color: #3d8b85;">it</span><span style="color: #78880e;">)</span> <span style="color: #78880e;">names</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+                      <span style="color: #a17e11;">,@(</span><span style="color: #3d85b7; font-weight: bold;">--map</span><span style="color: #3d85b7;"> `(</span><span style="color: #78880e;">property </span><span style="color: #921da24c26e6;">"person"</span> <span style="color: #78880e;">,</span><span style="color: #78880e;">it</span><span style="color: #3d85b7;">)</span> <span style="color: #3d85b7;">names</span><span style="color: #a17e11;">)</span><span style="color: #3d8b85;">)</span><span style="color: #78880e;">)</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<p>
+Let's make sure it works:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp"><span style="color: #a17e11;">(</span><span style="color: #3d85b7; text-decoration: underline;">org-ql-query</span><span style="color: #3d85b7;"> </span><span style="color: #3d85b7; font-weight: bold;">:select</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">org-get-heading </span><span style="color: #78880e; font-weight: bold;">:no-tags</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:from</span><span style="color: #3d85b7;"> (</span><span style="color: #78880e; text-decoration: underline;">current-buffer</span><span style="color: #3d85b7;">)</span>
+              <span style="color: #3d85b7; font-weight: bold;">:where</span><span style="color: #3d85b7;"> '(</span><span style="color: #78880e;">person </span><span style="color: #921da24c26e6;">"Alice"</span> <span style="color: #921da24c26e6;">"Bob"</span><span style="color: #3d85b7;">)</span><span style="color: #a17e11;">)</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[#A] Loud pet parakeet</li>
+<li>[#C] Missing sticky notes</li>
+<li>[#C] Dirty dishes in sink</li>
+<li>[#A] Stinky coffee breath</li>
+</ul>
+
+<p>
+Lisp is fun!
+</p>
+</div>
+</div>
+
+<div id="outline-container-Example%20data" class="outline-2">
+<h2 id="Example%20data">Example data</h2>
+<div class="outline-text-2" id="text-Example%20data">
+</div>
+
+<div id="outline-container-Loud%20pet%20parakeet" class="outline-3">
+<h3 id="Loud%20pet%20parakeet">Loud pet parakeet&#xa0;&#xa0;&#xa0;<span class="tag"><span class="personAlice">personAlice</span></span></h3>
+</div>
+
+<div id="outline-container-Missing%20sticky%20notes" class="outline-3">
+<h3 id="Missing%20sticky%20notes">Missing sticky notes&#xa0;&#xa0;&#xa0;<span class="tag"><span class="personAlice">personAlice</span></span></h3>
+<div class="outline-text-3" id="text-Missing%20sticky%20notes">
+</div>
+</div>
+
+<div id="outline-container-Dirty%20dishes%20in%20sink" class="outline-3">
+<h3 id="Dirty%20dishes%20in%20sink">Dirty dishes in sink&#xa0;&#xa0;&#xa0;<span class="tag"><span class="personAlice">personAlice</span></span></h3>
+<div class="outline-text-3" id="text-Dirty%20dishes%20in%20sink">
+</div>
+</div>
+
+<div id="outline-container-Stinky%20coffee%20breath" class="outline-3">
+<h3 id="Stinky%20coffee%20breath">Stinky coffee breath</h3>
+<div class="outline-text-3" id="text-Stinky%20coffee%20breath">
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-11-23 Mon 03:31</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
