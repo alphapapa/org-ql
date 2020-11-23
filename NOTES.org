@@ -24,6 +24,7 @@
 | P |   M | Keyword | Heading                                        |
 |---+-----+---------+------------------------------------------------|
 | A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
+|   |     | NEXT    | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]  |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -38,13 +39,11 @@
 ** To-do ([[org-ql-search:todo:?super-groups=((:todo%20"NEXT")%20(:todo%20"PROJECT")%20(:auto-priority))&sort=(todo)][view]])
 
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
-| P |   M | Todo    | Heading                                                      |
-|---+-----+---------+--------------------------------------------------------------|
-| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-| A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                      |
-| A | 0.5 | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
-| A | 0.5 | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
-| A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                         |
+| P |   M | Todo    | Heading                                        |
+|---+-----+---------+------------------------------------------------|
+| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
+| A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]        |
+| A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                           |
 #+END:
 
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
@@ -52,27 +51,27 @@
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
 |   M | P | Heading                                               |
 |-----+---+-------------------------------------------------------|
-| 0.6 | A | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]        |
 |     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]               |
-| 0.5 | A | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                  |
 |     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                  |
 | 0.6 | B | [[Define predicates with a macro][Define predicates with a macro]]                        |
 |     | B | [[Move this notes file into an orphan =meta/notes= branch][Move this notes file into an orphan =meta/notes= branch]] |
 |     | B | [[Outline path predicate][Outline path predicate]]                                |
+|     | B | [[Document the sorting functions][Document the sorting functions]]                        |
+|     | B | [[Recursive queries][Recursive queries]]                                     |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
-|   M | P | Todo    | Heading                                                      |
-|-----+---+---------+--------------------------------------------------------------|
-| 0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]               |
-| 0.5 | A | PROJECT | [[Checking links for unsafe parameters][Checking links for unsafe parameters]]                         |
-| 0.5 | A | TODO    | [[Tag org-super-agenda 1.2 and bump required version in org-ql][Tag org-super-agenda 1.2 and bump required version in org-ql]] |
-| 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]             |
-| 0.6 | B | PROJECT | [[Define predicates with a macro][Define predicates with a macro]]                               |
-| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                            |
-| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                   |
+|      M | P | Todo    | Heading                                          |
+|--------+---+---------+--------------------------------------------------|
+|    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]   |
+|    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]] |
+|    0.6 | B | PROJECT | [[Define predicates with a macro][Define predicates with a macro]]                   |
+|    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                |
+|    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                       |
+| future | C | MAYBE   | [[Alternative parsing libraries][Alternative parsing libraries]]                    |
+| future | C | MAYBE   | [[Experiment with =widget=][Experiment with =widget=]]                         |
 #+END:
 
 * [#A] Tasks
@@ -95,7 +94,6 @@
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
-- [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
 - [[#define-predicates-with-a-macro][Define predicates with a macro]]
 - [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
 - [[#outline-path-predicate][Outline path predicate]]
@@ -111,6 +109,7 @@
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
 - [[#node-caching]["Node" caching]]
+- [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
 - [[#views-multiple-sorters-are-not-preserved][Views: Multiple sorters are not preserved]]
 - [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
 - [[#add-emacs-271-to-testyml][Add Emacs 27.1 to test.yml]]
@@ -265,6 +264,9 @@ Eventually, the function org-export-custom-protocol-maybe is now called with a f
 
 Unfortunately it does not say what the new, required second argument is.
 
+[2020-11-22 Sun 17:22]  For now, I'll add an optional, ignored second argument to the follow function; if I'm lucky, it will work anyway.
+
+*** NEXT Check Org 9.4 source code for second argument
 
 ** PROJECT [#A] Convert simple sexp queries to non-sexp
 :PROPERTIES:
@@ -372,97 +374,6 @@ Unfortunately it does not say what the new, required second argument is.
 :END:
 
 Maybe make it an option to automatically convert them when possible, because if a user wanted to add complexity to a string query, he'd have to rewrite it as a sexp.
-
-** PROJECT [#A] Checking links for unsafe parameters
-:PROPERTIES:
-:ID:       ba70e375-eddb-40df-8892-fb418c1f70d1
-:milestone: 0.5
-:END:
-:LOGBOOK:
--  State "PROJECT"    from "UNDERWAY"   [2020-11-12 Thu 00:26]
--  State "UNDERWAY"   from              [2020-11-11 Wed 23:09]
-:END:
-
-Theoretically one could put a sexp-based query into a link that would run arbitrary code to do something evil.  Like:
-
-[[org-ql-search:(message "AHA")]]
-
-That's very unlikely to be abused, but it would be good to protect against it.  Two possibilities:
-
-1.  For sexp-based queries in links and dynamic blocks, prompt for confirmation before running.
-2.  Use a special variable to control whether lambdas and arbitrary sexps are allowed in queries, and disable it for links and dynamic blocks.  (That might be difficult to do, since they could be buried in an ~and~ or something.  A whitelist approach might be needed.)
-
-*** TODO [#A] Tag org-super-agenda 1.2 and bump required version in org-ql
-:PROPERTIES:
-:milestone: 0.5
-:END:
-
-That /should/ force the version of org-super-agenda with the fix to be installed when org-ql is upgraded.
-
-*** DONE Add automated tests
-:LOGBOOK:
--  State "UNDERWAY"   from "TODO"       [2020-11-12 Thu 00:24]
--  State "TODO"       from "MAYBE"      [2020-11-11 Wed 23:16]
--  State "MAYBE"      from              [2020-11-11 Wed 23:15]
-:END:
-
-Maybe impractical, but maybe we could at least test that potentially unsafe ones signal errors.
-
-[2020-11-12 Thu 00:24]  Works better than I expected.  All the tests seem to correctly pass, signaling the correct errors for the correct reasons--except for the tests specific to org-super-agenda.  For that, I'm currently waiting for MELPA to build the version of org-super-agenda that has the fix applied, so I can install that into the test sandbox, and then those two tests should pass also.
-
-*** DONE Enumerate and test parameters and potentially unsafe types
-CLOSED: [2020-11-11 Wed 23:26]
-:LOGBOOK:
--  State "DONE"       from "UNDERWAY"   [2020-11-11 Wed 23:26]
--  State "UNDERWAY"   from              [2020-11-11 Wed 23:15]
-:END:
-
-#+CAPTION: Template for making testable links
-#+BEGIN_SRC org
-[[org-ql-search:todo:?]]
-#+END_SRC
-
-#+CAPTION: Expression to insert encoded values into template (after the =?=)
-#+BEGIN_SRC elisp
-  (insert (url-hexify-string (concat "buffers-files=" (prin1-to-string '((lambda () (message "AHA")))))))
-#+END_SRC
-
-+  [X] Buffers-Files: Expanded by =org-ql-view--expand-buffers-files=:
-     -  [X] Quoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
-     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
-     -  [X] Quoted lambda in list (safe): [[org-ql-search:todo:?buffers-files%3D%28%28quote%20%28lambda%20nil%20%28message%20%22AHA%22%29%29%29%29]]
-     -  [X] Unquoted lambda in list: (safe) [[org-ql-search:todo:?buffers-files%3D%28%28lambda%20nil%20%28message%20%22AHA%22%29%29%29]]
-+  [X] Groups
-     -  [X] Quoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
-     -  [X] Unquoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
-     -  [X] Quoted expression (safe): [[org-ql-search:todo:?super-groups%3D%28message%20%22AHA%22%29]]
-     -  [X] Unquoted expression (safe): [[org-ql-search:todo:?super-groups%3D%22AHA%22]]
-     -  [X] ~:pred~ selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Apred%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
-     -  [X] =:auto-map= selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Aauto-map%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
-+  [X] Title
-     -  [X] Quoted lambda (produces the same encoded value as unquoted lambda): (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
-     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
-     -  [X] Expression: (safe) [[org-ql-search:todo:?title%3D%28message%20%22AHA%22%29]]
-+  [X] Sort
-     -  [X] Bare, quoted lambda: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
-     -  [X] Bare, unquoted lambda: (UNSAFE, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
-     -  [X] Quoted lambda in list: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28%28quote%20%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29%29%29]]
-     -  [X] Unquoted lambda in a list: (UNSAFE, but caught now):  [[org-ql-search:todo:?sort=((lambda%20nil%20(message%20"AHA")))]]
-
-For the query expression:
-
-1.  String queries are parsed by the PEG parsing function (which I will probably rename soon), which should only allow known Org QL predicates, not arbitrary functions.  For example:
-
-  #+BEGIN_SRC elisp
-    (org-ql--plain-query "message:AHA")  ;;=> (regexp "message:AHA")
-    (org-ql--plain-query '(message "AHA"))   ;;=> (wrong-type-argument stringp (message "AHA"))
-    (org-ql--plain-query "(message \"AHA\"")  ;;=> (and (regexp "(message") (regexp "AHA"))
-  #+END_SRC
-
-2.  Sexp queries already prompt for confirmation, unless the user has set =org-ql-view-ask-unsafe-links= to nil.
-
-[2020-11-11 Wed 23:27]  That's all the parameters and all the types that I can think to test.
-
 
 ** PROJECT [#B] Define predicates with a macro
 :PROPERTIES:
@@ -1435,6 +1346,99 @@ This works okay (except the priority accessor needs to be fixed, because Org pri
               :action #'helm-org-goto-marker))))
 #+END_SRC
 
+** DONE [#A] Checking links for unsafe parameters
+:PROPERTIES:
+:ID:       ba70e375-eddb-40df-8892-fb418c1f70d1
+:milestone: 0.5
+:END:
+:LOGBOOK:
+-  State "PROJECT"    from "UNDERWAY"   [2020-11-12 Thu 00:26]
+-  State "UNDERWAY"   from              [2020-11-11 Wed 23:09]
+:END:
+
+Theoretically one could put a sexp-based query into a link that would run arbitrary code to do something evil.  Like:
+
+[[org-ql-search:(message "AHA")]]
+
+That's very unlikely to be abused, but it would be good to protect against it.  Two possibilities:
+
+1.  For sexp-based queries in links and dynamic blocks, prompt for confirmation before running.
+2.  Use a special variable to control whether lambdas and arbitrary sexps are allowed in queries, and disable it for links and dynamic blocks.  (That might be difficult to do, since they could be buried in an ~and~ or something.  A whitelist approach might be needed.)
+
+*** DONE [#A] Tag org-super-agenda 1.2 and bump required version in org-ql
+:PROPERTIES:
+:milestone: 0.5
+:END:
+
+That /should/ force the version of org-super-agenda with the fix to be installed when org-ql is upgraded.
+
+[2020-11-22 Sun 17:19]  org-super-agenda 1.2 is tagged and released, so now we can depend on it.
+
+*** DONE Add automated tests
+:LOGBOOK:
+-  State "UNDERWAY"   from "TODO"       [2020-11-12 Thu 00:24]
+-  State "TODO"       from "MAYBE"      [2020-11-11 Wed 23:16]
+-  State "MAYBE"      from              [2020-11-11 Wed 23:15]
+:END:
+
+Maybe impractical, but maybe we could at least test that potentially unsafe ones signal errors.
+
+[2020-11-12 Thu 00:24]  Works better than I expected.  All the tests seem to correctly pass, signaling the correct errors for the correct reasons--except for the tests specific to org-super-agenda.  For that, I'm currently waiting for MELPA to build the version of org-super-agenda that has the fix applied, so I can install that into the test sandbox, and then those two tests should pass also.
+
+*** DONE Enumerate and test parameters and potentially unsafe types
+CLOSED: [2020-11-11 Wed 23:26]
+:LOGBOOK:
+-  State "DONE"       from "UNDERWAY"   [2020-11-11 Wed 23:26]
+-  State "UNDERWAY"   from              [2020-11-11 Wed 23:15]
+:END:
+
+#+CAPTION: Template for making testable links
+#+BEGIN_SRC org
+[[org-ql-search:todo:?]]
+#+END_SRC
+
+#+CAPTION: Expression to insert encoded values into template (after the =?=)
+#+BEGIN_SRC elisp
+  (insert (url-hexify-string (concat "buffers-files=" (prin1-to-string '((lambda () (message "AHA")))))))
+#+END_SRC
+
++  [X] Buffers-Files: Expanded by =org-ql-view--expand-buffers-files=:
+     -  [X] Quoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted lambda in list (safe): [[org-ql-search:todo:?buffers-files%3D%28%28quote%20%28lambda%20nil%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] Unquoted lambda in list: (safe) [[org-ql-search:todo:?buffers-files%3D%28%28lambda%20nil%20%28message%20%22AHA%22%29%29%29]]
++  [X] Groups
+     -  [X] Quoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda (safe): [[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted expression (safe): [[org-ql-search:todo:?super-groups%3D%28message%20%22AHA%22%29]]
+     -  [X] Unquoted expression (safe): [[org-ql-search:todo:?super-groups%3D%22AHA%22]]
+     -  [X] ~:pred~ selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Apred%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] =:auto-map= selector (UNSAFE, but caught with new org-super-agenda variable): [[org-ql-search:todo:?super-groups%3D%28%28%3Aauto-map%20%28lambda%20%28_%29%20%28message%20%22AHA%22%29%29%29%29]]
++  [X] Title
+     -  [X] Quoted lambda (produces the same encoded value as unquoted lambda): (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Unquoted lambda: (safe) [[org-ql-search:todo:?title%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Expression: (safe) [[org-ql-search:todo:?title%3D%28message%20%22AHA%22%29]]
++  [X] Sort
+     -  [X] Bare, quoted lambda: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Bare, unquoted lambda: (UNSAFE, but caught now): [[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29]]
+     -  [X] Quoted lambda in list: (maybe unsafe, but caught now): [[org-ql-search:todo:?sort%3D%28%28quote%20%28lambda%20%28_%20_%29%20%28message%20%22AHA%22%29%29%29%29]]
+     -  [X] Unquoted lambda in a list: (UNSAFE, but caught now):  [[org-ql-search:todo:?sort=((lambda%20nil%20(message%20"AHA")))]]
+
+For the query expression:
+
+1.  String queries are parsed by the PEG parsing function (which I will probably rename soon), which should only allow known Org QL predicates, not arbitrary functions.  For example:
+
+  #+BEGIN_SRC elisp
+    (org-ql--plain-query "message:AHA")  ;;=> (regexp "message:AHA")
+    (org-ql--plain-query '(message "AHA"))   ;;=> (wrong-type-argument stringp (message "AHA"))
+    (org-ql--plain-query "(message \"AHA\"")  ;;=> (and (regexp "(message") (regexp "AHA"))
+  #+END_SRC
+
+2.  Sexp queries already prompt for confirmation, unless the user has set =org-ql-view-ask-unsafe-links= to nil.
+
+[2020-11-11 Wed 23:27]  That's all the parameters and all the types that I can think to test.
+
+
 ** DONE [#A] Views: Multiple sorters are not preserved                 :bug:
 :PROPERTIES:
 :milestone: 0.5
@@ -1935,7 +1939,8 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
      -  [ ] =README.org=
 +  [ ] Tag and sign
 +  [ ] Push
-+  [ ] Merge to master
++  [ ] Merge to master or make stable branch
++  [ ] Push master/stable
 
 ** Commit
 :PROPERTIES:
@@ -1949,6 +1954,19 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 +  [ ] Lint
 +  [ ] Test
 +  [ ] Commit and push
+
+** DONE Release 0.5
+
++  [X] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
++  [ ] Changelog entry
++  [X] Update version numbers
+     -  [X] =org-ql.el=
+     -  [X] =helm-org-ql.el= (N/A yet)
+     -  [X] =README.org=
++  [X] Tag and sign
++  [X] Push
++  [X] Merge to master or make stable branch
++  [X] Push master/stable
 
 ** DONE Release 0.4.9
 
