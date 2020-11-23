@@ -5,21 +5,7 @@
 
 You've been experimenting with different ways to track such data in Org.  You've tried using tags, but some of the names in question conflict with other tags in your data (e.g. someone's named Charles, but you also work with a firm named Charles, Inc., and you'd prefer to continue using the tag =Charles= for entries about that firm), so you've been using tags like ~:personNAME:~, which seems awkward.  You've tried using a ~:person: NAME~ property on entries, which has the advantage of not cluttering the tags list, but also the disadvantage of not being readily visible in an outline.  
 
-So you haven't decided on a long-term solution, but the meetings aren't going to wait--you need to search that data now, and you have a mix of both tags and properties in your entries.  What you need is to be able to search for all of the entries about Alice (which you've tagged ~:personAlice:~) when you're meeting with her, and all of the entries about Bob (which have the property ~:person: Bob~) when you're meeting with him  What do you do?
-
-* Contents
-:PROPERTIES:
-:TOC:      :include siblings :ignore this
-:END:
-:CONTENTS:
-- [[#a-custom-person-predicate][A custom (person) predicate]]
-- [[#searching-for-multiple-people-at-once][Searching for multiple people at once]]
-- [[#normalizing-queries-to-rewrite-arguments][Normalizing queries to rewrite arguments]]
-- [[#non-sexp-query-syntax][Non-sexp query syntax]]
-- [[#using-multiple-predicates][Using multiple predicates]]
-- [[#predicate-aliases][Predicate aliases]]
-- [[#appendix-anaphoric-macros][Appendix: Anaphoric macros]]
-:END:
+So you haven't decided on a long-term solution, but the meetings aren't going to wait -- you need to search that data now, and you have a mix of both tags and properties in your entries.  What you need is to be able to search for all of the entries about Alice (which you've tagged ~:personAlice:~) when you're meeting with her, and all of the entries about Bob (which have the property ~:person: Bob~) when you're meeting with him.  What do you do?
 
 * A custom ~(person)~ predicate
 
@@ -44,7 +30,7 @@ Now let's see what results we get for searching this file for entries about Bob:
 - [#C] Dirty dishes in sink
 - [#A] Stinky coffee breath
 
-Hmm, looks like we need to remind Bob to do wash out his mug and take some mints after lunch.  Now what do we need to talk with Alice about?
+Hmm, looks like we need to remind Bob to wash his mug and take some mints after lunch.  Now what do we need to discuss with Alice?
 
 #+BEGIN_SRC elisp :results list :exports both :cache yes
   (org-ql-query :select '(org-get-heading :no-tags)
@@ -83,7 +69,7 @@ Hmm, I thought we already told her to leave Polly at home.
 
 * Searching for multiple people at once
 
-Oh, wait, this week is shortened due to holidays, so we're having a combined meeting.  How do we search for entries about both of them?  Well, this is the obvious solution:
+Oh, wait, this week is shortened due to holidays, so we're having a combined meeting.  How do we search for entries about either of them?  Well, this is the obvious solution:
 
 #+BEGIN_SRC elisp :results list :exports both :cache yes
   (org-ql-query :select '(org-get-heading :no-tags)
@@ -141,7 +127,7 @@ In fact, we can, using a query normalizer.  Normalizers are =pcase= forms (I /kn
                                (tags (concat "person" name)))))
 #+END_SRC
 
-Now, don't faint from all the backquoting and unquoting--it's just Lisp, nothing to be afraid of!  Let's slow down a moment and see what the normalized query looks like to be sure we're doing it correctly:
+Now, don't faint from all the backquoting and unquoting -- it's just Lisp, nothing to be afraid of!  Let's slow down a moment and see what the normalized query looks like to be sure we're doing it correctly:
 
 #+BEGIN_SRC elisp :results code :exports both :cache yes
   (org-ql--normalize-query '(person "Alice" "Bob"))
@@ -258,8 +244,10 @@ Finally, if you're a Lisper who appreciates anaphora, you might prefer a more sy
   (org-ql-defpred (person p) (&rest names)
     "Search for entries about any of NAMES."
     :normalizers ((`(,predicate-names . ,names)
-                   `(or (tags ,@(--map `(concat "person" ,it) names))
-                        ,@(--map `(property "person" ,it) names))))
+                   `(or (tags ,@(cl-loop for name in names
+                                         collect (concat "person" name)))
+                        ,@(cl-loop for name in names
+                                   collect `(property "person" ,name)))))
     :body (--any (or (property "person" name)
                      (tags (concat "person" name)))
                  names))
@@ -279,12 +267,9 @@ Let's make sure it works:
 - [#C] Dirty dishes in sink
 - [#A] Stinky coffee breath
 
-Have fun making custom search predicates!
+Have fun making custom search predicates
 
 * Example data
-:PROPERTIES:
-:TOC:      :ignore (this descendants)
-:END:
 
 ** [#A] Loud pet parakeet                                      :personAlice:
 
