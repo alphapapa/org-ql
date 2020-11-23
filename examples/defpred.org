@@ -5,7 +5,7 @@
 
 You've been experimenting with different ways to track such data in Org.  You've tried using tags, but some of the names in question conflict with other tags in your data (e.g. someone's named Charles, but you also work with a firm named Charles, Inc., and you'd prefer to continue using the tag =Charles= for entries about that firm), so you've been using tags like ~:personNAME:~, which seems awkward.  You've tried using a ~:person: NAME~ property on entries, which has the advantage of not cluttering the tags list, but also the disadvantage of not being readily visible in an outline.
 
-So you haven't decided on a long-term solution, but the meetings aren't going to wait--you need to search that data now, and you have a mix of both tags and properties in your entries.  What you need is to be able to search for all of the entries about Alice (which you've tagged ~:personAlice:~) when you're meeting with her, and all of the entries about Bob (which have the property ~:person: Bob~) when you're meeting with him  What do you do?
+So you haven't decided on a long-term solution, but the meetings aren't going to wait--you need to search that data now, and you have a mix of both tags and properties in your entries.  What you need is to be able to search for all of the entries about Alice (which you've tagged ~:personAlice:~) when you're meeting with her, and all of the entries about Bob (which have the property ~:person: Bob~) when you're meeting with him.  What do you do?
 
 * Contents
 :PROPERTIES:
@@ -19,6 +19,8 @@ So you haven't decided on a long-term solution, but the meetings aren't going to
 - [[#non-sexp-query-syntax][Non-sexp query syntax]]
 - [[#using-multiple-predicates][Using multiple predicates]]
 - [[#predicate-aliases][Predicate aliases]]
+- [[#be-formless][Be formless]]
+- [[#conclusion][Conclusion]]
 - [[#appendix-anaphoric-macros][Appendix: Anaphoric macros]]
 :END:
 
@@ -276,6 +278,42 @@ And, you know what, if you're just so busy that you don't even have time to type
 
 (It's up to you to remember whether =p= means =person= or =priority=, but code can't solve everything.)
 
+* Be formless
+
+We can even go a step further: since the normalizer rewrites the query to call the =property= and =tags= predicates instead, this =person= predicate doesn't even need a body form!
+
+#+BEGIN_SRC elisp :results silent :exports code
+  (org-ql-defpred (person p) (&rest names)
+    "Search for entries about any of NAMES."
+    :normalizers ((`(,predicate-names . ,names)
+                   `(or (tags ,@(cl-loop for name in names
+                                         collect (concat "person" name)))
+                        ,@(cl-loop for name in names
+                                   collect `(property "person" ,name))))))
+#+END_SRC
+
+Will it still work?
+
+#+BEGIN_SRC elisp :results list :exports both :cache yes
+  (org-ql-query :select '(org-get-heading :no-tags)
+                :from (current-buffer)
+                :where '(person "Alice" "Bob"))
+#+END_SRC
+
+#+RESULTS[4f5971c56616f01d8d3c28a66ef380495ee3e158]:
+-  [#A] Loud pet parakeet
+-  [#C] Missing sticky notes
+-  [#C] Dirty dishes in sink
+-  [#A] Stinky coffee breath
+
+It does!
+
+* Conclusion
+
+In this tutorial, we've gone from having to write lengthy, complex query expressions for accommodating idiosyncratic requirements, to being able to write simple query expressions that abstract away ugly details, to rewriting those query expressions into a more optimal form before a search is even run.  The end result is an Org Query Language that is customized to meet your specific needs.
+
+What new custom predicates will you write next?
+
 * Appendix: Anaphoric macros
 
 Finally, if you're a Lisper who appreciates anaphora, you might prefer a more syntactically concise definition of the predicate using Dash macros:
@@ -285,10 +323,7 @@ Finally, if you're a Lisper who appreciates anaphora, you might prefer a more sy
     "Search for entries about any of NAMES."
     :normalizers ((`(,predicate-names . ,names)
                    `(or (tags ,@(--map `(concat "person" ,it) names))
-                        ,@(--map `(property "person" ,it) names))))
-    :body (--any (or (property "person" it)
-                     (tags (concat "person" it)))
-                 names))
+                        ,@(--map `(property "person" ,it) names)))))
 #+END_SRC
 
 Let's make sure it works:
@@ -305,7 +340,7 @@ Let's make sure it works:
 - [#C] Dirty dishes in sink
 - [#A] Stinky coffee breath
 
-Have fun making custom search predicates!
+Lisp is fun!
 
 * Example data
 :PROPERTIES:
