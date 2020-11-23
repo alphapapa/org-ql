@@ -736,13 +736,15 @@ File: README.info,  Node: Listing / acting-on results,  Next: Custom predicates,
             :where '(todo "WAITING"))
           ;; => ((headline (:raw-value "Visit the moon" ...) ...) ...)
 
-  4. Macro: ‘org-ql’
+  4. Macro: ‘org-ql’ (deprecated)
 
      _Arguments:_ ‘(buffers-or-files query &key sort narrow markers
      action)’
 
      Expands into a call to ‘org-ql-select’ with the same arguments.
      For convenience, arguments should be unquoted.
+
+     _Note: This macro is deprecated and will be removed in v0.7._
 
 
 File: README.info,  Node: Custom predicates,  Prev: Listing / acting-on results,  Up: Functions / Macros
@@ -1461,35 +1463,35 @@ Node: Date/time predicates17382
 Node: Functions / Macros20037
 Node: Agenda-like views20335
 Node: Listing / acting-on results21740
-Node: Custom predicates27281
-Node: Dynamic block30772
-Node: Links33470
-Node: Tips34157
-Node: Changelog34475
-Node: 06-pre35171
-Node: 0535611
-Node: 04937088
-Node: 04837362
-Node: 04737709
-Node: 04638104
-Node: 04538504
-Node: 04438863
-Node: 04339220
-Node: 04239415
-Node: 04139576
-Node: 0439817
-Node: 03243750
-Node: 03144129
-Node: 0344326
-Node: 02347301
-Node: 02247529
-Node: 02147797
-Node: 0247996
-Node: 0152031
-Node: Notes52132
-Node: Comparison with Org Agenda searches52294
-Node: org-sidebar53166
-Node: License53445
+Node: Custom predicates27362
+Node: Dynamic block30853
+Node: Links33551
+Node: Tips34238
+Node: Changelog34556
+Node: 06-pre35252
+Node: 0535692
+Node: 04937169
+Node: 04837443
+Node: 04737790
+Node: 04638185
+Node: 04538585
+Node: 04438944
+Node: 04339301
+Node: 04239496
+Node: 04139657
+Node: 0439898
+Node: 03243831
+Node: 03144210
+Node: 0344407
+Node: 02347382
+Node: 02247610
+Node: 02147878
+Node: 0248077
+Node: 0152112
+Node: Notes52213
+Node: Comparison with Org Agenda searches52375
+Node: org-sidebar53247
+Node: License53526
 
 End Tag Table
 
