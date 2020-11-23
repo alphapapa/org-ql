@@ -43,6 +43,7 @@
 |---+-----+---------+------------------------------------------------|
 | A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 | A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]        |
+| A |     | TODO    | [[Merge new defpred into master][Merge new defpred into master]]                  |
 | A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                           |
 #+END:
 
@@ -384,7 +385,11 @@ Maybe make it an option to automatically convert them when possible, because if 
 
 [2020-11-22 Sun 17:17]  Everything is converted, everything works, and all the tests pass.  Worked out just as I hoped.  Will merge for 0.6.
 
-*** TODO Merge new defpred into master
+*** TODO [#A] Merge new defpred into master
+
+*** TODO Test defining custom predicates in user config
+
+*** TODO Show how to define custom predicates
 
 *** DONE Run tests
 
