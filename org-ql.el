@@ -2,8 +2,8 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.5-pre
-;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2-pre") (ov "1.0.6") (peg "0.6") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
+;; Version: 0.6-pre
+;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "0.6") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -136,7 +136,7 @@ This list should not contain any duplicates."))
 (defgroup org-ql nil
   "Customization for `org-ql'."
   :group 'org
-  ;; TODO: Add info manual link.
+  :link '(custom-manual "(org-ql)Usage")
   :link '(url-link "https://github.com/alphapapa/org-ql"))
 
 (defcustom org-ql-ask-unsafe-queries t
@@ -159,12 +159,39 @@ See Info node `(org-ql)Queries'."
 
 ;;;; Macros
 
-;; TODO: Mark as obsolete/deprecated.
+(cl-defmacro org-ql--defpred (name args docstring &rest body)
+  "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
+NAME may be a symbol or a list of symbols: if a list, the first
+is used as the name and the rest are aliases.  ARGS is a
+`cl-defun'-style argument list.  DOCSTRING is the function's
+docstring.  BODY is the body of the predicate.
+
+Predicates will be called with point on the beginning of an Org
+heading and should return non-nil if the heading's entry is a
+match."
+  (declare (debug ([&or symbolp listp] listp stringp def-body))
+           (indent defun))
+  (let* ((aliases (when (listp name)
+                    (cdr name)))
+         (name (cl-etypecase name
+                 (list (car name))
+                 (atom name)))
+         (fn-name (intern (concat "org-ql--predicate-" (symbol-name name))))
+         (pred-name (intern (symbol-name name))))
+    `(progn
+       (cl-eval-when (compile load eval)
+	 ;; When compiling, the predicate must be added to `org-ql-predicates' before `org-ql--def-plain-query-fn'
+	 ;; is called to define `org-ql--plain-query'.  Otherwise, `org-ql--plain-query' seems to work properly
+	 ;; when interpreted but not always when the file is byte-compiled.
+	 (push (list :name ',pred-name :aliases ',aliases :fn ',fn-name :docstring ,docstring :args ',args) org-ql-predicates))
+       (cl-defun ,fn-name ,args ,docstring ,@body))))
+
 ;;;###autoload
 (cl-defmacro org-ql (buffers-or-files query &key sort narrow action)
   "Expands into a call to `org-ql-select' with the same arguments.
 For convenience, arguments should be unquoted."
-  (declare (indent defun))
+  (declare (indent defun)
+           (obsolete "Please use functions `org-ql-select' or `org-ql-query' instead" "org-ql 0.5"))
   `(org-ql-select ,buffers-or-files
      ',query
      :action ',action
