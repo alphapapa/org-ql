@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # * Commit parameters
 # Unused now, but good for future reference.  See man 5 githooks.
@@ -14,4 +14,9 @@ read local_ref local_sha remote_ref remote_sha
 # cause remote code to be downloaded and executed (i.e. what would
 # happen by installing packages).  It can be done manually when needed.
 
-make sandbox=.sandbox test
+# Only run when pushing master.
+
+if [[ $local_ref = refs/heads/master ]]
+then
+    make sandbox=.sandbox test
+fi
