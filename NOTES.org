@@ -71,8 +71,8 @@
 |    0.6 | B | PROJECT | [[Define predicates with a macro][Define predicates with a macro]]                   |
 |    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                |
 |    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                       |
+|    0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                       |
 | future | C | MAYBE   | [[Alternative parsing libraries][Alternative parsing libraries]]                    |
-| future | C | MAYBE   | [[Experiment with =widget=][Experiment with =widget=]]                         |
 #+END:
 
 * [#A] Tasks
@@ -104,6 +104,7 @@
 - [[#timeline-view][Timeline view]]
 - [[#implement-view-with-tabulated-list-mode-or-magit-section][Implement view with tabulated-list-mode or magit-section]]
 - [[#dynamic-blocks][Dynamic blocks]]
+- [[#predicate-helper-functions][Predicate helper functions]]
 - [[#new-transient-transient-lisp-variable-class][New Transient transient-lisp-variable class]]
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
@@ -1225,6 +1226,71 @@ For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this 
 [2020-01-16 Thu 06:20]  This idea just came to me when I was thinking about using the search-based paradigm vs. outline-based.  This would allow both, e.g. some kind of =#+BEGIN_QUERY= block that would update when =C-c C-c= is pressed on it.
 
 [2020-11-13 Fri 22:57]  I keep rediscovering ideas that I've had previously.  This is now done as the dynamic block feature.  I guess I should actually use these tools I've made.
+
+** PROJECT [#B] Predicate helper functions
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
+[2020-11-24 Tue 16:50]  This idea started off by writing a =week= predicate:
+
+#+BEGIN_SRC elisp
+  (org-ql-defpred week (&optional relative)
+    "Match entries with a timestamp in the calendar week RELATIVE.
+  RELATIVE is a number relative to the current week (i.e. 0 or nil
+  is this week, -1 is last week, 1 is next week)."
+    :normalizers ((`(,predicate-names . ,(or `(,(and (pred numberp) relative)) `nil))
+                   (let* ((relative (or relative 0))
+                          (now (ts-now))
+                          (week-start (->> now
+                                           (ts-adjust 'day (- 0 (ts-dow now)))
+                                           (ts-adjust 'day (* 7 relative))
+                                           (ts-apply :hour 0 :minute 0 :second 0)))
+                          (week-end (->> now
+                                         (ts-adjust 'day (- 7 (ts-dow now)))
+                                         (ts-adjust 'day (* 7 relative))
+                                         (ts-apply :hour 23 :minute 59 :second 59))))
+                     `(ts :from ,week-start :to ,week-end)))
+                  (`(,predicate-names ,(and (pred stringp) date))
+                   (let* ((then (ts-parse date))
+                          (week-start (->> then
+                                           (ts-adjust 'day (- 0 (ts-dow then)))
+                                           (ts-apply :hour 0 :minute 0 :second 0)))
+                          (week-end (->> then
+                                         (ts-adjust 'day (- 7 (ts-dow then)))
+                                         (ts-apply :hour 23 :minute 59 :second 59))))
+                     `(ts :from ,week-start :to ,week-end)))))
+#+END_SRC
+
+That works pretty well:
+
+#+BEGIN_SRC elisp :results code
+  (list (org-ql--normalize-query '(week))
+        (org-ql--normalize-query '(week -1))
+        (org-ql--normalize-query '(week "2020-11-01")))
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC elisp
+  ((ts :from #s(ts nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 1606024800.0)
+       :to #s(ts nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 1606715999.0))
+   (ts :from #s(ts nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 1605420000.0)
+       :to #s(ts nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 1606111199.0))
+   (ts :from #s(ts nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 1604206800.0)
+       :to #s(ts nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 1604901599.0)))
+#+END_SRC
+
+(Hmm, the patterns in those beginning-of-week and end-of-week timestamps are interesting...)
+
+And that's pretty useful.  But what if someone wanted to write a query like ~(closed :on (week -1))~ to match entries closed in the last week?  It wouldn't help at all.
+
+One idea would be to add a =type= argument to the =week= predicate.  But that would be awkward and a bit ugly.  And it wouldn't solve the problem, anyway, because while the =ts= predicate can take a type argument for =active=, =inactive=, or =both=, it can't do, e.g. =clocked=, =closed=, =deadline=, etc.
+
+So what's really needed is a way to insert the week-based arguments into other selectors.  But that would require there to be a ~(week)~ function defined, which would mean polluting the global namespace and potential conflicts.
+
+So maybe another macro could define "helper" functions which would be available in the normalizers.  Or maybe the =defpred= macro could take another argument for "helpers", although that would probably require binding them around each =pcase= expression--not hard, but not especially elegant.
+
+The next question is, how would those work in string queries?  I'm not sure there's a good way to translate them.
 
 ** PROJECT [#C] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]  :compatibility:
 
