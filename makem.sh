@@ -3,7 +3,7 @@
 # * makem.sh --- Script to aid building and testing Emacs Lisp packages
 
 # URL: https://github.com/alphapapa/makem.sh
-# Version: 0.2.1
+# Version: 0.3
 
 # * Commentary:
 
@@ -80,6 +80,7 @@ Options:
   -d, --debug    Print debug info.
   -h, --help     I need somebody!
   -v, --verbose  Increase verbosity, up to -vv.
+  --no-color     Disable color output.
 
   --debug-load-path  Print load-path from inside Emacs.
 
@@ -88,8 +89,9 @@ Options:
   -e, --exclude FILE  Exclude FILE from linting and testing.
   -f, --file FILE     Check FILE in addition to discovered files.
 
-  --no-color        Disable color output.
-  -C, --no-compile  Don't compile files automatically.
+  -c, --compile-batch  Batch-compile files (instead of separately; quicker, but
+                                            may hide problems).
+  -C, --no-compile     Don't compile files automatically.
 
 Sandbox options:
   -s[DIR], --sandbox[=DIR]  Run Emacs with an empty config in a sandbox DIR.
@@ -287,6 +289,18 @@ function batch-byte-compile {
         "${error_on_warn[@]}" \
         --funcall batch-byte-compile \
         "$@"
+}
+
+function byte-compile-file {
+    debug "byte-compile: ERROR-ON-WARN:$compile_error_on_warn"
+    local file="$1"
+
+    [[ $compile_error_on_warn ]] && local error_on_warn=(--eval "(setq byte-compile-error-on-warn t)")
+
+    run_emacs \
+        "${error_on_warn[@]}" \
+        --eval "(byte-compile-file \"$file\")" \
+        || error "Compiling file failed: $file"
 }
 
 # ** Files
@@ -684,16 +698,46 @@ function all {
     tests
 }
 
-function compile {
+function compile-batch {
+    [[ $compile ]] || return 0
+    unset compile  # Only compile once.
+
+    verbose 1 "Compiling..."
+    verbose 2 "Batch-compiling files..."
+    debug "Byte-compile files: ${files_project_byte_compile[@]}"
+
+    batch-byte-compile "${files_project_byte_compile[@]}" \
+        && success "Compiling finished without errors." \
+            || error "Compilation failed."
+}
+
+function compile-each {
     [[ $compile ]] || return 0
     unset compile  # Only compile once.
 
     verbose 1 "Compiling..."
     debug "Byte-compile files: ${files_project_byte_compile[@]}"
 
-    batch-byte-compile "${files_project_byte_compile[@]}" \
+    local compile_errors
+    for file in "${files_project_byte_compile[@]}"
+    do
+        verbose 2 "Compiling file: $file..."
+        byte-compile-file "$file" \
+            || compile_errors=t
+    done
+
+    ! [[ $compile_errors ]] \
         && success "Compiling finished without errors." \
             || error "Compilation failed."
+}
+
+function compile {
+    if [[ $compile = batch ]]
+    then
+        compile-batch "$@"
+    else
+        compile-each "$@"
+    fi
 }
 
 function batch {
@@ -747,7 +791,7 @@ function lint-compile {
     verbose 1 "Linting compilation..."
 
     compile_error_on_warn=true
-    batch-byte-compile "${files_project_byte_compile[@]}" \
+    compile "${files_project_byte_compile[@]}" \
         && success "Linting compilation finished without errors." \
             || error "Linting compilation failed."
     unset compile_error_on_warn
@@ -880,6 +924,7 @@ errors=0
 verbose=0
 compile=true
 arg_batch="--batch"
+compile=each
 
 # MAYBE: Disable color if not outputting to a terminal.  (OTOH, the
 # colorized output is helpful in CI logs, and I don't know if,
@@ -938,8 +983,8 @@ elisp_org_package_archive="(add-to-list 'package-archives '(\"org\" . \"https://
 # * Args
 
 args=$(getopt -n "$0" \
-              -o dhe:E:i:s::vf:CO \
-              -l exclude:,emacs:,install-deps,install-linters,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,no-org-repo,sandbox:: \
+              -o dhce:E:i:s::vf:CO \
+              -l compile-batch,exclude:,emacs:,install-deps,install-linters,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,no-org-repo,sandbox:: \
               -- "$@") \
     || { usage; exit 1; }
 eval set -- "$args"
@@ -965,6 +1010,10 @@ do
         -h|--help)
             usage
             exit
+            ;;
+        -c|--compile-batch)
+            debug "Compiling files in batch mode"
+            compile=batch
             ;;
         -E|--emacs)
             shift
