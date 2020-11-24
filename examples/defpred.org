@@ -331,11 +331,24 @@ Finally, if you're a Lisper who appreciates anaphora, you might prefer a more sy
   (org-ql-defpred (person p) (&rest names)
     "Search for entries about any of NAMES."
     :normalizers ((`(,predicate-names . ,names)
-                   `(or (tags ,@(--map `(concat "person" ,it) names))
+                   `(or (tags ,@(--map (concat "person" it) names))
                         ,@(--map `(property "person" ,it) names)))))
 #+END_SRC
 
-Let's make sure it works:
+Let's make sure it normalizes correctly:
+
+#+BEGIN_SRC elisp :results code :exports both :cache yes
+  (org-ql--normalize-query '(person "Alice" "Bob"))
+#+END_SRC
+
+#+RESULTS[ebc46fff31b72359353dda539a26c95b7d650df2]:
+#+BEGIN_SRC elisp
+  (or (tags "personAlice" "personBob")
+      (property "person" "Alice")
+      (property "person" "Bob"))
+#+END_SRC
+
+It does, so the query also produces the correct results:
 
 #+BEGIN_SRC elisp :results list :exports both :cache yes
   (org-ql-query :select '(org-get-heading :no-tags)
