@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 ;; Version: 0.6-pre
-;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "0.6") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
+;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -671,87 +671,75 @@ Arguments STRING, POS, FILL, and LEVEL are according to
 
 (require 'peg)
 
-;; Fix compiler warnings probably caused by `peg' not using lexical-binding.
-;; TODO: File bug report upstream.
-(defvar peg-errors nil)
-(defvar peg-stack nil)
-
-(defmacro org-ql--peg-parse-string (rules string &optional noerror)
-  "Parse STRING according to RULES."
-  ;; This sentence was in the docstring but Checkdoc is complaining,
-  ;; so moving it to a comment: "If NOERROR is non-nil, push nil
-  ;; resp. t if the parse failed resp. succeded instead of signaling
-  ;; an error."
-
-  ;; Unfortunately, this macro was moved to peg-tests.el, so we copy it here.
-  `(with-temp-buffer
-     (insert ,string)
-     (goto-char (point-min))
-     ,(if noerror
-	  (let ((entry (make-symbol "entry"))
-		(start (caar rules)))
-	    `(peg-parse (,entry (or (and ,start `(-- t)) ""))
-			. ,rules))
-	`(peg-parse . ,rules))))
-
-(cl-eval-when (compile load eval)
-  ;; This `eval-when' is necessary, otherwise the macro does not define
-  ;; the function correctly, apparently because `org-ql-predicates'
-  ;; ends up being not defined correctly at expansion time.
-
-  (defun org-ql--def-query-string-to-sexp-fn (predicates)
-    "Define function `org-ql--query-string-to-sexp' according to PREDICATES.
-Builds the PEG expression using PREDICATES (which should be the
-value of `org-ql-predicates')."
-    (let* ((names (--map (symbol-name (plist-get (cdr it) :name))
-                         predicates))
-           (aliases (->> predicates
-                         (--map (plist-get (cdr it) :aliases))
-                         -non-nil
-                         -flatten
-                         (-map #'symbol-name)))
-           (predicates (->> (append names aliases)
-                            -uniq
-                            ;; Sort the keywords longest-first to work around what seems to be an
-                            ;; obscure bug in `peg': when one keyword is a substring of another,
-                            ;; and the shorter one is listed first, the shorter one fails to match.
-                            (-sort (-on #'> #'length)))))
-      (fset 'org-ql--query-string-to-sexp
-            (byte-compile
-             `(cl-function
-               (lambda (input &optional (boolean 'and))
-                 "Return query parsed from plain query string INPUT.
-Multiple predicates are combined with BOOLEAN."
-                 (unless (s-blank-str? input)
-                   (let* ((query (org-ql--peg-parse-string
-                                  ((query (+ term
-                                             (opt (+ (syntax-class whitespace) (any)))))
-                                   (term (or (and negation (list positive-term)
-                                                  ;; This is a bit confusing, but it seems to work.  There's probably a better way.
-                                                  `(pred -- (list 'not (car pred))))
-                                             positive-term))
-                                   (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
-                                                      (and predicate-without-args `(pred -- (list (intern pred))))
-                                                      (and plain-string `(s -- (list 'regexp s)))))
-                                   (plain-string (or quoted-arg unquoted-arg))
-                                   (predicate-with-args (substring predicate) ":" args)
-                                   (predicate-without-args (substring predicate) ":")
-                                   (predicate (or ,@predicates))
-                                   (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
-                                   (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
-                                   (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
-                                   (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
-                                   (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
-                                   (negation "!")
-                                   (separator "," ))
-                                  input 'noerror)))
-                     ;; Discard the t that `peg-parse-string' always returns as the first
-                     ;; element.  I don't know what it means, but we don't want it.
-                     (if (> (length (cdr query)) 1)
-                         (cons boolean (nreverse (cdr query)))
-                       (cadr query)))))))))))
+(defun org-ql--def-query-string-to-sexp-fn (predicates)
+  "Define function `org-ql--query-string-to-sexp' according to PREDICATES.
+  Builds the PEG expression using PREDICATES (which should be the
+  value of `org-ql-predicates')."
+  (let* ((names (--map (symbol-name (plist-get (cdr it) :name))
+                       predicates))
+         (aliases (->> predicates
+                       (--map (plist-get (cdr it) :aliases))
+                       -non-nil
+                       -flatten
+                       (-map #'symbol-name)))
+         (predicate-names (->> (append names aliases)
+                               -uniq
+                               ;; Sort the keywords longest-first to work around what seems to be an
+                               ;; obscure bug in `peg': when one keyword is a substring of another,
+                               ;; and the shorter one is listed first, the shorter one fails to match.
+                               (-sort (-on #'> #'length))))
+         (pexs `((query (+ term
+                           (opt (+ (syntax-class whitespace) (any)))))
+                 (term (or (and negation (list positive-term)
+                                ;; This is a bit confusing, but it seems to work.  There's probably a better way.
+                                `(pred -- (list 'not (car pred))))
+                           positive-term))
+                 (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
+                                    (and predicate-without-args `(pred -- (list (intern pred))))
+                                    (and plain-string `(s -- (list 'regexp s)))))
+                 (plain-string (or quoted-arg unquoted-arg))
+                 (predicate-with-args (substring predicate) ":" args)
+                 (predicate-without-args (substring predicate) ":")
+                 (predicate (or ,@predicate-names))
+                 (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
+                 (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
+                 (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
+                 (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
+                 (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
+                 (negation "!")
+                 (separator "," )))
+         (closure (lambda (input &optional boolean)
+                    "Return query parsed from plain query string INPUT.
+  Multiple predicate-names are combined with BOOLEAN (default: `and')."
+                    ;; HACK: Silence unused lexical variable warnings.
+                    (ignore predicates predicate-names names aliases)
+                    (unless (s-blank-str? input)
+                      (let* ((boolean (or boolean 'and))
+                             (parsed-sexp
+                              (with-temp-buffer
+                                (insert input)
+                                (goto-char (point-min))
+                                ;; Copied from `peg-parse'.  There is no function in `peg' that
+                                ;; returns a matcher function--every entry point is a macro,
+                                ;; which means that, since we define our PEG rules at runtime when
+                                ;; predicate-names are defined, we either have to use `eval', or we
+                                ;; have to borrow some code.  It ends up that we only have to
+                                ;; borrow this `with-peg-rules' call, which isn't too bad.
+                                (eval `(with-peg-rules ,pexs
+                                         (peg-run (peg ,(caar pexs)) #'peg-signal-failure)))
+                                )))
+                        (pcase parsed-sexp
+                          (`(,one-predicate) one-predicate)
+                          (`(,_ . ,_) (cons boolean (reverse parsed-sexp)))
+                          (_ nil)))))))
+    (fset 'org-ql--query-string-to-sexp closure)))
 
 ;;;;; Predicate definition
+
+;; HACK: These functions *will* be defined at runtime, so we silence
+;; compiler warnings about them:
+(declare-function org-ql--normalize-query "org-ql" (query) t)
+(declare-function org-ql--query-preamble "org-ql" (query) t)
 
 (defvar org-ql-defpred-defer nil
   "Defer expensive function redefinitions when defining predicates.
@@ -961,11 +949,10 @@ It would be expanded to:
          (preambles (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names))))
                                preambles)))
     `(progn
-       (cl-eval-when (compile load eval)
-         (cl-defun ,fn-name ,args ,docstring ,body))
+       (cl-defun ,fn-name ,args ,docstring ,body)
        ;; SOMEDAY: Use `map-elt' here, after map 2.1 can be automatically installed in CI sandbox...
        (setf (alist-get ',predicate-name org-ql-predicates)
-             `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,,docstring :args ,',args
+             `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,(\, docstring) :args ,',args
                      :normalizers ,',normalizers :preambles ,',preambles))
        (unless org-ql-defpred-defer
          ;; Reversing preserves the order in which predicates were defined.
@@ -1018,10 +1005,9 @@ predicates."
 
 ;;;;;; Predicates
 
-(cl-eval-when (compile load eval)
-  ;; Improve load time by deferring the per-predicate preamble- and normalizer-function
-  ;; redefinitions until all of the predicates have been defined.
-  (setf org-ql-defpred-defer t))
+;; Improve load time by deferring the per-predicate preamble- and normalizer-function
+;; redefinitions until all of the predicates have been defined.
+(setf org-ql-defpred-defer t)
 
 (org-ql-defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
@@ -1836,10 +1822,10 @@ of the line after the heading."
             (from (test-timestamps (ts<= from next-ts)))
             (to (test-timestamps (ts<= next-ts to)))))))
 
-;; Predicates defined: stop deferring and define normalizer and preamble functions now.
+;; NOTE: Predicates defined: stop deferring and define normalizer and
+;; preamble functions now.  Reversing preserves the order in which
+;; they were defined.  Generally it shouldn't matter, but it might...
 (setf org-ql-defpred-defer nil)
-;; Reversing preserves the order in which they were defined.
-;; Generally it shouldn't matter, but it might...
 (org-ql--define-normalize-query-fn (reverse org-ql-predicates))
 (org-ql--define-query-preamble-fn (reverse org-ql-predicates))
 (org-ql--def-query-string-to-sexp-fn (reverse org-ql-predicates))

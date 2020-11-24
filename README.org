@@ -524,6 +524,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Internal*
 +  Predicates are now defined more cleanly with a macro (=org-ql-defpred=) that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.
++  Version 1.0 of library ~peg~ is now required.
 
 ** 0.5
 

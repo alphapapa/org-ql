@@ -972,6 +972,7 @@ File: README.info,  Node: 06-pre,  Next: 05,  Up: Changelog
      (org-ql-defpred) that consolidates functionality related to each
      predicate.  This will also allow users to more easily define custom
      predicates.
+   • Version 1.0 of library ‘peg’ is now required.
 
 
 File: README.info,  Node: 05,  Next: 049,  Prev: 06-pre,  Up: Changelog
@@ -1487,29 +1488,29 @@ Node: Links33872
 Node: Tips34559
 Node: Changelog34877
 Node: 06-pre35573
-Node: 0536139
-Node: 04937616
-Node: 04837890
-Node: 04738237
-Node: 04638632
-Node: 04539032
-Node: 04439391
-Node: 04339748
-Node: 04239943
-Node: 04140104
-Node: 0440345
-Node: 03244278
-Node: 03144657
-Node: 0344854
-Node: 02347829
-Node: 02248057
-Node: 02148325
-Node: 0248524
-Node: 0152559
-Node: Notes52660
-Node: Comparison with Org Agenda searches52822
-Node: org-sidebar53694
-Node: License53973
+Node: 0536196
+Node: 04937673
+Node: 04837947
+Node: 04738294
+Node: 04638689
+Node: 04539089
+Node: 04439448
+Node: 04339805
+Node: 04240000
+Node: 04140161
+Node: 0440402
+Node: 03244335
+Node: 03144714
+Node: 0344911
+Node: 02347886
+Node: 02248114
+Node: 02148382
+Node: 0248581
+Node: 0152616
+Node: Notes52717
+Node: Comparison with Org Agenda searches52879
+Node: org-sidebar53751
+Node: License54030
 
 End Tag Table
 
