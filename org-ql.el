@@ -673,8 +673,8 @@ Arguments STRING, POS, FILL, and LEVEL are according to
 
 (defun org-ql--def-query-string-to-sexp-fn (predicates)
   "Define function `org-ql--query-string-to-sexp' according to PREDICATES.
-  Builds the PEG expression using PREDICATES (which should be the
-  value of `org-ql-predicates')."
+Builds the PEG expression using PREDICATES (which should be the
+value of `org-ql-predicates')."
   (let* ((names (--map (symbol-name (plist-get (cdr it) :name))
                        predicates))
          (aliases (->> predicates
@@ -726,8 +726,7 @@ Arguments STRING, POS, FILL, and LEVEL are according to
                                 ;; have to borrow some code.  It ends up that we only have to
                                 ;; borrow this `with-peg-rules' call, which isn't too bad.
                                 (eval `(with-peg-rules ,pexs
-                                         (peg-run (peg ,(caar pexs)) #'peg-signal-failure)))
-                                )))
+                                         (peg-run (peg ,(caar pexs)) #'peg-signal-failure))))))
                         (pcase parsed-sexp
                           (`(,one-predicate) one-predicate)
                           (`(,_ . ,_) (cons boolean (reverse parsed-sexp)))
