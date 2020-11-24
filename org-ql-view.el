@@ -1006,6 +1006,8 @@ property."
 ;; These functions are somewhat regrettable because of the need to keep them
 ;; in sync, but it seems worth it to provide users with the flexibility.
 
+(declare-function org-ql-search-directories-files "org-ql-search" t)
+
 (defun org-ql-view--contract-buffers-files (buffers-files)
   "Return BUFFERS-FILES in its \"contracted\" form.
 The contracted form is \"org-agenda-files\" if BUFFERS-FILES

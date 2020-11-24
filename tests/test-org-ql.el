@@ -30,6 +30,7 @@
 (require 'with-simulated-input)
 
 (require 'org-ql)
+(require 'org-ql-view)
 
 ;;;; Variables
 
