@@ -90,6 +90,7 @@
 - [[#update-commentary][Update commentary]]
 - [[#org-ql-block-let-org-agenda-format-its-output][org-ql-block: Let org-agenda format its output]]
 - [[#omnifocus-like-screencasts][OmniFocus-like screencasts]]
+- [[#use-ripgrep-to-search-unopened-files][Use ripgrep to search unopened files]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
@@ -226,6 +227,10 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 ** MAYBE OmniFocus-like screencasts
 
 [2020-11-18 Wed 03:03]  Looking at OmniFocus's web site now, their short videos showing features demonstrate a lot of features that exist in org-ql already.  After implementing section-based views, it would be cool to make some short demos showing similar features.
+
+** MAYBE Use ripgrep to search unopened files
+
+[2020-11-26 Thu 02:20]  It [[https://github.com/BurntSushi/ripgrep/issues/176][supports multiline search now]], so it might be suitable now.
 
 ** MAYBE [#C] Overlay-based caching inspired by org-num-mode
 
