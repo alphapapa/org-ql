@@ -47,7 +47,6 @@
 |   M | P | Keyword  | Heading                                                            |
 |-----+---+----------+--------------------------------------------------------------------|
 | 0.6 | B | PROJECT  | [[Group tag support][Group tag support]]                                                  |
-|     | B | UNDERWAY | [["Node" caching]["Node" caching]]                                                     |
 |     |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
 #+END:
 
@@ -109,7 +108,6 @@
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
-- [[#node-caching]["Node" caching]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
 - [[#views-multiple-sorters-are-not-preserved][Views: Multiple sorters are not preserved]]
 - [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
@@ -117,6 +115,7 @@
 - [[#fix-org-ql-view--link-open-on-org-93][Fix org-ql-view--link-open on Org 9.3+]]
 - [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
 - [[#helm-command][Helm command]]
+- [[#node-caching]["Node" caching]]
 - [[#define-predicates-with-a-macro][Define predicates with a macro]]
 - [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
 - [[#quickly-change-sortinggrouping-in-search-views][Quickly change sorting/grouping in search views]]
@@ -1299,110 +1298,6 @@ e.g. doesn't currently show the =View= header.
 
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
-** UNDERWAY [#B] "Node" caching
-
-[2019-09-05 Thu 12:30]  At each node checked by a predicate, make a struct that stores attributes we can query for, as well as parent node position.  This would let us speed up ancestor-based queries, like =(ancestor (todo "WAITING"))=.  Ideally it would also serve as the tag hierarchy cache.
-
-It would probably be an all-encompassing system, because predicates would need to refer to the cached node when available.  So maybe the struct should be like =ts-defstruct=, with lazy, caching accessors, which would move some of the predicates' code into the accessors.
-
-Maybe a good improvement to make later, after the project is more developed.
-
-[2019-10-07 Mon 13:08]  This has basically been implemented in =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but as functions and values rather than with structs.  It remains to be seen how this works with =ancestor= queries, but I suspect it will help a lot.
-
-*** Struct PoC code
-
-This works okay (except the priority accessor needs to be fixed, because Org priorities are awkward to get).  I'm guessing all the extra function calls would make it undesirable in cases of returning many results, but it's a flexible concept that makes sorting easy.
-
-#+BEGIN_SRC elisp
-  (ts-defstruct org-ql-node
-    file position marker
-    (level
-     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
-                          (org-outline-level)))
-    (heading
-     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
-                          ;; TODO: Org 9.2+ adds 2 more args to `org-get-heading'.
-                          (org-get-heading t t)))
-    (priority
-     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
-                          (org-get-priority )))
-    (tags
-     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
-                          (->> (org-ql--tags-at (point))
-                               -flatten
-                               (delq 'org-ql-nil))))
-    (todo
-     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
-                          (org-get-todo-state)))
-    (outline-path
-     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
-                          (org-split-string (org-format-outline-path (org-get-outline-path)
-                                                                     nil nil "")
-                                            ""))))
-
-  (defcustom helm-org-ql-sort
-    '(org-ql-node-priority org-ql-node-todo)
-    "FIXME"
-    )
-
-  (cl-defun helm-org-ql (buffers-files &optional no-and)
-    "Display results in BUFFERS-FILES for an `org-ql' query using Helm.
-  Interactively, search the current buffer.
-
-  NOTE: Atoms in the query are turned into strings where
-  appropriate, which makes it unnecessary to type quotation marks
-  around words that are intended to be searched for as indepenent
-  strings.
-
-  Also, unless NO-AND is non-nil (interactively, with prefix), all
-  query tokens are wrapped in an implied (and) form. This is
-  because a query must be a sexp, so when typing multiple clauses,
-  either (and) or (or) would be required around them, and (and) is
-  typically more useful, because it narrows down results.
-
-  For example, this raw input:
-
-   Emacs git
-
-  Is transformed into this query:
-
-   (and \"Emacs\" \"git\")
-
-  However, quoted strings remain quoted, so this input:
-
-   \"something else\" (tags \"funny\")
-
-  Is transformed into this query:
-
-   (and \"something else\" (tags \"funny\"))"
-    (interactive (list (current-buffer) current-prefix-arg))
-    (let ((helm-input-idle-delay helm-org-ql-input-idle-delay))
-      (helm :sources
-            (helm-build-sync-source "helm-org-ql-agenda-files"
-              :candidates (lambda ()
-                            (let* ((query (helm-org-ql--input-to-query helm-pattern no-and))
-                                   (window-width (window-width (helm-window))))
-                              (when query
-                                (let ((results (org-ql-select buffers-files
-                                                 query
-                                                 :action '(make-org-ql-node :marker (point-marker)))))
-                                  (when helm-org-ql-sort
-                                    (dolist (sorter (reverse helm-org-ql-sort))
-                                      (setf results (sort results sorter))))
-                                  (cl-loop for it in-ref results
-                                           do (setf it (concat (buffer-name (org-ql-node-file it)) ":"
-                                                               (or (org-ql-node-todo it) "")
-                                                               (or (org-ql-node-priority it) "")
-                                                               (org-ql-node-heading it) "\\"
-                                                               (org-ql-node-outline-path it))))
-                                  results))))
-              :match #'identity
-              :fuzzy-match nil
-              :multimatch nil
-              :volatile t
-              :action #'helm-org-goto-marker))))
-#+END_SRC
-
 ** DONE [#A] Checking links for unsafe parameters
 :PROPERTIES:
 :ID:       ba70e375-eddb-40df-8892-fb418c1f70d1
@@ -1741,6 +1636,110 @@ Well, a bit of fiddling (lots of trial-and-error required) produced this:
 #+END_SRC
 
 That seems pretty usable!
+
+** DONE [#B] "Node" caching
+
+[2019-09-05 Thu 12:30]  At each node checked by a predicate, make a struct that stores attributes we can query for, as well as parent node position.  This would let us speed up ancestor-based queries, like =(ancestor (todo "WAITING"))=.  Ideally it would also serve as the tag hierarchy cache.
+
+It would probably be an all-encompassing system, because predicates would need to refer to the cached node when available.  So maybe the struct should be like =ts-defstruct=, with lazy, caching accessors, which would move some of the predicates' code into the accessors.
+
+Maybe a good improvement to make later, after the project is more developed.
+
+[2019-10-07 Mon 13:08]  This has basically been implemented in =be2bf6df316b96b3ed56851b8ffe0e227796b621=, but as functions and values rather than with structs.  It remains to be seen how this works with =ancestor= queries, but I suspect it will help a lot.
+
+*** Struct PoC code
+
+This works okay (except the priority accessor needs to be fixed, because Org priorities are awkward to get).  I'm guessing all the extra function calls would make it undesirable in cases of returning many results, but it's a flexible concept that makes sorting easy.
+
+#+BEGIN_SRC elisp
+  (ts-defstruct org-ql-node
+    file position marker
+    (level
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (org-outline-level)))
+    (heading
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          ;; TODO: Org 9.2+ adds 2 more args to `org-get-heading'.
+                          (org-get-heading t t)))
+    (priority
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (org-get-priority )))
+    (tags
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (->> (org-ql--tags-at (point))
+                               -flatten
+                               (delq 'org-ql-nil))))
+    (todo
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (org-get-todo-state)))
+    (outline-path
+     nil :accessor-init (org-with-point-at (org-ql-node-marker struct)
+                          (org-split-string (org-format-outline-path (org-get-outline-path)
+                                                                     nil nil "")
+                                            ""))))
+
+  (defcustom helm-org-ql-sort
+    '(org-ql-node-priority org-ql-node-todo)
+    "FIXME"
+    )
+
+  (cl-defun helm-org-ql (buffers-files &optional no-and)
+    "Display results in BUFFERS-FILES for an `org-ql' query using Helm.
+  Interactively, search the current buffer.
+
+  NOTE: Atoms in the query are turned into strings where
+  appropriate, which makes it unnecessary to type quotation marks
+  around words that are intended to be searched for as indepenent
+  strings.
+
+  Also, unless NO-AND is non-nil (interactively, with prefix), all
+  query tokens are wrapped in an implied (and) form. This is
+  because a query must be a sexp, so when typing multiple clauses,
+  either (and) or (or) would be required around them, and (and) is
+  typically more useful, because it narrows down results.
+
+  For example, this raw input:
+
+   Emacs git
+
+  Is transformed into this query:
+
+   (and \"Emacs\" \"git\")
+
+  However, quoted strings remain quoted, so this input:
+
+   \"something else\" (tags \"funny\")
+
+  Is transformed into this query:
+
+   (and \"something else\" (tags \"funny\"))"
+    (interactive (list (current-buffer) current-prefix-arg))
+    (let ((helm-input-idle-delay helm-org-ql-input-idle-delay))
+      (helm :sources
+            (helm-build-sync-source "helm-org-ql-agenda-files"
+              :candidates (lambda ()
+                            (let* ((query (helm-org-ql--input-to-query helm-pattern no-and))
+                                   (window-width (window-width (helm-window))))
+                              (when query
+                                (let ((results (org-ql-select buffers-files
+                                                 query
+                                                 :action '(make-org-ql-node :marker (point-marker)))))
+                                  (when helm-org-ql-sort
+                                    (dolist (sorter (reverse helm-org-ql-sort))
+                                      (setf results (sort results sorter))))
+                                  (cl-loop for it in-ref results
+                                           do (setf it (concat (buffer-name (org-ql-node-file it)) ":"
+                                                               (or (org-ql-node-todo it) "")
+                                                               (or (org-ql-node-priority it) "")
+                                                               (org-ql-node-heading it) "\\"
+                                                               (org-ql-node-outline-path it))))
+                                  results))))
+              :match #'identity
+              :fuzzy-match nil
+              :multimatch nil
+              :volatile t
+              :action #'helm-org-goto-marker))))
+#+END_SRC
 
 ** DONE [#B] Define predicates with a macro
 :PROPERTIES:
