@@ -37,8 +37,8 @@
 |    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                |
 |    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                       |
 |    0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                       |
+|    0.6 | C | TODO    | [[Example: Next upcoming event][Example: Next upcoming event]]                     |
 | future | C | MAYBE   | [[Alternative parsing libraries][Alternative parsing libraries]]                    |
-| future | C | MAYBE   | [[Experiment with =widget=][Experiment with =widget=]]                         |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -85,6 +85,7 @@
 - [[#add-more-sorters][Add more sorters?]]
 - [[#default-sort][Default sort]]
 - [[#partial-match-for-property-queries][Partial match for property queries]]
+- [[#example-next-upcoming-event][Example: Next upcoming event]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
 - [[#org-ql-block-let-org-agenda-format-its-output][org-ql-block: Let org-agenda format its output]]
@@ -173,6 +174,42 @@ e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse
 #+END_SRC
 
 Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
+
+** TODO [#C] Example: Next upcoming event                             :docs:
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
+[2020-11-26 Thu 18:17]  Inspired by [[https://github.com/unhammer/org-upcoming-modeline][GitHub - unhammer/org-upcoming-modeline: put upcoming org event in modeline]] ([[https://www.reddit.com/r/emacs/comments/k1e4eu/show_next_orgappointment_in_modeline/gdp6fqv/][Reddit thread]]).
+
+#+BEGIN_SRC elisp
+  (pcase-let* ((now (ts-now))
+               (items (org-ql-select (org-agenda-files)
+                        '(ts-active :from 0 :to 1)
+                        :action '(cons (save-excursion
+                                         (car (sort (cl-loop while (re-search-forward org-tsr-regexp nil t)
+                                                             collect (ts-parse-org (match-string 1)))
+                                                    #'ts<)))
+                                       (point-marker))))
+               (`(,time . ,marker) (car (seq-sort-by #'car #'ts< items)))
+               (heading (org-with-point-at marker
+                          (org-link-display-format (nth 4 (org-heading-components)))))
+               (seconds-until (ts-difference time now))
+               ;; NOTE: Using day of year to avoid end-of-month turnover in day number.
+               (days-until (- (ts-doy time) (ts-doy now)))
+               (time-string (cond ((<= seconds-until org-upcoming-modeline-duration-threshold)
+                                   (ts-human-format-duration seconds-until 'abbreviate))
+                                  ((= 0 days-until)
+                                   (ts-format "%H:%M" time))
+                                  ((= 1 days-until)
+                                   (ts-format "tomorrow %H:%M" time))
+                                  (t ; > 1 days-until
+                                   (ts-format "%a %H:%M" time)))))
+    (propertize (format " ⏰ %s: %s" time-string heading)
+                'face 'org-level-4
+                'help-echo (format "%s at <%s>" heading
+                                   (ts-format "%Y-%m-%d %H:%M" time))))
+#+END_SRC
 
 ** TODO [#C] ~org-agenda-skip-function~
 
@@ -2163,6 +2200,7 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 :CONTENTS:
 - [[#alois-janicek][Alois Janicek]]
 - [[#benson-chu][Benson Chu]]
+- [[#kevin-brubeck-unhammer][Kevin Brubeck Unhammer]]
 :END:
 
 ** [[https://github.com/AloisJanicek/.doom.d-2nd][Alois Janicek]]
@@ -2257,6 +2295,12 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
                                                            :and (:not (:and (:not (:scheduled today)
                                                                                   :not (:deadline today)))))))))))
 #+END_SRC
+
+** [[https://github.com/unhammer/org-upcoming-modeline][Kevin Brubeck Unhammer]]
+
+*** [[https://github.com/unhammer/org-upcoming-modeline][org-upcoming-modeline: put upcoming org event in modeline]]
+
++ [[https://www.reddit.com/r/emacs/comments/k1e4eu/show_next_orgappointment_in_modeline/][Show next (org-)appointment in modeline? : r/emacs]]
 
 * Profiling
 :PROPERTIES:
