@@ -2199,6 +2199,7 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 :END:
 :CONTENTS:
 - [[#alois-janicek][Alois Janicek]]
+- [[#andrea-giugliano][Andrea Giugliano]]
 - [[#benson-chu][Benson Chu]]
 - [[#kevin-brubeck-unhammer][Kevin Brubeck Unhammer]]
 :END:
@@ -2255,6 +2256,10 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
          :sort '(date)) "inbox")
   )
 #+END_SRC
+
+** [[https://ag91.github.io/][Andrea Giugliano]]
+
+*** [[https://ag91.github.io/blog/2020/09/27/org-agenda-and-your-future-or-how-to-keep-score-of-your-long-term-goals-with-org-mode/][Org Agenda and Your Future, or how to keep score of your long term goals with Org Mode - Where parallels cross]]
 
 ** [[https://github.com/pestctrl/emacs-config][Benson Chu]]
 
