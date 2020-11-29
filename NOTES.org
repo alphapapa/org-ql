@@ -30,15 +30,15 @@
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
-|      M | P | Todo    | Heading                                          |
-|--------+---+---------+--------------------------------------------------|
-|    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]   |
-|    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]] |
-|    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                |
-|    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                       |
-|    0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                       |
-|    0.6 | C | TODO    | [[Example: Next upcoming event][Example: Next upcoming event]]                     |
-| future | C | MAYBE   | [[Alternative parsing libraries][Alternative parsing libraries]]                    |
+|   M | P | Todo    | Heading                                          |
+|-----+---+---------+--------------------------------------------------|
+| 0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]   |
+| 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]] |
+| 0.6 | B | PROJECT | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]        |
+| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                |
+| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                       |
+| 0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                       |
+| 0.6 | C | TODO    | [[Example: Next upcoming event][Example: Next upcoming event]]                     |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -63,15 +63,15 @@
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-| M | P | Heading                                                  |
-|---+---+----------------------------------------------------------|
-|   | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                  |
-|   | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                     |
-|   | B | [[Outline path predicate][Outline path predicate]]                                   |
-|   | B | [[Document the sorting functions][Document the sorting functions]]                           |
-|   | B | [[Recursive queries][Recursive queries]]                                        |
-|   | B | [[Timeline view][Timeline view]]                                            |
-|   | B | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]] |
+|   M | P | Heading                                   |
+|-----+---+-------------------------------------------|
+|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]   |
+|     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                      |
+| 0.6 | B | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]] |
+|     | B | [[Outline path predicate][Outline path predicate]]                    |
+|     | B | [[Document the sorting functions][Document the sorting functions]]            |
+|     | B | [[Recursive queries][Recursive queries]]                         |
+|     | B | [[Timeline view][Timeline view]]                             |
 #+END:
 
 * [#A] Tasks
@@ -96,6 +96,7 @@
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
+- [[#date-specific-preambles-for-ts-predicates][Date-specific preambles for ts predicates]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#group-tag-support][Group tag support]]
@@ -417,6 +418,20 @@ Unfortunately it does not say what the new, required second argument is.
 :END:
 
 Maybe make it an option to automatically convert them when possible, because if a user wanted to add complexity to a string query, he'd have to rewrite it as a sexp.
+
+** PROJECT [#B] Date-specific preambles for =ts= predicates      :enhancement:
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
+[2020-11-28 Sat 19:12]  For example, a regexp like this would make timestamp searches very fast:
+
+#+BEGIN_SRC elisp
+  (rx "<" "2020" "-" (or "10-31" "11-01" "11-02") ">")
+  ;;=> "<2020-\\(?:\\(?:1\\(?:0-31\\|1-0[12]\\)\\)\\)>"
+#+END_SRC
+
+It shouldn't be hard to generate a list of date strings that =rx-to-string= could optimize, and that would avoid parsing and testing many timestamps which wouldn't match when specific date ranges are given.
 
 ** PROJECT [#B] Outline path predicate
 
