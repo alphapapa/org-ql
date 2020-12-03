@@ -40,6 +40,11 @@
 
 (require 'org-ql)
 
+;; FIXME: check-declare declares "function not found", even though it
+;; clearly is.  It seems to not handle cl-defun, even though its code
+;; appears to account for it.
+(declare-function org-ql-search "org-ql-search" t)
+
 (require 'dash)
 (require 's)
 (require 'org-super-agenda)
