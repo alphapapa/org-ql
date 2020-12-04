@@ -521,7 +521,6 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Changed*
 +  Helm support (including the command =helm-org-ql=) has been moved to a separate package, =helm-org-ql=.
-+  Predicates ~outline-path~ and ~outline-path-segment~, when called with multiple arguments, optimize to a query like ~(and (heading LAST-OLP-ARG) (olp OTHER-OLP-ARGS))~, which is much faster.
 
 *Internal*
 +  Predicates are now defined more cleanly with a macro (=org-ql-defpred=) that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.

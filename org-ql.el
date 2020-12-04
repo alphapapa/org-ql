@@ -1170,17 +1170,9 @@ the following queries:
   (olp \"Food\" \"Fruits\")
   (olp \"Fruits\" \"Grapes\")
   (olp \"Food\" \"Grapes\")"
-  ;; FIXME: Stop regexp quoting when the (heading) predicate is changed to take a non-regexp string.
-  :normalizers ((`(,predicate-names ,string)
-                 ;; Equivalent to (heading string), which is much faster.
-                 `(heading ,(regexp-quote string)))
-                (`(,predicate-names . ,strings)
-                 ;; Rewrite query to use (heading) with the last string
-                 ;; and (olp) for the rest, which is much faster.
-                 (let ((last (car (last strings)))
-                       (rest (butlast strings)))
-                   `(and (heading ,(regexp-quote last))
-                         (outline-path ,@(mapcar #'regexp-quote rest))))))
+  :normalizers ((`(,predicate-names . ,strings)
+                 ;; Regexp quote headings.
+                 `(outline-path ,@(mapcar #'regexp-quote strings))))
   :body (let ((entry-olp (org-ql--value-at (point) #'org-ql--outline-path)))
           (cl-loop for h in regexps
                    always (cl-member h entry-olp :test #'string-match))))
@@ -1203,17 +1195,9 @@ contiguous segment of the outline path:
 
   (olp \"Food\" \"Grape\")"
   ;; MAYBE: Allow anchored matching.
-  ;; FIXME: Stop regexp quoting when the (heading) predicate is changed to take a non-regexp string.
-  :normalizers ((`(,predicate-names ,string)
-                 ;; Equivalent to (heading string), which is much faster.
-                 `(heading ,(regexp-quote string)))
-                (`(,predicate-names . ,strings)
-                 ;; Rewrite query to use (heading) with the last string
-                 ;; and (olp) for the rest, which is much faster.
-                 (let ((last (car (last strings)))
-                       (rest (butlast strings)))
-                   `(and (heading ,(regexp-quote last))
-                         (outline-path-segment ,@(mapcar #'regexp-quote rest))))))
+  :normalizers ((`(,(or 'outline-path-segment 'olps) . ,strings)
+                 ;; Regexp quote headings.
+                 `(outline-path-segment ,@(mapcar #'regexp-quote strings))))
   :body (org-ql--infix-p regexps (org-ql--value-at (point) #'org-ql--outline-path)))
 
 (org-ql-defpred path (&rest regexps)
