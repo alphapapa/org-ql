@@ -29,15 +29,15 @@
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
-|   M | P | Todo    | Heading                                          |
-|-----+---+---------+--------------------------------------------------|
-| 0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]   |
-| 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]] |
-| 0.6 | B | PROJECT | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]      |
-| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                |
-| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                       |
-| 0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                       |
-| 0.6 | C | TODO    | [[Example: Next upcoming event][Example: Next upcoming event]]                     |
+|   M | P | Todo    | Heading                                                                        |
+|-----+---+---------+--------------------------------------------------------------------------------|
+| 0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
+| 0.6 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
+| 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
+| 0.6 | B | PROJECT | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]                                      |
+| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
+| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                                     |
+| 0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                                                     |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -56,21 +56,21 @@
 |---+-----+---------+------------------------------------------------|
 | A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 | A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]        |
-| A |     | PROJECT | [[Org link types %5B2/3%5D][Org link types {2/3}]]                           |
+| A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                           |
 #+END:
 
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-|   M | P | Heading                                     |
-|-----+---+---------------------------------------------|
-|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]     |
-|     | A | [[Org link types %5B2/3%5D][Org link types {2/3}]]                        |
+|   M | P | Heading                                   |
+|-----+---+-------------------------------------------|
+|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]   |
+|     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                      |
 | 0.6 | B | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]] |
-|     | B | [[Outline path predicate][Outline path predicate]]                      |
-|     | B | [[Document the sorting functions][Document the sorting functions]]              |
-|     | B | [[Recursive queries][Recursive queries]]                           |
-|     | B | [[Timeline view][Timeline view]]                               |
+|     | B | [[Outline path predicate][Outline path predicate]]                    |
+|     | B | [[Document the sorting functions][Document the sorting functions]]            |
+|     | B | [[Recursive queries][Recursive queries]]                         |
+|     | B | [[Timeline view][Timeline view]]                             |
 #+END:
 
 * [#A] Tasks
@@ -79,6 +79,7 @@
 :END:
 :CONTENTS:
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
+- [[#bookmarks-save-list-of-files-instead-of-eg-org-agenda-files-when-appropriate][Bookmarks save list of files instead of e.g. org-agenda-files when appropriate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
 - [[#outline-path-in-buffers-files-arg][Outline path in buffers-files arg]]
 - [[#add-more-sorters][Add more sorters?]]
@@ -95,6 +96,7 @@
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
+- [[#optimization-for-olp-predicate][Optimization for olp predicate]]
 - [[#date-specific-preambles-for-ts-predicates][Date-specific preambles for ts predicates]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
@@ -130,6 +132,13 @@
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
 
 It should act like ~(or (deadline auto) (scheduled :to today))~.
+
+** TODO [#B] Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
+[2020-12-05 Sat 01:24]  The bookmarked plist should use the "contracted" form rather than the list of files so that, if the list of files changes before the bookmark is loaded, it will use the new list of files.
 
 ** TODO [#B] Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~
 
@@ -417,6 +426,32 @@ Unfortunately it does not say what the new, required second argument is.
 :END:
 
 Maybe make it an option to automatically convert them when possible, because if a user wanted to add complexity to a string query, he'd have to rewrite it as a sexp.
+
+** PROJECT [#B] Optimization for ~olp~ predicate
+
+I noticed that, of course, a search like =h:bar olp:foo= is much faster than =olp:foo,bar=.  Then I realized that the last argument to =olp= could be removed and replaced with a =heading= predicate with that argument, which is much faster.
+
+[2020-12-05 Sat 01:27]  However, this does not always work correctly, as [[https://github.com/alphapapa/org-ql/issues/160#issuecomment-738524404][yantar92 reported]]:
+
+#+BEGIN_QUOTE
+Consider the following
+example:
+
+    * No deadline
+    ** Learn
+    *** Research
+    **** Plasticity
+    ***** TODO Schwaiger [MRS-Fall] (2017) Characterizing the mechanical properties of individual phases in nanostructured composites
+
+I may try to match the last heading like the following "olp:dead phase".
+It will not match.
+#+END_QUOTE
+
+*** TODO Devise solution to desired ~olp~ optimization
+
+*** NEXT Write test for ~olp~ that catches bug that attempted optimization caused
+
+
 
 ** PROJECT [#B] Date-specific preambles for =ts= predicates      :enhancement:
 :PROPERTIES:
