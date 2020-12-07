@@ -177,30 +177,29 @@ Is transformed into this query:
 (cl-defun helm-org-ql-source (buffers-files &key (name "helm-org-ql"))
   "Return Helm source named NAME that searches BUFFERS-FILES with `helm-org-ql'."
   ;; Expansion of `helm-build-sync-source' macro.
-  (helm-make-source name 'helm-source-sync
-    :filtered-candidate-transformer (lambda (candidates _)
-                                      (let ((window-width (window-width (helm-window))))
-                                        (mapcar (lambda (marker)
-                                                  (unless (markerp marker) (user-error "Unexpected candidate for `helm-org-ql-source'"))
-                                                  (org-with-point-at marker
+  (let ((window-width (window-width (helm-window))))
+    (helm-make-source name 'helm-source-sync
+      :filtered-candidate-transformer (lambda (candidate-markers _)
+                                        (mapcar (lambda (candidate-marker)
+                                                  (org-with-point-at candidate-marker
                                                     (helm-org-ql--heading window-width)))
-                                                candidates)))
-    :candidates (lambda ()
-                  (let* ((query (org-ql--query-string-to-sexp helm-pattern)))
-                    (when query
-                      (with-current-buffer (helm-buffer-get)
-                        (setq helm-org-ql-buffers-files buffers-files))
-                      (ignore-errors
-                        ;; Ignore errors that might be caused by partially typed queries.
-                        (org-ql-select buffers-files query
-                          :action `(point-marker))))))
-    :match #'identity
-    :fuzzy-match nil
-    :multimatch nil
-    :nohighlight t
-    :match-dynamic t
-    :keymap helm-org-ql-map
-    :action helm-org-ql-actions))
+                                                candidate-markers))
+      :candidates (lambda ()
+                    (let* ((query (org-ql--query-string-to-sexp helm-pattern)))
+                      (when query
+                        (with-current-buffer (helm-buffer-get)
+                          (setq helm-org-ql-buffers-files buffers-files))
+                        (ignore-errors
+                          ;; Ignore errors that might be caused by partially typed queries.
+                          (org-ql-select buffers-files query
+                            :action `(point-marker))))))
+      :match #'identity
+      :fuzzy-match nil
+      :multimatch nil
+      :nohighlight t
+      :match-dynamic t
+      :keymap helm-org-ql-map
+      :action helm-org-ql-actions)))
 
 (defun helm-org-ql--heading (window-width)
   "Return string for Helm for heading at point.
