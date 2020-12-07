@@ -179,12 +179,12 @@ Is transformed into this query:
   ;; Expansion of `helm-build-sync-source' macro.
   (helm-make-source name 'helm-source-sync
     :filtered-candidate-transformer (lambda (candidates _)
-				      (let ((window-width (window-width (helm-window))))
-					(mapcar (lambda (marker)
-						  (unless (markerp marker) (user-error "Unexpected candidate for `helm-org-ql-source'"))
-						  (org-with-point-at marker
+                                      (let ((window-width (window-width (helm-window))))
+                                        (mapcar (lambda (marker)
+                                                  (unless (markerp marker) (user-error "Unexpected candidate for `helm-org-ql-source'"))
+                                                  (org-with-point-at marker
                                                     (helm-org-ql--heading window-width)))
-						candidates)))
+                                                candidates)))
     :candidates (lambda ()
                   (let* ((query (org-ql--query-string-to-sexp helm-pattern)))
                     (when query
