@@ -207,8 +207,10 @@ Arguments are listed next to predicate names, where applicable.
 +  =category (&optional categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
 +  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
 +  =habit= :: Return non-nil if entry is a habit.
-+  =heading (&rest regexps)= :: Return non-nil if current entry's heading matches all ~REGEXPS~ (regexp strings).
++  =heading (&rest strings)= :: Return non-nil if current entry's heading matches all ~STRINGS~.  Matching is done case-insensitively.
      -  Aliases: =h=.
++  ~heading-regexp (&rest regexps)~ :: Return non-nil if current entry's heading matches all ~REGEXPS~ (regexp strings).  Matching is done case-insensitively.
+     -  Aliases: ~h*~.
 +  =level (level-or-comparator &optional level)= :: Return non-nil if current heading's outline level matches arguments.  The following forms are accepted: ~(level NUMBER)~: Matches if heading level is ~NUMBER~.  ~(level NUMBER NUMBER)~: Matches if heading level is equal to or between NUMBERs.  ~(level COMPARATOR NUMBER)~: Matches if heading level compares to ~NUMBER~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.
 +  =link (&optional description-or-target &key description target regexp-p)= :: Return non-nil if current heading contains a link matching arguments. ~DESCRIPTION-OR-TARGET~ is matched against the link's description and target.  Alternatively, one or both of ~DESCRIPTION~ and ~TARGET~ may be matched separately.  Without arguments, return non-nil if any link is found.
 +  =outline-path (&rest strings)= :: Return non-nil if current node's outline path matches all of ~STRINGS~.  Each string may appear as a substring in any part of the node's outline path.  For example, the path =Food/Fruits/Grapes= would match ~(olp "Fruit" "Grape")~.
@@ -518,9 +520,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Added*
 +  Macro =org-ql-defpred=, used to define search predicates.  (See [[file:examples/defpred.org][tutorial]].)
++  Predicate ~heading-regexp~, which matches regular expressions against heading text (alias: ~h*~).
 
 *Changed*
 +  Helm support (including the command =helm-org-ql=) has been moved to a separate package, =helm-org-ql=.
++  Predicate ~heading~ now matches plain strings instead of regular expressions.
 
 *Internal*
 +  Predicates are now defined more cleanly with a macro (=org-ql-defpred=) that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.
