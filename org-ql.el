@@ -378,6 +378,7 @@ If NARROW is non-nil, buffer will not be widened."
                       (message "org-ql: No headings in buffer: %s" (current-buffer)))
                     nil)
                 ;; Find matching entries.
+                ;; TODO: Bind `case-fold-search' around the preamble loop.
                 (cond (preamble (cl-loop while (let ((case-fold-search preamble-case-fold))
                                                  (re-search-forward preamble nil t))
                                          do (outline-back-to-heading 'invisible-ok)
