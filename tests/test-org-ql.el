@@ -656,6 +656,16 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ('(heading "Take over" "world"))
           '("Take over the world"))))
 
+    (describe "(heading-regexp)"
+      (org-ql-it "with one argument"
+        (org-ql-expect ('(heading-regexp "w.rld"))
+          ;; NOTE: This--correctly--does not match the "Skype with president of
+          ;; Antarctica" heading, which has the tag ":world:" in its heading line.
+          '("Take over the world")))
+      (org-ql-it "with two arguments"
+        (org-ql-expect ('(h* "T.ke over" "wor.*"))
+          '("Take over the world"))))
+
     (describe "(link)"
       (org-ql-it "without arguments"
         (org-ql-expect ('(link))

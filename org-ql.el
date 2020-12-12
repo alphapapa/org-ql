@@ -378,6 +378,7 @@ If NARROW is non-nil, buffer will not be widened."
                       (message "org-ql: No headings in buffer: %s" (current-buffer)))
                     nil)
                 ;; Find matching entries.
+                ;; TODO: Bind `case-fold-search' around the preamble loop.
                 (cond (preamble (cl-loop while (let ((case-fold-search preamble-case-fold))
                                                  (re-search-forward preamble nil t))
                                          do (outline-back-to-heading 'invisible-ok)
@@ -1026,28 +1027,56 @@ predicates."
                (list :regexp (rx bol (0+ space) ":STYLE:" (1+ space) "habit" (0+ space) eol))))
   :body (org-is-habit-p))
 
-(org-ql-defpred (heading h) (&rest regexps)
-  "Return non-nil if current entry's heading matches all REGEXPS (regexp strings)."
+(org-ql-defpred (heading h) (&rest strings)
+  "Return non-nil if current entry's heading matches all STRINGS.
+Matching is done case-insensitively."
   :normalizers ((`(,predicate-names . ,args)
                  ;; "h" alias.
                  `(heading ,@args)))
+  ;; TODO: Adjust regexp to avoid matching in tag list.
+  :preambles ((`(,predicate-names ,string)
+               ;; Only one string: match with preamble, then let predicate confirm (because
+               ;; the match could be in e.g. the tags rather than the heading text).
+               (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
+                                                 ,string)
+                                           'no-group)
+                     :case-fold t :query query))
+              (`(,predicate-names . ,strings)
+               ;; Multiple strings: use preamble to match against first
+               ;; string, then let the predicate match the rest.
+               (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
+                                                 ,(car strings))
+                                           'no-group)
+                     :case-fold t :query query)))
+  ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
+  :body (let ((heading (org-get-heading 'no-tags 'no-todo))
+              (case-fold-search t))
+          (--all? (string-match it heading) strings)))
+
+(org-ql-defpred (heading-regexp h*) (&rest regexps)
+  "Return non-nil if current entry's heading matches all REGEXPS (regexp strings).
+Matching is done case-insensitively."
+  :normalizers ((`(,predicate-names . ,args)
+                 ;; "h" alias.
+                 `(heading-regexp ,@args)))
   ;; MAYBE: Adjust regexp to avoid matching in tag list.
   :preambles ((`(,predicate-names ,regexp)
                ;; Only one regexp: match with preamble, then let predicate confirm (because
                ;; the match could be in e.g. the tags rather than the heading text).
                (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
-                                                 ,regexp)
+                                                 (regexp ,regexp))
                                            'no-group)
-                     :query query))
+                     :case-fold t :query query))
               (`(,predicate-names . ,regexps)
                ;; Multiple regexps: use preamble to match against first
                ;; regexp, then let the predicate match the rest.
                (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
-                                                 ,(car regexps))
+                                                 (regexp ,(car regexps)))
                                            'no-group)
-                     :query query)))
+                     :case-fold t :query query)))
   ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
-  :body (let ((heading (org-get-heading 'no-tags 'no-todo)))
+  :body (let ((heading (org-get-heading 'no-tags 'no-todo))
+              (case-fold-search t))
           (--all? (string-match it heading) regexps)))
 
 (org-ql-defpred level (level-or-comparator &optional level)

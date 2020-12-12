@@ -401,10 +401,14 @@ Arguments are listed next to predicate names, where applicable.
      Return non-nil if entry’s ‘TODO’ keyword is in ‘org-done-keywords’.
 ‘habit’
      Return non-nil if entry is a habit.
-‘heading (&rest regexps)’
-     Return non-nil if current entry’s heading matches all ‘REGEXPS’
-     (regexp strings).
+‘heading (&rest strings)’
+     Return non-nil if current entry’s heading matches all ‘STRINGS’.
+     Matching is done case-insensitively.
         • Aliases: h.
+‘‘heading-regexp (&rest regexps)’’
+     Return non-nil if current entry’s heading matches all ‘REGEXPS’
+     (regexp strings).  Matching is done case-insensitively.
+        • Aliases: ‘h*’.
 ‘level (level-or-comparator &optional level)’
      Return non-nil if current heading’s outline level matches
      arguments.  The following forms are accepted: ‘(level NUMBER)’:
@@ -962,10 +966,14 @@ File: README.info,  Node: 06-pre,  Next: 05,  Up: Changelog
 *Added*
    • Macro org-ql-defpred, used to define search predicates.  (See
      tutorial (examples/defpred.org).)
+   • Predicate ‘heading-regexp’, which matches regular expressions
+     against heading text (alias: ‘h*’).
 
    *Changed*
    • Helm support (including the command helm-org-ql) has been moved to
      a separate package, helm-org-ql.
+   • Predicate ‘heading’ now matches plain strings instead of regular
+     expressions.
 
    *Internal*
    • Predicates are now defined more cleanly with a macro
@@ -1477,40 +1485,40 @@ Node: org-ql-sparse-tree7544
 Node: Queries8344
 Node: Non-sexp query syntax9455
 Node: General predicates11162
-Node: Ancestor/descendant predicates16575
-Node: Date/time predicates17703
-Node: Functions / Macros20358
-Node: Agenda-like views20656
-Node: Listing / acting-on results22061
-Node: Custom predicates27683
-Node: Dynamic block31174
-Node: Links33872
-Node: Tips34559
-Node: Changelog34877
-Node: 06-pre35573
-Node: 0536196
-Node: 04937673
-Node: 04837947
-Node: 04738294
-Node: 04638689
-Node: 04539089
-Node: 04439448
-Node: 04339805
-Node: 04240000
-Node: 04140161
-Node: 0440402
-Node: 03244335
-Node: 03144714
-Node: 0344911
-Node: 02347886
-Node: 02248114
-Node: 02148382
-Node: 0248581
-Node: 0152616
-Node: Notes52717
-Node: Comparison with Org Agenda searches52879
-Node: org-sidebar53751
-Node: License54030
+Node: Ancestor/descendant predicates16805
+Node: Date/time predicates17933
+Node: Functions / Macros20588
+Node: Agenda-like views20886
+Node: Listing / acting-on results22291
+Node: Custom predicates27913
+Node: Dynamic block31404
+Node: Links34102
+Node: Tips34789
+Node: Changelog35107
+Node: 06-pre35803
+Node: 0536638
+Node: 04938115
+Node: 04838389
+Node: 04738736
+Node: 04639131
+Node: 04539531
+Node: 04439890
+Node: 04340247
+Node: 04240442
+Node: 04140603
+Node: 0440844
+Node: 03244777
+Node: 03145156
+Node: 0345353
+Node: 02348328
+Node: 02248556
+Node: 02148824
+Node: 0249023
+Node: 0153058
+Node: Notes53159
+Node: Comparison with Org Agenda searches53321
+Node: org-sidebar54193
+Node: License54472
 
 End Tag Table
 
