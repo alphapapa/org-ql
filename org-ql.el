@@ -252,13 +252,28 @@ returns nil or non-nil."
                          ,action)))
                     (_ (user-error "Invalid action form: %s" action))))
           (org-ql--today (ts-now))
-          (items (->> buffers
-                      (--map (with-current-buffer it
-                               (unless (derived-mode-p 'org-mode)
-                                 (user-error "Not an Org buffer: %s" (buffer-name)))
-                               (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                      :predicate predicate :action action :narrow narrow)))
-                      (-flatten-n 1))))
+          (items (let (orig-fns)
+                   (unwind-protect
+                       (progn
+                         (--each org-ql-predicates
+                           ;; Set predicate functions.
+                           (-let (((&plist :name :fn) (cdr it)))
+                             ;; Save original function.
+                             (push (list :name name :fn (symbol-function name)) orig-fns)
+                             ;; Temporarily set new function definition.
+                             (fset name fn)))
+                         ;; Run query on buffers.
+                         (->> buffers
+                              (--map (with-current-buffer it
+                                       (unless (derived-mode-p 'org-mode)
+                                         (user-error "Not an Org buffer: %s" (buffer-name)))
+                                       (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
+                                                              :predicate predicate :action action :narrow narrow)))
+                              (-flatten-n 1)))
+                     (--each orig-fns
+                       ;; Restore original function mappings.
+                       (-let (((&plist :name :fn) it))
+                         (fset name fn)))))))
     ;; Sort items
     (pcase sort
       (`nil items)
@@ -347,50 +362,32 @@ If NARROW is non-nil, buffer will not be widened."
   ;; can't be used, so we do it manually (this is same as the equivalent `flet' expansion).
   ;; Mappings are stored in the variable because it allows predicates to be defined with a
   ;; macro, which allows documentation to be easily generated for them.
-
-  ;; MAYBE: Lift the `flet'-equivalent out of this function so it isn't done for each buffer.
-  (let (orig-fns)
-    (--each org-ql-predicates
-      ;; Save original function mappings.
-      (let* ((it (cdr it))
-             (name (plist-get it :name)))
-        (push (list :name name :fn (symbol-function name)) orig-fns)))
-    (unwind-protect
-        (progn
-          (--each org-ql-predicates
-            ;; Set predicate functions.
-            (let ((it (cdr it)))
-              (fset (plist-get it :name) (plist-get it :fn))))
-          ;; Run query.
-          (save-excursion
-            (save-restriction
-              (unless narrow
-                (widen))
-              (goto-char (point-min))
-              (when (org-before-first-heading-p)
-                (outline-next-heading))
-              (if (not (org-at-heading-p))
-                  (progn
-                    ;; No headings in buffer: return nil.
-                    (unless (string-prefix-p " " (buffer-name))
-                      ;; Not a special, hidden buffer: show message, because if a user accidentally
-                      ;; searches a buffer without headings, he might be confused.
-                      (message "org-ql: No headings in buffer: %s" (current-buffer)))
-                    nil)
-                ;; Find matching entries.
-                ;; TODO: Bind `case-fold-search' around the preamble loop.
-                (cond (preamble (cl-loop while (let ((case-fold-search preamble-case-fold))
-                                                 (re-search-forward preamble nil t))
-                                         do (outline-back-to-heading 'invisible-ok)
-                                         when (funcall predicate)
-                                         collect (funcall action)
-                                         do (outline-next-heading)))
-                      (t (cl-loop when (funcall predicate)
-                                  collect (funcall action)
-                                  while (outline-next-heading))))))))
-      (--each orig-fns
-        ;; Restore original function mappings.
-        (fset (plist-get it :name) (plist-get it :fn))))))
+  (save-excursion
+    (save-restriction
+      (unless narrow
+        (widen))
+      (goto-char (point-min))
+      (when (org-before-first-heading-p)
+        (outline-next-heading))
+      (if (not (org-at-heading-p))
+          (progn
+            ;; No headings in buffer: return nil.
+            (unless (string-prefix-p " " (buffer-name))
+              ;; Not a special, hidden buffer: show message, because if a user accidentally
+              ;; searches a buffer without headings, he might be confused.
+              (message "org-ql: No headings in buffer: %s" (current-buffer)))
+            nil)
+        ;; Find matching entries.
+        ;; TODO: Bind `case-fold-search' around the preamble loop.
+        (cond (preamble (cl-loop while (let ((case-fold-search preamble-case-fold))
+                                         (re-search-forward preamble nil t))
+                                 do (outline-back-to-heading 'invisible-ok)
+                                 when (funcall predicate)
+                                 collect (funcall action)
+                                 do (outline-next-heading)))
+              (t (cl-loop when (funcall predicate)
+                          collect (funcall action)
+                          while (outline-next-heading))))))))
 
 ;;;;; Helpers
 
