@@ -735,8 +735,8 @@ value of `org-ql-predicates')."
 
 ;; HACK: These functions *will* be defined at runtime, so we silence
 ;; compiler warnings about them:
-(declare-function org-ql--normalize-query "org-ql" (query) t)
-(declare-function org-ql--query-preamble "org-ql" (query) t)
+(declare-function org-ql--normalize-query "ext:org-ql" (query) t)
+(declare-function org-ql--query-preamble "ext:org-ql" (query) t)
 
 (defvar org-ql-defpred-defer nil
   "Defer expensive function redefinitions when defining predicates.
