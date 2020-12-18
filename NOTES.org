@@ -28,16 +28,18 @@
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
 
-#+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 7
+#+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 9
 |   M | P | Todo    | Heading                                                                        |
 |-----+---+---------+--------------------------------------------------------------------------------|
 | 0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
+| 0.6 | B | TODO    | [[Add a ~:with-hour~ argument to ~scheduled~ predicate, et al][Add a ~:with-hour~ argument to ~scheduled~ predicate, et al]]                        |
 | 0.6 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 | 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 | 0.6 | B | PROJECT | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]                                      |
 | 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
 | 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                                     |
 | 0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                                                     |
+| 0.6 | C | TODO    | [[Example: Next upcoming event][Example: Next upcoming event]]                                                   |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -78,6 +80,7 @@
 :TOC:      :include descendants :depth 1
 :END:
 :CONTENTS:
+- [[#add-a-with-hour-argument-to-scheduled-predicate-et-al][Add a :with-hour argument to scheduled predicate, et al]]
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#bookmarks-save-list-of-files-instead-of-eg-org-agenda-files-when-appropriate][Bookmarks save list of files instead of e.g. org-agenda-files when appropriate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
@@ -91,6 +94,7 @@
 - [[#org-ql-block-let-org-agenda-format-its-output][org-ql-block: Let org-agenda format its output]]
 - [[#omnifocus-like-screencasts][OmniFocus-like screencasts]]
 - [[#use-ripgrep-to-search-unopened-files][Use ripgrep to search unopened files]]
+- [[#key-cache-results-by-action-function][Key cache results by action function]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
@@ -128,6 +132,13 @@
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
 :END:
+
+** TODO [#B] Add a ~:with-hour~ argument to ~scheduled~ predicate, et al
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
+Which would obviate the need to [[https://gist.github.com/mskorzhinskiy/fac0662a39a7b1bf5b306f175943bc97#file-org-ql-rasmi-el-L59][use the ~org-scheduled-time-hour-regexp~]] to find entries scheduled for a certain time of day.
 
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
 
@@ -276,6 +287,10 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 ** MAYBE Use ripgrep to search unopened files
 
 [2020-11-26 Thu 02:20]  It [[https://github.com/BurntSushi/ripgrep/issues/176][supports multiline search now]], so it might be suitable now.
+
+** MAYBE Key cache results by action function
+
+Could allow reusing results for different queries.  Mentioned in [[https://www.reddit.com/r/emacs/comments/kewl3a/how_are_folks_using_orgagenda_and_orgroam_together/gg8iytf/][Reddit discussion]].
 
 ** MAYBE [#C] Overlay-based caching inspired by org-num-mode
 
@@ -2251,6 +2266,7 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 - [[#andrea-giugliano][Andrea Giugliano]]
 - [[#benson-chu][Benson Chu]]
 - [[#kevin-brubeck-unhammer][Kevin Brubeck Unhammer]]
+- [[#mikhail-skorzhinskiy][Mikhail Skorzhinskiy]]
 :END:
 
 ** [[https://github.com/AloisJanicek/.doom.d-2nd][Alois Janicek]]
@@ -2355,6 +2371,107 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 *** [[https://github.com/unhammer/org-upcoming-modeline][org-upcoming-modeline: put upcoming org event in modeline]]
 
 + [[https://www.reddit.com/r/emacs/comments/k1e4eu/show_next_orgappointment_in_modeline/][Show next (org-)appointment in modeline? : r/emacs]]
+
+** [[https://gist.github.com/mskorzhinskiy/fac0662a39a7b1bf5b306f175943bc97][Mikhail Skorzhinskiy]]
+
+[2020-12-18 Fri 03:41]  Shows a number of complex custom queries and grouping, including his "dashboard" view.  Shared at [[https://www.reddit.com/r/emacs/comments/kewl3a/how_are_folks_using_orgagenda_and_orgroam_together/gg8j251/][How are folks using org-agenda and org-roam TOGETHER? : emacs]].
+
+#+BEGIN_SRC elisp
+  (setq
+   org-ql-views
+   '(("stuck" lambda nil
+      (interactive)
+      (org-ql-search
+        (org-agenda-files)
+        '(and (tags "story")
+              (not (tags "ignore"))
+              (not (done)) ;; Finished stories should be excluded
+              (not (descendants (todo "NEXT"))) ;; If there are already
+              ;; something in progress
+              ;; it will shown
+              (and (not (descendants (done))) ;; There are not scheduled not finished items
+                   (not (descendants (scheduled)))))
+        :narrow nil :super-groups
+        '((:name "Waiting"   :order 8 :todo "WAIT")
+          (:name "Important" :order 1 :deadline t :priority>= "B")
+          (:name "Work"      :order 2 :tag "work")
+          (:name "Study"     :order 2 :tag "study")
+          (:name "Stucked"   :order 3 :tag "story"))
+        :title "stuck-projects"))
+     ("reports" lambda nil
+      (interactive)
+      (org-ql-search
+        (org-agenda-files)
+        '(and (or (tags-local "weekly")
+                  (tags-local "monthly"))
+              (not (tags "ignore")))
+        :narrow nil :super-groups
+        '((:name "Weekly reports" :tag "weekly")
+          (:name "Monthly reports" :tag "monthly"))
+        :title "Introspection reports"))
+     ("next" lambda nil
+      (interactive)
+      (org-ql-search
+        (org-agenda-files)
+        '(and (or (tags-local "refile")
+                  (todo "PROG")
+                  (todo "WAIT")
+                  (todo "NEXT"))
+              (not (tags "ignore"))
+              (not (property "linked"))
+              (not (done)))
+        :sort '(date)
+        :narrow nil
+        :super-groups
+        `((:name "In progress" :order 1 :todo "PROG")
+          (:name "Daily"       :order 2 :regexp ,org-repeat-re)
+          (:name "Waiting"     :order 3 :todo "WAIT")
+          (:name "Refile"      :order 3 :tag "refile")
+          (:name "Important"   :order 3 :priority>= "B")
+          (:auto-tags t        :order 5))
+        :title "Next actions"))
+     ("calendar" lambda nil
+      (interactive)
+      (org-ql-search
+        (org-agenda-files)
+        `(and (ts-active)
+              (regexp ,org-scheduled-time-hour-regexp)
+              (not (done)))
+        :sort '(date)
+        :narrow nil
+        :super-groups
+        '((:auto-planning t))
+        :title "Calendar"))
+     ("dashboard" lambda nil
+      (interactive)
+      (org-ql-search
+        (org-agenda-files)
+        '(and (or (ts-active :to today)
+                  (deadline auto)
+                  (todo "PROG")
+                  (and (tags "journal")
+                       (not (tags "weekly"))
+                       (not (tags "monthly"))
+                       (not (tags "yearly"))
+                       (todo)))
+              (not (todo "WAIT"))
+              (not (tags "ignore"))
+              (not (property "linked"))
+              (not (done)))
+        :sort '(date)
+        :narrow nil
+        :super-groups
+        `((:name "In progress" :order 1
+                 :tag "monthly" :tag "weekly" :todo "PROG")
+          (:name "Agenda"      :order 2
+                 :deadline t :regexp ,org-scheduled-time-hour-regexp)
+          (:name "Daily"       :order 2
+                 :and (:todo nil :regexp ,org-repeat-re))
+          (:name "Today"       :order 3 :tag "journal")
+          (:name "Important"   :order 3 :priority>= "B")
+          (:auto-tags t        :order 5))
+        :title "Dashboard"))))
+#+END_SRC
 
 * Profiling
 :PROPERTIES:
