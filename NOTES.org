@@ -35,11 +35,11 @@
 | 0.6 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 | 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 | 0.6 | B | PROJECT | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]]                              |
+| 0.6 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
 | 0.6 | B | PROJECT | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]                                      |
 | 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
 | 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                                     |
 | 0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                                                     |
-| 0.6 | C | TODO    | [[Example: Next upcoming event][Example: Next upcoming event]]                                                   |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -47,7 +47,9 @@
 #+BEGIN: org-ql :query (or (todo "UNDERWAY") (and (todo "PROJECT") (descendants (todo "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 |   M | P | Keyword  | Heading                                                            |
 |-----+---+----------+--------------------------------------------------------------------|
+| 0.6 | B | PROJECT  | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                         |
 | 0.6 | B | PROJECT  | [[Group tag support][Group tag support]]                                                  |
+|     |   | UNDERWAY | [[~ts~][~ts~]]                                                               |
 |     |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
 #+END:
 
@@ -101,6 +103,7 @@
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#add-a-with-time-argument-to-timestamp-predicates][Add a :with-time argument to timestamp predicates]]
 - [[#optimized-date-specific-timestamp-regexps][Optimized, date-specific timestamp regexps]]
+- [[#multi-pass-query-normalization][Multi-pass query normalization]]
 - [[#optimization-for-olp-predicate][Optimization for olp predicate]]
 - [[#date-specific-preambles-for-ts-predicates][Date-specific preambles for ts predicates]]
 - [[#outline-path-predicate][Outline path predicate]]
@@ -445,19 +448,57 @@ Maybe make it an option to automatically convert them when possible, because if 
 
 Which would obviate the need to [[https://gist.github.com/mskorzhinskiy/fac0662a39a7b1bf5b306f175943bc97#file-org-ql-rasmi-el-L59][use the ~org-scheduled-time-hour-regexp~]] to find entries scheduled for a certain time of day.
 
--  [ ] ~deadline~
-     -  [ ] Tests
--  [-] ~planning~
-     -  [ ] Tests
-     -  [X] regexp defvar
--  [ ] ~scheduled~
-     -  [ ] Tests
--  [ ] ~ts~
-     -  [ ] Tests
+Probably should do this after [[id:fc8ccf6e-5311-4121-a0b7-58482dbd2e85][Optimized, date-specific timestamp regexps]]. 
 
-** PROJECT Optimized, date-specific timestamp regexps
+*** TODO ~deadline~
+
+**** TODO Tests
+
+*** TODO ~planning~
+
+**** TODO Tests
+
+**** DONE regexp defvar
+
+*** TODO ~scheduled~
+
+**** TODO Tests
+
+*** TODO ~ts~
+
+**** TODO Tests
+
+** PROJECT [#B] Optimized, date-specific timestamp regexps
+:PROPERTIES:
+:milestone: 0.6
+:ID:       fc8ccf6e-5311-4121-a0b7-58482dbd2e85
+:END:
+
++ In branch =wip/ts-optimized-regexps=.
 
 Rather than searching for generic timestamp regexps, we could build a regexp based on expected values in the timestamp.
+
+*** TODO ~deadline~
+
+**** TODO Tests
+
+*** TODO ~planning~
+
+**** TODO Tests
+
+*** TODO ~scheduled~
+
+**** TODO Tests
+
+*** UNDERWAY ~ts~
+
+[2020-12-19 Sat 05:55]  Seems to be working well.  Not sure how best to integrate with other timestamp-related predicates.  The code isn't that much, so maybe copying it into each predicate would be best.
+
+**** TODO Tests
+
+** PROJECT Multi-pass query normalization
+
+It would allow, e.g. one query to be normalized into another, and then into another.  It would be helpful for timestamp-related ones, I think.
 
 ** PROJECT [#B] Optimization for ~olp~ predicate
 
