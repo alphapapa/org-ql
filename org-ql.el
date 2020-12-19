@@ -157,6 +157,29 @@ See Info node `(org-ql)Queries'."
   :type 'boolean
   :risky t)
 
+(defcustom org-ql-ts-days-to-default 365
+  "Search up to this many days after now by default when using a timestamp predicate.
+When a timestamp predicate is used without specifying a \"to\"
+timestamp, search for timestamps that are up to this many days
+from now.
+
+Since most searches are probably not for timestamps far into the
+future, this helps optimize timestamp-related searches."
+  :type 'integer)
+
+(defcustom org-ql-ts-days-from-default (* 5 365)
+  "Search up to this many days before now by default when using a timestamp predicate.
+When a timestamp predicate is used without specifying a \"from\"
+timestamp, search for timestamps that are up to this many days
+before now.
+
+Since most searches are probably not for timestamps far into the
+past, this helps optimize timestamp-related searches.  But unlike
+`org-ql-ts-days-to-default', this defaults to a 5-year range,
+because it's assumed that users are more likely to search an
+archive of notes from years past."
+  :type 'integer)
+
 ;;;; Macros
 
 ;;;###autoload
@@ -1823,7 +1846,8 @@ of the line after the heading."
    (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
   :preambles
   ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
-                                               (plist-get rest :to)))))
+                                               (plist-get rest :to)
+                                               (plist-get rest :on)))))
     (-let (((&plist :from :to :on :type) rest))
       (org-ql--from-to-on)
       (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
@@ -1856,29 +1880,6 @@ of the line after the heading."
             ((and from to) (test-timestamps (ts-in from to next-ts)))
             (from (test-timestamps (ts<= from next-ts)))
             (to (test-timestamps (ts<= next-ts to)))))))
-
-(defcustom org-ql-ts-days-to-default 365
-  "Search up to this many days after now by default when using a timestamp predicate.
-When a timestamp predicate is used without specifying a \"to\"
-timestamp, search for timestamps that are up to this many days
-from now.
-
-Since most searches are probably not for timestamps far into the
-future, this helps optimize timestamp-related searches."
-  :type 'integer)
-
-(defcustom org-ql-ts-days-from-default (* 5 365)
-  "Search up to this many days before now by default when using a timestamp predicate.
-When a timestamp predicate is used without specifying a \"from\"
-timestamp, search for timestamps that are up to this many days
-before now.
-
-Since most searches are probably not for timestamps far into the
-past, this helps optimize timestamp-related searches.  But unlike
-`org-ql-ts-days-to-default', this defaults to a 5-year range,
-because it's assumed that users are more likely to search an
-archive of notes from years past."
-  :type 'integer)
 
 (cl-defun org-ql--ts-range-to-regexp (from to &key type require-time)
   ;; Let's start with the plainest implementation: brute-force
