@@ -1818,20 +1818,30 @@ the end of the entry, i.e. the position returned by
 bound to a different positiion, e.g. for planning lines, the end
 of the line after the heading."
   ;; MAYBE: Define active/inactive ones separately?
-  :normalizers ((`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
-                (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
-  :preambles ((`(,predicate-names . ,rest)
-               (list :regexp (pcase (plist-get rest :type)
-                               ((or 'nil 'both) org-tsr-regexp-both)
-                               ('active org-tsr-regexp)
-                               ('inactive org-ql-tsr-regexp-inactive))
-                     ;; Predicate needs testing only when args are present.
-                     :query (-let (((&keys :from :to :on) rest))
-                              ;; FIXME: This used to be (when (or from to on) query), but that doesn't seem right, so I
-                              ;; changed it to this if, and the tests pass either way.  Might deserve a little scrutiny.
-                              (if (or from to on)
-                                  query
-                                t)))))
+  :normalizers
+  ((`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
+   (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
+  :preambles
+  ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                               (plist-get rest :to)))))
+    (-let (((&plist :from :to :on :type) rest))
+      (org-ql--from-to-on)
+      (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                            (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now)))))
+                      (org-ql--ts-range-to-regexp from to))
+            :query query)))
+   (`(,predicate-names . ,rest)
+    (list :regexp (pcase (plist-get rest :type)
+                    ((or 'nil 'both) org-tsr-regexp-both)
+                    ('active org-tsr-regexp)
+                    ('inactive org-ql-tsr-regexp-inactive))
+          ;; Predicate needs testing only when args are present.
+          :query (-let (((&keys :from :to :on) rest))
+                   ;; FIXME: This used to be (when (or from to on) query), but that doesn't seem right, so I
+                   ;; changed it to this if, and the tests pass either way.  Might deserve a little scrutiny.
+                   (if (or from to on)
+                       query
+                     t)))))
   ;; TODO: DRY this with the clocked predicate.
   :body
   (cl-macrolet ((next-timestamp ()
@@ -1846,6 +1856,78 @@ of the line after the heading."
             ((and from to) (test-timestamps (ts-in from to next-ts)))
             (from (test-timestamps (ts<= from next-ts)))
             (to (test-timestamps (ts<= next-ts to)))))))
+
+(defcustom org-ql-ts-days-to-default 365
+  "Search up to this many days after now by default when using a timestamp predicate.
+When a timestamp predicate is used without specifying a \"to\"
+timestamp, search for timestamps that are up to this many days
+from now.
+
+Since most searches are probably not for timestamps far into the
+future, this helps optimize timestamp-related searches."
+  :type 'integer)
+
+(defcustom org-ql-ts-days-from-default (* 5 365)
+  "Search up to this many days before now by default when using a timestamp predicate.
+When a timestamp predicate is used without specifying a \"from\"
+timestamp, search for timestamps that are up to this many days
+before now.
+
+Since most searches are probably not for timestamps far into the
+past, this helps optimize timestamp-related searches.  But unlike
+`org-ql-ts-days-to-default', this defaults to a 5-year range,
+because it's assumed that users are more likely to search an
+archive of notes from years past."
+  :type 'integer)
+
+(cl-defun org-ql--ts-range-to-regexp (from to &key type require-time)
+  ;; Let's start with the plainest implementation: brute-force
+  ;; marching through all of the dates.
+  ;; MAYBE: Handle given hour/minute/second?
+  ;; FIXME: Docstring.
+  "Return a regexp matching timestamps in the range FROM-TO.
+FROM and TO should be `ts' structs.  TYPE may be `active',
+`inactive', or nil to match both types."
+  ;; Set the H:M:S of each timestamp to the beginning/end of the day.
+  (setf from (ts-apply 'hour 0 'minute 0 'second 0 from)
+        to (ts-apply 'hour 23 'minute 59 'second 59 to))
+  (let* ((type-prefix (pcase type
+                        ((or 'nil 'both) (rx (any "<[")))
+                        ('active (rx "<"))
+                        ('inactive (rx "["))))
+         (type-suffix (if require-time
+                          (pcase type
+                            ((or 'nil 'both) (rx (any ">]")))
+                            ('active (rx ">"))
+                            ('inactive (rx "]")))
+                        ""))
+         (time-regexp (rx (1+ blank)
+                          (repeat 1 2 (any "0-9")) ":" (= 2 (any "0-9"))
+                          (0+ (any "0-9" "	 +.:dhmwy-"))))
+         (suffix (if require-time
+                     (rx-to-string `(seq (regexp ,time-regexp)
+                                         (regexp ,type-suffix)))
+                   (rx-to-string `(seq (0+ (regexp ,time-regexp))
+                                       (regexp ,type-suffix)))))
+         years months days)
+    (cl-loop do (progn
+                  (cl-pushnew (ts-year from) years)
+                  (cl-pushnew (ts-month from) months)
+                  (cl-pushnew (ts-day from) days))
+             until (and (eql (ts-year from) (ts-year to))
+                        (eql (ts-month from) (ts-month to))
+                        (eql (ts-day from) (ts-day to)))
+             do (ts-incf (ts-day from)))
+    (cl-flet ((format-number
+               (number) (format "%02d" number)))
+      (rx-to-string `(seq (or bol space)
+                          (regexp ,type-prefix)
+                          (or ,@(mapcar #'format-number years)) "-"
+                          (or ,@(mapcar #'format-number months)) "-"
+                          (or ,@(mapcar #'format-number days))
+                          (regexp ,suffix)
+                          (or eol space))
+                    t))))
 
 ;; NOTE: Predicates defined: stop deferring and define normalizer and
 ;; preamble functions now.  Reversing preserves the order in which
