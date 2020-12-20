@@ -487,6 +487,9 @@ Rather than searching for generic timestamp regexps, we could build a regexp bas
 **** TODO Tests
 
 *** TODO ~scheduled~
+:LOGBOOK:
+CLOCK: [2020-12-20 Sun 07:01]--[2020-12-20 Sun 07:58] =>  0:57
+:END:
 
 **** TODO Tests
 
@@ -495,6 +498,160 @@ Rather than searching for generic timestamp regexps, we could build a regexp bas
 [2020-12-19 Sat 05:55]  Seems to be working well.  Not sure how best to integrate with other timestamp-related predicates.  The code isn't that much, so maybe copying it into each predicate would be best.
 
 **** TODO Tests
+
+**** DONE Benchmark
+
+[2020-12-20 Sun 07:51]  This is a great improvement.  I tested it on the ~scheduled~ predicate too, but it doesn't make nearly as big a difference, because just searching for the ~SCHEDULED:~ prefix avoids testing most timestamps.
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("unoptimized"
+             (progn
+               (org-ql-defpred (ts ts-active ts-a ts-inactive ts-i)
+                 (&key from to _on regexp (match-group 0) (limit (org-entry-end-position)))
+                 ;; NOTE: Arguments to this predicate are pre-processed in `org-ql--normalize-query'.
+                 ;; The underscore before `on' prevents "unused lexical variable" warnings due to the
+                 ;; pre-processing converting that argument to FROM and TO.  The `regexp' argument is
+                 ;; also provided by the pre-processing and is not to be given by the user.  FROM and
+                 ;; TO are actually expected to be `ts' structs.  The docstring is written for users.
+                 "Return non-nil if current entry has a timestamp in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value.
+
+  TYPE may be `active' to match active timestamps, `inactive' to
+  match inactive ones, or `both' / nil to match both types.
+
+  LIMIT bounds the search for the timestamp REGEXP.  It defaults to
+  the end of the entry, i.e. the position returned by
+  `org-entry-end-position', but for certain searches it should be
+  bound to a different positiion, e.g. for planning lines, the end
+  of the line after the heading."
+                 ;; MAYBE: Define active/inactive ones separately?
+                 :normalizers ((`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
+                               (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
+                 :preambles ((`(,predicate-names . ,rest)
+                              (list :regexp (pcase (plist-get rest :type)
+                                              ((or 'nil 'both) org-tsr-regexp-both)
+                                              ('active org-tsr-regexp)
+                                              ('inactive org-ql-tsr-regexp-inactive))
+                                    ;; Predicate needs testing only when args are present.
+                                    :query (-let (((&keys :from :to :on) rest))
+                                             ;; FIXME: This used to be (when (or from to on) query), but that doesn't seem right, so I
+                                             ;; changed it to this if, and the tests pass either way.  Might deserve a little scrutiny.
+                                             (if (or from to on)
+                                                 query
+                                               t)))))
+                 ;; TODO: DRY this with the clocked predicate.
+                 :body
+                 (cl-macrolet ((next-timestamp ()
+                                               `(when (re-search-forward regexp limit t)
+                                                  (ts-parse-org (match-string match-group))))
+                               (test-timestamps (pred-form)
+                                                `(cl-loop for next-ts = (next-timestamp)
+                                                          while next-ts
+                                                          thereis ,pred-form)))
+                   (save-excursion
+                     (cond ((not (or from to)) (re-search-forward regexp limit t))
+                           ((and from to) (test-timestamps (ts-in from to next-ts)))
+                           (from (test-timestamps (ts<= from next-ts)))
+                           (to (test-timestamps (ts<= next-ts to)))))))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(ts :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))
+
+            ("optimized"
+             (progn
+               (org-ql-defpred (ts ts-active ts-a ts-inactive ts-i)
+                 (&key from to _on regexp (match-group 0) (limit (org-entry-end-position)))
+                 ;; NOTE: Arguments to this predicate are pre-processed in `org-ql--normalize-query'.
+                 ;; The underscore before `on' prevents "unused lexical variable" warnings due to the
+                 ;; pre-processing converting that argument to FROM and TO.  The `regexp' argument is
+                 ;; also provided by the pre-processing and is not to be given by the user.  FROM and
+                 ;; TO are actually expected to be `ts' structs.  The docstring is written for users.
+                 "Return non-nil if current entry has a timestamp in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value.
+
+  TYPE may be `active' to match active timestamps, `inactive' to
+  match inactive ones, or `both' / nil to match both types.
+
+  LIMIT bounds the search for the timestamp REGEXP.  It defaults to
+  the end of the entry, i.e. the position returned by
+  `org-entry-end-position', but for certain searches it should be
+  bound to a different positiion, e.g. for planning lines, the end
+  of the line after the heading."
+                 ;; MAYBE: Define active/inactive ones separately?
+                 :normalizers
+                 ((`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
+                  (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
+                 :preambles
+                 ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                                              (plist-get rest :to)
+                                                              (plist-get rest :on)))))
+                   (-let (((&plist :from :to :on :type) rest))
+                     (org-ql--from-to-on)
+                     (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                                           (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now)))))
+                                     (org-ql--ts-range-to-regexp from to))
+                           :query query)))
+                  (`(,predicate-names . ,rest)
+                   (list :regexp (pcase (plist-get rest :type)
+                                   ((or 'nil 'both) org-tsr-regexp-both)
+                                   ('active org-tsr-regexp)
+                                   ('inactive org-ql-tsr-regexp-inactive))
+                         ;; Predicate needs testing only when args are present.
+                         :query (-let (((&keys :from :to :on) rest))
+                                  ;; FIXME: This used to be (when (or from to on) query), but that doesn't seem right, so I
+                                  ;; changed it to this if, and the tests pass either way.  Might deserve a little scrutiny.
+                                  (if (or from to on)
+                                      query
+                                    t)))))
+                 ;; TODO: DRY this with the clocked predicate.
+                 :body
+                 (cl-macrolet ((next-timestamp ()
+                                               `(when (re-search-forward regexp limit t)
+                                                  (ts-parse-org (match-string match-group))))
+                               (test-timestamps (pred-form)
+                                                `(cl-loop for next-ts = (next-timestamp)
+                                                          while next-ts
+                                                          thereis ,pred-form)))
+                   (save-excursion
+                     (cond ((not (or from to)) (re-search-forward regexp limit t))
+                           ((and from to) (test-timestamps (ts-in from to next-ts)))
+                           (from (test-timestamps (ts<= from next-ts)))
+                           (to (test-timestamps (ts<= next-ts to)))))))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(ts :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form        | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------+--------------------+---------------+----------+------------------|
+| optimized   | 3.78               |      1.243185 |        0 |                0 |
+| unoptimized | slowest            |      4.700824 |        0 |                0 |
 
 ** PROJECT Multi-pass query normalization
 
