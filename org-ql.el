@@ -1805,8 +1805,19 @@ parseable by `parse-time-string' which may omit the time value."
                                 (ts-adjust 'day num-days)
                                 (ts-apply :hour 23 :minute 59 :second 59))))
                    `(scheduled :to ,to))))
-  :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-scheduled-time-regexp :query query)))
+  :preambles
+  ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                               (plist-get rest :to)
+                                               (plist-get rest :on)))))
+    (-let (((&plist :from :to :on :type) rest))
+      (org-ql--from-to-on)
+      (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                            (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now))))
+                            (ts-regexp (org-ql--ts-range-to-regexp from to :type 'active)))
+                      (rx-to-string `(seq bow (0+ blank) "SCHEDULED:" (1+ blank) (regexp ,ts-regexp))))
+            :query query)))
+   (`(,predicate-names . ,_)
+    (list :regexp org-scheduled-time-regexp :query query)))
   :body
   (org-ql--predicate-ts :from from :to to :regexp org-scheduled-time-regexp :match-group 1
                         :limit (line-end-position 2)))
@@ -1896,19 +1907,22 @@ FROM and TO should be `ts' structs.  TYPE may be `active',
                         ((or 'nil 'both) (rx (any "<[")))
                         ('active (rx "<"))
                         ('inactive (rx "["))))
-         (type-suffix (if require-time
-                          (pcase type
-                            ((or 'nil 'both) (rx (any ">]")))
-                            ('active (rx ">"))
-                            ('inactive (rx "]")))
-                        ""))
+         (type-suffix (pcase type
+                        ((or 'nil 'both) (rx (any ">]")))
+                        ('active (rx ">"))
+                        ('inactive (rx "]"))))
          (time-regexp (rx (1+ blank)
                           (repeat 1 2 (any "0-9")) ":" (= 2 (any "0-9"))
-                          (0+ (any "0-9" "	 +.:dhmwy-"))))
+                          (0+ (not (any ">]")))
+                          ;; NOTE: We don't need to test for a
+                          ;; repeater at this time, but it might be
+                          ;; useful in the future, so leaving this
+                          ;; commented: (0+ (any "0-9" " +.:dhmwy-"))
+                          ))
          (suffix (if require-time
                      (rx-to-string `(seq (regexp ,time-regexp)
                                          (regexp ,type-suffix)))
-                   (rx-to-string `(seq (0+ (regexp ,time-regexp))
+                   (rx-to-string `(seq (repeat 0 1 (regexp ,time-regexp))
                                        (regexp ,type-suffix)))))
          years months days)
     (cl-loop do (progn
@@ -1921,13 +1935,14 @@ FROM and TO should be `ts' structs.  TYPE may be `active',
              do (ts-incf (ts-day from)))
     (cl-flet ((format-number
                (number) (format "%02d" number)))
-      (rx-to-string `(seq (or bol space)
-                          (regexp ,type-prefix)
+      (rx-to-string `(seq (regexp ,type-prefix)
                           (or ,@(mapcar #'format-number years)) "-"
                           (or ,@(mapcar #'format-number months)) "-"
                           (or ,@(mapcar #'format-number days))
-                          (regexp ,suffix)
-                          (or eol space))
+                          ;; Day of week.
+                          (optional (1+ blank)
+                                    (1+ alpha))
+                          (regexp ,suffix))
                     t))))
 
 ;; NOTE: Predicates defined: stop deferring and define normalizer and
