@@ -1709,20 +1709,33 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
-  :normalizers ((`(,predicate-names auto)
-                 ;; Use `org-deadline-warning-days' as the :to arg.
-                 (let ((to (->> (ts-now)
-                                (ts-adjust 'day org-deadline-warning-days)
-                                (ts-apply :hour 23 :minute 59 :second 59))))
-                   `(deadline-warning :to ,to)))
-                (`(,predicate-names ,(and num-days (pred numberp)))
-                 (let ((to (->> (ts-now)
-                                (ts-adjust 'day num-days)
-                                (ts-apply :hour 23 :minute 59 :second 59))))
-                   `(deadline :to ,to))))
+  :normalizers
+  ((`(,predicate-names auto)
+    ;; Use `org-deadline-warning-days' as the :to arg.
+    (let ((to (->> (ts-now)
+                   (ts-adjust 'day org-deadline-warning-days)
+                   (ts-apply :hour 23 :minute 59 :second 59))))
+      `(deadline-warning :to ,to)))
+   (`(,predicate-names ,(and num-days (pred numberp)))
+    (let ((to (->> (ts-now)
+                   (ts-adjust 'day num-days)
+                   (ts-apply :hour 23 :minute 59 :second 59))))
+      `(deadline :to ,to))))
   ;; NOTE: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
-  :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-deadline-time-regexp :query query)))
+  :preambles
+  ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                               (plist-get rest :to)
+                                               (plist-get rest :on)))))
+    ;; Use date-optimized timestamp regexp.
+    (-let (((&plist :from :to :on :type) rest))
+      (org-ql--from-to-on)
+      (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                            (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now))))
+                            (ts-regexp (org-ql--ts-range-to-regexp from to :type 'active)))
+                      (rx-to-string `(seq bow (0+ blank) "DEADLINE:" (1+ blank) (regexp ,ts-regexp))))
+            :query query)))
+   (`(,predicate-names . ,_)
+    (list :regexp org-deadline-time-regexp :query query)))
   :body
   (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1
                         :limit (line-end-position 2)))
