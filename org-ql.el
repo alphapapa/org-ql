@@ -1908,12 +1908,14 @@ FROM and TO should be `ts' structs.  TYPE may be `active',
                         ('active (rx "<"))
                         ('inactive (rx "["))))
          (type-suffix (pcase type
-                        ((or 'nil 'both) (rx (any ">]")))
-                        ('active (rx ">"))
-                        ('inactive (rx "]"))))
+                        ((or 'nil 'both) (rx (0+ (not (any ">]")))
+                                             (any ">]")))
+                        ('active (rx (0+ (not (any ">")))
+                                     ">"))
+                        ('inactive (rx (0+ (not (any "]")))
+                                       "]"))))
          (time-regexp (rx (1+ blank)
                           (repeat 1 2 (any "0-9")) ":" (= 2 (any "0-9"))
-                          (0+ (not (any ">]")))
                           ;; NOTE: We don't need to test for a
                           ;; repeater at this time, but it might be
                           ;; useful in the future, so leaving this
