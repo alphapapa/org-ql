@@ -1772,13 +1772,27 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
-  :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
-                 (let ((to (->> (ts-now)
-                                (ts-adjust 'day num-days)
-                                (ts-apply :hour 23 :minute 59 :second 59))))
-                   `(planning :to ,to))))
-  :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-ql-planning-regexp :query query)))
+  :normalizers
+  ((`(,predicate-names ,(and num-days (pred numberp)))
+    (let ((to (->> (ts-now)
+                   (ts-adjust 'day num-days)
+                   (ts-apply :hour 23 :minute 59 :second 59))))
+      `(planning :to ,to))))
+  :preambles
+  ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                               (plist-get rest :to)
+                                               (plist-get rest :on)))))
+    ;; Use date-optimized timestamp regexp.
+    (-let (((&plist :from :to :on :type) rest))
+      (org-ql--from-to-on)
+      (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                            (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now))))
+                            (ts-regexp (org-ql--ts-range-to-regexp from to)))
+                      (rx-to-string `(seq bow (0+ blank) (or "CLOSED" "DEADLINE" "SCHEDULED") ":"
+                                          (1+ blank) (regexp ,ts-regexp))))
+            :query query)))
+   (`(,predicate-names . ,_)
+    (list :regexp org-ql-planning-regexp :query query)))
   :body
   (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1
                         :limit (line-end-position 2)))
@@ -1809,6 +1823,7 @@ parseable by `parse-time-string' which may omit the time value."
   ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
                                                (plist-get rest :to)
                                                (plist-get rest :on)))))
+    ;; Use date-optimized timestamp regexp.
     (-let (((&plist :from :to :on :type) rest))
       (org-ql--from-to-on)
       (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
@@ -1859,6 +1874,7 @@ of the line after the heading."
   ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
                                                (plist-get rest :to)
                                                (plist-get rest :on)))))
+    ;; Use date-optimized timestamp regexp.
     (-let (((&plist :from :to :on :type) rest))
       (org-ql--from-to-on)
       (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
