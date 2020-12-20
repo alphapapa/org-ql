@@ -49,6 +49,11 @@
 |-----+---+----------+--------------------------------------------------------------------|
 | 0.6 | B | PROJECT  | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                         |
 | 0.6 | B | PROJECT  | [[Group tag support][Group tag support]]                                                  |
+|     |   | UNDERWAY | [[~clocked~][~clocked~]]                                                          |
+|     |   | UNDERWAY | [[~closed~][~closed~]]                                                           |
+|     |   | UNDERWAY | [[~deadline~][~deadline~]]                                                         |
+|     |   | UNDERWAY | [[~planning~][~planning~]]                                                         |
+|     |   | UNDERWAY | [[~scheduled~][~scheduled~]]                                                        |
 |     |   | UNDERWAY | [[~ts~][~ts~]]                                                               |
 |     |   | UNDERWAY | [[Benchmarking tags searches without and with new group-tags support][Benchmarking tags searches without and with new group-tags support]] |
 #+END:
@@ -478,26 +483,436 @@ Probably should do this after [[id:fc8ccf6e-5311-4121-a0b7-58482dbd2e85][Optimiz
 
 Rather than searching for generic timestamp regexps, we could build a regexp based on expected values in the timestamp.
 
-*** TODO ~deadline~
+*** UNDERWAY ~clocked~
 
 **** TODO Tests
 
-*** TODO ~planning~
+**** DONE Use optimized regexp in predicate
+
+**** DONE Benchmark
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("unoptimized"
+             (progn
+               (org-ql-defpred clocked (&key from to _on)
+                 ;; The underscore before `on' prevents "unused lexical variable"
+                 ;; warnings, because we pre-process that argument in a macro before
+                 ;; this function is called.
+                 "Return non-nil if current entry was clocked in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value."
+                 :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                                ;; (clocked) and (closed) implicitly look into the past.
+                                (let ((from (->> (ts-now)
+                                                 (ts-adjust 'day (* -1 num-days))
+                                                 (ts-apply :hour 0 :minute 0 :second 0))))
+                                  `(clocked :from ,from))))
+                 :preambles ((`(,predicate-names ,(pred numberp))
+                              (list :regexp org-ql-clock-regexp :query t))
+                             (`(,predicate-names)
+                              (list :regexp org-ql-clock-regexp :query t)))
+                 :body
+                 (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(clocked :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))
+
+            ("optimized"
+             (progn
+               (org-ql-defpred clocked (&key from to _on)
+                 ;; The underscore before `on' prevents "unused lexical variable"
+                 ;; warnings, because we pre-process that argument in a macro before
+                 ;; this function is called.
+                 "Return non-nil if current entry was clocked in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value."
+                 :normalizers
+                 ((`(,predicate-names ,(and num-days (pred numberp)))
+                   ;; (clocked) and (closed) implicitly look into the past.
+                   (let ((from (->> (ts-now)
+                                    (ts-adjust 'day (* -1 num-days))
+                                    (ts-apply :hour 0 :minute 0 :second 0))))
+                     `(clocked :from ,from))))
+                 :preambles
+                 ((`(,predicate-names ,(pred numberp))
+                   (list :regexp org-ql-clock-regexp :query t))
+                  (`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                                              (plist-get rest :to)
+                                                              (plist-get rest :on)))))
+                   ;; Use date-optimized timestamp regexp.
+                   (-let (((&plist :from :to :on :type) rest))
+                     (org-ql--from-to-on)
+                     (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                                           (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now))))
+                                           (ts-regexp (org-ql--ts-range-to-regexp from to :type 'inactive)))
+                                     (rx-to-string `(seq bol (0+ blank) "CLOCK:" (1+ blank) (0+ not-newline) (regexp ,ts-regexp))))
+                           :query query)))
+                  (`(,predicate-names)
+                   (list :regexp org-ql-clock-regexp :query t)))
+                 :body
+                 (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(clocked :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))))
+
+#+END_SRC
+
+#+RESULTS:
+| Form        | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------+--------------------+---------------+----------+------------------|
+| optimized   | 1.85               |      1.746526 |        0 |                0 |
+| unoptimized | slowest            |      3.239420 |        0 |                0 |
+
+*** UNDERWAY ~closed~
 
 **** TODO Tests
 
-*** TODO ~scheduled~
+**** DONE Use optimized regexp in predicate
+
+**** DONE Benchmark
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("unoptimized"
+             (progn
+               (org-ql-defpred closed (&key from to _on)
+                 ;; The underscore before `on' prevents "unused lexical variable"
+                 ;; warnings, because we pre-process that argument in a macro before
+                 ;; this function is called.
+                 "Return non-nil if current entry was closed in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value."
+                 :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                                ;; (clocked) and (closed) implicitly look into the past.
+                                (let ((from (->> (ts-now)
+                                                 (ts-adjust 'day (* -1 num-days))
+                                                 (ts-apply :hour 0 :minute 0 :second 0))))
+                                  `(closed :from ,from))))
+                 :preambles ((`(,predicate-names . ,_)
+                              ;;  Predicate still needs testing.
+                              (list :regexp org-closed-time-regexp :query query)))
+                 :body
+                 (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1
+                                       :limit (line-end-position 2)))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(closed :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))
+
+            ("optimized"
+             (progn
+               (org-ql-defpred closed (&key from to _on)
+                 ;; The underscore before `on' prevents "unused lexical variable"
+                 ;; warnings, because we pre-process that argument in a macro before
+                 ;; this function is called.
+                 "Return non-nil if current entry was closed in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value."
+                 :normalizers
+                 ((`(,predicate-names ,(and num-days (pred numberp)))
+                   ;; (clocked) and (closed) implicitly look into the past.
+                   (let ((from (->> (ts-now)
+                                    (ts-adjust 'day (* -1 num-days))
+                                    (ts-apply :hour 0 :minute 0 :second 0))))
+                     `(closed :from ,from))))
+                 :preambles
+                 ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                                              (plist-get rest :to)
+                                                              (plist-get rest :on)))))
+                   (-let (((&plist :from :to :on :type) rest))
+                     (org-ql--from-to-on)
+                     (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                                           (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now))))
+                                           (ts-regexp (org-ql--ts-range-to-regexp from to :type 'inactive)))
+                                     (rx-to-string `(seq bow (0+ blank) "CLOSED:" (1+ blank) (regexp ,ts-regexp))))
+                           :query query)))
+                  (`(,predicate-names . ,_)
+                   ;;  Predicate still needs testing.
+                   (list :regexp org-closed-time-regexp :query query)))
+                 :body
+                 (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1
+                                       :limit (line-end-position 2)))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(closed :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form        | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------+--------------------+---------------+----------+------------------|
+| unoptimized | 1.04               |      0.382831 |        0 |                0 |
+| optimized   | slowest            |      0.396930 |        0 |                0 |
+
+*** UNDERWAY ~deadline~
+
+**** TODO Tests
+
+**** DONE Use optimized regexp in predicate
+
+**** DONE Benchmark
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("unoptimized"
+             (progn
+               (org-ql-defpred deadline (&key from to _on)
+                 ;; The underscore before `on' prevents "unused lexical variable"
+                 ;; warnings, because we pre-process that argument in a macro before
+                 ;; this function is called.
+                 "Return non-nil if current entry has deadline in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value."
+                 :normalizers ((`(,predicate-names auto)
+                                ;; Use `org-deadline-warning-days' as the :to arg.
+                                (let ((to (->> (ts-now)
+                                               (ts-adjust 'day org-deadline-warning-days)
+                                               (ts-apply :hour 23 :minute 59 :second 59))))
+                                  `(deadline-warning :to ,to)))
+                               (`(,predicate-names ,(and num-days (pred numberp)))
+                                (let ((to (->> (ts-now)
+                                               (ts-adjust 'day num-days)
+                                               (ts-apply :hour 23 :minute 59 :second 59))))
+                                  `(deadline :to ,to))))
+                 ;; NOTE: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
+                 :preambles ((`(,predicate-names . ,_)
+                              (list :regexp org-deadline-time-regexp :query query)))
+                 :body
+                 (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1
+                                       :limit (line-end-position 2)))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(deadline :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))
+
+            ("optimized"
+             (progn
+               (org-ql-defpred deadline (&key from to _on)
+                 ;; The underscore before `on' prevents "unused lexical variable"
+                 ;; warnings, because we pre-process that argument in a macro before
+                 ;; this function is called.
+                 "Return non-nil if current entry has deadline in given period.
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value."
+                 :normalizers
+                 ((`(,predicate-names auto)
+                   ;; Use `org-deadline-warning-days' as the :to arg.
+                   (let ((to (->> (ts-now)
+                                  (ts-adjust 'day org-deadline-warning-days)
+                                  (ts-apply :hour 23 :minute 59 :second 59))))
+                     `(deadline-warning :to ,to)))
+                  (`(,predicate-names ,(and num-days (pred numberp)))
+                   (let ((to (->> (ts-now)
+                                  (ts-adjust 'day num-days)
+                                  (ts-apply :hour 23 :minute 59 :second 59))))
+                     `(deadline :to ,to))))
+                 ;; NOTE: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
+                 :preambles
+                 ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                                              (plist-get rest :to)
+                                                              (plist-get rest :on)))))
+                   ;; Use date-optimized timestamp regexp.
+                   (-let (((&plist :from :to :on :type) rest))
+                     (org-ql--from-to-on)
+                     (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                                           (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now))))
+                                           (ts-regexp (org-ql--ts-range-to-regexp from to :type 'active)))
+                                     (rx-to-string `(seq bow (0+ blank) "DEADLINE:" (1+ blank) (regexp ,ts-regexp))))
+                           :query query)))
+                  (`(,predicate-names . ,_)
+                   (list :regexp org-deadline-time-regexp :query query)))
+                 :body
+                 (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1
+                                       :limit (line-end-position 2)))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(deadline :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form        | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------+--------------------+---------------+----------+------------------|
+| unoptimized | 1.54               |      0.258749 |        0 |                0 |
+| optimized   | slowest            |      0.397937 |        0 |                0 |
+
+*** UNDERWAY ~planning~
+
+**** TODO Tests
+
+**** DONE Use optimized regexp in predicate
+
+**** DONE Benchmark
+
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 1 :ensure-equal t
+    :forms (("unoptimized"
+             (progn
+               (org-ql-defpred planning (&key from to _on)
+                 ;; The underscore before `on' prevents "unused lexical variable"
+                 ;; warnings, because we pre-process that argument in a macro before
+                 ;; this function is called.
+                 "Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value."
+                 :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                                (let ((to (->> (ts-now)
+                                               (ts-adjust 'day num-days)
+                                               (ts-apply :hour 23 :minute 59 :second 59))))
+                                  `(planning :to ,to))))
+                 :preambles ((`(,predicate-names . ,_)
+                              (list :regexp org-ql-planning-regexp :query query)))
+                 :body
+                 (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1
+                                       :limit (line-end-position 2)))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(planning :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))
+
+            ("optimized"
+             (progn
+               (org-ql-defpred planning (&key from to _on)
+                 ;; The underscore before `on' prevents "unused lexical variable"
+                 ;; warnings, because we pre-process that argument in a macro before
+                 ;; this function is called.
+                 "Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).
+  If no arguments are specified, return non-nil if entry has any
+  timestamp.
+
+  If FROM, return non-nil if entry has a timestamp on or after
+  FROM.
+
+  If TO, return non-nil if entry has a timestamp on or before TO.
+
+  If ON, return non-nil if entry has a timestamp on date ON.
+
+  FROM, TO, and ON should be either `ts' structs, or strings
+  parseable by `parse-time-string' which may omit the time value."
+                 :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                                (let ((to (->> (ts-now)
+                                               (ts-adjust 'day num-days)
+                                               (ts-apply :hour 23 :minute 59 :second 59))))
+                                  `(planning :to ,to))))
+                 :preambles ((`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                                                         (plist-get rest :to)
+                                                                         (plist-get rest :on)))))
+                              (-let (((&plist :from :to :on :type) rest))
+                                (org-ql--from-to-on)
+                                (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                                                      (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now))))
+                                                      (ts-regexp (org-ql--ts-range-to-regexp from to)))
+                                                (rx-to-string `(seq bow (0+ blank) (or "CLOSED" "DEADLINE" "SCHEDULED") ":"
+                                                                    (1+ blank) (regexp ,ts-regexp))))
+                                      :query query)))
+                             (`(,predicate-names . ,_)
+                              (list :regexp org-ql-planning-regexp :query query)))
+                 :body
+                 (org-ql--predicate-ts :from from :to to :regexp org-ql-planning-regexp :match-group 1
+                                       :limit (line-end-position 2)))
+               (setf org-ql-cache (make-hash-table :weakness 'key))
+               (org-ql-select (org-agenda-files)
+                 '(planning :from "2020-01-01" :to "2020-12-31")
+                 :action '(substring-no-properties (org-get-heading t t)))))))
+#+END_SRC
+
+#+RESULTS:
+| Form        | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-------------+--------------------+---------------+----------+------------------|
+| optimized   | 1.28               |      0.450906 |        0 |                0 |
+| unoptimized | slowest            |      0.576033 |        0 |                0 |
+
+*** UNDERWAY ~scheduled~
 :LOGBOOK:
 CLOCK: [2020-12-20 Sun 07:01]--[2020-12-20 Sun 07:58] =>  0:57
 :END:
 
+**** TODO Benchmark
+
 **** TODO Tests
+
+**** DONE Use optimized regexp in predicate
 
 *** UNDERWAY ~ts~
 
 [2020-12-19 Sat 05:55]  Seems to be working well.  Not sure how best to integrate with other timestamp-related predicates.  The code isn't that much, so maybe copying it into each predicate would be best.
 
 **** TODO Tests
+
+**** DONE Use optimized regexp in predicate
 
 **** DONE Benchmark
 
