@@ -1649,16 +1649,29 @@ If ON, return non-nil if entry has a timestamp on date ON.
 
 FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
-  :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
-                 ;; (clocked) and (closed) implicitly look into the past.
-                 (let ((from (->> (ts-now)
-                                  (ts-adjust 'day (* -1 num-days))
-                                  (ts-apply :hour 0 :minute 0 :second 0))))
-                   `(clocked :from ,from))))
-  :preambles ((`(,predicate-names ,(pred numberp))
-               (list :regexp org-ql-clock-regexp :query t))
-              (`(,predicate-names)
-               (list :regexp org-ql-clock-regexp :query t)))
+  :normalizers
+  ((`(,predicate-names ,(and num-days (pred numberp)))
+    ;; (clocked) and (closed) implicitly look into the past.
+    (let ((from (->> (ts-now)
+                     (ts-adjust 'day (* -1 num-days))
+                     (ts-apply :hour 0 :minute 0 :second 0))))
+      `(clocked :from ,from))))
+  :preambles
+  ((`(,predicate-names ,(pred numberp))
+    (list :regexp org-ql-clock-regexp :query t))
+   (`(,predicate-names . ,(and rest (guard (or (plist-get rest :from)
+                                               (plist-get rest :to)
+                                               (plist-get rest :on)))))
+    ;; Use date-optimized timestamp regexp.
+    (-let (((&plist :from :to :on :type) rest))
+      (org-ql--from-to-on)
+      (list :regexp (-let* ((from (or from (ts-adjust 'day (- org-ql-ts-days-from-default) (ts-now))))
+                            (to (or to (ts-adjust 'day org-ql-ts-days-to-default (ts-now))))
+                            (ts-regexp (org-ql--ts-range-to-regexp from to :type 'inactive)))
+                      (rx-to-string `(seq bol (0+ blank) "CLOCK:" (1+ blank) (0+ not-newline) (regexp ,ts-regexp))))
+            :query query)))
+   (`(,predicate-names)
+    (list :regexp org-ql-clock-regexp :query t)))
   :body
   (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
 
