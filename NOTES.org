@@ -483,6 +483,30 @@ Probably should do this after [[id:fc8ccf6e-5311-4121-a0b7-58482dbd2e85][Optimiz
 
 Rather than searching for generic timestamp regexps, we could build a regexp based on expected values in the timestamp.
 
+*** TODO Limit or optimize
+
+[2020-12-22 Tue 04:55]  Noticed that the tests affected by this change are now slower in the test suite, presumably because they span a range of years and spend more time incrementing ~ts~ structs in the regexp-building function than running the search on the small amount of test data.  For smaller date ranges, and for searching larger sets of data, the performance is improved.  So there needs to be some kind of heuristic to handle this.  Or maybe the regexp-building function could be smarter rather than "brute-forcing" its way through every date in the range.
+
+(This also shows how valuable Buttercup's showing of each test's duration is, otherwise I might not have noticed this issue.)
+
+#+BEGIN_EXAMPLE
+   inactive
+          without arguments (preamble)    (2.43ms)
+          without arguments (no preamble) (2.58ms)
+          :from a timestamp (preamble)    (421.88ms)
+          :from a timestamp (no preamble) (8.65ms)
+          :from a number of days (preamble)    (20.77ms)
+          :from a number of days (no preamble) (3.06ms)
+          :to a timestamp (preamble)    (424.83ms)
+          :to a timestamp (no preamble) (8.48ms)
+          :to a number of days (preamble)    (220.44ms)
+          :to a number of days (no preamble) (2.68ms)
+          :on a timestamp (preamble)    (9.51ms)
+          :on a timestamp (no preamble) (8.03ms)
+          :on a number of days (preamble)    (67.11ms)
+          :on a number of days (no preamble) (3.25ms)
+#+END_EXAMPLE
+
 *** UNDERWAY ~clocked~
 
 **** TODO Tests
