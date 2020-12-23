@@ -507,6 +507,14 @@ Rather than searching for generic timestamp regexps, we could build a regexp bas
           :on a number of days (no preamble) (3.25ms)
 #+END_EXAMPLE
 
+[2020-12-22 Tue 19:16]  It should be simple to do something like this:
+
++  If the range spans at least a year, include every day and month number, and each year number.
++  If the range spans less than a year but at least a month, include every day number, each month number, and the year number(s).
++  If the range spans less than a month, probably just increment and collect the numbers, like the code currently does (which will ensure the proper result in case the range spans the end of a month and/or year).
+
+If necessary, another step could be to divide the range into three parts: the middle being the part that spans whole months/years, and then the ends being the parts that span partial months/years.  Then a regexp could be made for each part and combined into a single regexp which would match each part separately (rather than combining all numbers into one potential timestamp).
+
 *** UNDERWAY ~clocked~
 
 **** TODO Tests
