@@ -471,7 +471,7 @@ It would be expanded to:
 Org QL provides a dynamic block that lists entries in the current document matching a query.  In the header, these parameters are supported:
 
 +  ~:query~: An Org QL query expression in either sexp or non-sexp form.
-+  ~:columns~ A list of columns, including ~heading~, ~todo~, ~property~, ~priority~, ~deadline~, ~scheduled~.
++  ~:columns~ A list of columns, including ~heading~, ~todo~, ~property~, ~priority~, ~deadline~, ~scheduled~, ~closed~.
      -  Each column may also be specified as a list with the second element being a header string.  For example, to abbreviate the priority column: ~(priority "P")~.
      -  For certain columns, like =property=, arguments may be passed by specifying the column type itself as a list.  For example, to display a column showing the values of a ~property~ named ~milestone~, with the header being abbreviated to ~M~: ~((property "milestone") "M")~.
 +  ~:sort~ One or a list of Org QL sorting methods (see ~org-ql-select~).

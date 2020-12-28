@@ -246,7 +246,7 @@ Valid parameters include:
             form.
 
   :columns  A list of columns, including `heading', `todo',
-            `property', `priority', `deadline', `scheduled'.
+            `property',`priority',`deadline',`scheduled',`closed'.
             Each column may also be specified as a list with the
             second element being a header string.  For example,
             to abbreviate the priority column: (priority \"P\").
@@ -296,6 +296,9 @@ For example, an org-ql dynamic block header could look like:
                                      (ts-format ts-format (ts-parse-org-element it)))))
                  (cons 'scheduled (lambda (element)
                                     (--when-let (org-element-property :scheduled element)
+                                      (ts-format ts-format (ts-parse-org-element it)))))
+                 (cons 'closed (lambda (element)
+                                    (--when-let (org-element-property :closed element)
                                       (ts-format ts-format (ts-parse-org-element it)))))
                  (cons 'property (lambda (element property)
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
