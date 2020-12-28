@@ -349,7 +349,7 @@ widen and search the entire buffer).
 
 SORT is either nil, in which case items are not sorted; or one or
 a list of defined `org-ql' sorting methods (`date', `deadline',
-`scheduled', `todo', `priority', `reverse', or `random'); or a
+`scheduled', `closed', `todo', `priority', `reverse', or `random'); or a
 user-defined comparator function that accepts two items as
 arguments and returns nil or non-nil.  Sorting methods are
 applied in the order given (i.e. later methods override earlier
@@ -426,7 +426,7 @@ each priority the newest items would appear first."
     ;; Sort items
     (pcase sort
       (`nil items)
-      ((guard (cl-subsetp (-list sort) '(date deadline scheduled todo priority random reverse)))
+      ((guard (cl-subsetp (-list sort) '(date deadline scheduled closed todo priority random reverse)))
        ;; Default sorting functions
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
@@ -2164,11 +2164,11 @@ any planning prefix); it defaults to 0 (i.e. the whole regexp)."
 (defun org-ql--sort-by (items predicates)
   "Return ITEMS sorted by PREDICATES.
 PREDICATES is a list of one or more sorting methods, including:
-`deadline', `scheduled', and `priority'."
+`deadline', `scheduled', `closed' and `priority'."
   ;; MAYBE: Use macrolet instead of flet.
   (cl-flet* ((sorter (symbol)
                      (pcase symbol
-                       ((or 'deadline 'scheduled)
+                       ((or 'deadline 'scheduled 'closed)
                         (apply-partially #'org-ql--date-type< (intern (concat ":" (symbol-name symbol)))))
                        ;; TODO: Rename `date' to `planning'.  `date' should be something else.
                        ('date #'org-ql--date<)

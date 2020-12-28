@@ -348,7 +348,7 @@ Return items matching ~QUERY~ in ~BUFFERS-OR-FILES~.
 
 If ~NARROW~ is non-nil, buffers are not widened (the default is to widen and search the entire buffer).
 
-~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods (~date~, ~deadline~, ~scheduled~, ~todo~, ~priority~, or ~random~); or a user-defined comparator function that accepts two items as arguments and returns nil or non-nil.
+~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods (~date~, ~deadline~, ~scheduled~, ~closed~, ~todo~, ~priority~, or ~random~); or a user-defined comparator function that accepts two items as arguments and returns nil or non-nil.
 
 Examples:
 
