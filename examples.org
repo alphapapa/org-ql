@@ -221,6 +221,44 @@ Of course, all of those presume using a =PROJECT= keyword to define projects. If
     :super-groups '((:auto-parent t)))
 #+END_SRC
 
+Alternatively, =org-ql-block= and =org-super-agenda= can be combined to create a project view which lists projects and their associated tasks. Suppose you have an org file with the following structure:
+
+#+BEGIN_SRC 
+ * Inbox
+ ** TODO Read Getting things done by David Allen
+ ** TODO Reply to reddit post 
+
+ * Next Tasks
+ ** NEXT Clean car
+ ** NEXT Donate old clothes
+
+ * Projects
+ ** Construct house  
+ *** NEXT Buy Wood
+
+ ** Build electronics project
+ *** NEXT Order parts
+
+ ** Plan vacation
+ *** NEXT Select hotel
+#+END_SRC
+
+Then using the following code:
+
+#+BEGIN_SRC elisp
+(setq org-agenda-custom-commands 
+      '(("u" "My Agenda" 
+	 ((org-ql-block '(and (todo) (ancestors "Projects")) 
+			((org-ql-block-header "Projects")
+			 (org-super-agenda-groups '((:auto-parent t)))))))))
+#+END_SRC
+
+will result in:
+
+[[images/projectViewScreenshot.png]]
+
+Additional =org-agenda-custom-commands= can be used with =org-ql-block= to create powerful agenda views.
+
 Other interesting queries:
 
 #+BEGIN_SRC elisp
