@@ -242,6 +242,9 @@ automatically from the query."
   "Insert content for org-ql dynamic block at point according to PARAMS.
 Valid parameters include:
 
+  :file     Any file that works in other org-ql queries, like `org-agenda-files'.
+            Default value: current-buffer
+
   :query    An Org QL query expression in either sexp or string
             form.
 
@@ -270,14 +273,15 @@ Valid parameters include:
 
 For example, an org-ql dynamic block header could look like:
 
-  #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take) params)
+  #+BEGIN: org-ql :file org-agenda-files :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
+  (-let* (((&plist :query :columns :sort :ts-format :take :file) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
                     (org-ql--ask-unsafe-query query)
                     query)))
           (columns (or columns '(heading todo (priority "P"))))
+          (file (or file (current-buffer)))
           ;; MAYBE: Custom column functions.
           (format-fns
            ;; NOTE: Backquoting this alist prevents the lambdas from seeing
@@ -299,7 +303,7 @@ For example, an org-ql dynamic block header could look like:
                                       (ts-format ts-format (ts-parse-org-element it)))))
                  (cons 'property (lambda (element property)
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
-          (elements (org-ql-query :from (current-buffer)
+          (elements (org-ql-query :from file
                                   :where query
                                   :select '(org-element-headline-parser (line-end-position))
                                   :order-by sort)))
@@ -330,7 +334,6 @@ For example, an org-ql dynamic block header could look like:
         (insert "| " (format-element element) " |" "\n"))
       (delete-char -1)
       (org-table-align))))
-
 ;;;; Functions
 
 (cl-defun org-ql-search-directories-files
