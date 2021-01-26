@@ -289,9 +289,19 @@ For example, an org-ql dynamic block header could look like:
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
                  (cons 'heading (lambda (element)
-                                  (org-make-link-string (org-element-property :raw-value element)
-                                                        (org-link-display-format
-                                                         (org-element-property :raw-value element)))))
+                                  (org-link-make-string
+			                             (format "file:%s::%s"
+				                                   (marker-buffer (org-element-property :org-marker element))
+                                           (org-element-property :raw-value element))
+			                             ;; Prune statistics cookies.  Replace
+			                             ;; links with their description, or
+			                             ;; a plain link if there is none.
+			                             (org-trim
+			                              (org-link-display-format
+			                               (replace-regexp-in-string
+				                              "\\[[0-9]*\\(?:%\\|/[0-9]*\\)\\]" ""
+				                              (org-element-property :raw-value element)))))
+                                  ))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
@@ -305,7 +315,7 @@ For example, an org-ql dynamic block header could look like:
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
           (elements (org-ql-query :from file
                                   :where query
-                                  :select '(org-element-headline-parser (line-end-position))
+                                  :select 'element-with-markers
                                   :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
@@ -334,6 +344,7 @@ For example, an org-ql dynamic block header could look like:
         (insert "| " (format-element element) " |" "\n"))
       (delete-char -1)
       (org-table-align))))
+
 ;;;; Functions
 
 (cl-defun org-ql-search-directories-files
