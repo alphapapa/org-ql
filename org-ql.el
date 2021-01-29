@@ -519,8 +519,10 @@ from within ELEMENT's buffer."
   ;; time?  I don't know, but for now, it seems that we have to use `copy-marker'.
   (let* ((marker (copy-marker (org-element-property :begin element)))
          (properties (--> (cadr element)
-                          (plist-put it :org-marker marker)
-                          (plist-put it :org-hd-marker marker))))
+                       (plist-put it :file buffer-file-name)
+                       (plist-put it :org-marker marker)
+                       (plist-put it :org-hd-marker marker)
+                       )))
     (setf (cadr element) properties)
     element))
 
@@ -611,7 +613,8 @@ respectively."
   (rx-to-string `(seq bol (group (zero-or-more (any "	 ")))
                       "#+begin_src"
                       (one-or-more (any "	 "))
-                      ,(or lang `(1+ (not (any "	\n\f "))))
+                      ,(or lang `(1+ (not (any "	\n\f
+ "))))
                       (zero-or-more (any "	 "))
                       (group (or (seq (zero-or-more (not (any "\n\":")))
                                       "\""
@@ -620,7 +623,7 @@ respectively."
                                       (zero-or-more (not (any "\n\":"))))
                                  (zero-or-more (not (any "\n\":")))))
                       (group (zero-or-more (not (any "\n")))) "\n"
-                      (63 (group (*\? (not (any " "))) "\n"))
+                      (63 (group (*\? (not (any ""))) "\n"))
                       (zero-or-more (any "	 "))
                       "#+end_src")
                 t))
