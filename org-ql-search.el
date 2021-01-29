@@ -268,13 +268,15 @@ Valid parameters include:
             positive number) or the end (a negative number) of
             the results.
 
+  :link     set this to non-nil for org-links to be there. If you leave this out or to nil, then no links in the headings.
+
   :ts-format  Optional format string used to format
               timestamp-based columns.
 
 For example, an org-ql dynamic block header could look like:
 
-  #+BEGIN: org-ql :file org-agenda-files :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take :file) params)
+  #+BEGIN: org-ql :file org-agenda-files :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :link t :ts-format \"%Y-%m-%d %H:%M\""
+  (-let* (((&plist :query :columns :sort :ts-format :take :link :file) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
@@ -289,22 +291,27 @@ For example, an org-ql dynamic block header could look like:
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
                  (cons 'heading (lambda (element)
-                                  (org-link-make-string
-			                             (format "file:%s::%s"
-				                                   (marker-buffer (org-element-property :org-marker element))
-                                           (org-element-property :raw-value element))
-			                             ;; Prune statistics cookies.  Replace
-			                             ;; links with their description, or
-			                             ;; a plain link if there is none.
-			                             (org-trim
-			                              (org-link-display-format
-			                               (replace-regexp-in-string
-				                              "\\[[0-9]*\\(?:%\\|/[0-9]*\\)\\]" ""
-				                              (org-element-property :raw-value element)))))
-                                  ))
+		                              (--when-let (org-element-property :raw-value element)
+			                                   (if (not link) it
+			                                     (let ((search
+				                                          (org-link-heading-search-string it)))
+			                                       (org-link-make-string
+			                                        (format "file:%s::%s" (org-element-property :file element) search)
+			                                        ;; Prune statistics cookies.  Replace
+			                                        ;; links with their description, or
+			                                        ;; a plain link if there is none.
+			                                        (org-trim
+			                                         (org-link-display-format
+			                                          (replace-regexp-in-string
+				                                         "\\[[0-9]*\\(?:%\\|/[0-9]*\\)\\]" ""
+				                                         it))))
+                                             )))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
+                 (cons 'closed (lambda (element)
+                                   (--when-let (org-element-property :closed element)
+                                     (ts-format ts-format (ts-parse-org-element it)))))
                  (cons 'deadline (lambda (element)
                                    (--when-let (org-element-property :deadline element)
                                      (ts-format ts-format (ts-parse-org-element it)))))
