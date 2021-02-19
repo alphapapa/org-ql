@@ -24,7 +24,6 @@
 
 ;; From MELPA
 (require 'dash)
-(require 'dash-functional)
 (require 's)
 
 ;; org-ql
