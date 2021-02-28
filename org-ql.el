@@ -269,7 +269,7 @@ returns nil or non-nil."
                                          (user-error "Not an Org buffer: %s" (buffer-name)))
                                        (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
                                                               :predicate predicate :action action :narrow narrow)))
-                              (-flatten-n 1)))
+                              (apply #'append)))
                      (--each orig-fns
                        ;; Restore original function mappings.
                        (-let (((&plist :name :fn) it))
