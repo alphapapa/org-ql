@@ -285,7 +285,7 @@ multiple files are queried."
                          (->> buffers-or-files
                            (--map (with-current-buffer (if (bufferp it)
                                                            it
-                                                         (org-ql--prepair-work-buffer it))
+                                                         (org-ql--prepare-work-buffer it))
                                     (unless (derived-mode-p 'org-mode)
                                       (user-error "Not an Org buffer: %s" (buffer-name)))
                                     (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
@@ -571,7 +571,7 @@ returns nil."
       buf
     (org-ql--init-work-buffer)))
 
-(defun org-ql--prepair-work-buffer (file)
+(defun org-ql--prepare-work-buffer (file)
   "Load file into the work buffer and return the buffer."
   (with-current-buffer (org-ql--work-buffer)
     (insert-file-contents file nil nil nil 'replace)
