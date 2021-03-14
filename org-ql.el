@@ -96,6 +96,8 @@ but the match groups were changed, so they are not compatible.")
 
 (defvar org-ql--today nil)
 
+(defvar org-ql--work-buffer-name " *org-ql-work*")
+
 (defvar org-ql-use-preamble t
   ;; MAYBE: Naming things is hard.  There must be a better term than "preamble."
   "Use query preambles to speed up searches.
@@ -157,6 +159,17 @@ See Info node `(org-ql)Queries'."
   :type 'boolean
   :risky t)
 
+(defcustom org-ql-open-buffers t
+  "Choose whether org-ql shall open all files to be queried in separate buffers.
+
+Opening files in their own separate buffer will significantly
+lower performance.  It will also leave the buffers open after the
+query has executed.  It will, however, allow for actions on the
+files that mutate them or checkes file metadata, something that
+otherwise is not possible since the file will be loaded into a
+separate work-buffer, see `org-ql-work-buffer-name'."
+  :type 'boolean)
+
 ;;;; Macros
 
 ;;;###autoload
@@ -210,25 +223,31 @@ SORT is either nil, in which case items are not sorted; or one or
 a list of defined `org-ql' sorting methods (`date', `deadline',
 `scheduled', `todo', `priority', or `random'); or a user-defined
 comparator function that accepts two items as arguments and
-returns nil or non-nil."
+returns nil or non-nil.
+
+Uses `org-ql-open-buffers to determine if all files that aren't
+yet loaded into a buffer should be loaded or not.  Choosing to not
+load buffers will give a significant improvement to performance when
+multiple files are queried."
   (declare (indent defun))
-  (-let* ((buffers (->> (cl-typecase buffers-or-files
-                          (null (list (current-buffer)))
-                          (function (funcall buffers-or-files))
-                          (list buffers-or-files)
-                          (otherwise (list buffers-or-files)))
-                        (--map (cl-etypecase it
-                                 ;; NOTE: This etypecase is essential to opening links safely,
-                                 ;; as it rejects, e.g. lambdas in the buffers-files argument.
-                                 (buffer it)
-                                 (string (or (find-buffer-visiting it)
-                                             (when (file-readable-p it)
-                                               ;; It feels unintuitive that `find-file-noselect' returns
-                                               ;; a buffer if the filename doesn't exist.
-                                               (find-file-noselect it))
-                                             (user-error "Can't open file: %s" it)))))
-                        ;; Ignore special/hidden buffers.
-                        (--remove (string-prefix-p " " (buffer-name it)))))
+  (-let* ((buffers-or-files (->> (cl-typecase buffers-or-files
+                                   (null (list (current-buffer)))
+                                   (function (funcall buffers-or-files))
+                                   (list buffers-or-files)
+                                   (otherwise (list buffers-or-files)))
+                              (--map (cl-etypecase it
+                                       ;; NOTE: This etypecase is essential to opening links safely,
+                                       ;; as it rejects, e.g. lambdas in the buffers-files argument.
+                                       (buffer it)
+                                       (string (or (find-buffer-visiting it)
+                                                   (when (file-readable-p it)
+                                                     (if org-ql-open-buffers
+                                                         (find-file-noselect it)
+                                                       it))
+                                                   (user-error "Can't open file: %s" it)))))
+                              ;; Ignore special/hidden buffers.
+                              (--remove (when (bufferp it)
+                                          (string-prefix-p " " (buffer-name it))))))
           (query (org-ql--normalize-query query))
           ((&plist :query :preamble :preamble-case-fold) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
@@ -263,13 +282,15 @@ returns nil or non-nil."
                              ;; Temporarily set new function definition.
                              (fset name fn)))
                          ;; Run query on buffers.
-                         (->> buffers
-                              (--map (with-current-buffer it
-                                       (unless (derived-mode-p 'org-mode)
-                                         (user-error "Not an Org buffer: %s" (buffer-name)))
-                                       (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                              :predicate predicate :action action :narrow narrow)))
-                              (-flatten-n 1)))
+                         (->> buffers-or-files
+                           (--map (with-current-buffer (if (bufferp it)
+                                                           it
+                                                         (org-ql--prepare-work-buffer it))
+                                    (unless (derived-mode-p 'org-mode)
+                                      (user-error "Not an Org buffer: %s" (buffer-name)))
+                                    (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
+                                                           :predicate predicate :action action :narrow narrow)))
+                           (-flatten-n 1)))
                      (--each orig-fns
                        ;; Restore original function mappings.
                        (-let (((&plist :name :fn) it))
@@ -536,6 +557,25 @@ returns nil."
       (unless (yes-or-no-p (concat "Query is in sexp form and could contain arbitrary code: "
                                    query-string " Execute it? "))
         (user-error "Query aborted by user")))))
+
+(defun org-ql--init-work-buffer ()
+  "Initiate hidden buffer."
+  (let ((buf (get-buffer-create (format org-ql--work-buffer-name))))
+    (with-current-buffer buf
+      (delay-mode-hooks (org-mode)))
+    buf))
+
+(defun org-ql--work-buffer ()
+  "Return the hidden buffer used for crawling operations."
+  (if-let ((buf (get-buffer org-ql--work-buffer-name)))
+      buf
+    (org-ql--init-work-buffer)))
+
+(defun org-ql--prepare-work-buffer (file)
+  "Load file into the work buffer and return the buffer."
+  (with-current-buffer (org-ql--work-buffer)
+    (insert-file-contents file nil nil nil 'replace)
+    (current-buffer)))
 
 ;;;;; Query processing
 
