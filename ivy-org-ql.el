@@ -111,7 +111,7 @@ Is transformed into this query:
           (ivy-dynamic-exhibit-delay-ms ivy-org-ql-dynamic-exhibit-delay-ms))
       (ivy-read (format "Query (boolean %s): " (-> boolean symbol-name upcase))
                 (lambda (input)
-                  (let ((query (org-ql--plain-query input))
+                  (let ((query (org-ql--query-string-to-sexp input))
                         (window-width (window-width)))
                     (when query
                       (ignore-errors
@@ -138,7 +138,7 @@ Is transformed into this query:
 ;;   (interactive)
 ;;   (let ((buffers-files (with-current-buffer (ivy-buffer-get)
 ;;                          ivy-org-ql-buffers-files))
-;;         (query (org-ql--plain-query ivy-pattern)))
+;;         (query (org-ql--query-string-to-sexp ivy-pattern)))
 ;;     (ivy-run-after-exit #'org-ql-search buffers-files query)))
 
 ;; FIXME: ivy-org-ql-views
