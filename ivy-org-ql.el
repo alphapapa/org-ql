@@ -68,13 +68,6 @@
     "Milliseconds to wait after typing stops before running query."
     :type 'integer)
 
-  (defcustom ivy-org-ql-actions
-    (list (cons "Show heading in source buffer" 'ivy-org-ql-show-marker)
-          (cons "Show heading in indirect buffer" 'ivy-org-ql-show-marker-indirect))
-    "Alist of actions for `ivy-org-ql' commands."
-    :type '(alist :key-type (string :tag "Description")
-                  :value-type (function :tag "Command")))
-
 ;;;;; Commands
 
   (cl-defun ivy-org-ql (buffers-files
@@ -114,12 +107,35 @@ Is transformed into this query:
                   (let ((query (org-ql--query-string-to-sexp input))
                         (window-width (window-width)))
                     (when query
-                      (ignore-errors
-                        (org-ql-select files query
-                          :action (lambda ()
-                                    (org-ql--heading-cons window-width ivy-org-ql-reverse-paths)))))))
+                      (org-ql-select buffers-files query
+                        :action 'ivy-org-ql--heading-cons))))
                 :dynamic-collection t
-                :action ivy-org-ql-actions)))
+                :action 'ivy-org-ql-show-marker)))
+
+  (defun ivy-org-ql--heading-cons ()
+    (font-lock-ensure (point-at-bol) (point-at-eol))
+    ;; TODO: It would be better to avoid calculating the prefix and width
+    ;; at each heading, but there's no easy way to do that once in each
+    ;; buffer, unless we manually called `org-ql' in each buffer, which
+    ;; I'd prefer not to do.  Maybe I should add a feature to `org-ql' to
+    ;; call a setup function in a buffer before running queries.
+    (let* ((prefix (concat (buffer-name) ":"))
+           (heading (org-get-heading t))
+           (path (-> (org-get-outline-path)
+                   (org-format-outline-path nil nil "")
+                   (org-split-string "")))
+           (path (if ivy-org-ql-reverse-paths
+                     (concat heading "\\" (s-join "\\" (nreverse path)))
+                   (concat (s-join "/" path) "/" heading)))
+           (str (concat prefix path)))
+      ;; ivy doesn't support calling action function with a cons when dynamic-collection is on
+      ;; see https://github.com/abo-abo/swiper/issues/2677
+      ;; so we had to use text-property to store (point-marker)
+      (put-text-property 0 1 'marker (point-marker) str)
+      str))
+
+  (defun ivy-org-ql-show-marker (cand)
+    (org-ql-show-marker (get-text-property 0 'marker cand)))
 
   (defun ivy-org-ql-agenda-files ()
     "Search agenda files with `ivy-org-ql', which see."
