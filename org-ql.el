@@ -481,7 +481,7 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
     (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
               (query-cache (cadr buffer-cache))
               (modified-tick (car buffer-cache))
-              (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+              (buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
               (cached-result (gethash query-cache-key query-cache)))
         (pcase cached-result
           ('org-ql-nil nil)
@@ -490,7 +490,7 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
         (cond ((or (not query-cache)
                    (not buffer-unmodified-p))
                (puthash (current-buffer)
-                        (list (buffer-modified-tick)
+                        (list (buffer-chars-modified-tick)
                               (let ((table (make-hash-table :test 'org-ql-hash-test)))
                                 (puthash query-cache-key (or new-result 'org-ql-nil) table)
                                 table))
@@ -545,7 +545,7 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
   (if-let* ((buffer-cache (gethash (current-buffer) org-ql-tags-cache))
             (modified-tick (car buffer-cache))
             (tags-cache (cdr buffer-cache))
-            (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+            (buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
             (cached-result (gethash position tags-cache)))
       ;; Found in cache: return them.
       ;; FIXME: Isn't `cached-result' a list of (INHERITED . LOCAL)?  It
@@ -586,12 +586,12 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
       (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
             modified-tick (car buffer-cache)
             tags-cache (cdr buffer-cache)
-            buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+            buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
       (unless (and buffer-cache buffer-unmodified-p)
         ;; Buffer-local tags cache empty or invalid: make new one.
         (setf tags-cache (make-hash-table))
         (puthash (current-buffer)
-                 (cons (buffer-modified-tick) tags-cache)
+                 (cons (buffer-chars-modified-tick) tags-cache)
                  org-ql-tags-cache))
       (puthash position all-tags tags-cache))))
 
@@ -622,7 +622,7 @@ Values compared with `equal'."
   (pcase (if-let* ((buffer-cache (gethash (current-buffer) org-ql-node-value-cache))
                    (modified-tick (car buffer-cache))
                    (position-cache (cdr buffer-cache))
-                   (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                   (buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
                    (value-cache (gethash position position-cache))
                    (cached-value (alist-get fn value-cache nil nil #'equal)))
              ;; Found in cache: return it.
@@ -637,13 +637,13 @@ Values compared with `equal'."
                    position-cache (cdr buffer-cache)
                    value-cache (when position-cache
                                  (gethash position position-cache))
-                   buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                   buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
              (unless (and buffer-cache buffer-unmodified-p)
                ;; Buffer-local node cache empty or invalid: make new one.
                (setf position-cache (make-hash-table)
                      value-cache (gethash position position-cache))
                (puthash (current-buffer)
-                        (cons (buffer-modified-tick) position-cache)
+                        (cons (buffer-chars-modified-tick) position-cache)
                         org-ql-node-value-cache))
              (setf (alist-get fn value-cache nil nil #'equal) new-value)
              (puthash position value-cache position-cache)
