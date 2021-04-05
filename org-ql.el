@@ -1219,16 +1219,26 @@ result form."
                  `(and ,@(mapcar #'rec clauses))))
   :preambles ((`(and . ,clauses)
                (let ((preambles (mapcar #'rec clauses))
-                     regexps regexp-max case-fold-max)
-                 (dolist (preamble preambles)
-                   (-let* (((&plist :regexp :case-fold :query) preamble))
-                     ;; Take the longest regexp.  It should be hardest to match.
-                     (when (length> regexp (length regexp-max))
-                       (setq regexp-max regexp)
-                       (setq case-fold-max case-fold))))
+                     regexps regexp-max case-fold-max queries)
+                 (cl-loop for preamble in preambles
+                          for clause in clauses
+                          do
+                          (-let* (((&plist :regexp :case-fold :query) preamble))
+                            (if regexp
+                                (cond
+                                 ((eq query t) (setq query `(regexp ,regexp)))
+                                 ((not query) (setq query `(regexp ,regexp)))
+                                 (t nil))
+                              (setq query clause))
+                            (push query queries)
+                            ;; Take the longest regexp.  It should be hardest to match.
+                            (when (length> regexp (length regexp-max))
+                              (setq regexp-max regexp)
+                              (setq case-fold-max case-fold))))
+                 (setq queries (reverse queries))
                  (list :regexp regexp-max
                        :case-fold case-fold-max
-                       :query `(and ,@clauses))))))
+                       :query `(and ,@queries))))))
 
 (org-ql-defpred org-ql--or (&rest clauses)
   "Return non-nil if any of the clauses match."
@@ -1238,17 +1248,29 @@ result form."
                  `(or ,@(mapcar #'rec clauses))))
   :preambles ((`(or . ,clauses)
                (let ((preambles (mapcar #'rec clauses))
-                     regexps regexp-null-p)
-                 (dolist (preamble preambles)
-                   (-let* (((&plist :regexp :case-fold :query) preamble))
-                     ;; Collect regexps for combining.
-                     (if regexp (push regexp regexps)
-                       (setq regexp-null-p t))))
+                     regexps regexp-null-p queries)
+                 (cl-loop for preamble in preambles
+                          for clause in clauses
+                          do
+                          (-let* (((&plist :regexp :case-fold :query) preamble))
+                            (if regexp
+                                (cond
+                                 ((eq query t) (setq query `(regexp ,regexp)))
+                                 ((not query) (setq query `(regexp ,regexp)))
+                                 (t nil))
+                              (setq query clause))
+                            (push query queries)
+                            ;; Collect regexps for combining.
+                            (if regexp (push regexp regexps)
+                              (setq regexp-null-p t))))
+                 (setq queries (reverse queries))
                  (list :regexp (unless regexp-null-p
                                  (and regexps
                                       (rx-to-string `(or ,@(mapcar (lambda (re) `(regex ,re)) regexps)))))
                        :case-fold t
-                       :query `(save-excursion (or ,@clauses)))))))
+                       :query (if regexp-null-p
+                                  `(save-excursion (or ,@clauses))
+                                `(save-excursion (or ,@queries))))))))
 
 (org-ql-defpred org-ql--when (condition &rest clauses)
   "Return values of CLAUSES when CONDITION is non-nil."
