@@ -565,25 +565,26 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
                            'org-ql-nil))
            (inherited-tags (or (when org-use-tag-inheritance
                                  (save-excursion
-                                   (if (org-up-heading-safe)
-                                       ;; Return parent heading's tags.
-                                       (-let* (((inherited local) (org-ql--tags-at (point)))
-                                               (tags (when (or inherited local)
-                                                       (cond ((and (listp inherited)
-                                                                   (listp local))
-                                                              (->> (append inherited local)
-                                                                -non-nil -uniq))
-                                                             ((listp inherited) inherited)
-                                                             ((listp local) local)))))
-                                         (cl-typecase org-use-tag-inheritance
-                                           (list (setf tags (-intersection tags org-use-tag-inheritance)))
-                                           (string (setf tags (--select (string-match org-use-tag-inheritance it)
-                                                                        tags))))
-                                         (pcase org-tags-exclude-from-inheritance
-                                           ('nil tags)
-                                           (_ (-difference tags org-tags-exclude-from-inheritance))))
-                                     ;; Top-level heading: use file tags.
-                                     org-file-tags)))
+                                   (org-with-wide-buffer
+                                    (if (org-up-heading-safe)
+                                        ;; Return parent heading's tags.
+                                        (-let* (((inherited local) (org-ql--tags-at (point)))
+                                                (tags (when (or inherited local)
+                                                        (cond ((and (listp inherited)
+                                                                    (listp local))
+                                                               (->> (append inherited local)
+                                                                    -non-nil -uniq))
+                                                              ((listp inherited) inherited)
+                                                              ((listp local) local)))))
+                                          (cl-typecase org-use-tag-inheritance
+                                            (list (setf tags (-intersection tags org-use-tag-inheritance)))
+                                            (string (setf tags (--select (string-match org-use-tag-inheritance it)
+                                                                         tags))))
+                                          (pcase org-tags-exclude-from-inheritance
+                                            ('nil tags)
+                                            (_ (-difference tags org-tags-exclude-from-inheritance))))
+                                      ;; Top-level heading: use file tags.
+                                      org-file-tags))))
                                'org-ql-nil))
            (all-tags (list inherited-tags local-tags)))
       ;; Check caches again, because they may have been set now.
