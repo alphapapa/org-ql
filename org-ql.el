@@ -1117,7 +1117,7 @@ It would be expanded to:
          (preambles (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names))))
                                preambles)))
     `(progn
-       (cl-defun ,fn-name ,(if body args '(&rest _)) ,docstring ,body)
+       (cl-defun ,fn-name ,args ,docstring ,body)
        ;; SOMEDAY: Use `map-elt' here, after map 2.1 can be automatically installed in CI sandbox...
        (setf (alist-get ',predicate-name org-ql-predicates)
              `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,(\, docstring) :args ,',args
@@ -1212,7 +1212,7 @@ result form."
 ;; redefinitions until all of the predicates have been defined.
 (setf org-ql-defpred-defer t)
 
-(org-ql-defpred org-ql--and (&rest clauses)
+(org-ql-defpred org-ql--and (&rest _)
   "Return non-nil if all the clauses match."
   :normalizers ((`(and)
                  nil)
@@ -1241,7 +1241,7 @@ result form."
                        :case-fold case-fold-max
                        :query `(and ,@queries))))))
 
-(org-ql-defpred org-ql--or (&rest clauses)
+(org-ql-defpred org-ql--or (&rest _)
   "Return non-nil if any of the clauses match."
   :normalizers ((`(or)
                  nil)
@@ -1270,7 +1270,7 @@ result form."
                        :case-fold t
                        :query `(or ,@(mapcar (lambda (clause) `(save-excursion ,clause)) queries)))))))
 
-(org-ql-defpred org-ql--when (condition &rest clauses)
+(org-ql-defpred org-ql--when (_ &rest _)
   "Return values of CLAUSES when CONDITION is non-nil."
   :normalizers
   ((`(when ,condition . ,clauses)
@@ -1283,7 +1283,7 @@ result form."
             :case-fold case-fold
             :query `(when ,condition ,@(mapcar (lambda (clause) `(save-excursion ,clause)) (butlast clauses)) ,(last clauses)))))))
 
-(org-ql-defpred org-ql--unless (condition &rest clauses)
+(org-ql-defpred org-ql--unless (_ &rest _)
   "Return values of CLAUSES unless CONDITION is non-nil."
   :normalizers
   ((`(unless ,condition . ,clauses)
@@ -1296,7 +1296,7 @@ result form."
             :case-fold case-fold
             :query `(unless (save-excursion ,condition) ,@(mapcar (lambda (clause) `(save-excursion ,clause)) (butlast clauses)) ,(last clauses)))))))
 
-(org-ql-defpred org-ql--not (clauses)
+(org-ql-defpred org-ql--not (_)
   "Match when CLAUSES don't match."
   :normalizers
   ((`(not . ,clauses)
