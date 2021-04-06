@@ -1289,7 +1289,7 @@ result form."
                                  (and regexps
                                       (rx-to-string `(or ,@(mapcar (lambda (re) `(regex ,re)) regexps)))))
                        :case-fold t
-                       :query `(or ,@(mapcar (lambda (clause) `(save-excursion ,clause)) queries)))))))
+                       :query `(or ,@queries))))))
 
 (org-ql-defpred org-ql--when (_ &rest _)
   "Return values of CLAUSES when CONDITION is non-nil."
@@ -1302,7 +1302,7 @@ result form."
     (-let* (((&plist :regexp :case-fold :query) (org-ql-query-preamble `(and ,condition ,(last clauses)))))
       (list :regexp regexp
             :case-fold case-fold
-            :query `(when ,condition ,@(mapcar (lambda (clause) `(save-excursion ,clause)) (butlast clauses)) ,(last clauses)))))))
+            :query `(when ,condition ,@clauses))))))
 
 (org-ql-defpred org-ql--unless (_ &rest _)
   "Return values of CLAUSES unless CONDITION is non-nil."
@@ -1315,13 +1315,13 @@ result form."
     (-let* (((&plist :regexp :case-fold :query) (org-ql-query-preamble ,(last clauses))))
       (list :regexp regexp
             :case-fold case-fold
-            :query `(unless (save-excursion ,condition) ,@(mapcar (lambda (clause) `(save-excursion ,clause)) (butlast clauses)) ,(last clauses)))))))
+            :query `(unless ,condition ,@clauses))))))
 
 (org-ql-defpred org-ql--not (_)
   "Match when CLAUSES don't match."
   :normalizers
   ((`(not . ,clauses)
-    `(save-excursion (not ,@(mapcar #'org-ql-normalize-query clauses))))))
+    `(not ,@(mapcar #'org-ql-normalize-query clauses)))))
 
 (org-ql-defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
