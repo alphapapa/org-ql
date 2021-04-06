@@ -1117,7 +1117,7 @@ It would be expanded to:
          (preambles (cl-sublis (list (cons 'predicate-names (cons 'or (--map (list 'quote it) predicate-names))))
                                preambles)))
     `(progn
-       (cl-defun ,fn-name ,args ,docstring ,body)
+       (cl-defun ,fn-name ,(if body args '(&rest _)) ,docstring ,body)
        ;; SOMEDAY: Use `map-elt' here, after map 2.1 can be automatically installed in CI sandbox...
        (setf (alist-get ',predicate-name org-ql-predicates)
              `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,(\, docstring) :args ,',args
