@@ -1839,10 +1839,10 @@ Tests both inherited and local tags."
 (org-ql-defpred (tags-inherited inherited-tags tags-i itags) (&rest tags)
   "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any inherited tags."
-  :normalizers ((`(,predicate-names . ,tags)
-                 `(tags-inherited ,@tags))
-                (`(,predicate-names)
-                 `(tags-inherited)))
+  :normalizers ((`(,predicate-names)
+                 `(tags-inherited))
+                (`(,predicate-names . ,tags)
+                 `(tags-inherited ,@tags)))
   :body (cl-macrolet ((tags-p (tags)
                               `(and ,tags
                                     (not (eq 'org-ql-nil ,tags)))))
