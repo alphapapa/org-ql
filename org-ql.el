@@ -1308,7 +1308,7 @@ result form."
   "Return values of CLAUSES unless CONDITION is non-nil."
   :normalizers
   ((`(unless ,condition . ,clauses)
-    `(unless (save-excursion ,(org-ql-normalize-query condition))
+    `(unless ,(org-ql-normalize-query condition)
        ,@(mapcar #'org-ql-normalize-query clauses))))
   :preambles
   ((`(unless ,condition . ,clauses)
