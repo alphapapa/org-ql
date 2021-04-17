@@ -469,6 +469,11 @@ with keyword arg NOW in PLIST."
     (expect (org-ql--normalize-query '(and (todo "TODO")
                                            (or "string1" "string2")))
             :to-equal '(and (todo "TODO") (or (regexp "string1") (regexp "string2"))))
+    (expect (org-ql--normalize-query '(or (todo "TODO")
+                                          (or "string1" "string2")))
+            :to-equal '(or (todo "TODO") (or (regexp "string1") (regexp "string2"))))
+    (expect (org-ql--normalize-query '(not (or "string1" "string2")))
+            :to-equal '(not (or (regexp "string1") (regexp "string2"))))
     (expect (org-ql--normalize-query '(when (todo "TODO")
                                         (or "string1" "string2")))
             :to-equal '(when (todo "TODO") (or (regexp "string1") (regexp "string2"))))
@@ -516,6 +521,76 @@ with keyword arg NOW in PLIST."
   (describe "Query preambles"
 
     ;; TODO: Other predicates.
+
+    (describe "(and)"
+      (it "all clauses have preambles"
+        (expect (org-ql--query-preamble '(and (regexp "a") (regexp "b")))
+                :to-equal (list :query '(and (regexp "a") (regexp "b"))
+                                :preamble "a"
+                                :preamble-case-fold t)))
+      (it "some clauses miss preambles"
+        (expect (org-ql--query-preamble '(and (regexp "a") (+ 1 1)))
+                :to-equal (list :query '(and (regexp "a") (+ 1 1))
+                                :preamble "a"
+                                :preamble-case-fold t)))
+      (it "all clauses don't have preambles"
+        (expect (org-ql--query-preamble '(and t (+ 1 1)))
+                :to-equal (list :query '(and t (+ 1 1))
+                                :preamble nil
+                                :preamble-case-fold nil))))
+
+    (describe "(or)"
+      (it "all clauses have preambles"
+        (expect (org-ql--query-preamble '(or (regexp "a") (regexp "b")))
+                :to-equal (list :query '(or (regexp "a") (regexp "b"))
+                                :preamble (rx-to-string `(or (regexp "a") (regexp "b")))
+                                :preamble-case-fold t)))
+      (it "some clauses miss preambles"
+        (expect (org-ql--query-preamble '(or (regexp "a") (+ 1 1)))
+                :to-equal (list :query '(or (regexp "a") (+ 1 1))
+                                :preamble nil
+                                :preamble-case-fold t)))
+      (it "all clauses don't have preambles"
+        (expect (org-ql--query-preamble '(or t (+ 1 1)))
+                :to-equal (list :query '(or t (+ 1 1))
+                                :preamble nil
+                                :preamble-case-fold t))))
+
+    (describe "(when)"
+      (it "simple query"
+        (expect (org-ql--query-preamble '(when (regexp "a") (regexp "b")))
+                :to-equal (list :query '(when (regexp "a") (regexp "b"))
+                                :preamble "a"
+                                :preamble-case-fold t)))
+      (it "multiple clauses after when"
+        (expect (org-ql--query-preamble '(when (regexp "a") (+ 1 1) (regexp "b")))
+                :to-equal (list :query '(when (regexp "a") (+ 1 1) (regexp "b"))
+                                :preamble "a"
+                                :preamble-case-fold t)))
+      (it "no preambles in clauses"
+        (expect (org-ql--query-preamble '(when t (+ 1 1)))
+                :to-equal (list :query '(when t (+ 1 1))
+                                :preamble nil
+                                :preamble-case-fold nil))))
+
+    (describe "(unless)"
+      (it "simple query"
+        (expect (org-ql--query-preamble '(unless (regexp "a") (regexp "b")))
+                :to-equal (list :query '(unless (regexp "a") (regexp "b"))
+                                :preamble "b"
+                                :preamble-case-fold t)))
+      (it "no predicate in last clause"
+        (expect (org-ql--query-preamble '(unless (regexp "a") (regexp "b") (+ 1 1)))
+                :to-equal (list :query '(unless (regexp "a") (regexp "b") (+ 1 1))
+                                :preamble nil
+                                :preamble-case-fold nil))))
+
+    (describe "(not)"
+      (it "simple query"
+        (expect (org-ql--query-preamble '(not (regexp "a")))
+                :to-equal (list :query '(not (regexp "a"))
+                                :preamble nil
+                                :preamble-case-fold nil))))
 
     (describe "(clocked)"
       (it "without arguments"
