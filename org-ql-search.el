@@ -242,6 +242,15 @@ automatically from the query."
   "Insert content for org-ql dynamic block at point according to PARAMS.
 Valid parameters include:
 
+  :scope    The scope to consider for the Org QL query. This can
+            be one of the following:
+
+            `buffer'              the current buffer
+            `org-agenda-files'    all agenda files
+            `org-directory'       all org files
+            `(list-of-files ...)' a list of org files
+            `all'                 all agenda files, and org-mode buffers
+
   :query    An Org QL query expression in either sexp or string
             form.
 
@@ -271,13 +280,18 @@ Valid parameters include:
 For example, an org-ql dynamic block header could look like:
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take) params)
+  (-let* (((&plist :scope :query :columns :sort :ts-format :take) params)
           (query (cl-etypecase query
-                   (string (org-ql--query-string-to-sexp query))
+                   (string (org-ql--plain-query query))
                    (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
                     (org-ql--ask-unsafe-query query)
                     query)))
           (columns (or columns '(heading todo (priority "P"))))
+          (scope (cond ((listp scope) scope)
+                       ((string-equal scope "org-agenda-files") (org-agenda-files))
+                       ((or (not scope) (string-equal scope "buffer")) (current-buffer))
+                       ((string-equal scope "org-directory") (org-ql-search-directories-files))
+                       (t (user-error "Unknown scope '%s'" scope))))
           ;; MAYBE: Custom column functions.
           (format-fns
            ;; NOTE: Backquoting this alist prevents the lambdas from seeing
@@ -285,9 +299,11 @@ For example, an org-ql dynamic block header could look like:
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
                  (cons 'heading (lambda (element)
-                                  (org-make-link-string (org-element-property :raw-value element)
-                                                        (org-link-display-format
-                                                         (org-element-property :raw-value element)))))
+                                  (let ((m (plist-get (cadr element) :org-hd-marker)))
+                                    (with-current-buffer (marker-buffer m)
+                                      (save-excursion
+                                        (goto-char m)
+                                        (org-store-link nil nil))))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
@@ -299,9 +315,9 @@ For example, an org-ql dynamic block header could look like:
                                       (ts-format ts-format (ts-parse-org-element it)))))
                  (cons 'property (lambda (element property)
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
-          (elements (org-ql-query :from (current-buffer)
+          (elements (org-ql-query :from scope
                                   :where query
-                                  :select '(org-element-headline-parser (line-end-position))
+                                  :select 'element-with-markers
                                   :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
