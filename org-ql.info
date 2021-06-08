@@ -974,6 +974,16 @@ File: README.info,  Node: 06-pre,  Next: 05,  Up: Changelog
      a separate package, helm-org-ql.
    • Predicate ‘heading’ now matches plain strings instead of regular
      expressions.
+   • Update dash dependency, and remove dependency on obsolete
+     dash-functional.  (Fixes #179
+     (https://github.com/alphapapa/org-ql/issues/179), #209
+     (https://github.com/alphapapa/org-ql/issues/209).  Thanks to Mark
+     Hudnall (https://github.com/landakram), Akira Komamura
+     (https://github.com/akirak), Nathanael kinfe
+     (https://github.com/natask), Pablo Stafforini
+     (https://github.com/benthamite), Jason May
+     (https://github.com/jmay), and Basil L. Contovounesios
+     (https://github.com/basil-conto).)
 
    *Internal*
    • Predicates are now defined more cleanly with a macro
@@ -1496,29 +1506,29 @@ Node: Links34102
 Node: Tips34789
 Node: Changelog35107
 Node: 06-pre35803
-Node: 0536638
-Node: 04938115
-Node: 04838389
-Node: 04738736
-Node: 04639131
-Node: 04539531
-Node: 04439890
-Node: 04340247
-Node: 04240442
-Node: 04140603
-Node: 0440844
-Node: 03244777
-Node: 03145156
-Node: 0345353
-Node: 02348328
-Node: 02248556
-Node: 02148824
-Node: 0249023
-Node: 0153058
-Node: Notes53159
-Node: Comparison with Org Agenda searches53321
-Node: org-sidebar54193
-Node: License54472
+Node: 0537178
+Node: 04938655
+Node: 04838929
+Node: 04739276
+Node: 04639671
+Node: 04540071
+Node: 04440430
+Node: 04340787
+Node: 04240982
+Node: 04141143
+Node: 0441384
+Node: 03245317
+Node: 03145696
+Node: 0345893
+Node: 02348868
+Node: 02249096
+Node: 02149364
+Node: 0249563
+Node: 0153598
+Node: Notes53699
+Node: Comparison with Org Agenda searches53861
+Node: org-sidebar54733
+Node: License55012
 
 End Tag Table
 

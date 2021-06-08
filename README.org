@@ -525,6 +525,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Changed*
 +  Helm support (including the command =helm-org-ql=) has been moved to a separate package, =helm-org-ql=.
 +  Predicate ~heading~ now matches plain strings instead of regular expressions.
++  Update =dash= dependency, and remove dependency on obsolete =dash-functional=.  (Fixes [[https://github.com/alphapapa/org-ql/issues/179][#179]], [[https://github.com/alphapapa/org-ql/issues/209][#209]].  Thanks to [[https://github.com/landakram][Mark Hudnall]], [[https://github.com/akirak][Akira Komamura]], [[https://github.com/natask][Nathanael kinfe]], [[https://github.com/benthamite][Pablo Stafforini]], [[https://github.com/jmay][Jason May]], and [[https://github.com/basil-conto][Basil L. Contovounesios]].)
 
 *Internal*
 +  Predicates are now defined more cleanly with a macro (=org-ql-defpred=) that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.
