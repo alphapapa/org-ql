@@ -859,7 +859,12 @@ File: README.info,  Node: 051-pre,  Next: 05,  Up: Changelog
 5.1 0.5.1-pre
 =============
 
-Nothing yet.
+*Fixed*
+   • Custom sorting functions could corrupt the cache, causing items to
+     disappear after refreshing an org-ql-search buffer.  (#186
+     (https://github.com/alphapapa/org-ql/issues/186), #187
+     (https://github.com/alphapapa/org-ql/issues/187).  Thanks to
+     Nathanael kinfe (https://github.com/natask).)
 
 
 File: README.info,  Node: 05,  Next: 049,  Prev: 051-pre,  Up: Changelog
@@ -1373,29 +1378,29 @@ Node: Links29571
 Node: Tips30258
 Node: Changelog30576
 Node: 051-pre31275
-Node: 0531382
-Node: 04932860
-Node: 04833134
-Node: 04733481
-Node: 04633876
-Node: 04534276
-Node: 04434635
-Node: 04334992
-Node: 04235187
-Node: 04135348
-Node: 0435589
-Node: 03239522
-Node: 03139901
-Node: 0340098
-Node: 02343073
-Node: 02243301
-Node: 02143569
-Node: 0243768
-Node: 0147803
-Node: Notes47904
-Node: Comparison with Org Agenda searches48066
-Node: org-sidebar48938
-Node: License49217
+Node: 0531692
+Node: 04933170
+Node: 04833444
+Node: 04733791
+Node: 04634186
+Node: 04534586
+Node: 04434945
+Node: 04335302
+Node: 04235497
+Node: 04135658
+Node: 0435899
+Node: 03239832
+Node: 03140211
+Node: 0340408
+Node: 02343383
+Node: 02243611
+Node: 02143879
+Node: 0244078
+Node: 0148113
+Node: Notes48214
+Node: Comparison with Org Agenda searches48376
+Node: org-sidebar49248
+Node: License49527
 
 End Tag Table
 
