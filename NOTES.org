@@ -124,6 +124,8 @@
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
+- [[#fix-custom-sorter-breaks-cached-results][Fix: Custom sorter breaks cached results]]
+- [[#update-dash-dependencies][Update dash dependencies]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
 - [[#views-multiple-sorters-are-not-preserved][Views: Multiple sorters are not preserved]]
 - [[#make-dynamic-blocks-warn-about-sexp-queries][Make dynamic blocks warn about sexp queries]]
@@ -2061,6 +2063,22 @@ e.g. doesn't currently show the =View= header.
 
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
+** DONE [#A] Fix: Custom sorter breaks cached results                  :bug:
+:PROPERTIES:
+:milestone: 0.5.1
+:END:
+
++  [[https://github.com/alphapapa/org-ql/issues/186][custom sort functions pollute cache · Issue #186 · alphapapa/org-ql · GitHub]]
++  [[https://github.com/alphapapa/org-ql/pull/187][replace sort with -sort. by natask · Pull Request #187 · alphapapa/org-ql · GitHub]]
+
+** DONE [#A] Update =dash= dependencies
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
++  [[https://github.com/alphapapa/org-ql/issues/209][Out-of-date dependences (dash-functional) · Issue #209 · alphapapa/org-ql · GitHub]]
++  [[https://github.com/alphapapa/org-ql/pull/197][Bump dash.el to fix helm-org-ql by landakram · Pull Request #197 · alphapapa/org-ql · GitHub]]
+
 ** DONE [#A] Checking links for unsafe parameters
 :PROPERTIES:
 :ID:       ba70e375-eddb-40df-8892-fb418c1f70d1
@@ -2795,11 +2813,28 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 
 *** Fix
 
-+  [ ] Check repo for closing issue
-+  [ ] Check this file for closing task
++  [ ] Check repo for closing issues
 +  [ ] Lint
 +  [ ] Test
-+  [ ] Commit and push
++  [ ] Update changelog
+     -  [ ] Mention closing issues
++  [ ] Commit
+     -  [ ] Mention closing issues in commit message
++  [ ] Push
++  [ ] Close related tasks in this file
+
+** DONE Release 0.5.1
+
++  [X] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
++  [X] Changelog entry
++  [X] Update version numbers
+     -  [X] =org-ql.el=
+     -  [X] =helm-org-ql.el=
+     -  [X] =README.org=
++  [X] Tag and sign
++  [X] Push
++  [X] Merge to master or make stable branch
++  [X] Push master/stable
 
 ** DONE Release 0.5
 
