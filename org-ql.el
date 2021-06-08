@@ -216,18 +216,18 @@ returns nil or non-nil."
                           (function (funcall buffers-or-files))
                           (list buffers-or-files)
                           (otherwise (list buffers-or-files)))
-                        (--map (cl-etypecase it
-                                 ;; NOTE: This etypecase is essential to opening links safely,
-                                 ;; as it rejects, e.g. lambdas in the buffers-files argument.
-                                 (buffer it)
-                                 (string (or (find-buffer-visiting it)
-                                             (when (file-readable-p it)
-                                               ;; It feels unintuitive that `find-file-noselect' returns
-                                               ;; a buffer if the filename doesn't exist.
-                                               (find-file-noselect it))
-                                             (user-error "Can't open file: %s" it)))))
-                        ;; Ignore special/hidden buffers.
-                        (--remove (string-prefix-p " " (buffer-name it)))))
+                     (--map (cl-etypecase it
+                              ;; NOTE: This etypecase is essential to opening links safely,
+                              ;; as it rejects, e.g. lambdas in the buffers-files argument.
+                              (buffer it)
+                              (string (or (find-buffer-visiting it)
+                                          (when (file-readable-p it)
+                                            ;; It feels unintuitive that `find-file-noselect' returns
+                                            ;; a buffer if the filename doesn't exist.
+                                            (find-file-noselect it))
+                                          (user-error "Can't open file: %s" it)))))
+                     ;; Ignore special/hidden buffers.
+                     (--remove (string-prefix-p " " (buffer-name it)))))
           (query (org-ql--normalize-query query))
           ((&plist :query :preamble :preamble-case-fold) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
@@ -263,12 +263,12 @@ returns nil or non-nil."
                              (fset name fn)))
                          ;; Run query on buffers.
                          (->> buffers
-                              (--map (with-current-buffer it
-                                       (unless (derived-mode-p 'org-mode)
-                                         (user-error "Not an Org buffer: %s" (buffer-name)))
-                                       (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                              :predicate predicate :action action :narrow narrow)))
-                              (-flatten-n 1)))
+                           (--map (with-current-buffer it
+                                    (unless (derived-mode-p 'org-mode)
+                                      (user-error "Not an Org buffer: %s" (buffer-name)))
+                                    (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
+                                                           :predicate predicate :action action :narrow narrow)))
+                           (-flatten-n 1)))
                      (--each orig-fns
                        ;; Restore original function mappings.
                        (-let (((&plist :name :fn) it))
@@ -422,7 +422,7 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
                                                        (cond ((and (listp inherited)
                                                                    (listp local))
                                                               (->> (append inherited local)
-                                                                   -non-nil -uniq))
+                                                                -non-nil -uniq))
                                                              ((listp inherited) inherited)
                                                              ((listp local) local)))))
                                          (cl-typecase org-use-tag-inheritance
@@ -518,8 +518,8 @@ from within ELEMENT's buffer."
   ;; time?  I don't know, but for now, it seems that we have to use `copy-marker'.
   (let* ((marker (copy-marker (org-element-property :begin element)))
          (properties (--> (cadr element)
-                          (plist-put it :org-marker marker)
-                          (plist-put it :org-hd-marker marker))))
+                       (plist-put it :org-marker marker)
+                       (plist-put it :org-hd-marker marker))))
     (setf (cadr element) properties)
     element))
 
@@ -675,16 +675,16 @@ value of `org-ql-predicates')."
   (let* ((names (--map (symbol-name (plist-get (cdr it) :name))
                        predicates))
          (aliases (->> predicates
-                       (--map (plist-get (cdr it) :aliases))
-                       -non-nil
-                       -flatten
-                       (-map #'symbol-name)))
+                    (--map (plist-get (cdr it) :aliases))
+                    -non-nil
+                    -flatten
+                    (-map #'symbol-name)))
          (predicate-names (->> (append names aliases)
-                               -uniq
-                               ;; Sort the keywords longest-first to work around what seems to be an
-                               ;; obscure bug in `peg': when one keyword is a substring of another,
-                               ;; and the shorter one is listed first, the shorter one fails to match.
-                               (-sort (-on #'> #'length))))
+                            -uniq
+                            ;; Sort the keywords longest-first to work around what seems to be an
+                            ;; obscure bug in `peg': when one keyword is a substring of another,
+                            ;; and the shorter one is listed first, the shorter one fails to match.
+                            (-sort (-on #'> #'length))))
          (pexs `((query (+ term
                            (opt (+ (syntax-class whitespace) (any)))))
                  (term (or (and negation (list positive-term)
@@ -757,8 +757,8 @@ manually; see the definition of `org-ql-defpred').")
   "Define function `org-ql--normalize-query' for PREDICATES.
 PREDICATES should be the value of `org-ql-predicates'."
   (let ((normalizer-patterns (->> predicates
-                                  (--map (plist-get (cdr it) :normalizers))
-                                  (-flatten-n 1))))
+                               (--map (plist-get (cdr it) :normalizers))
+                               (-flatten-n 1))))
     (fset 'org-ql--normalize-query
           (byte-compile
            `(lambda (query)
@@ -969,33 +969,33 @@ predicates."
      (when from
        (setq from (pcase from
                     ((or 'today "today") (->> (ts-now)
-                                              (ts-apply :hour 0 :minute 0 :second 0)))
+                                           (ts-apply :hour 0 :minute 0 :second 0)))
                     ((pred numberp) (->> (ts-now)
-                                         (ts-adjust 'day from)
-                                         (ts-apply :hour 0 :minute 0 :second 0)))
+                                      (ts-adjust 'day from)
+                                      (ts-apply :hour 0 :minute 0 :second 0)))
                     ((and (pred stringp)
                           (guard (ignore-errors (cl-parse-integer from))))
                      ;; The `pcase' `let' pattern doesn't bind values in the
                      ;; body forms, so we have to parse the integer again.
                      (->> (ts-now)
-                          (ts-adjust 'day (cl-parse-integer from))
-                          (ts-apply :hour 0 :minute 0 :second 0)))
+                       (ts-adjust 'day (cl-parse-integer from))
+                       (ts-apply :hour 0 :minute 0 :second 0)))
                     ((pred stringp) (ts-parse-fill 'begin from))
                     ((pred ts-p) from))))
      (when to
        (setq to (pcase to
                   ((or 'today "today") (->> (ts-now)
-                                            (ts-apply :hour 23 :minute 59 :second 59)))
+                                         (ts-apply :hour 23 :minute 59 :second 59)))
                   ((pred numberp) (->> (ts-now)
-                                       (ts-adjust 'day to)
-                                       (ts-apply :hour 23 :minute 59 :second 59)))
+                                    (ts-adjust 'day to)
+                                    (ts-apply :hour 23 :minute 59 :second 59)))
                   ((and (pred stringp)
                         (guard (ignore-errors (cl-parse-integer to))))
                    ;; The `pcase' `let' pattern doesn't bind values in the
                    ;; body forms, so we have to parse the integer again.
                    (->> (ts-now)
-                        (ts-adjust 'day (cl-parse-integer to))
-                        (ts-apply :hour 23 :minute 59 :second 59)))
+                     (ts-adjust 'day (cl-parse-integer to))
+                     (ts-apply :hour 23 :minute 59 :second 59)))
                   ((pred stringp) (ts-parse-fill 'end to))
                   ((pred ts-p) to))))))
 
@@ -1628,8 +1628,8 @@ parseable by `parse-time-string' which may omit the time value."
   :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
                  ;; (clocked) and (closed) implicitly look into the past.
                  (let ((from (->> (ts-now)
-                                  (ts-adjust 'day (* -1 num-days))
-                                  (ts-apply :hour 0 :minute 0 :second 0))))
+                               (ts-adjust 'day (* -1 num-days))
+                               (ts-apply :hour 0 :minute 0 :second 0))))
                    `(clocked :from ,from))))
   :preambles ((`(,predicate-names ,(pred numberp))
                (list :regexp org-ql-clock-regexp :query t))
@@ -1658,8 +1658,8 @@ parseable by `parse-time-string' which may omit the time value."
   :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
                  ;; (clocked) and (closed) implicitly look into the past.
                  (let ((from (->> (ts-now)
-                                  (ts-adjust 'day (* -1 num-days))
-                                  (ts-apply :hour 0 :minute 0 :second 0))))
+                               (ts-adjust 'day (* -1 num-days))
+                               (ts-apply :hour 0 :minute 0 :second 0))))
                    `(closed :from ,from))))
   :preambles ((`(,predicate-names . ,_)
                ;;  Predicate still needs testing.
@@ -1688,13 +1688,13 @@ parseable by `parse-time-string' which may omit the time value."
   :normalizers ((`(,predicate-names auto)
                  ;; Use `org-deadline-warning-days' as the :to arg.
                  (let ((to (->> (ts-now)
-                                (ts-adjust 'day org-deadline-warning-days)
-                                (ts-apply :hour 23 :minute 59 :second 59))))
+                             (ts-adjust 'day org-deadline-warning-days)
+                             (ts-apply :hour 23 :minute 59 :second 59))))
                    `(deadline-warning :to ,to)))
                 (`(,predicate-names ,(and num-days (pred numberp)))
                  (let ((to (->> (ts-now)
-                                (ts-adjust 'day num-days)
-                                (ts-apply :hour 23 :minute 59 :second 59))))
+                             (ts-adjust 'day num-days)
+                             (ts-apply :hour 23 :minute 59 :second 59))))
                    `(deadline :to ,to))))
   ;; NOTE: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
   :preambles ((`(,predicate-names . ,_)
@@ -1750,8 +1750,8 @@ FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
   :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
                  (let ((to (->> (ts-now)
-                                (ts-adjust 'day num-days)
-                                (ts-apply :hour 23 :minute 59 :second 59))))
+                             (ts-adjust 'day num-days)
+                             (ts-apply :hour 23 :minute 59 :second 59))))
                    `(planning :to ,to))))
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-ql-planning-regexp :query query)))
@@ -1778,8 +1778,8 @@ FROM, TO, and ON should be either `ts' structs, or strings
 parseable by `parse-time-string' which may omit the time value."
   :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
                  (let ((to (->> (ts-now)
-                                (ts-adjust 'day num-days)
-                                (ts-apply :hour 23 :minute 59 :second 59))))
+                             (ts-adjust 'day num-days)
+                             (ts-apply :hour 23 :minute 59 :second 59))))
                    `(scheduled :to ,to))))
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-scheduled-time-regexp :query query)))

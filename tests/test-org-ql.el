@@ -105,9 +105,9 @@ Set at runtime by test suite.")
   "Return buffer visiting FILENAME.
 FILENAME should be a file in the \"tests\" directory."
   (->> (locate-dominating-file default-directory ".git")
-       (expand-file-name "tests")
-       (expand-file-name filename)
-       find-file-noselect))
+    (expand-file-name "tests")
+    (expand-file-name filename)
+    find-file-noselect))
 
 ;;;; Macros
 

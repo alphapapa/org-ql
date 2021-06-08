@@ -224,9 +224,9 @@ automatically from the query."
       ;; `org-agenda-multi' is bound non-nil, in which case `org-agenda-finalize' does nothing.
       ;; But we do call `org-agenda-finalize-entries', which allows `org-super-agenda' to work.
       (->> items
-           (-map #'org-ql-view--format-element)
-           org-agenda-finalize-entries
-           insert)
+        (-map #'org-ql-view--format-element)
+        org-agenda-finalize-entries
+        insert)
       (insert "\n"))))
 
 ;;;###autoload
@@ -343,8 +343,8 @@ For example, an org-ql dynamic block header could look like:
 When RECURSE is non-nil, recurse into subdirectories.  When
 REGEXP is non-nil, only return files that match REGEXP."
   (let ((files (->> directories
-                    (--map (f-files it nil recurse))
-                    -flatten)))
+                 (--map (f-files it nil recurse))
+                 -flatten)))
     (if regexp
         (--select (string-match regexp it)
                   files)
