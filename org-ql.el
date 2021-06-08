@@ -281,7 +281,7 @@ returns nil or non-nil."
        ;; Default sorting functions
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
-      ((pred functionp) (sort items sort))
+      ((pred functionp) (-sort sort items))
       (_ (user-error "SORT must be either nil, one or a list of the defined sorting methods (see documentation), or a comparison function of two arguments")))))
 
 ;;;###autoload
