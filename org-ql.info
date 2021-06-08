@@ -66,7 +66,7 @@ Functions / Macros
 
 Changelog
 
-* 0.5.1-pre: 051-pre. 
+* 0.5.1: 051. 
 * 0.5: 05. 
 * 0.4.9: 049. 
 * 0.4.8: 048. 
@@ -832,7 +832,7 @@ releases.
 
 * Menu:
 
-* 0.5.1-pre: 051-pre. 
+* 0.5.1: 051. 
 * 0.5: 05. 
 * 0.4.9: 049. 
 * 0.4.8: 048. 
@@ -854,10 +854,10 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 051-pre,  Next: 05,  Up: Changelog
+File: README.info,  Node: 051,  Next: 05,  Up: Changelog
 
-5.1 0.5.1-pre
-=============
+5.1 0.5.1
+=========
 
 *Fixed*
    • Custom sorting functions could corrupt the cache, causing items to
@@ -867,7 +867,7 @@ File: README.info,  Node: 051-pre,  Next: 05,  Up: Changelog
      Nathanael kinfe (https://github.com/natask).)
 
 
-File: README.info,  Node: 05,  Next: 049,  Prev: 051-pre,  Up: Changelog
+File: README.info,  Node: 05,  Next: 049,  Prev: 051,  Up: Changelog
 
 5.2 0.5
 =======
@@ -1353,54 +1353,54 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1609
-Node: Screenshots1732
-Node: Installation1850
-Node: Quelpa2488
-Node: Usage2931
-Node: Commands3329
-Node: org-ql-search3802
-Node: helm-org-ql5452
-Node: org-ql-view5864
-Node: org-ql-view-sidebar6364
-Node: org-ql-view-recent-items6720
-Node: org-ql-sparse-tree7204
-Node: Queries8004
-Node: Non-sexp query syntax9115
-Node: General predicates10822
-Node: Ancestor/descendant predicates16235
-Node: Date/time predicates17363
-Node: Functions / Macros20018
-Node: Agenda-like views20273
-Node: Listing / acting-on results21678
-Node: Dynamic block26873
-Node: Links29571
-Node: Tips30258
-Node: Changelog30576
-Node: 051-pre31275
-Node: 0531692
-Node: 04933170
-Node: 04833444
-Node: 04733791
-Node: 04634186
-Node: 04534586
-Node: 04434945
-Node: 04335302
-Node: 04235497
-Node: 04135658
-Node: 0435899
-Node: 03239832
-Node: 03140211
-Node: 0340408
-Node: 02343383
-Node: 02243611
-Node: 02143879
-Node: 0244078
-Node: 0148113
-Node: Notes48214
-Node: Comparison with Org Agenda searches48376
-Node: org-sidebar49248
-Node: License49527
+Node: Contents1601
+Node: Screenshots1724
+Node: Installation1842
+Node: Quelpa2480
+Node: Usage2923
+Node: Commands3321
+Node: org-ql-search3794
+Node: helm-org-ql5444
+Node: org-ql-view5856
+Node: org-ql-view-sidebar6356
+Node: org-ql-view-recent-items6712
+Node: org-ql-sparse-tree7196
+Node: Queries7996
+Node: Non-sexp query syntax9107
+Node: General predicates10814
+Node: Ancestor/descendant predicates16227
+Node: Date/time predicates17355
+Node: Functions / Macros20010
+Node: Agenda-like views20265
+Node: Listing / acting-on results21670
+Node: Dynamic block26865
+Node: Links29563
+Node: Tips30250
+Node: Changelog30568
+Node: 05131259
+Node: 0531664
+Node: 04933138
+Node: 04833412
+Node: 04733759
+Node: 04634154
+Node: 04534554
+Node: 04434913
+Node: 04335270
+Node: 04235465
+Node: 04135626
+Node: 0435867
+Node: 03239800
+Node: 03140179
+Node: 0340376
+Node: 02343351
+Node: 02243579
+Node: 02143847
+Node: 0244046
+Node: 0148081
+Node: Notes48182
+Node: Comparison with Org Agenda searches48344
+Node: org-sidebar49216
+Node: License49495
 
 End Tag Table
 
