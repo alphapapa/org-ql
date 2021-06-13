@@ -1155,7 +1155,7 @@ any link is found."
                     plist (cdr args))
             (setf plist args))
           (setf description (plist-get plist :description)
-                target (plist-get plist :description)
+                target (plist-get plist :target)
                 regexp-p (plist-get plist :regexp-p))
           (unless regexp-p
             ;; NOTE: It would also be preferable to avoid regexp-quoting every time this predicate
