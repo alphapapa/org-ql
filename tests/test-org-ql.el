@@ -669,19 +669,39 @@ RESULTS should be a list of strings as returned by
     (describe "(link)"
       (org-ql-it "without arguments"
         (org-ql-expect ('(link))
-          '("/r/emacs")))
+          '("/r/emacs" "Check out sanityinc")))
       (org-ql-it "with description-or-target"
         (org-ql-expect ('(link "emacs"))
           '("/r/emacs")))
       (org-ql-it "with :description"
         (org-ql-expect ('(link :description "emacs"))
           '("/r/emacs")))
+      (org-ql-it "with description-or-target (regexp)"
+        (org-ql-expect (`(link ,(rx (or "emacs" "Linux")) :regexp t))
+          '("/r/emacs")))
+      (org-ql-it "with :description (regexp)"
+        (org-ql-expect (`(link :description ,(rx (or "emacs" "Linux")) :regexp t))
+          '("/r/emacs")))
       (org-ql-it "with :target"
         (org-ql-expect ('(link :target "reddit.com"))
           '("/r/emacs")))
+      (org-ql-it "with :target (regexp)"
+        (org-ql-expect (`(link :target ,(rx "reddit.com") :regexp t))
+          '("/r/emacs")))
       (org-ql-it "with :description and :target"
         (org-ql-expect ('(link :description "emacs" :target "reddit.com"))
-          '("/r/emacs"))))
+          '("/r/emacs"))
+        (org-ql-expect ('(link :description "Sanity, Inc." :target "sanityinc.com"))
+          '("Check out sanityinc"))
+        (org-ql-expect ('(link :description "sanityinc.com" :target "sanityinc.com"))
+          nil)
+        (org-ql-expect ('(link :description "Sanity, Inc." :target "Sanity, Inc."))
+          nil))
+      (org-ql-it "with :description and :target (regexp)"
+        (org-ql-expect (`(link :description ,(rx "Sanity, Inc.")
+                               :target ,(rx "sanityinc.com")
+                               :regexp t))
+          '("Check out sanityinc"))))
 
     (describe "(outline-path)"
       (org-ql-it "with one argument"
