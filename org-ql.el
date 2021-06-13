@@ -1137,17 +1137,24 @@ any link is found."
                          "]"
                          (or eol blank))))
               (`(,predicate-names ,(and description-or-target
-                                        (guard (not (keywordp description-or-target)))))
+                                        (guard (not (keywordp description-or-target))))
+                                  . ,plist)
                (list :regexp (org-ql--link-regexp :description-or-target
-                                                  (regexp-quote description-or-target)))
+                                                  (if (plist-get plist :regexp-p)
+                                                      description-or-target
+                                                    (regexp-quote description-or-target))))
                nil)
               (`(,predicate-names . ,plist)
                (list :regexp (org-ql--link-regexp
                               :description
                               (when (plist-get plist :description)
-                                (regexp-quote (plist-get plist :description)))
+                                (if (plist-get plist :regexp-p)
+                                    (plist-get plist :description)
+                                  (regexp-quote (plist-get plist :description))))
                               :target (when (plist-get plist :target)
-                                        (regexp-quote (plist-get plist :target)))))
+                                        (if (plist-get plist :regexp-p)
+                                            (plist-get plist :target)
+                                          (regexp-quote (plist-get plist :target))))))
                nil))
   :body (let* (plist description-or-target description target regexp-p)
           (if (not (keywordp (car args)))
