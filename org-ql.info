@@ -66,7 +66,7 @@ Functions / Macros
 
 Changelog
 
-* 0.5.2-pre: 052-pre. 
+* 0.5.2: 052. 
 * 0.5.1: 051. 
 * 0.5: 05. 
 * 0.4.9: 049. 
@@ -833,7 +833,7 @@ releases.
 
 * Menu:
 
-* 0.5.2-pre: 052-pre. 
+* 0.5.2: 052. 
 * 0.5.1: 051. 
 * 0.5: 05. 
 * 0.4.9: 049. 
@@ -856,15 +856,18 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 052-pre,  Next: 051,  Up: Changelog
+File: README.info,  Node: 052,  Next: 051,  Up: Changelog
 
-5.1 0.5.2-pre
-=============
+5.1 0.5.2
+=========
 
-Nothing yet.
+*Fixed*
+   • Predicate ‘link’’s ‘:target’ and ‘:regexp-p’ arguments.  (#220
+     (https://github.com/alphapapa/org-ql/pull/220).  Thanks to Akira
+     Komamura (https://github.com/akirak).)
 
 
-File: README.info,  Node: 051,  Next: 05,  Prev: 052-pre,  Up: Changelog
+File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
 5.2 0.5.1
 =========
@@ -1363,55 +1366,55 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1624
-Node: Screenshots1747
-Node: Installation1865
-Node: Quelpa2503
-Node: Usage2946
-Node: Commands3344
-Node: org-ql-search3817
-Node: helm-org-ql5467
-Node: org-ql-view5879
-Node: org-ql-view-sidebar6379
-Node: org-ql-view-recent-items6735
-Node: org-ql-sparse-tree7219
-Node: Queries8019
-Node: Non-sexp query syntax9130
-Node: General predicates10837
-Node: Ancestor/descendant predicates16250
-Node: Date/time predicates17378
-Node: Functions / Macros20033
-Node: Agenda-like views20288
-Node: Listing / acting-on results21693
-Node: Dynamic block26888
-Node: Links29586
-Node: Tips30273
-Node: Changelog30591
-Node: 052-pre31305
-Node: 05131413
-Node: 0531834
-Node: 04933308
-Node: 04833582
-Node: 04733929
-Node: 04634324
-Node: 04534724
-Node: 04435083
-Node: 04335440
-Node: 04235637
-Node: 04135798
-Node: 0436039
-Node: 03239972
-Node: 03140351
-Node: 0340548
-Node: 02343523
-Node: 02243751
-Node: 02144019
-Node: 0244218
-Node: 0148253
-Node: Notes48354
-Node: Comparison with Org Agenda searches48516
-Node: org-sidebar49388
-Node: License49667
+Node: Contents1616
+Node: Screenshots1739
+Node: Installation1857
+Node: Quelpa2495
+Node: Usage2938
+Node: Commands3336
+Node: org-ql-search3809
+Node: helm-org-ql5459
+Node: org-ql-view5871
+Node: org-ql-view-sidebar6371
+Node: org-ql-view-recent-items6727
+Node: org-ql-sparse-tree7211
+Node: Queries8011
+Node: Non-sexp query syntax9122
+Node: General predicates10829
+Node: Ancestor/descendant predicates16242
+Node: Date/time predicates17370
+Node: Functions / Macros20025
+Node: Agenda-like views20280
+Node: Listing / acting-on results21685
+Node: Dynamic block26880
+Node: Links29578
+Node: Tips30265
+Node: Changelog30583
+Node: 05231289
+Node: 05131578
+Node: 0531995
+Node: 04933469
+Node: 04833743
+Node: 04734090
+Node: 04634485
+Node: 04534885
+Node: 04435244
+Node: 04335601
+Node: 04235798
+Node: 04135959
+Node: 0436200
+Node: 03240133
+Node: 03140512
+Node: 0340709
+Node: 02343684
+Node: 02243912
+Node: 02144180
+Node: 0244379
+Node: 0148414
+Node: Notes48515
+Node: Comparison with Org Agenda searches48677
+Node: org-sidebar49549
+Node: License49828
 
 End Tag Table
 
