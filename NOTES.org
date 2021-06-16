@@ -29,17 +29,17 @@
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 9
-|   M | P | Todo    | Heading                                                                        |
-|-----+---+---------+--------------------------------------------------------------------------------|
-| 0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
-| 0.6 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
-| 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
-| 0.6 | B | PROJECT | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]]                              |
-| 0.6 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
-| 0.6 | B | PROJECT | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]                                      |
-| 0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
-| 0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                                     |
-| 0.6 | B | PROJECT | [[Predicate helper functions][Predicate helper functions]]                                                     |
+|      M | P | Todo    | Heading                                                                        |
+|--------+---+---------+--------------------------------------------------------------------------------|
+|    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
+|    0.6 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
+|    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
+|    0.6 | B | PROJECT | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]]                              |
+|    0.6 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
+|    0.6 | B | PROJECT | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]                                      |
+|    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
+| future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
+| future | B | PROJECT | [[Timeline view][Timeline view]]                                                                  |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -71,15 +71,15 @@
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-|   M | P | Heading                                           |
-|-----+---+---------------------------------------------------|
-|     | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]           |
-|     | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                              |
-| 0.6 | B | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]] |
-| 0.6 | B | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]         |
-|     | B | [[Outline path predicate][Outline path predicate]]                            |
-|     | B | [[Document the sorting functions][Document the sorting functions]]                    |
-|     | B | [[Recursive queries][Recursive queries]]                                 |
+|      M | P | Heading                                           |
+|--------+---+---------------------------------------------------|
+|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]           |
+|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                              |
+|    0.6 | B | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]] |
+|    0.6 | B | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]         |
+|        | B | [[Outline path predicate][Outline path predicate]]                            |
+|        | B | [[Document the sorting functions][Document the sorting functions]]                    |
+| future | B | [[Recursive queries][Recursive queries]]                                 |
 #+END:
 
 * [#A] Tasks
@@ -124,6 +124,8 @@
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
+- [[#link-target-doesnt-work][~(link :target)~ doesn't work]]
+- [[#link-regexp-p-doesnt-work][~(link :regexp-p)~ doesn't work]]
 - [[#fix-custom-sorter-breaks-cached-results][Fix: Custom sorter breaks cached results]]
 - [[#update-dash-dependencies][Update dash dependencies]]
 - [[#checking-links-for-unsafe-parameters][Checking links for unsafe parameters]]
@@ -1129,6 +1131,9 @@ It will not match.
 *** TODO Devise solution to desired ~olp~ optimization
 
 *** NEXT Write test for ~olp~ that catches bug that attempted optimization caused
+:PROPERTIES:
+:milestone: 0.6
+:END:
 
 
 
@@ -1602,6 +1607,9 @@ Note that the built-in sorting only works on Org elements, which is the default 
 
 
 ** PROJECT [#B] Recursive queries
+:PROPERTIES:
+:milestone: future
+:END:
 
 For lack of a better term.  A way to query for certain headings, and then gather results of a different query at each result of the first query, displaying all results in a single view.  
 
@@ -1680,6 +1688,7 @@ This works pretty well.  It needs polishing, and some refactoring so items can b
 ** PROJECT [#B] Timeline view
 :PROPERTIES:
 :ID:       00573552-ffe9-4608-8904-7f6c73246b6d
+:milestone: future
 :END:
 
 e.g. as mentioned by Samuel Wales at https://lists.gnu.org/archive/html/emacs-orgmode/2019-08/msg00330.html.  Prototype code:
@@ -2043,10 +2052,16 @@ So maybe another macro could define "helper" functions which would be available 
 The next question is, how would those work in string queries?  I'm not sure there's a good way to translate them.
 
 ** PROJECT [#C] [[https://github.com/magit/transient/issues/76][New Transient transient-lisp-variable class]]  :compatibility:
+:PROPERTIES:
+:milestone: 0.7
+:END:
 
 [2020-10-19 Mon 00:23]  Should try to use this instead of whatever bespoke code is currently used.
 
 ** PROJECT [#C] Normalize queries
+:PROPERTIES:
+:milestone: future
+:END:
 
 [2019-07-16 Tue 11:49]  This serves two purposes:
 
@@ -2062,6 +2077,19 @@ e.g. doesn't currently show the =View= header.
 ** PROJECT [#C] Test caching
 
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
+
+** DONE [#A] [[https://github.com/alphapapa/org-ql/pull/220][~(link :target)~ doesn't work]]                             :bug:
+:PROPERTIES:
+:milestone: 0.5.2
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-16 Wed 17:02]--[2021-06-16 Wed 17:41] =>  0:39
+:END:
+
+** DONE [#A] [[https://github.com/alphapapa/org-ql/pull/220][~(link :regexp-p)~ doesn't work]]                           :bug:
+:PROPERTIES:
+:milestone: 0.5.2
+:END:
 
 ** DONE [#A] Fix: Custom sorter breaks cached results                  :bug:
 :PROPERTIES:
@@ -2793,25 +2821,16 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 
 * Checklists
 
-** Release template
-
-+  [ ] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
-+  [ ] Changelog entry
-+  [ ] Update version numbers
-     -  [ ] =org-ql.el=
-     -  [ ] =helm-org-ql.el=
-     -  [ ] =README.org=
-+  [ ] Tag and sign
-+  [ ] Push
-+  [ ] Merge to master or make stable branch
-+  [ ] Push master/stable
-
-** Commit
+** Commits
 :PROPERTIES:
 :ID:       d8d7b88e-5737-437e-af76-2253f8340de3
 :END:
 
-*** Fix
+To complete before and after pushing any commit.
+
+*** Fixes
+
+When committing a fix:
 
 +  [ ] Check repo for closing issues
 +  [ ] Lint
@@ -2823,20 +2842,39 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 +  [ ] Push
 +  [ ] Close related tasks in this file
 
-** DONE Release 0.5.1
+** Release template
+
++  [ ] Make WIP branch
++  [ ] =Meta= pre-release commit
+     -  [ ] Update version numbers
+          +  [ ] =org-ql.el=
+          +  [ ] =helm-org-ql.el=
+          +  [ ] =README.org=
++  [ ] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
++  [ ] Changelog entry
++  [ ] Merge to stable branch
+     -  [ ] Non-fast-forward merge WIP branch into stable branch
+     -  [ ] Tag and sign merge commit
++  [ ] Push stable branch
++  [ ] Merge to master or make stable branch
++  [ ] Push master/stable
++  [ ] Delete WIP branch
+
+** Archive
+
+*** DONE Release 0.4.9
 
 +  [X] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
 +  [X] Changelog entry
 +  [X] Update version numbers
      -  [X] =org-ql.el=
-     -  [X] =helm-org-ql.el=
+     -  [X] =helm-org-ql.el= (N/A)
      -  [X] =README.org=
 +  [X] Tag and sign
 +  [X] Push
-+  [X] Merge to master or make stable branch
-+  [X] Push master/stable
++  [X] Merge to master
 
-** DONE Release 0.5
+*** DONE Release 0.5
 
 +  [X] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
 +  [ ] Changelog entry
@@ -2849,17 +2887,39 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 +  [X] Merge to master or make stable branch
 +  [X] Push master/stable
 
-** DONE Release 0.4.9
+*** DONE Release 0.5.1
 
 +  [X] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
 +  [X] Changelog entry
 +  [X] Update version numbers
      -  [X] =org-ql.el=
-     -  [X] =helm-org-ql.el= (N/A)
+     -  [X] =helm-org-ql.el=
      -  [X] =README.org=
 +  [X] Tag and sign
 +  [X] Push
-+  [X] Merge to master
++  [X] Merge to master or make stable branch
++  [X] Push master/stable
+
+*** DONE Release 0.5.2
+:PROPERTIES:
+:ID:       5b9fd52c-dae2-473c-8f00-0fd840327b75
+:END:
+
++  [X] Make WIP branch
++  [X] =Meta= pre-release commit
+     -  [X] Update version numbers
+          +  [X] =org-ql.el=
+          +  [X] =helm-org-ql.el=
+          +  [X] =README.org=
++  [X] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
++  [X] Changelog entry
++  [X] Merge to stable branch
+     -  [X] Non-fast-forward merge WIP branch into stable branch
+     -  [X] Tag and sign merge commit
++  [X] Push stable branch
++  [X] Merge to master or make stable branch
++  [X] Push master/stable
++  [X] Delete WIP branch
 
 * Examples / testing
 :PROPERTIES:
