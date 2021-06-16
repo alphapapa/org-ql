@@ -531,6 +531,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Predicates are now defined more cleanly with a macro (=org-ql-defpred=) that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.
 +  Version 1.0 of library ~peg~ is now required.
 
+** 0.5.2
+
+*Fixed*
++  Predicate ~link~'s ~:target~ and ~:regexp-p~ arguments.  ([[https://github.com/alphapapa/org-ql/pull/220][#220]].  Thanks to [[https://github.com/akirak][Akira Komamura]].)
+
 ** 0.5.1
 
 *Fixed*

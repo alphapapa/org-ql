@@ -669,7 +669,7 @@ RESULTS should be a list of strings as returned by
     (describe "(link)"
       (org-ql-it "without arguments"
         (org-ql-expect ('(link))
-          '("/r/emacs")))
+          '("Fix flux capacitor" "/r/emacs")))
       (org-ql-it "with description-or-target"
         (org-ql-expect ('(link "emacs"))
           '("/r/emacs")))
@@ -681,6 +681,18 @@ RESULTS should be a list of strings as returned by
           '("/r/emacs")))
       (org-ql-it "with :description and :target"
         (org-ql-expect ('(link :description "emacs" :target "reddit.com"))
+          '("/r/emacs")))
+      (org-ql-it "with description-or-target regexp"
+        (org-ql-expect ('(link "em.cs" :regexp-p t))
+          '("/r/emacs")))
+      (org-ql-it "with :description regexp"
+        (org-ql-expect ('(link :description "em.cs" :regexp-p t))
+          '("/r/emacs")))
+      (org-ql-it "with :target regexp"
+        (org-ql-expect ('(link :target "em.cs" :regexp-p t))
+          '("/r/emacs")))
+      (org-ql-it "with :description and :target regexp"
+        (org-ql-expect ('(link :description "em.cs" :target "em.cs" :regexp-p t))
           '("/r/emacs"))))
 
     (describe "(outline-path)"
