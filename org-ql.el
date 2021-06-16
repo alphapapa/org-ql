@@ -810,19 +810,26 @@ replace the clause with a preamble."
                                 ;; have to use `plist-get' here for now.  Maybe when we drop
                                 ;; support for Emacs <28...
                                 (`(link ,(and description-or-target
-                                              (guard (not (keywordp description-or-target)))))
+                                              (guard (not (keywordp description-or-target))))
+                                        . ,plist)
                                  (setq org-ql-preamble
                                        (org-ql--link-regexp :description-or-target
-                                                            (regexp-quote description-or-target)))
+                                                            (if (plist-get plist :regexp-p)
+                                                                description-or-target
+                                                              (regexp-quote description-or-target))))
                                  nil)
                                 (`(link . ,plist)
                                  (setq org-ql-preamble
                                        (org-ql--link-regexp
                                         :description
                                         (when (plist-get plist :description)
-                                          (regexp-quote (plist-get plist :description)))
+                                          (if (plist-get plist :regexp-p)
+                                              (plist-get plist :description)
+                                            (regexp-quote (plist-get plist :description))))
                                         :target (when (plist-get plist :target)
-                                                  (regexp-quote (plist-get plist :target)))))
+                                                  (if (plist-get plist :regexp-p)
+                                                      (plist-get plist :target)
+                                                    (regexp-quote (plist-get plist :target))))))
                                  nil)
 
                                 ;; Planning lines.
