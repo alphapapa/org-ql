@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.5.1
+;; Version: 0.5.2-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.13") (dash-functional "1.2.0") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "0.6") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -810,19 +810,26 @@ replace the clause with a preamble."
                                 ;; have to use `plist-get' here for now.  Maybe when we drop
                                 ;; support for Emacs <28...
                                 (`(link ,(and description-or-target
-                                              (guard (not (keywordp description-or-target)))))
+                                              (guard (not (keywordp description-or-target))))
+                                        . ,plist)
                                  (setq org-ql-preamble
                                        (org-ql--link-regexp :description-or-target
-                                                            (regexp-quote description-or-target)))
+                                                            (if (plist-get plist :regexp-p)
+                                                                description-or-target
+                                                              (regexp-quote description-or-target))))
                                  nil)
                                 (`(link . ,plist)
                                  (setq org-ql-preamble
                                        (org-ql--link-regexp
                                         :description
                                         (when (plist-get plist :description)
-                                          (regexp-quote (plist-get plist :description)))
+                                          (if (plist-get plist :regexp-p)
+                                              (plist-get plist :description)
+                                            (regexp-quote (plist-get plist :description))))
                                         :target (when (plist-get plist :target)
-                                                  (regexp-quote (plist-get plist :target)))))
+                                                  (if (plist-get plist :regexp-p)
+                                                      (plist-get plist :target)
+                                                    (regexp-quote (plist-get plist :target))))))
                                  nil)
 
                                 ;; Planning lines.
@@ -1250,7 +1257,7 @@ any link is found."
               plist (cdr args))
       (setf plist args))
     (setf description (plist-get plist :description)
-          target (plist-get plist :description)
+          target (plist-get plist :target)
           regexp-p (plist-get plist :regexp-p))
     (unless regexp-p
       ;; NOTE: It would also be preferable to avoid regexp-quoting every time this predicate
