@@ -132,13 +132,13 @@ See info node `(elisp)Cyclic Window Ordering'."
                                      (deadline auto)
                                      (scheduled :to today)
                                      (ts-active :on today)))
-                    :sort '(date priority todo)
+                    :sort '(todo priority date)
                     :super-groups 'org-super-agenda-groups
                     :title "Agenda-like"))
         (cons "Overview: NEXT tasks"
               (list :buffers-files #'org-agenda-files
                     :query '(todo "NEXT")
-                    :sort '(priority date)
+                    :sort '(date priority)
                     :super-groups 'org-super-agenda-groups
                     :title "Overview: NEXT tasks"))
         (cons "Calendar: Today"
@@ -189,7 +189,7 @@ See info node `(elisp)Cyclic Window Ordering'."
                                  (ancestors (done)))
                     :title (propertize "Review: Dangling tasks"
                                        'help-echo "Tasks whose ancestor is done")
-                    :sort '(date priority todo)
+                    :sort '(todo priority date)
                     :super-groups '((:auto-parent t))))
         (cons (propertize "Review: Stale tasks"
                           'help-echo "Tasks without a timestamp in the past 2 weeks")
@@ -198,7 +198,7 @@ See info node `(elisp)Cyclic Window Ordering'."
                                  (not (ts :from -14)))
                     :title (propertize "Review: Stale tasks"
                                        'help-echo "Tasks without a timestamp in the past 2 weeks")
-                    :sort '(date priority todo)
+                    :sort '(todo priority date)
                     :super-groups '((:auto-parent t))))
         (cons (propertize "Review: Stuck projects"
                           'help-echo "Tasks with sub-tasks but no NEXT sub-tasks")
@@ -208,7 +208,7 @@ See info node `(elisp)Cyclic Window Ordering'."
                                  (not (descendants (todo "NEXT"))))
                     :title (propertize "Review: Stuck projects"
                                        'help-echo "Tasks with sub-tasks but no NEXT sub-tasks")
-                    :sort '(priority date)
+                    :sort '(date priority)
                     :super-groups 'org-super-agenda-groups)))
   "Alist of `org-ql-view' commands."
   :type
@@ -230,6 +230,7 @@ See info node `(elisp)Cyclic Window Ordering'."
                                                                     (const todo)
                                                                     (const priority)
                                                                     (const random)
+                                                                    (const reverse)
                                                                     (function :tag "Custom comparator"))))
                              ((const :tag "Group-by" :super-groups)
                               (choice (variable-item :tag "Default org-super-agenda groups" org-super-agenda-groups)
@@ -282,7 +283,7 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
                     `(,type :from ,(- num-days) :to 0)))))
     (org-ql-search files query
       :title "Recent items"
-      :sort '(date priority todo)
+      :sort '(todo priority date)
       :super-groups groups)))
 
 ;;;###autoload
@@ -1110,6 +1111,7 @@ The counterpart to `org-ql-view--contract-buffers-files'."
                                                      "deadline"
                                                      "priority"
                                                      "random"
+                                                     "reverse"
                                                      "scheduled"
                                                      "todo")
                                                nil nil (when org-ql-view-sort

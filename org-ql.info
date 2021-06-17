@@ -995,8 +995,15 @@ File: README.info,  Node: 06-pre,  Next: 052,  Up: Changelog
    • Timestamp-related predicates now accept an optional ‘:with-time’
      argument, which allows matching timestamps with or without times
      (i.e.  HH:MM).
+   • Sorting method ‘reverse’.
 
    *Changed*
+   • The order in which sorting functions is applied has been reversed.
+     For example, ‘:sort '(todo priority date)’ now does what ‘:sort
+     '(date priority todo)’ did in earlier versions.  (This change is
+     made to enable the new ‘reverse’ sorting method.)  Users who have
+     customized org-ql-views will need to update the stored views’
+     sorting methods to preserve the desired sort order.
    • Helm support (including the command helm-org-ql) has been moved to
      a separate package, helm-org-ql.
    • Predicate ‘heading’ now matches plain strings instead of regular
@@ -1568,31 +1575,31 @@ Node: Links35328
 Node: Tips36015
 Node: Changelog36333
 Node: 06-pre37059
-Node: 05239177
-Node: 05139481
-Node: 0539898
-Node: 04941372
-Node: 04841646
-Node: 04741993
-Node: 04642388
-Node: 04542788
-Node: 04443147
-Node: 04343506
-Node: 04243703
-Node: 04143864
-Node: 0444105
-Node: 03248038
-Node: 03148417
-Node: 0348614
-Node: 02351589
-Node: 02251817
-Node: 02152085
-Node: 0252284
-Node: 0156319
-Node: Notes56420
-Node: Comparison with Org Agenda searches56582
-Node: org-sidebar57454
-Node: License57733
+Node: 05239636
+Node: 05139940
+Node: 0540357
+Node: 04941831
+Node: 04842105
+Node: 04742452
+Node: 04642847
+Node: 04543247
+Node: 04443606
+Node: 04343965
+Node: 04244162
+Node: 04144323
+Node: 0444564
+Node: 03248497
+Node: 03148876
+Node: 0349073
+Node: 02352048
+Node: 02252276
+Node: 02152544
+Node: 0252743
+Node: 0156778
+Node: Notes56879
+Node: Comparison with Org Agenda searches57041
+Node: org-sidebar57913
+Node: License58192
 
 End Tag Table
 

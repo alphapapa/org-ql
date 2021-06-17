@@ -35,7 +35,7 @@ Show an agenda-like view, similar to a "traditional" Org Agenda with Log Mode tu
                   (scheduled :to today)
                   (ts-active :on today)))
          (closed :on today))
-    :sort '(date priority todo))
+    :sort '(todo priority date))
 #+END_SRC
 
 Another example, showing grouping with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]:
@@ -76,7 +76,7 @@ Show entries that have any timestamp within the past week.  Group by date using 
   (org-ql-search (org-agenda-files)
     '(ts :from -7 :to today)
     :title "Recent Items"
-    :sort '(date priority todo)
+    :sort '(todo priority date)
     :super-groups '((:auto-ts t)))
 #+END_SRC
 

@@ -349,9 +349,17 @@ widen and search the entire buffer).
 
 SORT is either nil, in which case items are not sorted; or one or
 a list of defined `org-ql' sorting methods (`date', `deadline',
-`scheduled', `todo', `priority', or `random'); or a user-defined
-comparator function that accepts two items as arguments and
-returns nil or non-nil."
+`scheduled', `todo', `priority', `reverse', or `random'); or a
+user-defined comparator function that accepts two items as
+arguments and returns nil or non-nil.  Sorting methods are
+applied in the order given (i.e. later methods override earlier
+ones), and `reverse' may be used more than once.
+
+For example, `(date priority)' would present items with the
+highest priority first, and within each priority the oldest items
+would appear first.  In contrast, `(date reverse priority)' would
+also present items with the highest priority first, but within
+each priority the newest items would appear first."
   (declare (indent defun))
   (-let* ((buffers (->> (cl-typecase buffers-or-files
                           (null (list (current-buffer)))
@@ -418,8 +426,7 @@ returns nil or non-nil."
     ;; Sort items
     (pcase sort
       (`nil items)
-      ((guard (cl-loop for elem in (-list sort)
-                       always (memq elem '(date deadline scheduled todo priority random))))
+      ((guard (cl-subsetp (-list sort) '(date deadline scheduled todo priority random reverse)))
        ;; Default sorting functions
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
@@ -2170,7 +2177,7 @@ PREDICATES is a list of one or more sorting methods, including:
                        ('priority #'org-ql--priority<)
                        ('random (lambda (&rest _ignore)
                                   (= 0 (random 2))))
-                       ;; NOTE: 'todo is handled below
+                       ;; NOTE: reverse and todo are handled below.
                        ;; TODO: Add more.
                        (_ (user-error "Invalid sorting predicate: %s" symbol))))
              (sort-by-todo-keyword (items)
@@ -2183,11 +2190,16 @@ PREDICATES is a list of one or more sorting methods, including:
                                                                              ;; Put at end of list if not found
                                                                              (1+ (length org-todo-keywords-1)))))))
                                      (-flatten-n 1 (-map #'cdr sorted-groups)))))
-    (cl-loop for pred in (reverse predicates)
-             do (setq items (if (eq pred 'todo)
-                                (sort-by-todo-keyword items)
-                              (-sort (sorter pred) items)))
-             finally return items)))
+    (dolist (pred predicates)
+      (setq items (pcase pred
+                    ;; NOTE: Using `reverse' instead of `nreverse' because my gut
+                    ;; tells me that, while `nreverse' would be preferable and faster,
+                    ;; it would probably cause weird bugs, like items' order being
+                    ;; reversed every time a cached query is refreshed in a view.
+                    ('reverse (reverse items))
+                    ('todo (sort-by-todo-keyword items))
+                    (_ (-sort (sorter pred) items)))))
+    items))
 
 ;; TODO: Rewrite date sorters using `ts'.
 
