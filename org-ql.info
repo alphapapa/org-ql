@@ -384,9 +384,9 @@ Sexp syntax                                         Non-sexp syntax
 ‘(and (tags "space") (not (regexp "moon")))’        ‘tags:space !moon’
 ‘(priority >= B)’                                   ‘priority:A,B’
 
-   Note that the priority predicate does not support comparators in the
-non-sexp syntax, so multiple priorities should be passed instead, as
-seen in the last example.
+   Note that the effort, level, and priority predicates do not support
+comparators in the non-sexp syntax, so multiple arguments should be
+passed instead, as seen in the last example.
 
 
 File: README.info,  Node: General predicates,  Next: Ancestor/descendant predicates,  Prev: Non-sexp query syntax,  Up: Queries
@@ -1531,43 +1531,43 @@ Node: org-ql-view-recent-items7090
 Node: org-ql-sparse-tree7574
 Node: Queries8374
 Node: Non-sexp query syntax9485
-Node: General predicates11192
-Node: Ancestor/descendant predicates17413
-Node: Date/time predicates18541
-Node: Functions / Macros21196
-Node: Agenda-like views21494
-Node: Listing / acting-on results22899
-Node: Custom predicates28521
-Node: Dynamic block32012
-Node: Links34710
-Node: Tips35397
-Node: Changelog35715
-Node: 06-pre36441
-Node: 05237848
-Node: 05138152
-Node: 0538569
-Node: 04940043
-Node: 04840317
-Node: 04740664
-Node: 04641059
-Node: 04541459
-Node: 04441818
-Node: 04342177
-Node: 04242374
-Node: 04142535
-Node: 0442776
-Node: 03246709
-Node: 03147088
-Node: 0347285
-Node: 02350260
-Node: 02250488
-Node: 02150756
-Node: 0250955
-Node: 0154990
-Node: Notes55091
-Node: Comparison with Org Agenda searches55253
-Node: org-sidebar56125
-Node: License56404
+Node: General predicates11209
+Node: Ancestor/descendant predicates17430
+Node: Date/time predicates18558
+Node: Functions / Macros21213
+Node: Agenda-like views21511
+Node: Listing / acting-on results22916
+Node: Custom predicates28538
+Node: Dynamic block32029
+Node: Links34727
+Node: Tips35414
+Node: Changelog35732
+Node: 06-pre36458
+Node: 05237865
+Node: 05138169
+Node: 0538586
+Node: 04940060
+Node: 04840334
+Node: 04740681
+Node: 04641076
+Node: 04541476
+Node: 04441835
+Node: 04342194
+Node: 04242391
+Node: 04142552
+Node: 0442793
+Node: 03246726
+Node: 03147105
+Node: 0347302
+Node: 02350277
+Node: 02250505
+Node: 02150773
+Node: 0250972
+Node: 0155007
+Node: Notes55108
+Node: Comparison with Org Agenda searches55270
+Node: org-sidebar56142
+Node: License56421
 
 End Tag Table
 
