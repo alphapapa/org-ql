@@ -206,6 +206,7 @@ Arguments are listed next to predicate names, where applicable.
 
 +  =category (&optional categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
 +  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
++  =effort (&optional effort-or-comparator effort)= :: Return non-nil if current heading's effort property matches arguments.  The following forms are accepted: ~(effort DURATION)~: Matches if effort is ~DURATION~.  ~(effort DURATION DURATION)~: Matches if effort is between DURATIONs, inclusive.  ~(effort COMPARATOR DURATION)~: Matches if effort compares to ~DURATION~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.  ~DURATION~ should be an Org effort string, like =5= or =0:05=.
 +  =habit= :: Return non-nil if entry is a habit.
 +  =heading (&rest strings)= :: Return non-nil if current entry's heading matches all ~STRINGS~.  Matching is done case-insensitively.
      -  Aliases: =h=.
@@ -520,6 +521,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Added*
 +  Macro =org-ql-defpred=, used to define search predicates.  (See [[file:examples/defpred.org][tutorial]].)
++  Predicate ~effort~.
 +  Predicate ~heading-regexp~, which matches regular expressions against heading text (alias: ~h*~).
 
 *Changed*

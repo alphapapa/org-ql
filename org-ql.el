@@ -1017,6 +1017,73 @@ predicates."
   ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   :body (or (apply #'org-ql--predicate-todo org-done-keywords)))
 
+(defun org-ql--duration-to-minutes (duration)
+  "Return DURATION string as a number of minutes.
+For compatibility, since Org 9.1 deprecated
+`org-duration-string-to-minutes', replacing it with
+`org-duration-to-minutes', which seems to return floats instead
+of integers."
+  ;; MAYBE: Remove if compatibility with Org 9.0 is dropped.
+  (funcall (if (fboundp 'org-duration-to-minutes)
+               #'org-duration-to-minutes
+             #'org-duration-string-to-minutes)
+           duration))
+
+(org-ql-defpred effort (&optional effort-or-comparator effort)
+  "Return non-nil if current heading's effort property matches arguments.
+The following forms are accepted:
+
+  (effort DURATION): Matches if effort is DURATION.
+  (effort DURATION DURATION): Matches if effort is between DURATIONs, inclusive.
+  (effort COMPARATOR DURATION): Matches if effort compares to DURATION with COMPARATOR.
+
+COMPARATOR may be `<', `<=', `>', or `>='.  DURATION should be an
+Org effort string, like \"5\" or \"0:05\"."
+  :normalizers ((`(,predicate-names . ,args)
+                 ;; Arguments could be given as strings (e.g. from a non-Lisp query).
+                 `(effort ,@(--map (pcase-exhaustive it
+                                     ((or "<" "<=" ">" ">=" "=")
+                                      (intern it))
+                                     ((pred stringp) (org-ql--duration-to-minutes it))
+                                     ((pred numberp) it)
+                                     ((or '< '<= '> '>= '=)
+                                      ;; FIXME: This same treatment probably needs to be done in the (level) predicate's normalizer (which I would have caught had I already written tests for it).
+                                      `',it))
+                                   args))))
+  ;; NOTE: We always test the body, because we must ensure that the
+  ;; ":effort:" string found is actually an entry property.
+  :preambles ((`(,predicate-names ,_comparator-or-num ,_num)
+               ;; Since we can't compare this using regexps, we just check for what looks like a valid effort.
+               ;; FIXME: Are decimal efforts allowed, or only colon-separated HH:MM?
+               (list :regexp (rx-to-string `(seq bol (0+ blank) ":effort:" (1+ blank) (1+ (or digit "." ":"))) t)
+                     :case-fold t :query query))
+              (`(,predicate-names ,num)
+               ;; Testing equality to a certain effort.
+               (let* ((with-colon (org-duration-from-minutes num))
+                      (without-colon (number-to-string num))
+                      (without-colon-and-decimal
+                       (if (string-suffix-p ".0" without-colon)
+                           (replace-regexp-in-string (rx ".0" eos) "" without-colon t t)
+                         "")))
+                 (list :regexp (rx-to-string `(seq bol (0+ blank) ":effort:" (1+ blank)
+                                                   (or ,with-colon ,without-colon ,without-colon-and-decimal) (or blank eol)) t)
+                       :case-fold t :query query))))
+  :body (let ((entry-effort (org-entry-get (point) "effort"))
+              entry-effort-minutes)
+          (when entry-effort
+            (setf entry-effort-minutes (org-ql--duration-to-minutes entry-effort))
+            (pcase effort-or-comparator
+              ('nil
+               ;; Any effort.  (NOTE: This must come before the symbolp clause, because `symbolp' is non-nil for nil!)
+               t)
+              ((pred numberp) (pcase effort
+                                ('nil ;; Equality
+                                 (= effort-or-comparator entry-effort-minutes))
+                                ((pred numberp) ;; Between two levels
+                                 (<= effort-or-comparator entry-effort-minutes effort))))
+              ((pred symbolp) ;; Compare with function
+               (funcall effort-or-comparator entry-effort-minutes effort))))))
+
 (org-ql-defpred habit ()
   "Return non-nil if entry is a habit."
   :preambles ((`(,predicate-names)

@@ -401,6 +401,14 @@ Arguments are listed next to predicate names, where applicable.
      (a list of strings).
 ‘done’
      Return non-nil if entry’s ‘TODO’ keyword is in ‘org-done-keywords’.
+‘effort (&optional effort-or-comparator effort)’
+     Return non-nil if current heading’s effort property matches
+     arguments.  The following forms are accepted: ‘(effort DURATION)’:
+     Matches if effort is ‘DURATION’.  ‘(effort DURATION DURATION)’:
+     Matches if effort is between DURATIONs, inclusive.  ‘(effort
+     COMPARATOR DURATION)’: Matches if effort compares to ‘DURATION’
+     with ‘COMPARATOR’.  ‘COMPARATOR’ may be ‘<’, ‘<=’, ‘>’, or ‘>=’.
+     ‘DURATION’ should be an Org effort string, like 5 or 0:05.
 ‘habit’
      Return non-nil if entry is a habit.
 ‘heading (&rest strings)’
@@ -970,6 +978,7 @@ File: README.info,  Node: 06-pre,  Next: 052,  Up: Changelog
 *Added*
    • Macro org-ql-defpred, used to define search predicates.  (See
      tutorial (examples/defpred.org).)
+   • Predicate ‘effort’.
    • Predicate ‘heading-regexp’, which matches regular expressions
      against heading text (alias: ‘h*’).
 
@@ -1523,42 +1532,42 @@ Node: org-ql-sparse-tree7574
 Node: Queries8374
 Node: Non-sexp query syntax9485
 Node: General predicates11192
-Node: Ancestor/descendant predicates16835
-Node: Date/time predicates17963
-Node: Functions / Macros20618
-Node: Agenda-like views20916
-Node: Listing / acting-on results22321
-Node: Custom predicates27943
-Node: Dynamic block31434
-Node: Links34132
-Node: Tips34819
-Node: Changelog35137
-Node: 06-pre35863
-Node: 05237239
-Node: 05137543
-Node: 0537960
-Node: 04939434
-Node: 04839708
-Node: 04740055
-Node: 04640450
-Node: 04540850
-Node: 04441209
-Node: 04341568
-Node: 04241765
-Node: 04141926
-Node: 0442167
-Node: 03246100
-Node: 03146479
-Node: 0346676
-Node: 02349651
-Node: 02249879
-Node: 02150147
-Node: 0250346
-Node: 0154381
-Node: Notes54482
-Node: Comparison with Org Agenda searches54644
-Node: org-sidebar55516
-Node: License55795
+Node: Ancestor/descendant predicates17413
+Node: Date/time predicates18541
+Node: Functions / Macros21196
+Node: Agenda-like views21494
+Node: Listing / acting-on results22899
+Node: Custom predicates28521
+Node: Dynamic block32012
+Node: Links34710
+Node: Tips35397
+Node: Changelog35715
+Node: 06-pre36441
+Node: 05237848
+Node: 05138152
+Node: 0538569
+Node: 04940043
+Node: 04840317
+Node: 04740664
+Node: 04641059
+Node: 04541459
+Node: 04441818
+Node: 04342177
+Node: 04242374
+Node: 04142535
+Node: 0442776
+Node: 03246709
+Node: 03147088
+Node: 0347285
+Node: 02350260
+Node: 02250488
+Node: 02150756
+Node: 0250955
+Node: 0154990
+Node: Notes55091
+Node: Comparison with Org Agenda searches55253
+Node: org-sidebar56125
+Node: License56404
 
 End Tag Table
 
