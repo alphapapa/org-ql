@@ -2878,6 +2878,7 @@ When committing a fix:
      -  [ ] Non-fast-forward merge WIP branch into stable branch
      -  [ ] Tag and sign merge commit
 +  [ ] Push stable branch
++  [ ] Push tags
 +  [ ] Merge to master or make stable branch
 +  [ ] Push master/stable
 +  [ ] Delete WIP branch
