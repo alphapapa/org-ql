@@ -1109,6 +1109,7 @@ The counterpart to `org-ql-view--contract-buffers-files'."
                                                      "date"
                                                      "deadline"
                                                      "priority"
+                                                     "random"
                                                      "scheduled"
                                                      "todo")
                                                nil nil (when org-ql-view-sort
