@@ -1626,10 +1626,44 @@ RESULTS should be a list of strings as returned by
                                               :store-input "M-n M-n RET")
                     :to-equal temp-filenames))
           (it "Can search buffer containing the link"
-            ;; This is sort-of a special case because of how the test link-opening function works.
-            (expect (var-after-link-save-open 'org-ql-view-buffers-files one-filename query
+            ;; The purpose of this test is to ensure that links that search whichever buffer contains the link
+            ;; search the buffer that contains the link.  This only applies to file-backed buffers.  The code is
+            ;; messy because it requires doing things like switching between buffers and emulating user input.
+            (let ((temp-file (make-temp-file "org-ql-test-" nil ".org"))
+                  (view-buffer (get-buffer-create "*Org QL View TEST BUFFER*")))
+              (unwind-protect
+                  (progn
+                    (with-temp-file temp-file
+                      ;; See function `var-after-link-save-open`.
+                      (insert "* TODO Test heading\n\n"))
+                    (find-file temp-file)
+                    (org-ql-search (current-buffer) query
+                      :buffer view-buffer)
+                    (cl-assert (member '("org-ql-search" :follow org-ql-view--link-follow :store org-ql-view--link-store)
+                                       org-link-parameters)
+                               t)
+                    (with-current-buffer view-buffer
+                      (with-simulated-input "RET"
+                        ;; Avoid writing "Stored: ..." to test output.
+                        (let ((inhibit-message t))
+                          (call-interactively #'org-store-link nil))))
+                    (cl-assert (and org-stored-links (caar org-stored-links)) t)
+                    (with-current-buffer (find-buffer-visiting temp-file)
+                      (goto-char (point-max))
+                      (with-simulated-input "RET RET"
+                        (call-interactively #'org-insert-link))
+                      (save-buffer)
+                      (backward-char 1)
+                      (with-simulated-input "RET"
+                        (org-open-at-point)))
+                    (with-current-buffer view-buffer
+                      (expect org-ql-view-buffers-files
+                              :to-equal (find-buffer-visiting temp-file))))
+                (delete-file temp-file nil))))
+          (it "Refuses to link to non-file-backed buffer"
+            (expect (var-after-link-save-open 'org-ql-view-buffers-files link-buffer query
                                               :buffer link-buffer)
-                    :to-equal link-buffer)))))
+                    :to-throw 'user-error '("Views that search non-file-backed buffers can’t be linked to"))))))
 
     ;; MAYBE: Also test `org-ql-views', although I already know it works now.
     ;; (describe "org-ql-views")
