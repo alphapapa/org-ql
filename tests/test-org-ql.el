@@ -435,6 +435,7 @@ RESULTS should be a list of strings as returned by
   (describe "Query results"
 
     ;; TODO: Other predicates.
+    ;; TODO: (level) predicate.
 
     (describe "(ancestors)"
       (org-ql-it "without sub-query"
