@@ -2828,6 +2828,26 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 
 To complete before and after pushing any commit.
 
+*** Additions
+
+When committing an additional feature:
+
++  [ ] Make WIP branch
++  [ ] Check repo for closing issues
++  [ ] Lint
++  [ ] Test
+     -  [ ] Locally
+     -  [ ] On different Emacs versions with GitHub CI
++  [ ] Update docs
++  [ ] Update changelog
+     -  [ ] Mention closing issues (optionally)
++  [ ] Commit
+     -  [ ] Mention closing issues in commit message
++  [ ] Merge to master
++  [ ] Push master
++  [ ] Close related tasks in this file
++  [ ] Delete WIP branch
+
 *** Fixes
 
 When committing a fix:
@@ -2835,6 +2855,8 @@ When committing a fix:
 +  [ ] Check repo for closing issues
 +  [ ] Lint
 +  [ ] Test
+     -  [ ] Locally
+     -  [ ] On different Emacs versions with GitHub CI
 +  [ ] Update changelog
      -  [ ] Mention closing issues
 +  [ ] Commit
