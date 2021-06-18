@@ -32,14 +32,14 @@
 |      M | P | Todo    | Heading                                                                        |
 |--------+---+---------+--------------------------------------------------------------------------------|
 |    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
+| future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
 |    0.6 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 |    0.6 | B | PROJECT | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]]                              |
 |    0.6 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
-|    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
+|    0.7 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
 | future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
 | future | B | PROJECT | [[Timeline view][Timeline view]]                                                                  |
-|    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                                     |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -48,7 +48,7 @@
 |   M | P | Keyword  | Heading                                                            |
 |-----+---+----------+--------------------------------------------------------------------|
 | 0.6 | B | PROJECT  | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                         |
-| 0.6 | B | PROJECT  | [[Group tag support][Group tag support]]                                                  |
+| 0.7 | B | PROJECT  | [[Group tag support][Group tag support]]                                                  |
 |     |   | UNDERWAY | [[~clocked~][~clocked~]]                                                          |
 |     |   | UNDERWAY | [[~closed~][~closed~]]                                                           |
 |     |   | UNDERWAY | [[~deadline~][~deadline~]]                                                         |
@@ -87,6 +87,7 @@
 :TOC:      :include descendants :depth 1
 :END:
 :CONTENTS:
+- [[#sorter-for-property-values][Sorter for property values]]
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#bookmarks-save-list-of-files-instead-of-eg-org-agenda-files-when-appropriate][Bookmarks save list of files instead of e.g. org-agenda-files when appropriate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
@@ -144,6 +145,19 @@
 - [[#operate-on-list-of-heading-positions][Operate on list of heading positions]]
 - [[#use-macros-for-date][Use macros for date]]
 :END:
+
+** TODO [#B] Sorter for property values                        :enhancement:
+:PROPERTIES:
+:milestone: future
+:END:
+
+[2021-06-18 Fri 02:26]  e.g. to sort entries in this file by the =milestone= property.  Something like:
+
+#+BEGIN_SRC elisp
+  (org-ql-search (current-buffer)
+    '(todo)
+    :sort '((property "milestone") priority))
+#+END_SRC
 
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
 
@@ -1367,8 +1381,11 @@ That seems to work, like:
 
 ** PROJECT [#B] Group tag support
 :PROPERTIES:
-:milestone: 0.6
+:milestone: 0.7
 :END:
+
++  [[https://github.com/alphapapa/org-ql/issues/145][Tag hierarchy support · Issue #145 · alphapapa/org-ql · GitHub]]
++  [[https://github.com/alphapapa/org-ql/pull/146][Change: (org-ql--tags-at) Support tag hierarchies by maxchaos · Pull Request #146 · alphapapa/org-ql · GitHub]]
 
 *** UNDERWAY Benchmarking tags searches without and with new group-tags support
 
