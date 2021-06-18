@@ -71,15 +71,15 @@
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-|      M | P | Heading                                           |
-|--------+---+---------------------------------------------------|
-|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]           |
-|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                              |
-|    0.6 | B | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]] |
-|    0.6 | B | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]         |
-|        | B | [[Outline path predicate][Outline path predicate]]                            |
-|        | B | [[Document the sorting functions][Document the sorting functions]]                    |
-| future | B | [[Recursive queries][Recursive queries]]                                 |
+| M      | P | Heading                                   |
+|--------+---+-------------------------------------------|
+|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]   |
+|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                      |
+| 0.6    | B | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]] |
+|        | B | [[Outline path predicate][Outline path predicate]]                    |
+|        | B | [[Document the sorting functions][Document the sorting functions]]            |
+| future | B | [[Recursive queries][Recursive queries]]                         |
+| future | B | [[Timeline view][Timeline view]]                             |
 #+END:
 
 * [#A] Tasks
@@ -451,6 +451,7 @@ Maybe make it an option to automatically convert them when possible, because if 
 ** PROJECT [#B] Add a ~:with-time~ argument to timestamp predicates
 :PROPERTIES:
 :milestone: 0.6
+:ID:       eada7d28-2580-4553-824e-ddab991a30d5
 :END:
 
 + In branch =wip/with-time=.
@@ -463,23 +464,45 @@ Also relevant to [[https://github.com/alphapapa/org-ql/pull/73][examples: add tw
 
 [2021-06-17 Thu 20:01]  Implemented for ~scheduled~ in branch =wip/with-time2= (I should check for my own prior work before starting, haha).  It's fairly simple, and since I haven't finished the date-specific timestamp regexps branch yet, I might as well do this first, because it's useful.  The other branch has some needed work too, so I should fold it into the second branch.
 
-*** TODO ~deadline~
+[2021-06-17 Thu 20:11]  Merged second branch into first and deleted second.
+
+*** NEXT ~deadline~
 
 **** TODO Tests
 
-*** TODO ~planning~
+*** NEXT ~planning~
 
 **** TODO Tests
 
 **** DONE regexp defvar
 
-*** TODO ~scheduled~
+*** NEXT Update docs
 
-**** TODO Tests
+**** TODO deadline
 
-*** TODO ~ts~
+**** TODO ts
 
-**** TODO Tests
+**** TODO scheduled
+
+**** TODO planning
+
+**** TODO General date/time predicate info
+
+*** DONE ~ts~
+:LOGBOOK:
+CLOCK: [2021-06-17 Thu 22:34]
+CLOCK: [2021-06-17 Thu 22:12]--[2021-06-17 Thu 22:12] =>  0:00
+:END:
+
+[2021-06-18 Fri 00:00]  Had to add a bunch of extra regexps, but probably needed to do that anyway.  Seems to work...
+
+**** DONE Tests
+
+[2021-06-17 Thu 23:59]  The tests pass and seem to work correctly.
+
+*** DONE ~scheduled~
+
+**** DONE Tests
 
 ** PROJECT [#B] Optimized, date-specific timestamp regexps
 :PROPERTIES:
@@ -5396,7 +5419,7 @@ I don't need this right now, but it might come in handy here or elsewhere.
 ** File-local variables
 
 # Local Variables:
-# before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (save-excursion (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o))))) org-update-all-dblocks org-make-toc)
+# before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (let ((olp (org-get-outline-path 'with-self)) (relative-pos (- (point) (save-excursion (org-back-to-heading) (point))))) (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o)) (goto-char (org-find-olp olp 'this-buffer)) (forward-char relative-pos)))) org-update-all-dblocks org-make-toc)
 # org-ql-ask-unsafe-queries: nil
 # End:
 
