@@ -940,7 +940,13 @@ RESULTS should be a list of strings as returned by
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-then
           (org-ql-expect ('(scheduled :to today))
-            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
+            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+
+      (org-ql-it ":with-time"
+        (org-ql-expect ('(scheduled :with-time t))
+          '("Skype with president of Antarctica" "Order a pizza"))
+        (org-ql-expect ('(scheduled :to "2017-07-04" :with-time t))
+          '("Skype with president of Antarctica"))))
 
     ;; ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
     ;; ;; significant hassle.  Manual testing shows that the predicate appears to work properly.

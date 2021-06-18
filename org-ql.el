@@ -640,19 +640,19 @@ Arguments STRING, POS, FILL, and LEVEL are according to
         (cl-macrolet ((clocked (&key from to on)
                                (org-ql--from-to-on)
                                `(org-ql--predicate-clocked :from ,from :to ,to))
-                      (closed (&key from to on)
+                      (closed (&key from to on with-time)
                               (org-ql--from-to-on)
                               `(org-ql--predicate-closed :from ,from :to ,to))
-                      (deadline (&key from to on)
+                      (deadline (&key from to on with-time)
                                 (org-ql--from-to-on)
                                 `(org-ql--predicate-deadline :from ,from :to ,to))
-                      (planning (&key from to on)
+                      (planning (&key from to on with-time)
                                 (org-ql--from-to-on)
                                 `(org-ql--predicate-planning :from ,from :to ,to))
-                      (scheduled (&key from to on)
+                      (scheduled (&key from to on with-time)
                                  (org-ql--from-to-on)
-                                 `(org-ql--predicate-scheduled :from ,from :to ,to))
-                      (ts (&key from to on (type 'both))
+                                 `(org-ql--predicate-scheduled :from ,from :to ,to :with-time ,with-time))
+                      (ts (&key from to on (type 'both) with-time)
                           (org-ql--from-to-on)
                           `(org-ql--predicate-ts :from ,from :to ,to
                                                  :regexp ,(pcase type
@@ -1845,6 +1845,14 @@ parseable by `parse-time-string' which may omit the time value."
                                     org-ql-planning-time-hour-regexp
                                   org-ql-planning-regexp)))
 
+(defun org-ql--plist-get (plist property)
+  "Like `plist-get', but for \"improper\" plists.
+\"Improper\" meaning that the first element of PLIST need not be
+a keyword; the PROPERTY may appear anywhere in PLIST, and the
+subsequent element is is value."
+  (when-let ((pos (cl-position property plist)))
+    (elt plist (1+ pos))))
+
 (org-ql-defpred scheduled (&key from to _on with-time)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
@@ -1868,15 +1876,18 @@ parseable by `parse-time-string' which may omit the time value."
                              (ts-adjust 'day num-days)
                              (ts-apply :hour 23 :minute 59 :second 59))))
                    `(scheduled :to ,to))))
-  :preambles ((`(,predicate-names . ,(and args (guard (plist-get args :with-time))))
-               (list :regexp org-scheduled-time-hour-regexp :query query))
-              (`(,predicate-names . ,_)
-               (list :regexp org-scheduled-time-regexp :query query)))
+  :preambles ((`(,predicate-names . ,rest)
+               (list :query query
+                     :regexp (if (org-ql--plist-get rest :with-time)
+                                 org-scheduled-time-hour-regexp
+                               org-scheduled-time-regexp))))
   :body
-  (org-ql--predicate-ts :from from :to to :match-group 1 :limit (line-end-position 2)
+  (org-ql--predicate-ts :from from :to to
                         :regexp (if with-time
                                     org-scheduled-time-hour-regexp
-                                  org-scheduled-time-regexp)))
+                                  org-scheduled-time-regexp)
+                        :match-group 1
+                        :limit (line-end-position 2)))
 
 (org-ql-defpred (ts ts-active ts-a ts-inactive ts-i)
   (&key from to _on regexp with-time (match-group 0) (limit (org-entry-end-position)))
