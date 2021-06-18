@@ -36,10 +36,10 @@
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 |    0.6 | B | PROJECT | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]]                              |
 |    0.6 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
-|    0.6 | B | PROJECT | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]]                                      |
 |    0.6 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
 | future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
 | future | B | PROJECT | [[Timeline view][Timeline view]]                                                                  |
+|    0.6 | B | PROJECT | [[Save view to dynamic block][Save view to dynamic block]]                                                     |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -71,15 +71,15 @@
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-| M      | P | Heading                                   |
-|--------+---+-------------------------------------------|
-|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]   |
-|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                      |
-| 0.6    | B | [[Date-specific preambles for =ts= predicates][Date-specific preambles for =ts= predicates]] |
-|        | B | [[Outline path predicate][Outline path predicate]]                    |
-|        | B | [[Document the sorting functions][Document the sorting functions]]            |
-| future | B | [[Recursive queries][Recursive queries]]                         |
-| future | B | [[Timeline view][Timeline view]]                             |
+| M      | P | Heading                                                  |
+|--------+---+----------------------------------------------------------|
+|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                  |
+|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                     |
+|        | B | [[Outline path predicate][Outline path predicate]]                                   |
+|        | B | [[Document the sorting functions][Document the sorting functions]]                           |
+| future | B | [[Recursive queries][Recursive queries]]                                        |
+| future | B | [[Timeline view][Timeline view]]                                            |
+|        | B | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]] |
 #+END:
 
 * [#A] Tasks
@@ -110,7 +110,6 @@
 - [[#optimized-date-specific-timestamp-regexps][Optimized, date-specific timestamp regexps]]
 - [[#multi-pass-query-normalization][Multi-pass query normalization]]
 - [[#optimization-for-olp-predicate][Optimization for olp predicate]]
-- [[#date-specific-preambles-for-ts-predicates][Date-specific preambles for ts predicates]]
 - [[#outline-path-predicate][Outline path predicate]]
 - [[#tools-for-saving-queries-and-accessing-them-34][Tools for saving queries and accessing them {3/4}]]
 - [[#group-tag-support][Group tag support]]
@@ -504,15 +503,22 @@ CLOCK: [2021-06-17 Thu 22:12]--[2021-06-17 Thu 22:12] =>  0:00
 
 **** DONE Tests
 
-** PROJECT [#B] Optimized, date-specific timestamp regexps
+** PROJECT [#B] Optimized, date-specific timestamp regexps     :enhancement:
 :PROPERTIES:
 :milestone: 0.6
 :ID:       fc8ccf6e-5311-4121-a0b7-58482dbd2e85
 :END:
 
-+ In branch =wip/ts-optimized-regexps=.
++  In branch =wip/ts-optimized-regexps=.
 
-Rather than searching for generic timestamp regexps, we could build a regexp based on expected values in the timestamp.
+[2020-11-28 Sat 19:12]  For example, a regexp like this would make timestamp searches very fast:
+
+#+BEGIN_SRC elisp
+  (rx "<" "2020" "-" (or "10-31" "11-01" "11-02") ">")
+  ;;=> "<2020-\\(?:\\(?:1\\(?:0-31\\|1-0[12]\\)\\)\\)>"
+#+END_SRC
+
+It shouldn't be hard to generate a list of date strings that =rx-to-string= could optimize, and that would avoid parsing and testing many timestamps which wouldn't match when specific date ranges are given.
 
 *** TODO Limit or optimize
 
@@ -1163,20 +1169,6 @@ It will not match.
 :END:
 
 
-
-** PROJECT [#B] Date-specific preambles for =ts= predicates      :enhancement:
-:PROPERTIES:
-:milestone: 0.6
-:END:
-
-[2020-11-28 Sat 19:12]  For example, a regexp like this would make timestamp searches very fast:
-
-#+BEGIN_SRC elisp
-  (rx "<" "2020" "-" (or "10-31" "11-01" "11-02") ">")
-  ;;=> "<2020-\\(?:\\(?:1\\(?:0-31\\|1-0[12]\\)\\)\\)>"
-#+END_SRC
-
-It shouldn't be hard to generate a list of date strings that =rx-to-string= could optimize, and that would avoid parsing and testing many timestamps which wouldn't match when specific date ranges are given.
 
 ** PROJECT [#B] Outline path predicate
 
