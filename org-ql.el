@@ -635,6 +635,12 @@ returns nil."
                                    query-string " Execute it? "))
         (user-error "Query aborted by user")))))
 
+(defun org-ql--plist-get* (plist property)
+  "Return the value of PROPERTY in PLIST, or `not-found' if the property is missing."
+  (if-let ((pair (plist-member plist property)))
+      (cadr pair)
+    'not-found))
+
 ;;;;; Query processing
 
 ;; Processing, compiling, etc. for queries.
@@ -739,25 +745,35 @@ Arguments STRING, POS, FILL, and LEVEL are according to
         (cl-macrolet ((clocked (&key from to on)
                                (org-ql--from-to-on)
                                `(org-ql--predicate-clocked :from ,from :to ,to))
-                      (closed (&key from to on with-time)
+                      (closed (&key from to on (with-time 'not-found))
                               (org-ql--from-to-on)
-                              `(org-ql--predicate-closed :from ,from :to ,to))
-                      (deadline (&key from to on with-time)
+                              `(org-ql--predicate-closed :from ,from :to ,to :with-time ,with-time))
+                      (deadline (&key from to on (with-time 'not-found))
                                 (org-ql--from-to-on)
-                                `(org-ql--predicate-deadline :from ,from :to ,to))
-                      (planning (&key from to on with-time)
+                                `(org-ql--predicate-deadline :from ,from :to ,to :with-time ,with-time))
+                      (planning (&key from to on (with-time 'not-found))
                                 (org-ql--from-to-on)
-                                `(org-ql--predicate-planning :from ,from :to ,to))
-                      (scheduled (&key from to on with-time)
+                                `(org-ql--predicate-planning :from ,from :to ,to :with-time ,with-time))
+                      (scheduled (&key from to on (with-time 'not-found))
                                  (org-ql--from-to-on)
                                  `(org-ql--predicate-scheduled :from ,from :to ,to :with-time ,with-time))
-                      (ts (&key from to on (type 'both) with-time)
+                      (ts (&key from to on (type 'both) (with-time 'not-found))
                           (org-ql--from-to-on)
-                          `(org-ql--predicate-ts :from ,from :to ,to
-                                                 :regexp ,(pcase type
-                                                            ('both org-tsr-regexp-both)
-                                                            ('active org-tsr-regexp)
-                                                            ('inactive org-ql-tsr-regexp-inactive)))))
+                          `(org-ql--predicate-ts
+                            :from ,from :to ,to :with-time ',with-time
+                            :regexp ,(pcase type
+                                       ((or 'nil 'both) (pcase-exhaustive with-time
+                                                          ('t org-ql-regexp-ts-both-with-time)
+                                                          ('nil org-ql-regexp-ts-both-without-time)
+                                                          ('not-found org-ql-regexp-ts-both)))
+                                       ('active (pcase-exhaustive with-time
+                                                  ('t org-ql-regexp-ts-active-with-time)
+                                                  ('nil org-ql-regexp-ts-active-without-time)
+                                                  ('not-found org-ql-regexp-ts-active)))
+                                       ('inactive (pcase-exhaustive with-time
+                                                    ('t org-ql-regexp-ts-inactive-with-time)
+                                                    ('nil org-ql-regexp-ts-inactive-without-time)
+                                                    ('not-found org-ql-regexp-ts-inactive)))))))
           ,query)))))
 
 ;;;;; String query parsing
@@ -1122,6 +1138,7 @@ For compatibility, since Org 9.1 deprecated
 `org-duration-string-to-minutes', replacing it with
 `org-duration-to-minutes', which seems to return floats instead
 of integers."
+  ;; FIXME: Define this as an alias instead.
   ;; MAYBE: Remove if compatibility with Org 9.0 is dropped.
   (funcall (if (fboundp 'org-duration-to-minutes)
                #'org-duration-to-minutes
@@ -1944,14 +1961,6 @@ parseable by `parse-time-string' which may omit the time value."
                                     org-ql-planning-time-hour-regexp
                                   org-ql-planning-regexp)))
 
-(defun org-ql--plist-get (plist property)
-  "Like `plist-get', but for \"improper\" plists.
-\"Improper\" meaning that the first element of PLIST need not be
-a keyword; the PROPERTY may appear anywhere in PLIST, and the
-subsequent element is is value."
-  (when-let ((pos (cl-position property plist)))
-    (elt plist (1+ pos))))
-
 (org-ql-defpred scheduled (&key from to _on with-time)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
@@ -1977,7 +1986,7 @@ parseable by `parse-time-string' which may omit the time value."
                    `(scheduled :to ,to))))
   :preambles ((`(,predicate-names . ,rest)
                (list :query query
-                     :regexp (if (org-ql--plist-get rest :with-time)
+                     :regexp (if (plist-get rest :with-time)
                                  org-scheduled-time-hour-regexp
                                org-scheduled-time-regexp))))
   :body
@@ -1988,7 +1997,7 @@ parseable by `parse-time-string' which may omit the time value."
                         :match-group 1
                         :limit (line-end-position 2)))
 
-(org-ql-defpred (ts ts-active ts-a ts-inactive ts-i)
+(org-ql-defpred (ts ts-active ts-a ts-inactive ts-i _with-time)
   (&key from to _on regexp with-time (match-group 0) (limit (org-entry-end-position)))
   ;; NOTE: Arguments to this predicate are pre-processed in `org-ql--normalize-query'.
   ;; The underscore before `on' prevents "unused lexical variable" warnings due to the
@@ -2023,9 +2032,18 @@ of the line after the heading."
                 (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
   :preambles ((`(,predicate-names . ,rest)
                (list :regexp (pcase (plist-get rest :type)
-                               ((or 'nil 'both) org-tsr-regexp-both)
-                               ('active org-tsr-regexp)
-                               ('inactive org-ql-tsr-regexp-inactive))
+                               ((or 'nil 'both) (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                                                  ('t org-ql-regexp-ts-both-with-time)
+                                                  ('nil org-ql-regexp-ts-both-without-time)
+                                                  ('not-found org-ql-regexp-ts-both)))
+                               ('active (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                                          ('t org-ql-regexp-ts-active-with-time)
+                                          ('nil org-ql-regexp-ts-active-without-time)
+                                          ('not-found org-ql-regexp-ts-active)))
+                               ('inactive (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                                            ('t org-ql-regexp-ts-inactive-with-time)
+                                            ('nil org-ql-regexp-ts-inactive-without-time)
+                                            ('not-found org-ql-regexp-ts-inactive))))
                      ;; Predicate needs testing only when args are present.
                      :query (-let (((&keys :from :to :on) rest))
                               ;; FIXME: This used to be (when (or from to on) query), but that doesn't seem right, so I
@@ -2034,6 +2052,7 @@ of the line after the heading."
                                   query
                                 t)))))
   ;; TODO: DRY this with the clocked predicate.
+  ;; NOTE: The argument `regexp' is provided by pre-processing done by `org-ql--query-predicate'.
   :body
   (cl-macrolet ((next-timestamp ()
                                 `(when (re-search-forward regexp limit t)

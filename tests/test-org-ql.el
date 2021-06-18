@@ -1146,7 +1146,15 @@ RESULTS should be a list of strings as returned by
         (org-ql-it ":on a number of days"
           (org-ql-then
             (org-ql-expect ('(ts-active :on 2))
-              '("Take over the world")))))
+              '("Take over the world"))))
+
+        (org-ql-it ":with-time"
+          (org-ql-expect ('(ts-active :with-time nil))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(ts-active :with-time t))
+            '("Skype with president of Antarctica" "Order a pizza"))
+          (org-ql-expect ('(ts-active :to "2017-07-04" :with-time t))
+            '("Skype with president of Antarctica"))))
 
       (describe "inactive"
 
@@ -1194,7 +1202,15 @@ RESULTS should be a list of strings as returned by
         (org-ql-it ":on a number of days"
           (org-ql-then
             (org-ql-expect ('(ts-inactive :on 19))
-              '("Visit the moon" "Rewrite Emacs in Common Lisp")))))
+              '("Visit the moon" "Rewrite Emacs in Common Lisp"))))
+
+        (org-ql-it ":with-time"
+          (org-ql-expect ('(ts-inactive :with-time nil))
+            nil)
+          (org-ql-expect ('(ts-inactive :with-time t))
+            '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(ts-inactive :to "2017-07-04" :with-time t))
+            nil)))
 
       (describe "both"
 
@@ -1256,7 +1272,15 @@ RESULTS should be a list of strings as returned by
         (org-ql-it ":on a number of days"
           (org-ql-then
             (org-ql-expect ('(ts :on 5))
-              '("Renew membership in supervillain club"))))))
+              '("Renew membership in supervillain club"))))
+
+        (org-ql-it ":with-time"
+          (org-ql-expect ('(ts :with-time nil))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(ts :with-time t))
+            '("Skype with president of Antarctica" "Visit the moon" "Learn universal sign language" "Order a pizza" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(ts :to "2017-07-04" :with-time t))
+            '("Skype with president of Antarctica")))))
 
     (describe "Compound queries"
 
