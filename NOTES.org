@@ -32,6 +32,7 @@
 |      M | P | Todo    | Heading                                                                        |
 |--------+---+---------+--------------------------------------------------------------------------------|
 |    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
+|    0.6 | A | PROJECT | [[Reverse sorting][Reverse sorting]]                                                                |
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
 |    0.6 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
@@ -39,7 +40,6 @@
 |    0.6 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
 |    0.7 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
 | future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
-| future | B | PROJECT | [[Timeline view][Timeline view]]                                                                  |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -65,21 +65,22 @@
 |---+-----+---------+------------------------------------------------|
 | A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 | A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]        |
+| A | 0.6 | PROJECT | [[Reverse sorting][Reverse sorting]]                                |
 | A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                           |
 #+END:
 
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-| M      | P | Heading                                                  |
-|--------+---+----------------------------------------------------------|
-|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                  |
-|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                     |
-|        | B | [[Outline path predicate][Outline path predicate]]                                   |
-|        | B | [[Document the sorting functions][Document the sorting functions]]                           |
-| future | B | [[Recursive queries][Recursive queries]]                                        |
-| future | B | [[Timeline view][Timeline view]]                                            |
-|        | B | [[Implement view with tabulated-list-mode or magit-section][Implement view with tabulated-list-mode or magit-section]] |
+| M      | P | Heading                                 |
+|--------+---+-----------------------------------------|
+|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]] |
+| 0.6    | A | [[Reverse sorting][Reverse sorting]]                         |
+|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                    |
+|        | B | [[Outline path predicate][Outline path predicate]]                  |
+|        | B | [[Document the sorting functions][Document the sorting functions]]          |
+| future | B | [[Recursive queries][Recursive queries]]                       |
+| future | B | [[Timeline view][Timeline view]]                           |
 #+END:
 
 * [#A] Tasks
@@ -107,6 +108,7 @@
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
+- [[#reverse-sorting][Reverse sorting]]
 - [[#add-a-with-time-argument-to-timestamp-predicates][Add a :with-time argument to timestamp predicates]]
 - [[#optimized-date-specific-timestamp-regexps][Optimized, date-specific timestamp regexps]]
 - [[#multi-pass-query-normalization][Multi-pass query normalization]]
@@ -460,6 +462,19 @@ Unfortunately it does not say what the new, required second argument is.
 :END:
 
 Maybe make it an option to automatically convert them when possible, because if a user wanted to add complexity to a string query, he'd have to rewrite it as a sexp.
+
+** PROJECT [#A] Reverse sorting
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
++  [[https://github.com/alphapapa/org-ql/issues/143][Reverse sort order? · Issue #143 · alphapapa/org-ql · GitHub]]
+
+*** TODO Update docs
+
+Need to mention incompatible change (though that isn't the best way to describe it) in the changelog.
+
+*** WAITING [[https://github.com/alphapapa/org-ql/issues/143#issuecomment-863638651][Get feedback]]
 
 ** PROJECT [#B] Add a ~:with-time~ argument to timestamp predicates
 :PROPERTIES:
