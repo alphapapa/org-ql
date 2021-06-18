@@ -459,6 +459,10 @@ Which would obviate the need to [[https://gist.github.com/mskorzhinskiy/fac0662a
 
 Probably should do this after [[id:fc8ccf6e-5311-4121-a0b7-58482dbd2e85][Optimized, date-specific timestamp regexps]]. 
 
+Also relevant to [[https://github.com/alphapapa/org-ql/pull/73][examples: add two new examples by mskorzhinskiy · Pull Request #73 · alphapapa/org-ql · GitHub]].
+
+[2021-06-17 Thu 20:01]  Implemented for ~scheduled~ in branch =wip/with-time2= (I should check for my own prior work before starting, haha).  It's fairly simple, and since I haven't finished the date-specific timestamp regexps branch yet, I might as well do this first, because it's useful.  The other branch has some needed work too, so I should fold it into the second branch.
+
 *** TODO ~deadline~
 
 **** TODO Tests
