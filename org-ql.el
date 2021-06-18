@@ -130,6 +130,105 @@ the value returned by it at that node.")
     "Plist of predicates, their corresponding functions, and their docstrings.
 This list should not contain any duplicates."))
 
+;;;;; Timestamp regexps
+
+;; We need more specificity than the built-in Org timestamp regexps
+;; provide, and sometimes they change from version to version, so we
+;; define our own.  And by defining them with `rx', they are much
+;; easier to understand than the string-based ones in org.el (of
+;; course, `rx' probably wasn't available when most of those were
+;; written).
+
+;; MAYBE: Use newer `rx' custom expressions to define these.
+;; MAYBE: Add match groups corresponding to the ones in the "official" Org regexps.
+;; TODO: Use these new regexps in more places.
+
+(defvar org-ql-regexp-part-ts-date
+  (rx (repeat 4 digit) "-" (repeat 2 digit) "-" (repeat 2 digit)
+      ;; Day of week
+      (optional " " (1+ alpha))
+      ;; Repeaters (not sure if the colon is necessary, but it's in the org.el one)
+      (optional (repeat 1 2 (seq " " (repeat 1 2 (any "-+:")) (1+ digit) (any "hdwmy")))))
+  "Matches the inner, date part of an Org timestamp, both active and inactive.
+Also matches optional day-of-week and repeaters.  Used to build
+other timestamp regexps.")
+
+(defvar org-ql-regexp-part-ts-time
+  (rx " " (repeat 1 2 digit) ":" (repeat 2 digit))
+  "Matches the inner, time part of an Org timestamp (i.e. HH:MM).
+Includes leading space character.  Used to build other timestamp
+regexps.")
+
+(defvar org-ql-regexp-ts-both
+  (rx-to-string
+   `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date) (optional (regexp ,org-ql-regexp-part-ts-time)) ">")
+        (seq "[" (regexp ,org-ql-regexp-part-ts-date) (optional (regexp ,org-ql-regexp-part-ts-time)) "]")))
+  "Matches both active and inactive Org timestamps, with or without time.")
+
+(defvar org-ql-regexp-ts-both-with-time
+  (rx-to-string `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date) (regexp ,org-ql-regexp-part-ts-time) ">")
+                     (seq "[" (regexp ,org-ql-regexp-part-ts-date) (regexp ,org-ql-regexp-part-ts-time) "]")))
+  "Matches both active and inactive Org timestamps, with time.")
+
+(defvar org-ql-regexp-ts-both-without-time
+  (rx-to-string `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date) ">")
+                     (seq "[" (regexp ,org-ql-regexp-part-ts-date) "]")))
+  "Matches both active and inactive Org timestamps, without time.")
+
+(defvar org-ql-regexp-ts-active
+  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date) (optional (regexp ,org-ql-regexp-part-ts-time)) ">"))
+  "Matches active Org timestamps, with or without time.")
+
+(defvar org-ql-regexp-ts-active-with-time
+  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date) (regexp ,org-ql-regexp-part-ts-time) ">"))
+  "Matches active Org timestamps, with time.")
+
+(defvar org-ql-regexp-ts-active-without-time
+  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date) ">"))
+  "Matches active Org timestamps, without time.")
+
+(defvar org-ql-regexp-ts-inactive
+  (rx-to-string `(seq "[" (regexp ,org-ql-regexp-part-ts-date) (optional (regexp ,org-ql-regexp-part-ts-time)) "]"))
+  "Matches inactive Org timestamps, with or without time.")
+
+(defvar org-ql-regexp-ts-inactive-with-time
+  (rx-to-string `(seq "[" (regexp ,org-ql-regexp-part-ts-date) (regexp ,org-ql-regexp-part-ts-time) "]"))
+  "Matches inactive Org timestamps, with time.")
+
+(defvar org-ql-regexp-ts-inactive-without-time
+  (rx-to-string `(seq "[" (regexp ,org-ql-regexp-part-ts-date) "]"))
+  "Matches inactive Org timestamps, without time.")
+
+(defvar org-ql-regexp-planning
+  (rx-to-string `(seq bow (or "CLOSED" "SCHEDULED" "DEADLINE") ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-both))))
+  "Matches DEADLINE or SCHEDULED keyword with timestamp, with or without time.")
+
+(defvar org-ql-regexp-planning-with-time
+  (rx-to-string `(seq bow (or "CLOSED" "SCHEDULED" "DEADLINE") ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-both-with-time))))
+  "Matches DEADLINE or SCHEDULED keyword with timestamp, with time.")
+
+(defvar org-ql-regexp-planning-without-time
+  (rx-to-string `(seq bow (or "CLOSED" "SCHEDULED" "DEADLINE") ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-both-without-time))))
+  "Matches DEADLINE or SCHEDULED keyword with timestamp, without time.")
+
+(defvar org-ql-regexp-scheduled
+  (rx-to-string `(seq bow "SCHEDULED" ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-both))))
+  "Matches SCHEDULED keyword with a time-and-hour stamp, with or without time.")
+
+(defvar org-ql-regexp-scheduled-with-time
+  (rx-to-string `(seq bow "SCHEDULED" ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-both-with-time))))
+  "Matches SCHEDULED keyword with a time-and-hour stamp, with time.")
+
+(defvar org-ql-regexp-scheduled-without-time
+  (rx-to-string `(seq bow "SCHEDULED" ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-both-without-time))))
+  "Matches SCHEDULED keyword with a time-and-hour stamp, without time.")
+
 ;;;; Customization
 
 (defgroup org-ql nil
