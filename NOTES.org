@@ -34,10 +34,10 @@
 |    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
 |    0.6 | A | PROJECT | [[Reverse sorting][Reverse sorting]]                                                                |
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
-|    0.6 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
+|    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 |    0.6 | B | PROJECT | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]]                              |
-|    0.6 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
+|    0.7 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
 |    0.7 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
 | future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
 #+END:
@@ -47,7 +47,7 @@
 #+BEGIN: org-ql :query (or (todo "UNDERWAY") (and (todo "PROJECT") (descendants (todo "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 |   M | P | Keyword  | Heading                                                            |
 |-----+---+----------+--------------------------------------------------------------------|
-| 0.6 | B | PROJECT  | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                         |
+| 0.7 | B | PROJECT  | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                         |
 | 0.7 | B | PROJECT  | [[Group tag support][Group tag support]]                                                  |
 |     |   | UNDERWAY | [[~clocked~][~clocked~]]                                                          |
 |     |   | UNDERWAY | [[~closed~][~closed~]]                                                           |
@@ -167,10 +167,12 @@ It should act like ~(or (deadline auto) (scheduled :to today))~.
 
 ** TODO [#B] Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate
 :PROPERTIES:
-:milestone: 0.6
+:milestone: 0.7
 :END:
 
 [2020-12-05 Sat 01:24]  The bookmarked plist should use the "contracted" form rather than the list of files so that, if the list of files changes before the bookmark is loaded, it will use the new list of files.
+
+[2021-06-18 Fri 03:12]  This has the potential to cause bugs, so I'm going to defer it until at least 0.7.
 
 ** TODO [#B] Change ~(deadline)~'s ~auto~ argument to ~:auto~ and/or ~:auto t~
 
@@ -217,9 +219,7 @@ e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse
 Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
 
 ** TODO [#C] Example: Next upcoming event                             :docs:
-:PROPERTIES:
-:milestone: 0.6
-:END:
+
 
 [2020-11-26 Thu 18:17]  Inspired by [[https://github.com/unhammer/org-upcoming-modeline][GitHub - unhammer/org-upcoming-modeline: put upcoming org event in modeline]] ([[https://www.reddit.com/r/emacs/comments/k1e4eu/show_next_orgappointment_in_modeline/gdp6fqv/][Reddit thread]]).
 
@@ -322,9 +322,7 @@ Could allow reusing results for different queries.  Mentioned in [[https://www.r
 However, there might still be a useful idea here somewhere...
 
 ** MAYBE [#C] Alternative parsing libraries
-:PROPERTIES:
-:milestone: future
-:END:
+
 
 +  e.g. Bovine and Wisent come with Emacs, which would allow us to drop the =peg= dependency (which doesn't use lexical binding).
 +  [[https://github.com/cute-jumper/parsec.el][parsec]] is third-party, but looks powerful
@@ -534,7 +532,7 @@ CLOCK: [2021-06-17 Thu 22:12]--[2021-06-17 Thu 22:12] =>  0:00
 
 ** PROJECT [#B] Optimized, date-specific timestamp regexps     :enhancement:
 :PROPERTIES:
-:milestone: 0.6
+:milestone: 0.7
 :ID:       fc8ccf6e-5311-4121-a0b7-58482dbd2e85
 :END:
 
@@ -1193,9 +1191,7 @@ It will not match.
 *** TODO Devise solution to desired ~olp~ optimization
 
 *** NEXT Write test for ~olp~ that catches bug that attempted optimization caused
-:PROPERTIES:
-:milestone: 0.6
-:END:
+
 
 
 
@@ -2039,7 +2035,7 @@ For example, [[https://egli.dev/posts/using-org-mode-for-meeting-minutes/][this 
 
 ** PROJECT [#B] Predicate helper functions
 :PROPERTIES:
-:milestone: 0.6
+:milestone: future
 :END:
 
 [2020-11-24 Tue 16:50]  This idea started off by writing a =week= predicate:
