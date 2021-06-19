@@ -244,29 +244,30 @@ Arguments are listed next to predicate names, where applicable.
 
 *** Date/time predicates
 
-All of these predicates take optional keyword arguments ~:from~, ~:to:~, and ~:on~:
+These predicates take optional keyword arguments:
 
-+  If ~:from~, return non-nil if entry has a timestamp on or after ~:from~.
-+  If ~:to~, return non-nil if entry has a timestamp on or before ~:to~.
-+  If ~:on~, return non-nil if entry has a timestamp on date ~:on~.
++  ~:from~: Match entries whose timestamp is on or after timestamp ~:from~.
++  ~:to~: Match entries whose timestamp is on or before timestamp ~:to~.
++  ~:on~: Match entries whose timestamp is on date ~:on~.
++  ~:with-time~: If unspecified, match timestamps with or without times (i.e. HH:MM).  If nil, match timestamps without times.  If t, match timestamps with times.
 
-Argument values should be either a number of days (positive to look forward, or negative to look backward), a ~ts~ struct, or a string parseable by ~parse-time-string~ (the string may omit the time value).
+Timestamp/date arguments should be either a number of days (positive to look forward, or negative to look backward), a string parseable by ~parse-time-string~ (the string may omit the time value), or a ~ts~ struct.
 
 +  *Predicates*
-     -  =ts= :: Return non-nil if current entry has a timestamp in given period.  If no arguments are specified, return non-nil if entry has any timestamp.
+     -  =ts= :: Return non-nil if current entry has a timestamp in given period.  Without arguments, return non-nil if entry has a timestamp.
      -  =ts-active=, =ts-a= :: Like =ts=, but only matches active timestamps.
      -  =ts-inactive=, =ts-i= :: Like =ts=, but only matches inactive timestamps.
 
 The following predicates, in addition to the keyword arguments, can also take a single argument, a number, which looks backward or forward a number of days.  The number can be negative to invert the direction.
 
 +  *Backward-looking*
-     -  =clocked= :: Return non-nil if current entry was clocked in given period.  If no arguments are specified, return non-nil if entry was clocked at any time.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
-     -  =closed= :: Return non-nil if current entry was closed in given period.  If no arguments are specified, return non-nil if entry was closed at any time.
+     -  =clocked= :: Return non-nil if current entry was clocked in given period.  Without arguments, return non-nil if entry was ever clocked.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
+     -  =closed= :: Return non-nil if current entry was closed in given period.  Without arguments, return non-nil if entry is closed.
 
 +  *Forward-looking*
-     -  =deadline= :: Return non-nil if current entry has deadline in given period.  If argument is =auto=, return non-nil if entry has deadline within =org-deadline-warning-days=.  If no arguments are specified, return non-nil if entry has any deadline.
-     -  =planning= :: Return non-nil if current entry has planning timestamp in given period (i.e. its deadline, scheduled, or closed timestamp).  If no arguments are specified, return non-nil if entry is scheduled at any time.
-     -  =scheduled= :: Return non-nil if current entry is scheduled in given period.  If no arguments are specified, return non-nil if entry is scheduled at any time.
+     -  =deadline= :: Return non-nil if current entry has deadline in given period.  If argument is =auto=, return non-nil if entry has deadline within =org-deadline-warning-days=.  Without arguments, return non-nil if entry has any deadline.
+     -  =planning= :: Return non-nil if current entry has planning timestamp (i.e. its deadline, scheduled, or closed timestamp) in given period.  Without arguments, return non-nil if entry has any planning timestamp.
+     -  =scheduled= :: Return non-nil if current entry is scheduled in given period.  Without arguments, return non-nil if entry is scheduled.
 
 ** Functions / Macros
 :PROPERTIES:
@@ -523,6 +524,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Macro =org-ql-defpred=, used to define search predicates.  (See [[file:examples/defpred.org][tutorial]].)
 +  Predicate ~effort~.
 +  Predicate ~heading-regexp~, which matches regular expressions against heading text (alias: ~h*~).
++  Timestamp-related predicates now accept an optional ~:with-time~ argument, which allows matching timestamps with or without times (i.e. HH:MM).
 
 *Changed*
 +  Helm support (including the command =helm-org-ql=) has been moved to a separate package, =helm-org-ql=.

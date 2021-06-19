@@ -637,7 +637,15 @@ RESULTS should be a list of strings as returned by
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
         (org-ql-then
           (org-ql-expect ('(deadline :to today))
-            '("/r/emacs")))))
+            '("/r/emacs"))))
+
+      (org-ql-it ":with-time"
+        (org-ql-expect ('(deadline :with-time nil))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Internet" "Spaceship lease" "/r/emacs"))
+        (org-ql-expect ('(deadline :with-time t))
+          '("Renew membership in supervillain club"))
+        (org-ql-expect ('(deadline :to "2017-07-10" :with-time t))
+          '("Renew membership in supervillain club"))))
 
     (org-ql-it "(done)"
       (org-ql-expect ('(done))
@@ -831,7 +839,15 @@ RESULTS should be a list of strings as returned by
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-then
           (org-ql-expect ('(planning :to today))
-            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
+            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+
+      (org-ql-it ":with-time"
+        (org-ql-expect ('(planning :with-time nil))
+          '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+        (org-ql-expect ('(planning :with-time t))
+          '("Skype with president of Antarctica" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza"))
+        (org-ql-expect ('(planning :to "2017-07-04" :with-time t))
+          '("Skype with president of Antarctica"))))
 
     (describe "(priority)"
 
@@ -940,7 +956,13 @@ RESULTS should be a list of strings as returned by
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-then
           (org-ql-expect ('(scheduled :to today))
-            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
+            '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
+
+      (org-ql-it ":with-time"
+        (org-ql-expect ('(scheduled :with-time t))
+          '("Skype with president of Antarctica" "Order a pizza"))
+        (org-ql-expect ('(scheduled :to "2017-07-04" :with-time t))
+          '("Skype with president of Antarctica"))))
 
     ;; ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
     ;; ;; significant hassle.  Manual testing shows that the predicate appears to work properly.
@@ -1140,7 +1162,28 @@ RESULTS should be a list of strings as returned by
         (org-ql-it ":on a number of days"
           (org-ql-then
             (org-ql-expect ('(ts-active :on 2))
-              '("Take over the world")))))
+              '("Take over the world"))))
+
+        (org-ql-it ":with-time"
+          (org-ql-expect ('(ts-active :with-time nil))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(ts-active :with-time t))
+            '("Skype with president of Antarctica" "Renew membership in supervillain club" "Order a pizza"))
+          (org-ql-expect ('(ts-active :to "2017-07-04" :with-time t))
+            '("Skype with president of Antarctica"))
+
+          ;; Test string query syntax.  Just doing it in this predicate
+          ;; for now, rather than in all ths ts-related ones.
+
+          ;; NOTE: "with-time=" is equivalent to "with-time=nil".  It's debatable whether this is best or most
+          ;; intuitive, but making it behave as if "with-time=" were not given is too much trouble and makes the
+          ;; code too complicated in the current implementation of argument handling and string query parsing.
+          (org-ql-expect ((org-ql--query-string-to-sexp "ts-active:with-time=nil"))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((org-ql--query-string-to-sexp "ts-active:with-time="))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((org-ql--query-string-to-sexp "ts-active:with-time=t"))
+            '("Skype with president of Antarctica" "Renew membership in supervillain club" "Order a pizza"))))
 
       (describe "inactive"
 
@@ -1188,7 +1231,15 @@ RESULTS should be a list of strings as returned by
         (org-ql-it ":on a number of days"
           (org-ql-then
             (org-ql-expect ('(ts-inactive :on 19))
-              '("Visit the moon" "Rewrite Emacs in Common Lisp")))))
+              '("Visit the moon" "Rewrite Emacs in Common Lisp"))))
+
+        (org-ql-it ":with-time"
+          (org-ql-expect ('(ts-inactive :with-time nil))
+            nil)
+          (org-ql-expect ('(ts-inactive :with-time t))
+            '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(ts-inactive :to "2017-07-04" :with-time t))
+            nil)))
 
       (describe "both"
 
@@ -1250,7 +1301,15 @@ RESULTS should be a list of strings as returned by
         (org-ql-it ":on a number of days"
           (org-ql-then
             (org-ql-expect ('(ts :on 5))
-              '("Renew membership in supervillain club"))))))
+              '("Renew membership in supervillain club"))))
+
+        (org-ql-it ":with-time"
+          (org-ql-expect ('(ts :with-time nil))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(ts :with-time t))
+            '("Skype with president of Antarctica" "Visit the moon" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(ts :to "2017-07-04" :with-time t))
+            '("Skype with president of Antarctica")))))
 
     (describe "Compound queries"
 

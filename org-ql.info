@@ -530,24 +530,27 @@ File: README.info,  Node: Date/time predicates,  Prev: Ancestor/descendant predi
 4.2.4 Date/time predicates
 --------------------------
 
-All of these predicates take optional keyword arguments ‘:from’, ‘:to:’,
-and ‘:on’:
+These predicates take optional keyword arguments:
 
-   • If ‘:from’, return non-nil if entry has a timestamp on or after
+   • ‘:from’: Match entries whose timestamp is on or after timestamp
      ‘:from’.
-   • If ‘:to’, return non-nil if entry has a timestamp on or before
+   • ‘:to’: Match entries whose timestamp is on or before timestamp
      ‘:to’.
-   • If ‘:on’, return non-nil if entry has a timestamp on date ‘:on’.
+   • ‘:on’: Match entries whose timestamp is on date ‘:on’.
+   • ‘:with-time’: If unspecified, match timestamps with or without
+     times (i.e.  HH:MM). If nil, match timestamps without times.  If t,
+     match timestamps with times.
 
-   Argument values should be either a number of days (positive to look
-forward, or negative to look backward), a ‘ts’ struct, or a string
-parseable by ‘parse-time-string’ (the string may omit the time value).
+   Timestamp/date arguments should be either a number of days (positive
+to look forward, or negative to look backward), a string parseable by
+‘parse-time-string’ (the string may omit the time value), or a ‘ts’
+struct.
 
    • *Predicates*
      ‘ts’
           Return non-nil if current entry has a timestamp in given
-          period.  If no arguments are specified, return non-nil if
-          entry has any timestamp.
+          period.  Without arguments, return non-nil if entry has a
+          timestamp.
      ‘ts-active, ts-a’
           Like ts, but only matches active timestamps.
      ‘ts-inactive, ts-i’
@@ -560,30 +563,28 @@ number of days.  The number can be negative to invert the direction.
    • *Backward-looking*
      ‘clocked’
           Return non-nil if current entry was clocked in given period.
-          If no arguments are specified, return non-nil if entry was
-          clocked at any time.  Note: Clock entries are expected to be
-          clocked out.  Currently clocked entries (i.e.  with unclosed
-          timestamp ranges) are ignored.
+          Without arguments, return non-nil if entry was ever clocked.
+          Note: Clock entries are expected to be clocked out.  Currently
+          clocked entries (i.e.  with unclosed timestamp ranges) are
+          ignored.
      ‘closed’
           Return non-nil if current entry was closed in given period.
-          If no arguments are specified, return non-nil if entry was
-          closed at any time.
+          Without arguments, return non-nil if entry is closed.
 
    • *Forward-looking*
      ‘deadline’
           Return non-nil if current entry has deadline in given period.
           If argument is auto, return non-nil if entry has deadline
-          within org-deadline-warning-days.  If no arguments are
-          specified, return non-nil if entry has any deadline.
+          within org-deadline-warning-days.  Without arguments, return
+          non-nil if entry has any deadline.
      ‘planning’
-          Return non-nil if current entry has planning timestamp in
-          given period (i.e.  its deadline, scheduled, or closed
-          timestamp).  If no arguments are specified, return non-nil if
-          entry is scheduled at any time.
+          Return non-nil if current entry has planning timestamp (i.e.
+          its deadline, scheduled, or closed timestamp) in given period.
+          Without arguments, return non-nil if entry has any planning
+          timestamp.
      ‘scheduled’
           Return non-nil if current entry is scheduled in given period.
-          If no arguments are specified, return non-nil if entry is
-          scheduled at any time.
+          Without arguments, return non-nil if entry is scheduled.
 
 
 File: README.info,  Node: Functions / Macros,  Next: Dynamic block,  Prev: Queries,  Up: Usage
@@ -981,6 +982,9 @@ File: README.info,  Node: 06-pre,  Next: 052,  Up: Changelog
    • Predicate ‘effort’.
    • Predicate ‘heading-regexp’, which matches regular expressions
      against heading text (alias: ‘h*’).
+   • Timestamp-related predicates now accept an optional ‘:with-time’
+     argument, which allows matching timestamps with or without times
+     (i.e.  HH:MM).
 
    *Changed*
    • Helm support (including the command helm-org-ql) has been moved to
@@ -1534,40 +1538,40 @@ Node: Non-sexp query syntax9485
 Node: General predicates11209
 Node: Ancestor/descendant predicates17430
 Node: Date/time predicates18558
-Node: Functions / Macros21213
-Node: Agenda-like views21511
-Node: Listing / acting-on results22916
-Node: Custom predicates28538
-Node: Dynamic block32029
-Node: Links34727
-Node: Tips35414
-Node: Changelog35732
-Node: 06-pre36458
-Node: 05237865
-Node: 05138169
-Node: 0538586
-Node: 04940060
-Node: 04840334
-Node: 04740681
-Node: 04641076
-Node: 04541476
-Node: 04441835
-Node: 04342194
-Node: 04242391
-Node: 04142552
-Node: 0442793
-Node: 03246726
-Node: 03147105
-Node: 0347302
-Node: 02350277
-Node: 02250505
-Node: 02150773
-Node: 0250972
-Node: 0155007
-Node: Notes55108
-Node: Comparison with Org Agenda searches55270
-Node: org-sidebar56142
-Node: License56421
+Node: Functions / Macros21220
+Node: Agenda-like views21518
+Node: Listing / acting-on results22923
+Node: Custom predicates28545
+Node: Dynamic block32036
+Node: Links34734
+Node: Tips35421
+Node: Changelog35739
+Node: 06-pre36465
+Node: 05238038
+Node: 05138342
+Node: 0538759
+Node: 04940233
+Node: 04840507
+Node: 04740854
+Node: 04641249
+Node: 04541649
+Node: 04442008
+Node: 04342367
+Node: 04242564
+Node: 04142725
+Node: 0442966
+Node: 03246899
+Node: 03147278
+Node: 0347475
+Node: 02350450
+Node: 02250678
+Node: 02150946
+Node: 0251145
+Node: 0155180
+Node: Notes55281
+Node: Comparison with Org Agenda searches55443
+Node: org-sidebar56315
+Node: License56594
 
 End Tag Table
 
