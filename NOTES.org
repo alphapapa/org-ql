@@ -96,6 +96,7 @@
 - [[#add-more-sorters][Add more sorters?]]
 - [[#default-sort][Default sort]]
 - [[#partial-match-for-property-queries][Partial match for property queries]]
+- [[#remove-org-ql-macro][Remove org-ql macro]]
 - [[#example-next-upcoming-event][Example: Next upcoming event]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
@@ -217,6 +218,13 @@ e.g. something like [[https://200ok.ch/posts/2020-02-09_creating_org_mode_sparse
 #+END_SRC
 
 Searching that with a query like =property:author=Fabrice= returns nothing; the full value must be used, like ~property:author="Fabrice Niessen"~.  It should be possible to do something like ~property:author=~Fabrice~ to search for partial matches.
+
+** TODO Remove ~org-ql~ macro
+:PROPERTIES:
+:milestone: 0.7
+:END:
+
+0.6 will be the last stable release to have it.
 
 ** TODO [#C] Example: Next upcoming event                             :docs:
 
