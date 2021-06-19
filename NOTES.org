@@ -36,10 +36,10 @@
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
 |    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
-|    0.6 | B | PROJECT | [[Add a ~:with-time~ argument to timestamp predicates][Add a ~:with-time~ argument to timestamp predicates]]                              |
 |    0.7 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
 |    0.7 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
 | future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
+| future | B | PROJECT | [[Timeline view][Timeline view]]                                                                  |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -109,7 +109,6 @@
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#reverse-sorting][Reverse sorting]]
-- [[#add-a-with-time-argument-to-timestamp-predicates][Add a :with-time argument to timestamp predicates]]
 - [[#optimized-date-specific-timestamp-regexps][Optimized, date-specific timestamp regexps]]
 - [[#multi-pass-query-normalization][Multi-pass query normalization]]
 - [[#optimization-for-olp-predicate][Optimization for olp predicate]]
@@ -137,6 +136,7 @@
 - [[#fix-org-ql-view--link-open-on-org-93][Fix org-ql-view--link-open on Org 9.3+]]
 - [[#fix-query-sexp-to-string-functions-handling-of-eg-descendants][Fix query-sexp-to-string function's handling of, e.g. descendants]]
 - [[#helm-command][Helm command]]
+- [[#add-a-with-time-argument-to-timestamp-predicates][Add a :with-time argument to timestamp predicates]]
 - [[#node-caching]["Node" caching]]
 - [[#define-predicates-with-a-macro][Define predicates with a macro]]
 - [[#move-this-notes-file-into-an-orphan-metanotes-branch][Move this notes file into an orphan meta/notes branch]]
@@ -473,63 +473,6 @@ Maybe make it an option to automatically convert them when possible, because if 
 Need to mention incompatible change (though that isn't the best way to describe it) in the changelog.
 
 *** WAITING [[https://github.com/alphapapa/org-ql/issues/143#issuecomment-863638651][Get feedback]]
-
-** PROJECT [#B] Add a ~:with-time~ argument to timestamp predicates
-:PROPERTIES:
-:milestone: 0.6
-:ID:       eada7d28-2580-4553-824e-ddab991a30d5
-:END:
-
-+ In branch =wip/with-time=.
-
-Which would obviate the need to [[https://gist.github.com/mskorzhinskiy/fac0662a39a7b1bf5b306f175943bc97#file-org-ql-rasmi-el-L59][use the ~org-scheduled-time-hour-regexp~]] to find entries scheduled for a certain time of day.
-
-Probably should do this after [[id:fc8ccf6e-5311-4121-a0b7-58482dbd2e85][Optimized, date-specific timestamp regexps]]. 
-
-Also relevant to [[https://github.com/alphapapa/org-ql/pull/73][examples: add two new examples by mskorzhinskiy · Pull Request #73 · alphapapa/org-ql · GitHub]].
-
-[2021-06-17 Thu 20:01]  Implemented for ~scheduled~ in branch =wip/with-time2= (I should check for my own prior work before starting, haha).  It's fairly simple, and since I haven't finished the date-specific timestamp regexps branch yet, I might as well do this first, because it's useful.  The other branch has some needed work too, so I should fold it into the second branch.
-
-[2021-06-17 Thu 20:11]  Merged second branch into first and deleted second.
-
-*** TODO Ensure changes to these predicates are consistent
-
-*** NEXT Update docs
-
-**** TODO deadline
-
-**** TODO ts
-
-**** TODO scheduled
-
-**** TODO planning
-
-**** TODO General date/time predicate info
-
-*** DONE ~deadline~
-
-**** DONE Tests
-
-*** DONE ~scheduled~
-
-+  [X] Like ~planning~, select the regexp in ~org-ql--query-predicate~.
-+  [X] Use new regexps.
-
-**** DONE Tests
-
-*** DONE ~planning~
-
-**** DONE Tests
-
-**** DONE regexp defvar
-
-*** DONE ~ts~
-
-[2021-06-18 Fri 00:00]  Had to add a bunch of extra regexps, but probably needed to do that anyway.  Seems to work...
-
-**** DONE Tests
-
-[2021-06-17 Thu 23:59]  The tests pass and seem to work correctly.
 
 ** PROJECT [#B] Optimized, date-specific timestamp regexps     :enhancement:
 :PROPERTIES:
@@ -2493,6 +2436,85 @@ Well, a bit of fiddling (lots of trial-and-error required) produced this:
 #+END_SRC
 
 That seems pretty usable!
+
+** DONE [#B] Add a ~:with-time~ argument to timestamp predicates
+:PROPERTIES:
+:milestone: 0.6
+:ID:       eada7d28-2580-4553-824e-ddab991a30d5
+:END:
+
++ In branch =wip/with-time=.
+
+Which would obviate the need to [[https://gist.github.com/mskorzhinskiy/fac0662a39a7b1bf5b306f175943bc97#file-org-ql-rasmi-el-L59][use the ~org-scheduled-time-hour-regexp~]] to find entries scheduled for a certain time of day.
+
+Probably should do this after [[id:fc8ccf6e-5311-4121-a0b7-58482dbd2e85][Optimized, date-specific timestamp regexps]]. 
+
+Also relevant to [[https://github.com/alphapapa/org-ql/pull/73][examples: add two new examples by mskorzhinskiy · Pull Request #73 · alphapapa/org-ql · GitHub]].
+
+[2021-06-17 Thu 20:01]  Implemented for ~scheduled~ in branch =wip/with-time2= (I should check for my own prior work before starting, haha).  It's fairly simple, and since I haven't finished the date-specific timestamp regexps branch yet, I might as well do this first, because it's useful.  The other branch has some needed work too, so I should fold it into the second branch.
+
+[2021-06-17 Thu 20:11]  Merged second branch into first and deleted second.
+
+[2021-06-19 Sat 03:30]  Everything seems to work.  Merged and pushed to master.
+
+*** DONE Merge to master
+
++  [X] Probably squash merge.
++  [X] Push
+
+*** DONE Update docs
+
+**** DONE Readme
+
+***** DONE deadline
+
+***** DONE ts
+
+***** DONE scheduled
+
+***** DONE planning
+
+***** DONE General date/time predicate info
+
+**** DONE Docstrings
+
+***** DONE deadline
+
+***** DONE ts
+
+***** DONE scheduled
+
+***** DONE planning
+
+*** DONE Ensure changes to these predicates are consistent
+:LOGBOOK:
+CLOCK: [2021-06-19 Sat 00:12]--[2021-06-19 Sat 00:36] =>  0:24
+:END:
+
+*** DONE ~deadline~
+
+**** DONE Tests
+
+*** DONE ~scheduled~
+
++  [X] Like ~planning~, select the regexp in ~org-ql--query-predicate~.
++  [X] Use new regexps.
+
+**** DONE Tests
+
+*** DONE ~planning~
+
+**** DONE Tests
+
+**** DONE regexp defvar
+
+*** DONE ~ts~
+
+[2021-06-18 Fri 00:00]  Had to add a bunch of extra regexps, but probably needed to do that anyway.  Seems to work...
+
+**** DONE Tests
+
+[2021-06-17 Thu 23:59]  The tests pass and seem to work correctly.
 
 ** DONE [#B] "Node" caching
 
