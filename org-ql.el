@@ -2019,8 +2019,8 @@ parseable by `parse-time-string' which may omit the time value."
   ;; NOTE: The argument `regexp' is provided by pre-processing done by `org-ql--query-predicate'.
   ;; MAYBE: Should the regexp be done in the normalizer instead?  (If so, also in other ts-related predicates.)
   :body
-  (org-ql--predicate-ts :from from :to to :match-group 1 :limit (line-end-position 2)
-                        :regexp regexp))
+  (org-ql--predicate-ts :from from :to to :regexp regexp :match-group 1
+                        :limit (line-end-position 2)))
 
 (org-ql-defpred scheduled (&key from to _on regexp _with-time)
   ;; The underscore before `on' prevents "unused lexical variable"
@@ -2056,7 +2056,8 @@ parseable by `parse-time-string' which may omit the time value."
                         :limit (line-end-position 2)))
 
 (org-ql-defpred (ts ts-active ts-a ts-inactive ts-i)
-  (&key from to _on regexp _with-time (match-group 0) (limit (org-entry-end-position)))
+  (&key from to _on regexp _with-time
+        (match-group 0) (limit (org-entry-end-position)))
   ;; NOTE: Arguments to this predicate are pre-processed in `org-ql--normalize-query'.
   ;; The underscore before `on' prevents "unused lexical variable" warnings due to the
   ;; pre-processing converting that argument to FROM and TO.  The `regexp' argument is
