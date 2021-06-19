@@ -146,12 +146,16 @@ This list should not contain any duplicates."))
 (defvar org-ql-regexp-part-ts-date
   (rx (repeat 4 digit) "-" (repeat 2 digit) "-" (repeat 2 digit)
       ;; Day of week
-      (optional " " (1+ alpha))
-      ;; Repeaters (not sure if the colon is necessary, but it's in the org.el one)
-      (optional (repeat 1 2 (seq " " (repeat 1 2 (any "-+:")) (1+ digit) (any "hdwmy")))))
+      (optional " " (1+ alpha)))
   "Matches the inner, date part of an Org timestamp, both active and inactive.
-Also matches optional day-of-week and repeaters.  Used to build
-other timestamp regexps.")
+Also matches optional day-of-week.  Used to build other timestamp
+regexps.")
+
+(defvar org-ql-regexp-part-ts-repeaters
+  ;; Repeaters (not sure if the colon is necessary, but it's in the org.el one)
+  (rx (repeat 1 2 (seq " " (repeat 1 2 (any "-+:")) (1+ digit) (any "hdwmy"))))
+  "Matches the repeater part of an Org timestamp.
+Includes leading space character.")
 
 (defvar org-ql-regexp-part-ts-time
   (rx " " (repeat 1 2 digit) ":" (repeat 2 digit))
@@ -159,40 +163,57 @@ other timestamp regexps.")
 Includes leading space character.  Used to build other timestamp
 regexps.")
 
+;; NOTE: The inactive timestamp regexps don't allow repeaters.  I don't know if this is
+;; officially correct, but it seems to make sense, and would be easy to change if necessary.
+
 (defvar org-ql-regexp-ts-both
   (rx-to-string
-   `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date) (optional (regexp ,org-ql-regexp-part-ts-time)) ">")
-        (seq "[" (regexp ,org-ql-regexp-part-ts-date) (optional (regexp ,org-ql-regexp-part-ts-time)) "]")))
+   `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date)
+             (optional (regexp ,org-ql-regexp-part-ts-time))
+             (optional (regexp ,org-ql-regexp-part-ts-repeaters)) ">")
+        (seq "[" (regexp ,org-ql-regexp-part-ts-date)
+             (optional (regexp ,org-ql-regexp-part-ts-time)))))
   "Matches both active and inactive Org timestamps, with or without time.")
 
 (defvar org-ql-regexp-ts-both-with-time
-  (rx-to-string `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date) (regexp ,org-ql-regexp-part-ts-time) ">")
-                     (seq "[" (regexp ,org-ql-regexp-part-ts-date) (regexp ,org-ql-regexp-part-ts-time) "]")))
+  (rx-to-string `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date)
+                          (regexp ,org-ql-regexp-part-ts-time)
+                          (optional (regexp ,org-ql-regexp-part-ts-repeaters)) ">")
+                     (seq "[" (regexp ,org-ql-regexp-part-ts-date)
+                          (regexp ,org-ql-regexp-part-ts-time) "]")))
   "Matches both active and inactive Org timestamps, with time.")
 
 (defvar org-ql-regexp-ts-both-without-time
-  (rx-to-string `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date) ">")
+  (rx-to-string `(or (seq "<" (regexp ,org-ql-regexp-part-ts-date)
+                          (optional (regexp ,org-ql-regexp-part-ts-repeaters)) ">")
                      (seq "[" (regexp ,org-ql-regexp-part-ts-date) "]")))
   "Matches both active and inactive Org timestamps, without time.")
 
 (defvar org-ql-regexp-ts-active
-  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date) (optional (regexp ,org-ql-regexp-part-ts-time)) ">"))
+  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date)
+                      (optional (regexp ,org-ql-regexp-part-ts-time))
+                      (optional (regexp ,org-ql-regexp-part-ts-repeaters)) ">"))
   "Matches active Org timestamps, with or without time.")
 
 (defvar org-ql-regexp-ts-active-with-time
-  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date) (regexp ,org-ql-regexp-part-ts-time) ">"))
+  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date)
+                      (regexp ,org-ql-regexp-part-ts-time)
+                      (optional (regexp ,org-ql-regexp-part-ts-repeaters)) ">"))
   "Matches active Org timestamps, with time.")
 
 (defvar org-ql-regexp-ts-active-without-time
-  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date) ">"))
+  (rx-to-string `(seq "<" (regexp ,org-ql-regexp-part-ts-date)
+                      (optional (regexp ,org-ql-regexp-part-ts-repeaters)) ">"))
   "Matches active Org timestamps, without time.")
 
 (defvar org-ql-regexp-ts-inactive
-  (rx-to-string `(seq "[" (regexp ,org-ql-regexp-part-ts-date) (optional (regexp ,org-ql-regexp-part-ts-time)) "]"))
+  (rx-to-string `(seq "[" (regexp ,org-ql-regexp-part-ts-date)
+                      (optional (regexp ,org-ql-regexp-part-ts-time))"]"))
   "Matches inactive Org timestamps, with or without time.")
 
 (defvar org-ql-regexp-ts-inactive-with-time
-  (rx-to-string `(seq "[" (regexp ,org-ql-regexp-part-ts-date) (regexp ,org-ql-regexp-part-ts-time) "]"))
+  (rx-to-string `(seq "[" (regexp ,org-ql-regexp-part-ts-date)
+                      (regexp ,org-ql-regexp-part-ts-time)"]"))
   "Matches inactive Org timestamps, with time.")
 
 (defvar org-ql-regexp-ts-inactive-without-time
@@ -200,33 +221,54 @@ regexps.")
   "Matches inactive Org timestamps, without time.")
 
 (defvar org-ql-regexp-planning
-  (rx-to-string `(seq bow (or "CLOSED" "SCHEDULED" "DEADLINE") ":" (0+ " ")
-                      (group (regexp ,org-ql-regexp-ts-both))))
-  "Matches DEADLINE or SCHEDULED keyword with timestamp, with or without time.")
+  (rx-to-string `(seq bow (or (seq "CLOSED" ":" (0+ " ")
+                                   (group-n 1 (regexp ,org-ql-regexp-ts-inactive)))
+                              (seq (or "DEADLINE" "SCHEDULED") ":" (0+ " ")
+                                   (group-n 1 (regexp ,org-ql-regexp-ts-active))))))
+  "Matches CLOSED, DEADLINE or SCHEDULED keyword with timestamp, with or without time.")
 
 (defvar org-ql-regexp-planning-with-time
-  (rx-to-string `(seq bow (or "CLOSED" "SCHEDULED" "DEADLINE") ":" (0+ " ")
-                      (group (regexp ,org-ql-regexp-ts-both-with-time))))
-  "Matches DEADLINE or SCHEDULED keyword with timestamp, with time.")
+  (rx-to-string `(seq bow (or (seq "CLOSED" ":" (0+ " ")
+                                   (group-n 1 (regexp ,org-ql-regexp-ts-inactive-with-time)))
+                              (seq (or "DEADLINE" "SCHEDULED") ":" (0+ " ")
+                                   (group-n 1 (regexp ,org-ql-regexp-ts-active-with-time))))))
+  "Matches CLOSED, DEADLINE or SCHEDULED keyword with timestamp, with time.")
 
 (defvar org-ql-regexp-planning-without-time
-  (rx-to-string `(seq bow (or "CLOSED" "SCHEDULED" "DEADLINE") ":" (0+ " ")
-                      (group (regexp ,org-ql-regexp-ts-both-without-time))))
-  "Matches DEADLINE or SCHEDULED keyword with timestamp, without time.")
+  (rx-to-string `(seq bow (or (seq "CLOSED" ":" (0+ " ")
+                                   (group-n 1 (regexp ,org-ql-regexp-ts-inactive-without-time)))
+                              (seq (or "DEADLINE" "SCHEDULED") ":" (0+ " ")
+                                   (group-n 1 (regexp ,org-ql-regexp-ts-active-without-time))))))
+  "Matches CLOSED, DEADLINE or SCHEDULED keyword with timestamp, without time.")
+
+(defvar org-ql-regexp-deadline
+  (rx-to-string `(seq bow "DEADLINE" ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-active))))
+  "Matches DEADLINE keyword with a time-and-hour stamp, with or without time.")
+
+(defvar org-ql-regexp-deadline-with-time
+  (rx-to-string `(seq bow "DEADLINE" ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-active-with-time))))
+  "Matches DEADLINE keyword with a time-and-hour stamp, with time.")
+
+(defvar org-ql-regexp-deadline-without-time
+  (rx-to-string `(seq bow "DEADLINE" ":" (0+ " ")
+                      (group (regexp ,org-ql-regexp-ts-active-without-time))))
+  "Matches DEADLINE keyword with a time-and-hour stamp, without time.")
 
 (defvar org-ql-regexp-scheduled
   (rx-to-string `(seq bow "SCHEDULED" ":" (0+ " ")
-                      (group (regexp ,org-ql-regexp-ts-both))))
+                      (group (regexp ,org-ql-regexp-ts-active))))
   "Matches SCHEDULED keyword with a time-and-hour stamp, with or without time.")
 
 (defvar org-ql-regexp-scheduled-with-time
   (rx-to-string `(seq bow "SCHEDULED" ":" (0+ " ")
-                      (group (regexp ,org-ql-regexp-ts-both-with-time))))
+                      (group (regexp ,org-ql-regexp-ts-active-with-time))))
   "Matches SCHEDULED keyword with a time-and-hour stamp, with time.")
 
 (defvar org-ql-regexp-scheduled-without-time
   (rx-to-string `(seq bow "SCHEDULED" ":" (0+ " ")
-                      (group (regexp ,org-ql-regexp-ts-both-without-time))))
+                      (group (regexp ,org-ql-regexp-ts-active-without-time))))
   "Matches SCHEDULED keyword with a time-and-hour stamp, without time.")
 
 ;;;; Customization
@@ -742,29 +784,38 @@ Arguments STRING, POS, FILL, and LEVEL are according to
   (let ((byte-compile-log-warning-function #'org-ql--byte-compile-warning))
     (byte-compile
      `(lambda ()
+        ;; NOTE: `clocked' and `closed' don't have WITH-TIME args, because they should always have a time.
+        ;; TODO: If possible, all of this argument processing should be done in each predicate's normalizers.
         (cl-macrolet ((clocked (&key from to on)
                                (org-ql--from-to-on)
                                `(org-ql--predicate-clocked :from ,from :to ,to))
                       (closed (&key from to on (with-time 'not-found))
                               (org-ql--from-to-on)
-                              `(org-ql--predicate-closed :from ,from :to ,to :with-time ,with-time))
+                              `(org-ql--predicate-closed :from ,from :to ,to))
                       (deadline (&key from to on (with-time 'not-found))
                                 (org-ql--from-to-on)
-                                `(org-ql--predicate-deadline :from ,from :to ,to :with-time ,with-time))
+                                `(org-ql--predicate-deadline
+                                  :from ,from :to ,to :with-time ',with-time
+                                  :regexp ,(pcase-exhaustive with-time
+                                             ('t org-ql-regexp-deadline-with-time)
+                                             ('nil org-ql-regexp-deadline-without-time)
+                                             ('not-found org-ql-regexp-deadline))))
                       (planning (&key from to on (with-time 'not-found))
                                 (org-ql--from-to-on)
-                                `(org-ql--predicate-planning :from ,from :to ,to :with-time ',with-time
-                                                             :regexp ,(pcase-exhaustive with-time
-                                                                        ('t org-ql-regexp-planning-with-time)
-                                                                        ('nil org-ql-regexp-planning-without-time)
-                                                                        ('not-found org-ql-regexp-planning))))
+                                `(org-ql--predicate-planning
+                                  :from ,from :to ,to :with-time ',with-time
+                                  :regexp ,(pcase-exhaustive with-time
+                                             ('t org-ql-regexp-planning-with-time)
+                                             ('nil org-ql-regexp-planning-without-time)
+                                             ('not-found org-ql-regexp-planning))))
                       (scheduled (&key from to on (with-time 'not-found))
                                  (org-ql--from-to-on)
-                                 `(org-ql--predicate-scheduled :from ,from :to ,to :with-time ',with-time
-                                                               :regexp ,(pcase-exhaustive with-time
-                                                                          ('t org-ql-regexp-scheduled-with-time)
-                                                                          ('nil org-ql-regexp-scheduled-without-time)
-                                                                          ('not-found org-ql-regexp-scheduled))))
+                                 `(org-ql--predicate-scheduled
+                                   :from ,from :to ,to :with-time ',with-time
+                                   :regexp ,(pcase-exhaustive with-time
+                                              ('t org-ql-regexp-scheduled-with-time)
+                                              ('nil org-ql-regexp-scheduled-without-time)
+                                              ('not-found org-ql-regexp-scheduled))))
                       (ts (&key from to on (type 'both) (with-time 'not-found))
                           (org-ql--from-to-on)
                           `(org-ql--predicate-ts
@@ -1837,6 +1888,7 @@ parseable by `parse-time-string' which may omit the time value."
   (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
 
 (org-ql-defpred closed (&key from to _on)
+  ;; TODO: Should this use the new org-ql-regexps?
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1866,7 +1918,7 @@ parseable by `parse-time-string' which may omit the time value."
   (org-ql--predicate-ts :from from :to to :regexp org-closed-time-regexp :match-group 1
                         :limit (line-end-position 2)))
 
-(org-ql-defpred deadline (&key from to _on)
+(org-ql-defpred deadline (&key from to _on regexp _with-time)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1895,13 +1947,19 @@ parseable by `parse-time-string' which may omit the time value."
                              (ts-apply :hour 23 :minute 59 :second 59))))
                    `(deadline :to ,to))))
   ;; NOTE: Does this normalizer cause the preamble to not be used?  (Adding one to the deadline-warning definition to be sure.)
-  :preambles ((`(,predicate-names . ,_)
-               (list :regexp org-deadline-time-regexp :query query)))
+  :preambles ((`(,predicate-names . ,rest)
+               (list :query query
+                     :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                               ('t org-ql-regexp-deadline-with-time)
+                               ('nil org-ql-regexp-deadline-without-time)
+                               ('not-found org-ql-regexp-deadline)))))
   :body
-  (org-ql--predicate-ts :from from :to to :regexp org-deadline-time-regexp :match-group 1
+  (org-ql--predicate-ts :from from :to to :regexp regexp :match-group 1
                         :limit (line-end-position 2)))
 
 (org-ql-defpred deadline-warning (&key from to)
+  ;; TODO: Should this also accept a WITH-TIME argument?
+  ;; TODO: Should this use the new org-ql-regexps?
   "Internal selector used to handle `org-deadline-warning-days' and deadlines with warning periods."
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-deadline-time-regexp :query query)))
@@ -1964,7 +2022,7 @@ parseable by `parse-time-string' which may omit the time value."
   (org-ql--predicate-ts :from from :to to :match-group 1 :limit (line-end-position 2)
                         :regexp regexp))
 
-(org-ql-defpred scheduled (&key from to _on regexp with-time)
+(org-ql-defpred scheduled (&key from to _on regexp _with-time)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.

@@ -43,7 +43,7 @@ SCHEDULED: <2017-07-05 Wed +2d>
 :END:
 
 ** TODO [#B] Renew membership in supervillain club
-DEADLINE: <2017-07-10 Mon -1w>
+DEADLINE: <2017-07-10 Mon 23:59 -1w>
 
 ** DONE [#B] Learn universal sign language
 CLOSED: [2017-07-05 Wed 03:02]
