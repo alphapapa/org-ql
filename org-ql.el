@@ -753,10 +753,18 @@ Arguments STRING, POS, FILL, and LEVEL are according to
                                 `(org-ql--predicate-deadline :from ,from :to ,to :with-time ,with-time))
                       (planning (&key from to on (with-time 'not-found))
                                 (org-ql--from-to-on)
-                                `(org-ql--predicate-planning :from ,from :to ,to :with-time ,with-time))
+                                `(org-ql--predicate-planning :from ,from :to ,to :with-time ',with-time
+                                                             :regexp ,(pcase-exhaustive with-time
+                                                                        ('t org-ql-regexp-planning-with-time)
+                                                                        ('nil org-ql-regexp-planning-without-time)
+                                                                        ('not-found org-ql-regexp-planning))))
                       (scheduled (&key from to on (with-time 'not-found))
                                  (org-ql--from-to-on)
-                                 `(org-ql--predicate-scheduled :from ,from :to ,to :with-time ,with-time))
+                                 `(org-ql--predicate-scheduled :from ,from :to ,to :with-time ',with-time
+                                                               :regexp ,(pcase-exhaustive with-time
+                                                                          ('t org-ql-regexp-scheduled-with-time)
+                                                                          ('nil org-ql-regexp-scheduled-without-time)
+                                                                          ('not-found org-ql-regexp-scheduled))))
                       (ts (&key from to on (type 'both) (with-time 'not-found))
                           (org-ql--from-to-on)
                           `(org-ql--predicate-ts
@@ -1921,14 +1929,7 @@ parseable by `parse-time-string' which may omit the time value."
            (ts<= (->> ts (ts-adjust unit (- warning-value))) org-ql--today))
           ('week (ts<= (->> ts (ts-adjust 'day (* -7 warning-value))) org-ql--today)))))))
 
-(defvar org-ql-planning-time-hour-regexp
-  (rx bow (or "SCHEDULED" "DEADLINE") ":" (0+ " ")
-      "<" (group (1+ (not (any ">")))
-                 (repeat 1 2 (any "0-9")) ":" (= 2 (any "0-9"))
-                 (0+ (any "0-9" "	 +.:dhmwy-"))) ">")
-  "Matches DEADLINE or SCHEDULED keyword with a time-and-hour stamp.")
-
-(org-ql-defpred planning (&key from to _on with-time)
+(org-ql-defpred planning (&key from to _on regexp _with-time)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1951,17 +1952,19 @@ parseable by `parse-time-string' which may omit the time value."
                              (ts-adjust 'day num-days)
                              (ts-apply :hour 23 :minute 59 :second 59))))
                    `(planning :to ,to))))
-  :preambles ((`(,predicate-names . ,(and args (guard (plist-get args :with-time))))
-               (list :regexp org-ql-planning-time-hour-regexp :query query))
-              (`(,predicate-names . ,_)
-               (list :regexp org-ql-planning-regexp :query query)))
+  :preambles ((`(,predicate-names . ,rest)
+               (list :query query
+                     :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                               ('t org-ql-regexp-planning-with-time)
+                               ('nil org-ql-regexp-planning-without-time)
+                               ('not-found org-ql-regexp-planning)))))
+  ;; NOTE: The argument `regexp' is provided by pre-processing done by `org-ql--query-predicate'.
+  ;; MAYBE: Should the regexp be done in the normalizer instead?  (If so, also in other ts-related predicates.)
   :body
   (org-ql--predicate-ts :from from :to to :match-group 1 :limit (line-end-position 2)
-                        :regexp (if with-time
-                                    org-ql-planning-time-hour-regexp
-                                  org-ql-planning-regexp)))
+                        :regexp regexp))
 
-(org-ql-defpred scheduled (&key from to _on with-time)
+(org-ql-defpred scheduled (&key from to _on regexp with-time)
   ;; The underscore before `on' prevents "unused lexical variable"
   ;; warnings, because we pre-process that argument in a macro before
   ;; this function is called.
@@ -1986,19 +1989,16 @@ parseable by `parse-time-string' which may omit the time value."
                    `(scheduled :to ,to))))
   :preambles ((`(,predicate-names . ,rest)
                (list :query query
-                     :regexp (if (plist-get rest :with-time)
-                                 org-scheduled-time-hour-regexp
-                               org-scheduled-time-regexp))))
+                     :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                               ('t org-ql-regexp-scheduled-with-time)
+                               ('nil org-ql-regexp-scheduled-without-time)
+                               ('not-found org-ql-regexp-scheduled)))))
   :body
-  (org-ql--predicate-ts :from from :to to
-                        :regexp (if with-time
-                                    org-scheduled-time-hour-regexp
-                                  org-scheduled-time-regexp)
-                        :match-group 1
+  (org-ql--predicate-ts :from from :to to :regexp regexp :match-group 1
                         :limit (line-end-position 2)))
 
-(org-ql-defpred (ts ts-active ts-a ts-inactive ts-i _with-time)
-  (&key from to _on regexp with-time (match-group 0) (limit (org-entry-end-position)))
+(org-ql-defpred (ts ts-active ts-a ts-inactive ts-i)
+  (&key from to _on regexp _with-time (match-group 0) (limit (org-entry-end-position)))
   ;; NOTE: Arguments to this predicate are pre-processed in `org-ql--normalize-query'.
   ;; The underscore before `on' prevents "unused lexical variable" warnings due to the
   ;; pre-processing converting that argument to FROM and TO.  The `regexp' argument is
@@ -2026,7 +2026,7 @@ the end of the entry, i.e. the position returned by
 `org-entry-end-position', but for certain searches it should be
 bound to a different positiion, e.g. for planning lines, the end
 of the line after the heading."
-  ;; FIXME: Update docstring.
+  ;; FIXME: Update docstring (e.g. mention MATCH-GROUP).
   ;; MAYBE: Define active/inactive ones separately?
   :normalizers ((`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
                 (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest)))
