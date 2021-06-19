@@ -2904,6 +2904,7 @@ When committing an additional feature:
 
 +  [ ] Make WIP branch
 +  [ ] Check repo for closing issues
++  [ ] Check magit-todos list of items branched from master
 +  [ ] Lint
 +  [ ] Test
      -  [ ] Locally
@@ -2923,6 +2924,7 @@ When committing an additional feature:
 When committing a fix:
 
 +  [ ] Check repo for closing issues
++  [ ] Check magit-todos list of items branched from master
 +  [ ] Lint
 +  [ ] Test
      -  [ ] Locally
