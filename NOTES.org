@@ -492,15 +492,7 @@ Also relevant to [[https://github.com/alphapapa/org-ql/pull/73][examples: add tw
 
 [2021-06-17 Thu 20:11]  Merged second branch into first and deleted second.
 
-*** NEXT ~deadline~
-
-**** TODO Tests
-
-*** NEXT ~planning~
-
-**** TODO Tests
-
-**** DONE regexp defvar
+*** TODO Ensure changes to these predicates are consistent
 
 *** NEXT Update docs
 
@@ -514,21 +506,30 @@ Also relevant to [[https://github.com/alphapapa/org-ql/pull/73][examples: add tw
 
 **** TODO General date/time predicate info
 
+*** DONE ~deadline~
+
+**** DONE Tests
+
+*** DONE ~scheduled~
+
++  [X] Like ~planning~, select the regexp in ~org-ql--query-predicate~.
++  [X] Use new regexps.
+
+**** DONE Tests
+
+*** DONE ~planning~
+
+**** DONE Tests
+
+**** DONE regexp defvar
+
 *** DONE ~ts~
-:LOGBOOK:
-CLOCK: [2021-06-17 Thu 22:34]
-CLOCK: [2021-06-17 Thu 22:12]--[2021-06-17 Thu 22:12] =>  0:00
-:END:
 
 [2021-06-18 Fri 00:00]  Had to add a bunch of extra regexps, but probably needed to do that anyway.  Seems to work...
 
 **** DONE Tests
 
 [2021-06-17 Thu 23:59]  The tests pass and seem to work correctly.
-
-*** DONE ~scheduled~
-
-**** DONE Tests
 
 ** PROJECT [#B] Optimized, date-specific timestamp regexps     :enhancement:
 :PROPERTIES:
@@ -1934,7 +1935,7 @@ Appears to be another implementation of magit-section-like expandable sections. 
 
 *** PROJECT [#B] Save view to dynamic block
 :PROPERTIES:
-:milestone: 0.6
+:milestone: 0.7
 :END:
 
 [2020-11-10 Tue 04:31]  A command would save users from having to write out the dynamic block manually.
@@ -5430,6 +5431,9 @@ I don't need this right now, but it might come in handy here or elsewhere.
 
 
 * [#C] COMMENT Config                                              :noexport:
+:LOGBOOK:
+CLOCK: [2021-06-18 Fri 07:38]--[2021-06-18 Fri 21:51] => 14:13
+:END:
 
 ** Org settings
 
@@ -5438,8 +5442,10 @@ I don't need this right now, but it might come in handy here or elsewhere.
 
 ** File-local variables
 
+# before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (let ((narrowed-p (buffer-narrowed-p)) (olp (org-get-outline-path 'with-self)) (relative-pos (- (point) (save-excursion (org-back-to-heading) (point))))) (widen) (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o)) (goto-char (org-find-olp olp 'this-buffer)) (when narrowed-p (org-narrow-to-subtree)) (forward-char relative-pos)))) org-update-all-dblocks org-make-toc)
+
 # Local Variables:
-# before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) (lambda () (when (fboundp 'ap/org-sort-entries-recursive-multi) (let ((olp (org-get-outline-path 'with-self)) (relative-pos (- (point) (save-excursion (org-back-to-heading) (point))))) (goto-char (point-min)) (ap/org-sort-entries-recursive-multi '(?a ?p ?o)) (goto-char (org-find-olp olp 'this-buffer)) (forward-char relative-pos)))) org-update-all-dblocks org-make-toc)
+# before-save-hook: ((lambda () (when (fboundp 'unpackaged/org-fix-blank-lines) (unpackaged/org-fix-blank-lines t))) ap/org-sort-before-save-hook org-update-all-dblocks org-make-toc)
 # org-ql-ask-unsafe-queries: nil
 # End:
 
