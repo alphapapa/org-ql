@@ -1170,7 +1170,20 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ('(ts-active :with-time t))
             '("Skype with president of Antarctica" "Renew membership in supervillain club" "Order a pizza"))
           (org-ql-expect ('(ts-active :to "2017-07-04" :with-time t))
-            '("Skype with president of Antarctica"))))
+            '("Skype with president of Antarctica"))
+
+          ;; Test string query syntax.  Just doing it in this predicate
+          ;; for now, rather than in all ths ts-related ones.
+
+          ;; NOTE: "with-time=" is equivalent to "with-time=nil".  It's debatable whether this is best or most
+          ;; intuitive, but making it behave as if "with-time=" were not given is too much trouble and makes the
+          ;; code too complicated in the current implementation of argument handling and string query parsing.
+          (org-ql-expect ((org-ql--query-string-to-sexp "ts-active:with-time=nil"))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((org-ql--query-string-to-sexp "ts-active:with-time="))
+            '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ((org-ql--query-string-to-sexp "ts-active:with-time=t"))
+            '("Skype with president of Antarctica" "Renew membership in supervillain club" "Order a pizza"))))
 
       (describe "inactive"
 

@@ -786,6 +786,8 @@ Arguments STRING, POS, FILL, and LEVEL are according to
      `(lambda ()
         ;; NOTE: `clocked' and `closed' don't have WITH-TIME args, because they should always have a time.
         ;; TODO: If possible, all of this argument processing should be done in each predicate's normalizers.
+        ;; NOTE: The pcases check for both t/nil symbols and strings, because the
+        ;; string queries always return keyword arguments' values as strings.
         (cl-macrolet ((clocked (&key from to on)
                                (org-ql--from-to-on)
                                `(org-ql--predicate-clocked :from ,from :to ,to))
@@ -797,24 +799,24 @@ Arguments STRING, POS, FILL, and LEVEL are according to
                                 `(org-ql--predicate-deadline
                                   :from ,from :to ,to :with-time ',with-time
                                   :regexp ,(pcase-exhaustive with-time
-                                             ('t org-ql-regexp-deadline-with-time)
-                                             ('nil org-ql-regexp-deadline-without-time)
+                                             ((or 't "t") org-ql-regexp-deadline-with-time)
+                                             ((or 'nil "nil") org-ql-regexp-deadline-without-time)
                                              ('not-found org-ql-regexp-deadline))))
                       (planning (&key from to on (with-time 'not-found))
                                 (org-ql--from-to-on)
                                 `(org-ql--predicate-planning
                                   :from ,from :to ,to :with-time ',with-time
                                   :regexp ,(pcase-exhaustive with-time
-                                             ('t org-ql-regexp-planning-with-time)
-                                             ('nil org-ql-regexp-planning-without-time)
+                                             ((or 't "t") org-ql-regexp-planning-with-time)
+                                             ((or 'nil "nil") org-ql-regexp-planning-without-time)
                                              ('not-found org-ql-regexp-planning))))
                       (scheduled (&key from to on (with-time 'not-found))
                                  (org-ql--from-to-on)
                                  `(org-ql--predicate-scheduled
                                    :from ,from :to ,to :with-time ',with-time
                                    :regexp ,(pcase-exhaustive with-time
-                                              ('t org-ql-regexp-scheduled-with-time)
-                                              ('nil org-ql-regexp-scheduled-without-time)
+                                              ((or 't "t") org-ql-regexp-scheduled-with-time)
+                                              ((or 'nil "nil") org-ql-regexp-scheduled-without-time)
                                               ('not-found org-ql-regexp-scheduled))))
                       (ts (&key from to on (type 'both) (with-time 'not-found))
                           (org-ql--from-to-on)
@@ -822,16 +824,16 @@ Arguments STRING, POS, FILL, and LEVEL are according to
                             :from ,from :to ,to :with-time ',with-time
                             :regexp ,(pcase type
                                        ((or 'nil 'both) (pcase-exhaustive with-time
-                                                          ('t org-ql-regexp-ts-both-with-time)
-                                                          ('nil org-ql-regexp-ts-both-without-time)
+                                                          ((or 't "t") org-ql-regexp-ts-both-with-time)
+                                                          ((or 'nil "nil") org-ql-regexp-ts-both-without-time)
                                                           ('not-found org-ql-regexp-ts-both)))
                                        ('active (pcase-exhaustive with-time
-                                                  ('t org-ql-regexp-ts-active-with-time)
-                                                  ('nil org-ql-regexp-ts-active-without-time)
+                                                  ((or 't "t") org-ql-regexp-ts-active-with-time)
+                                                  ((or 'nil "nil") org-ql-regexp-ts-active-without-time)
                                                   ('not-found org-ql-regexp-ts-active)))
                                        ('inactive (pcase-exhaustive with-time
-                                                    ('t org-ql-regexp-ts-inactive-with-time)
-                                                    ('nil org-ql-regexp-ts-inactive-without-time)
+                                                    ((or 't "t") org-ql-regexp-ts-inactive-with-time)
+                                                    ((or 'nil "nil") org-ql-regexp-ts-inactive-without-time)
                                                     ('not-found org-ql-regexp-ts-inactive)))))))
           ,query)))))
 
@@ -1932,8 +1934,8 @@ non-nil if entry has a deadline."
   :preambles ((`(,predicate-names . ,rest)
                (list :query query
                      :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
-                               ('t org-ql-regexp-deadline-with-time)
-                               ('nil org-ql-regexp-deadline-without-time)
+                               ((or 't "t") org-ql-regexp-deadline-with-time)
+                               ((or 'nil "nil") org-ql-regexp-deadline-without-time)
                                ('not-found org-ql-regexp-deadline)))))
   :body
   (org-ql--predicate-ts :from from :to to :regexp regexp :match-group 1
@@ -1980,8 +1982,8 @@ Without arguments, return non-nil if entry has any planning timestamp."
   :preambles ((`(,predicate-names . ,rest)
                (list :query query
                      :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
-                               ('t org-ql-regexp-planning-with-time)
-                               ('nil org-ql-regexp-planning-without-time)
+                               ((or 't "t") org-ql-regexp-planning-with-time)
+                               ((or 'nil "nil") org-ql-regexp-planning-without-time)
                                ('not-found org-ql-regexp-planning)))))
   ;; MAYBE: Should the regexp be done in the normalizer instead?  (If
   ;; so, also in other ts-related predicates.)
@@ -2000,8 +2002,8 @@ Without arguments, return non-nil if entry is scheduled."
   :preambles ((`(,predicate-names . ,rest)
                (list :query query
                      :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
-                               ('t org-ql-regexp-scheduled-with-time)
-                               ('nil org-ql-regexp-scheduled-without-time)
+                               ((or 't "t") org-ql-regexp-scheduled-with-time)
+                               ((or 'nil "nil") org-ql-regexp-scheduled-without-time)
                                ('not-found org-ql-regexp-scheduled)))))
   :body
   (org-ql--predicate-ts :from from :to to :regexp regexp :match-group 1
@@ -2032,16 +2034,16 @@ any planning prefix); it defaults to 0 (i.e. the whole regexp)."
   ((`(,predicate-names . ,rest)
     (list :regexp (pcase (plist-get rest :type)
                     ((or 'nil 'both) (pcase-exhaustive (org-ql--plist-get* rest :with-time)
-                                       ('t org-ql-regexp-ts-both-with-time)
-                                       ('nil org-ql-regexp-ts-both-without-time)
+                                       ((or 't "t") org-ql-regexp-ts-both-with-time)
+                                       ((or 'nil "nil") org-ql-regexp-ts-both-without-time)
                                        ('not-found org-ql-regexp-ts-both)))
                     ('active (pcase-exhaustive (org-ql--plist-get* rest :with-time)
-                               ('t org-ql-regexp-ts-active-with-time)
-                               ('nil org-ql-regexp-ts-active-without-time)
+                               ((or 't "t") org-ql-regexp-ts-active-with-time)
+                               ((or 'nil "nil") org-ql-regexp-ts-active-without-time)
                                ('not-found org-ql-regexp-ts-active)))
                     ('inactive (pcase-exhaustive (org-ql--plist-get* rest :with-time)
-                                 ('t org-ql-regexp-ts-inactive-with-time)
-                                 ('nil org-ql-regexp-ts-inactive-without-time)
+                                 ((or 't "t") org-ql-regexp-ts-inactive-with-time)
+                                 ((or 'nil "nil") org-ql-regexp-ts-inactive-without-time)
                                  ('not-found org-ql-regexp-ts-inactive))))
           ;; Predicate needs testing only when args are present.
           :query (-let (((&keys :from :to :on) rest))
