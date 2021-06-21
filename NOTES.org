@@ -36,10 +36,10 @@
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
 |    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.7 | B | TODO    | [[Change ~clocked~ and ~closed~'s behavior with just-number args][Change ~clocked~ and ~closed~'s behavior with just-number args]]                     |
+|    0.6 | B | TODO    | [[Review all normalizers for potential loops][Review all normalizers for potential loops]]                                     |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 |    0.7 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
 |    0.7 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
-| future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -98,6 +98,7 @@
 - [[#partial-match-for-property-queries][Partial match for property queries]]
 - [[#remove-org-ql-macro][Remove org-ql macro]]
 - [[#change-clocked-and-closeds-behavior-with-just-number-args][Change clocked and closed's behavior with just-number args]]
+- [[#review-all-normalizers-for-potential-loops][Review all normalizers for potential loops]]
 - [[#example-next-upcoming-event][Example: Next upcoming event]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
@@ -242,6 +243,13 @@ Searching that with a query like =property:author=Fabrice= returns nothing; the 
   ;; inconsistent. It would be better to be consistent and
   ;; require the user to pass these predicates a negative number.
 #+END_SRC
+
+** TODO [#B] Review all normalizers for potential loops
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
+Since I found (and fixed) one after I made normalizers apply repeatedly, I should check the rest, because there might be a few more that could do it.
 
 ** TODO [#C] Example: Next upcoming event                             :docs:
 
