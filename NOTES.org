@@ -37,9 +37,9 @@
 |    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.7 | B | TODO    | [[Change ~clocked~ and ~closed~'s behavior with just-number args][Change ~clocked~ and ~closed~'s behavior with just-number args]]                     |
 |    0.6 | B | TODO    | [[Review all normalizers for potential loops][Review all normalizers for potential loops]]                                     |
+|    0.6 | B | TODO    | [[Normalize query while preserving body][Normalize query while preserving body]]                                          |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 |    0.7 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
-|    0.7 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -99,6 +99,7 @@
 - [[#remove-org-ql-macro][Remove org-ql macro]]
 - [[#change-clocked-and-closeds-behavior-with-just-number-args][Change clocked and closed's behavior with just-number args]]
 - [[#review-all-normalizers-for-potential-loops][Review all normalizers for potential loops]]
+- [[#normalize-query-while-preserving-body][Normalize query while preserving body]]
 - [[#example-next-upcoming-event][Example: Next upcoming event]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
@@ -250,6 +251,32 @@ Searching that with a query like =property:author=Fabrice= returns nothing; the 
 :END:
 
 Since I found (and fixed) one after I made normalizers apply repeatedly, I should check the rest, because there might be a few more that could do it.
+
+** TODO [#B] Normalize query while preserving body             :enhancement:
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
+Sometimes it would be helpful to define a predicate that normalizes to another predicate while having a different body.  [[https://github.com/plundaahl/dotfiles/blob/ef4d25498ab895c3c22b588ae2506fd69bdd8755/emacs/package-defs/org-ql/pred-created.el#L19][For example]]:
+
+#+BEGIN_SRC elisp
+  (org-ql-defpred created (&key from to on)
+    "Search for entries with \"CREATED\" property in range or on date"
+    :body (if (and on (or from to))
+              (error "Either specify FROM and/or TO, or ON")
+            (let ((heading-time (pcl/as-ts (org-entry-get (point) "CREATED")))
+                  (on (pcl/as-ts on))
+                  (from (pcl/as-ts (or on from)))
+                  (to (pcl/as-ts (or on to))))
+              (and t
+                   (if from (ts<= from heading-time) t)
+                   (if to (ts< heading-time (ts-adjust 'day +1 to)) t)))))
+#+END_SRC
+
+That predicate would best be normalized to ~(property "CREATED")~, but its body would still need to be evaluated to compare the property value as a timestamp.  There are two obvious possibilities:
+
+1.  Normalize it to ~(and (property "CREATED") (...form that compares (org-entry-get (point) "CREATED") as a timestamp...))~, without a defined body.
+2.  Allow ~-defpred~ to normalize the query to ~(property "CREATED")~ while preserving a separate body.  Maybe something like normalizing it to ~(and (property "CREATED") (created ...))~, which would still call the body; however, the normalizer must avoid looping on ~(created ...)~, so maybe a sentinel value is needed.
 
 ** TODO [#C] Example: Next upcoming event                             :docs:
 
