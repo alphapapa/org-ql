@@ -20,16 +20,15 @@
 ** Bugs ([[org-ql-search:todo%253A%2520tags%253Abug?super-groups=%2528%2528%253Aauto-property%2520%2522Milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Bugs%2522][view]])
 
 #+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
-| P |   M | Keyword  | Heading                                                  |
-|---+-----+----------+----------------------------------------------------------|
-| A | 0.6 | PROJECT  | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]]  |
-| A | 0.6 | PROJECT  | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]           |
-|   |     | TODO     | [[Move from-to-on argument processing to query normalizers][Move from-to-on argument processing to query normalizers]] |
-|   |     | TODO     | [[clocked][clocked]]                                                  |
-|   |     | TODO     | [[closed][closed]]                                                   |
-|   |     | TODO     | [[Remove old ~--from-to-on~ macro completely][Remove old ~--from-to-on~ macro completely]]                 |
-|   |     | NEXT     | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]            |
-|   |     | UNDERWAY | [[ts][ts]]                                                       |
+| P |   M | Keyword | Heading                                                  |
+|---+-----+---------+----------------------------------------------------------|
+| A | 0.6 | PROJECT | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]]  |
+| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]           |
+|   |     | TODO    | [[Move from-to-on argument processing to query normalizers][Move from-to-on argument processing to query normalizers]] |
+|   |     | TODO    | [[Update defpred docs][Update defpred docs]]                                      |
+|   |     | TODO    | [[closed][closed]]                                                   |
+|   |     | TODO    | [[Remove old ~--from-to-on~ macro completely][Remove old ~--from-to-on~ macro completely]]                 |
+|   |     | NEXT    | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]            |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
@@ -42,10 +41,10 @@
 |    0.6 | A | PROJECT | [[Reverse sorting][Reverse sorting]]                                                                |
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
 |    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
+|    0.7 | B | TODO    | [[Change ~clocked~ and ~closed~'s behavior with just-number args][Change ~clocked~ and ~closed~'s behavior with just-number args]]                     |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 |    0.7 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
 |    0.7 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
-| future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -53,10 +52,8 @@
 #+BEGIN: org-ql :query (or (todo "UNDERWAY") (and (todo "PROJECT") (descendants (todo "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 |   M | P | Keyword  | Heading                                                            |
 |-----+---+----------+--------------------------------------------------------------------|
-| 0.6 | A | PROJECT  | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]]            |
 | 0.7 | B | PROJECT  | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                         |
 | 0.7 | B | PROJECT  | [[Group tag support][Group tag support]]                                                  |
-|     |   | UNDERWAY | [[ts][ts]]                                                                 |
 |     |   | UNDERWAY | [[~clocked~][~clocked~]]                                                          |
 |     |   | UNDERWAY | [[~closed~][~closed~]]                                                           |
 |     |   | UNDERWAY | [[~deadline~][~deadline~]]                                                         |
@@ -81,15 +78,15 @@
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-| M      | P | Heading                                 |
-|--------+---+-----------------------------------------|
-|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]] |
-| 0.6    | A | [[Reverse sorting][Reverse sorting]]                         |
-|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                    |
-|        | B | [[Outline path predicate][Outline path predicate]]                  |
-|        | B | [[Document the sorting functions][Document the sorting functions]]          |
-| future | B | [[Recursive queries][Recursive queries]]                       |
-| future | B | [[Timeline view][Timeline view]]                           |
+|      M | P | Heading                                                 |
+|--------+---+---------------------------------------------------------|
+|    0.6 | A | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]] |
+|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                 |
+|    0.6 | A | [[Reverse sorting][Reverse sorting]]                                         |
+|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                    |
+|        | B | [[Outline path predicate][Outline path predicate]]                                  |
+|        | B | [[Document the sorting functions][Document the sorting functions]]                          |
+| future | B | [[Recursive queries][Recursive queries]]                                       |
 #+END:
 
 * [#A] Tasks
@@ -106,6 +103,7 @@
 - [[#default-sort][Default sort]]
 - [[#partial-match-for-property-queries][Partial match for property queries]]
 - [[#remove-org-ql-macro][Remove org-ql macro]]
+- [[#change-clocked-and-closeds-behavior-with-just-number-args][Change clocked and closed's behavior with just-number args]]
 - [[#example-next-upcoming-event][Example: Next upcoming event]]
 - [[#org-agenda-skip-function][org-agenda-skip-function]]
 - [[#update-commentary][Update commentary]]
@@ -236,6 +234,21 @@ Searching that with a query like =property:author=Fabrice= returns nothing; the 
 
 0.6 will be the last stable release to have it.
 
+** TODO [#B] Change ~clocked~ and ~closed~'s behavior with just-number args
+:PROPERTIES:
+:milestone: 0.7
+:END:
+
++  [[file:~/src/emacs/org-ql/tests/test-org-ql.el::;;%20TODO:%20While%20it%20seems%20helpful%20for%20(clocked)%20and%20(close)%20to][To-do item]]
+
+#+BEGIN_SRC elisp
+  ;; TODO: While it seems helpful for (clocked) and (close) to
+  ;; implicitly look into the past (because entries can't be
+  ;; clocked or closed in the future), it makes the API
+  ;; inconsistent. It would be better to be consistent and
+  ;; require the user to pass these predicates a negative number.
+#+END_SRC
+
 ** TODO [#C] Example: Next upcoming event                             :docs:
 
 
@@ -360,13 +373,11 @@ Could fix this in a 0.5.3 release, but I think too much code changes are involve
 
 *** TODO Move from-to-on argument processing to query normalizers
 
-**** TODO clocked
+**** TODO Update defpred docs
 
-+  [ ] Use new ~--normalize-from-to-on~ macro
-+  [ ] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [ ] Add tests
-     -  [ ] Query normalization
-     -  [ ] Results
++  [ ] Mention that normalizers are run until they return the same result; need to guard against infinite loops.
++  [ ] Update docstring
++  [ ] Update readme
 
 **** TODO closed
 
@@ -378,13 +389,21 @@ Could fix this in a 0.5.3 release, but I think too much code changes are involve
 
 **** TODO Remove old ~--from-to-on~ macro completely
 
-**** UNDERWAY ts
+**** DONE clocked
 
-+  [ ] Use new ~--normalize-from-to-on~ macro
-+  [ ] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [-] Add tests
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
      -  [X] Query normalization
-     -  [ ] Results
+     -  [X] Results
+
+**** DONE ts
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
 
 **** DONE planning
 
@@ -2967,7 +2986,6 @@ CLOSED: [2018-05-10 Thu 14:59]
 If I made the =date= selector a macro, I could avoid the need to quote the comparator.
 
 Also, maybe instead of having a single =date= selector, I should have =scheduled=, =deadline=, etc.
-
 
 * Checklists
 
