@@ -20,11 +20,10 @@
 ** Bugs ([[org-ql-search:todo%253A%2520tags%253Abug?super-groups=%2528%2528%253Aauto-property%2520%2522Milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Bugs%2522][view]])
 
 #+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
-| P |   M | Keyword | Heading                                                 |
-|---+-----+---------+---------------------------------------------------------|
-| A | 0.6 | PROJECT | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]] |
-| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]          |
-|   |     | NEXT    | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]           |
+| P |   M | Keyword | Heading                                        |
+|---+-----+---------+------------------------------------------------|
+| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
+|   |     | NEXT    | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]  |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
@@ -32,7 +31,6 @@
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 9
 |      M | P | Todo    | Heading                                                                        |
 |--------+---+---------+--------------------------------------------------------------------------------|
-|    0.6 | A | PROJECT | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]]                        |
 |    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
 |    0.6 | A | PROJECT | [[Reverse sorting][Reverse sorting]]                                                                |
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
@@ -41,6 +39,7 @@
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
 |    0.7 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
 |    0.7 | B | PROJECT | [[Group tag support][Group tag support]]                                                              |
+| future | B | PROJECT | [[Recursive queries][Recursive queries]]                                                              |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -62,27 +61,26 @@
 ** To-do ([[org-ql-search:todo:?super-groups=((:todo%20"NEXT")%20(:todo%20"PROJECT")%20(:auto-priority))&sort=(todo)][view]])
 
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
-| P |   M | Todo    | Heading                                                 |
-|---+-----+---------+---------------------------------------------------------|
-| A | 0.6 | PROJECT | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]] |
-| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]          |
-| A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                 |
-| A | 0.6 | PROJECT | [[Reverse sorting][Reverse sorting]]                                         |
-| A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                    |
+| P |   M | Todo    | Heading                                        |
+|---+-----+---------+------------------------------------------------|
+| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
+| A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]        |
+| A | 0.6 | PROJECT | [[Reverse sorting][Reverse sorting]]                                |
+| A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                           |
 #+END:
 
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-|      M | P | Heading                                                 |
-|--------+---+---------------------------------------------------------|
-|    0.6 | A | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]] |
-|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                 |
-|    0.6 | A | [[Reverse sorting][Reverse sorting]]                                         |
-|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                    |
-|        | B | [[Outline path predicate][Outline path predicate]]                                  |
-|        | B | [[Document the sorting functions][Document the sorting functions]]                          |
-| future | B | [[Recursive queries][Recursive queries]]                                       |
+| M      | P | Heading                                 |
+|--------+---+-----------------------------------------|
+|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]] |
+| 0.6    | A | [[Reverse sorting][Reverse sorting]]                         |
+|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                    |
+|        | B | [[Outline path predicate][Outline path predicate]]                  |
+|        | B | [[Document the sorting functions][Document the sorting functions]]          |
+| future | B | [[Recursive queries][Recursive queries]]                       |
+| future | B | [[Timeline view][Timeline view]]                           |
 #+END:
 
 * [#A] Tasks
@@ -110,7 +108,6 @@
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
-- [[#timestamp-predicates-using-relative-dates-break-caching][Timestamp predicates using relative dates break caching]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#reverse-sorting][Reverse sorting]]
@@ -130,6 +127,7 @@
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
+- [[#timestamp-predicates-using-relative-dates-break-caching][Timestamp predicates using relative dates break caching]]
 - [[#link-target-doesnt-work][~(link :target)~ doesn't work]]
 - [[#link-regexp-p-doesnt-work][~(link :regexp-p)~ doesn't work]]
 - [[#fix-custom-sorter-breaks-cached-results][Fix: Custom sorter breaks cached results]]
@@ -357,74 +355,6 @@ However, there might still be a useful idea here somewhere...
 ** MAYBE [#C] Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
-
-** PROJECT [#A] Timestamp predicates using relative dates break caching :bug:
-:PROPERTIES:
-:milestone: 0.6
-:branch:   wip/fix-223
-:issue-link: [[https://github.com/alphapapa/org-ql/issues/223][Cache is not invalidated for relative date/time queries · Issue #223 · alphapapa/org-ql · GitHub]]
-:END:
-
-Could fix this in a 0.5.3 release, but I think too much code changes are involved for a bugfix release.
-
-*** DONE Move from-to-on argument processing to query normalizers
-
-**** DONE Update defpred docs
-
-+  [X] Mention that normalizers are run until they return the same result; need to guard against infinite loops.
-     -  [X] Update docstring
-     -  [X] Update readme
-     -  [X] defpred tutorial
-
-**** DONE Remove old ~--from-to-on~ macro completely
-
-**** DONE closed
-
-+  [X] Use new ~--normalize-from-to-on~ macro
-+  [X] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [X] Add tests
-     -  [X] Query normalization
-     -  [X] Results
-
-**** DONE clocked
-
-+  [X] Use new ~--normalize-from-to-on~ macro
-+  [X] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [X] Add tests
-     -  [X] Query normalization
-     -  [X] Results
-
-**** DONE ts
-
-+  [X] Use new ~--normalize-from-to-on~ macro
-+  [X] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [X] Add tests
-     -  [X] Query normalization
-     -  [X] Results
-
-**** DONE planning
-
-+  [X] Use new ~--normalize-from-to-on~ macro
-+  [X] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [X] Add tests
-     -  [X] Query normalization
-     -  [X] Results
-
-**** DONE deadline
-
-+  [X] Use new ~--normalize-from-to-on~ macro
-+  [X] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [X] Add tests
-     -  [X] Query normalization
-     -  [X] Results
-
-**** DONE scheduled
-
-+  [X] Use new ~--normalize-from-to-on~ macro
-+  [X] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [X] Add tests
-     -  [X] Query normalization
-     -  [X] Results
 
 ** PROJECT [#A] Compatibility with Org 9.4 custom link changes          :bug:
 :PROPERTIES:
@@ -2164,6 +2094,78 @@ e.g. doesn't currently show the =View= header.
 
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
+** DONE [#A] Timestamp predicates using relative dates break caching   :bug:
+:PROPERTIES:
+:milestone: 0.6
+:branch:   wip/fix-223
+:issue-link: [[https://github.com/alphapapa/org-ql/issues/223][Cache is not invalidated for relative date/time queries · Issue #223 · alphapapa/org-ql · GitHub]]
+:END:
+
+Could fix this in a 0.5.3 release, but I think too much code changes are involved for a bugfix release.
+
+*** DONE Fix/commit checklists
+
++ Closing issue: 223
+
+*** DONE Move from-to-on argument processing to query normalizers
+
+**** DONE Update defpred docs
+
++  [X] Mention that normalizers are run until they return the same result; need to guard against infinite loops.
+     -  [X] Update docstring
+     -  [X] Update readme
+     -  [X] defpred tutorial
+
+**** DONE Remove old ~--from-to-on~ macro completely
+
+**** DONE closed
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
+
+**** DONE clocked
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
+
+**** DONE ts
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
+
+**** DONE planning
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
+
+**** DONE deadline
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
+
+**** DONE scheduled
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
+
 ** DONE [#A] [[https://github.com/alphapapa/org-ql/pull/220][~(link :target)~ doesn't work]]                             :bug:
 :PROPERTIES:
 :milestone: 0.5.2
@@ -3003,7 +3005,7 @@ When committing an additional feature:
 +  [ ] Lint
 +  [ ] Test
      -  [ ] Locally
-     -  [ ] On different Emacs versions with GitHub CI
+     -  [ ] On different Emacs versions with GitHub CI (very important)
 +  [ ] Update docs
 +  [ ] Update changelog
      -  [ ] Mention closing issues (optionally)
@@ -3023,8 +3025,9 @@ When committing a fix:
 +  [ ] Lint
 +  [ ] Test
      -  [ ] Locally
-     -  [ ] On different Emacs versions with GitHub CI
+     -  [ ] On different Emacs versions with GitHub CI (very important)
 +  [ ] Update changelog
+     -  [ ] Mention changes
      -  [ ] Mention closing issues
 +  [ ] Commit
      -  [ ] Mention closing issues in commit message
