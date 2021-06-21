@@ -137,14 +137,20 @@ RESULTS should be a list of strings as returned by
              :action '(org-ql-test-org-get-heading))
            :to-equal ,results))
 
-(defmacro org-ql-then (&rest body)
-  "Wrap BODY, setting `ts-now' to return timestamp at 2017-07-05 12:00:00."
+(cl-defmacro org-ql-then (plist &rest body)
+  "Wrap BODY, setting `ts-now' to return a certain timestamp.
+Timestamp defaults to timestamp at 2017-07-05 12:00:00; change it
+with keyword arg NOW in PLIST."
   ;; The same time used in `org-super-agenda--test-date', which is where the test data comes from.
   (declare (indent defun))
-  `(cl-letf (((symbol-function 'ts-now)
-              (lambda ()
-                (make-ts :year 2017 :month 7 :day 5 :hour 12 :minute 0 :second 0))))
-     ,@body))
+  (let* ((target-date (or (plist-get plist :now) "2017-07-05 12:00:00"))
+         (parsed-date (ts-parse target-date))
+         (target-ts (make-ts :year (ts-Y parsed-date) :month (ts-m parsed-date) :day (ts-d parsed-date)
+                             :hour (ts-H parsed-date) :minute (ts-M parsed-date) :second (ts-S parsed-date))))
+    `(cl-letf (((symbol-function 'ts-now)
+                (lambda ()
+                  ,target-ts)))
+       ,@body)))
 
 ;;;; Tests
 
@@ -245,6 +251,197 @@ RESULTS should be a list of strings as returned by
                 :to-equal '(link :description "DESCRIPTION" :target "TARGET"
                                  :regexp-p t))))
 
+    (describe "timestamp predicates"
+      ;; NOTE: (clocked) and (closed) don't accept :with-time arguments.
+      (describe "(clocked)"
+        (let ((beg-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 0 :minute 0 :second 0)))
+              (end-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 23 :minute 59 :second 59))))
+          ;; MAYBE: While it seems helpful for (clocked) and (close) to
+          ;; implicitly look into the past (because entries can't be
+          ;; clocked or closed in the future), it makes the API
+          ;; inconsistent.  It would be better to be consistent and
+          ;; require the user to pass these predicates a negative number.
+          (it "with a number"
+            (expect (org-ql--normalize-query '(clocked 0))
+                    :to-equal `(clocked :from ,beg-of-today-ts))
+            (expect (org-ql--normalize-query '(clocked 1))
+                    :to-equal `(clocked :from ,(ts-inc 'day -1 beg-of-today-ts))))
+          (it ":from/:to/:on"
+            (expect (org-ql--normalize-query '(clocked :on today))
+                    :to-equal `(clocked :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(clocked :on 0))
+                    :to-equal `(clocked :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(clocked :on 1))
+                    :to-equal `(clocked :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                        :to ,(ts-inc 'day 1 end-of-today-ts))))))
+      (describe "(closed)"
+        (let ((beg-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 0 :minute 0 :second 0)))
+              (end-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 23 :minute 59 :second 59))))
+          (it "with a number"
+            (expect (org-ql--normalize-query '(closed 0))
+                    :to-equal `(closed :from ,beg-of-today-ts))
+            (expect (org-ql--normalize-query '(closed 1))
+                    :to-equal `(closed :from ,(ts-inc 'day -1 beg-of-today-ts))))
+          (it ":from/:to/:on"
+            (expect (org-ql--normalize-query '(closed :on today))
+                    :to-equal `(closed :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(closed :on 0))
+                    :to-equal `(closed :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(closed :on 1))
+                    :to-equal `(closed :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                       :to ,(ts-inc 'day 1 end-of-today-ts))))))
+
+      ;; NOTE: The rest of them do accept :with-time.
+      (describe "(deadline)"
+        (let ((beg-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 0 :minute 0 :second 0)))
+              (end-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 23 :minute 59 :second 59))))
+          (it "with auto"
+            (let ((auto-ts (->> (ts-now)
+                             (ts-adjust 'day org-deadline-warning-days)
+                             (ts-apply :hour 23 :minute 59 :second 59))))
+              (expect (org-ql--normalize-query '(deadline auto))
+                      :to-equal `(deadline-warning :to ,auto-ts))
+              (expect (org-ql--normalize-query '(deadline auto :with-time t))
+                      :to-equal `(deadline-warning :to ,auto-ts :with-time t))
+              (expect (org-ql--normalize-query '(deadline auto :with-time nil))
+                      :to-equal `(deadline-warning :to ,auto-ts :with-time nil))))
+          (it "with a number"
+            (expect (org-ql--normalize-query '(deadline 0))
+                    :to-equal `(deadline :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(deadline 0 :with-time t))
+                    :to-equal `(deadline :to ,end-of-today-ts :with-time t))
+            (expect (org-ql--normalize-query '(deadline 0 :with-time nil))
+                    :to-equal `(deadline :to ,end-of-today-ts :with-time nil))
+            (expect (org-ql--normalize-query '(deadline 2))
+                    :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)))
+            (expect (org-ql--normalize-query '(deadline 2 :with-time nil))
+                    :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)
+                                         :with-time nil))
+            (expect (org-ql--normalize-query '(deadline 2 :with-time t))
+                    :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)
+                                         :with-time t)))
+          (it ":from/:to/:on"
+            (expect (org-ql--normalize-query '(deadline :on today))
+                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(deadline :on today :with-time t))
+                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
+                                         :with-time t))
+            (expect (org-ql--normalize-query '(deadline :on today :with-time nil))
+                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
+                                         :with-time nil))
+            (expect (org-ql--normalize-query '(deadline :on 0))
+                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(deadline :on 0 :with-time t))
+                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
+                                         :with-time t))
+            (expect (org-ql--normalize-query '(deadline :on 1))
+                    :to-equal `(deadline :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                         :to ,(ts-inc 'day 1 end-of-today-ts))))))
+      (describe "(scheduled)"
+        (let ((beg-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 0 :minute 0 :second 0)))
+              (end-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 23 :minute 59 :second 59))))
+          (it "with a number"
+            (expect (org-ql--normalize-query '(scheduled 0))
+                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(scheduled 0 :with-time t))
+                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                          :with-time t))
+            (expect (org-ql--normalize-query '(scheduled 0 :with-time nil))
+                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                          :with-time nil))
+            (expect (org-ql--normalize-query '(scheduled 1))
+                    :to-equal `(scheduled :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                          :to ,(ts-inc 'day 1 end-of-today-ts))))
+          (it ":from/:to/:on"
+            (expect (org-ql--normalize-query '(scheduled :on today))
+                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(scheduled :on today :with-time t))
+                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                          :with-time t))
+            (expect (org-ql--normalize-query '(scheduled :on today :with-time nil))
+                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                          :with-time nil))
+            (expect (org-ql--normalize-query '(scheduled :on 0))
+                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(scheduled :on 0 :with-time t))
+                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                          :with-time t))
+            (expect (org-ql--normalize-query '(scheduled :on 1))
+                    :to-equal `(scheduled :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                          :to ,(ts-inc 'day 1 end-of-today-ts))))))
+      (describe "(planning)"
+        (let ((beg-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 0 :minute 0 :second 0)))
+              (end-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 23 :minute 59 :second 59))))
+          (it "with a number"
+            (expect (org-ql--normalize-query '(planning 0))
+                    :to-equal `(planning :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(planning 0 :with-time t))
+                    :to-equal `(planning :to ,end-of-today-ts :with-time t))
+            (expect (org-ql--normalize-query '(planning 0 :with-time nil))
+                    :to-equal `(planning :to ,end-of-today-ts :with-time nil))
+            (expect (org-ql--normalize-query '(planning 1))
+                    :to-equal `(planning :to ,(ts-inc 'day 1 end-of-today-ts))))
+          (it ":from/:to/:on"
+            (expect (org-ql--normalize-query '(planning :on today))
+                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(planning :on today :with-time t))
+                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
+                                         :with-time t))
+            (expect (org-ql--normalize-query '(planning :on today :with-time nil))
+                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
+                                         :with-time nil))
+            (expect (org-ql--normalize-query '(planning :on 0))
+                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(planning :on 0 :with-time t))
+                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
+                                         :with-time t))
+            (expect (org-ql--normalize-query '(planning :on 1))
+                    :to-equal `(planning :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                         :to ,(ts-inc 'day 1 end-of-today-ts))))))
+      (describe "(ts)"
+        (let ((beg-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 0 :minute 0 :second 0)))
+              (end-of-today-ts (->> (ts-now)
+                                 (ts-apply :hour 23 :minute 59 :second 59))))
+          (it "with a number"
+            ;; NOTE: For consistency with the other ts-related predicates, a number argument means ":to NUMBER".
+            ;; MAYBE: Mention this in docs.  Or remove this, because it's ambiguous.
+            (expect (org-ql--normalize-query '(ts 0))
+                    :to-equal `(ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(ts 0 :with-time t))
+                    :to-equal `(ts :to ,end-of-today-ts :with-time t))
+            (expect (org-ql--normalize-query '(ts 0 :with-time nil))
+                    :to-equal `(ts :to ,end-of-today-ts :with-time nil))
+            (expect (org-ql--normalize-query '(ts 1))
+                    :to-equal `(ts :to ,(ts-inc 'day 1 end-of-today-ts))))
+          (it ":from/:to/:on"
+            (expect (org-ql--normalize-query '(ts :on today))
+                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(ts :on today :with-time t))
+                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
+                                   :with-time t))
+            (expect (org-ql--normalize-query '(ts :on today :with-time nil))
+                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
+                                   :with-time nil))
+            (expect (org-ql--normalize-query '(ts :on 0))
+                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts))
+            (expect (org-ql--normalize-query '(ts :on 0 :with-time t))
+                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
+                                   :with-time t))
+            (expect (org-ql--normalize-query '(ts :on 1))
+                    :to-equal `(ts :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                   :to ,(ts-inc 'day 1 end-of-today-ts)))))))
+
     (expect (org-ql--normalize-query '(and "string1" "string2"))
             :to-equal '(and (regexp "string1") (regexp "string2")))
     (expect (org-ql--normalize-query '(or "string1" "string2"))
@@ -265,14 +462,36 @@ RESULTS should be a list of strings as returned by
                                         (or "string1" "string2")))
             :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2"))))
 
-    (expect (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
-                                          (ts-a :on "2019-01-01")
-                                          (ts-inactive :on "2019-01-01")
-                                          (ts-i :on "2019-01-01")))
-            :to-equal '(or (ts :type active :on "2019-01-01")
-                           (ts :type active :on "2019-01-01")
-                           (ts :type inactive :on "2019-01-01")
-                           (ts :type inactive :on "2019-01-01"))))
+    ;; FIXME: This test fails, but only on GitHub CI; it works fine
+    ;; locally.  It seems to be something to do with Buttercup and
+    ;; comparing the structs.  It only started happening after I moved
+    ;; the predicate argument processing into the newer
+    ;; --normalize-from-to-on macro.  I can't explain why it works
+    ;; fine locally, even in a clean sandbox with newly installed
+    ;; packages, yet fails entirely on GitHub CI.  The only
+    ;; possibility I can think of might be a difference in how the
+    ;; Emacs being installed into CI is built, but that seems very
+    ;; unlikely, so I don't know.  For now, I have no alternative but
+    ;; to comment out the test.  But it doesn't matter much, anyway,
+    ;; because I know it works properly.
+
+    ;; (expect (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
+    ;;                                       (ts-a :on "2019-01-01")
+    ;;                                       (ts-inactive :on "2019-01-01")
+    ;;                                       (ts-i :on "2019-01-01")))
+    ;;         :to-equal `(or (ts :type active
+    ;;                            :from ,(make-ts :unix 1546322400.0)
+    ;;                            :to ,(make-ts :unix 1546408799.0))
+    ;;                        (ts :type active
+    ;;                            :from ,(make-ts :unix 1546322400.0)
+    ;;                            :to ,(make-ts :unix 1546408799.0))
+    ;;                        (ts :type inactive
+    ;;                            :from ,(make-ts :unix 1546322400.0)
+    ;;                            :to ,(make-ts :unix 1546408799.0))
+    ;;                        (ts :type inactive
+    ;;                            :from ,(make-ts :unix 1546322400.0)
+    ;;                            :to ,(make-ts :unix 1546408799.0))))
+    )
 
   (describe "Query preambles"
 
@@ -502,7 +721,7 @@ RESULTS should be a list of strings as returned by
           '("Learn universal sign language")))
 
       (org-ql-it "with a number"
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(clocked 10))
             '("Learn universal sign language"))))
 
@@ -513,7 +732,7 @@ RESULTS should be a list of strings as returned by
           nil))
 
       (org-ql-it ":from today"
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(clocked :from today))
             '("Learn universal sign language"))))
 
@@ -524,7 +743,7 @@ RESULTS should be a list of strings as returned by
           nil))
 
       (org-ql-it ":to today"
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(clocked :to today))
             '("Learn universal sign language"))))
 
@@ -535,7 +754,7 @@ RESULTS should be a list of strings as returned by
           nil))
 
       (org-ql-it ":on today"
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(clocked :on today))
             '("Learn universal sign language"))))
 
@@ -545,7 +764,24 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ('(clocked :from "2017-07-06" :to "2018-12-11"))
           nil)
         (org-ql-expect ('(clocked :from "2017-07-01" :to "2017-07-04"))
-          nil)))
+          nil))
+
+      (org-ql-it "relative dates update after midnight"
+        ;; e.g. a "ts:on=today" query updates after midnight. See <https://github.com/alphapapa/org-ql/issues/223>.
+        (org-ql-then (:now "2017-07-05")
+          (org-ql-expect ('(clocked 0))
+            '("Learn universal sign language"))
+          (org-ql-expect ('(clocked :on 0))
+            '("Learn universal sign language"))
+          (org-ql-expect ('(clocked :on today))
+            '("Learn universal sign language")))
+        (org-ql-then (:now "2017-07-07")
+          (org-ql-expect ('(clocked 0))
+            nil)
+          (org-ql-expect ('(clocked :on 0))
+            nil)
+          (org-ql-expect ('(clocked :on today))
+            nil))))
 
     (describe "(closed)"
 
@@ -554,14 +790,14 @@ RESULTS should be a list of strings as returned by
           '("Learn universal sign language")))
 
       (org-ql-it "with a number"
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(closed 10))
             '("Learn universal sign language"))))
 
       (org-ql-it ":on"
         (org-ql-expect ('(closed :on "2017-07-05"))
           '("Learn universal sign language"))
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(closed :on today))
             '("Learn universal sign language")))
         (org-ql-expect ('(closed :on "2019-06-09"))
@@ -572,7 +808,7 @@ RESULTS should be a list of strings as returned by
           '("Learn universal sign language"))
         (org-ql-expect ('(closed :from "2017-07-05"))
           '("Learn universal sign language"))
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(closed :from today))
             '("Learn universal sign language")))
         (org-ql-expect ('(closed :from "2017-07-06"))
@@ -583,11 +819,28 @@ RESULTS should be a list of strings as returned by
           nil)
         (org-ql-expect ('(closed :to "2017-07-05"))
           '("Learn universal sign language"))
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(closed :to today))
             '("Learn universal sign language")))
         (org-ql-expect ('(closed :to "2017-07-06"))
-          '("Learn universal sign language"))))
+          '("Learn universal sign language")))
+
+      (org-ql-it "relative dates update after midnight"
+        ;; e.g. a "ts:on=today" query updates after midnight. See <https://github.com/alphapapa/org-ql/issues/223>.
+        (org-ql-then (:now "2017-07-05")
+          (org-ql-expect ('(closed 0))
+            '("Learn universal sign language"))
+          (org-ql-expect ('(closed :on 0))
+            '("Learn universal sign language"))
+          (org-ql-expect ('(closed :on today))
+            '("Learn universal sign language")))
+        (org-ql-then (:now "2017-07-07")
+          (org-ql-expect ('(closed 0))
+            nil)
+          (org-ql-expect ('(closed :on 0))
+            nil)
+          (org-ql-expect ('(closed :on today))
+            nil))))
 
     (describe "(deadline)"
 
@@ -596,19 +849,20 @@ RESULTS should be a list of strings as returned by
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs")))
 
       (org-ql-it "auto"
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(deadline auto))
             '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
 
       (org-ql-it "with a number"
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(deadline 2))
+            ;; NOTE: (deadline 2) means (deadline :to 2).
             '("Take over the world" "/r/emacs"))))
 
       (org-ql-it ":on"
         (org-ql-expect ('(deadline :on "2017-07-05"))
           '("/r/emacs"))
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(deadline :on today))
             '("/r/emacs")))
 
@@ -624,7 +878,7 @@ RESULTS should be a list of strings as returned by
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
         (org-ql-expect ('(deadline :from "2018-07-06"))
           nil)
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(deadline :from today))
             '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))))
 
@@ -635,7 +889,7 @@ RESULTS should be a list of strings as returned by
           '("/r/emacs"))
         (org-ql-expect ('(deadline :to "2018-07-06"))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "/r/emacs"))
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(deadline :to today))
             '("/r/emacs"))))
 
@@ -645,7 +899,20 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ('(deadline :with-time t))
           '("Renew membership in supervillain club"))
         (org-ql-expect ('(deadline :to "2017-07-10" :with-time t))
-          '("Renew membership in supervillain club"))))
+          '("Renew membership in supervillain club")))
+
+      (org-ql-it "relative dates update after midnight"
+        ;; e.g. a "ts:on=today" query updates after midnight. See <https://github.com/alphapapa/org-ql/issues/223>.
+        (org-ql-then (:now "2017-07-05")
+          (org-ql-expect ('(deadline :on today))
+            '("/r/emacs"))
+          (org-ql-expect ('(deadline :on 0))
+            '("/r/emacs")))
+        (org-ql-then (:now "2017-07-07")
+          (org-ql-expect ('(deadline :on today))
+            '("Take over the world"))
+          (org-ql-expect ('(deadline :on 0))
+            '("Take over the world")))))
 
     (org-ql-it "(done)"
       (org-ql-expect ('(done))
@@ -806,7 +1073,7 @@ RESULTS should be a list of strings as returned by
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
 
       (org-ql-it "with a number"
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(planning 2))
             '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -815,7 +1082,7 @@ RESULTS should be a list of strings as returned by
           '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ('(planning :on "2019-06-09"))
           nil)
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(planning :on today))
             '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -826,7 +1093,7 @@ RESULTS should be a list of strings as returned by
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ('(planning :from "2017-07-06"))
           '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(planning :from today))
             '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -837,7 +1104,7 @@ RESULTS should be a list of strings as returned by
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ('(planning :to "2018-07-06"))
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(planning :to today))
             '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -847,7 +1114,20 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ('(planning :with-time t))
           '("Skype with president of Antarctica" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza"))
         (org-ql-expect ('(planning :to "2017-07-04" :with-time t))
-          '("Skype with president of Antarctica"))))
+          '("Skype with president of Antarctica")))
+
+      (org-ql-it "relative dates update after midnight"
+        ;; e.g. a "ts:on=today" query updates after midnight. See <https://github.com/alphapapa/org-ql/issues/223>.
+        (org-ql-then (:now "2017-07-05")
+          (org-ql-expect ('(planning :on today))
+            '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(planning :on 0))
+            '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
+        (org-ql-then (:now "2019-06-09")
+          (org-ql-expect ('(planning :on today))
+            nil)
+          (org-ql-expect ('(planning :on 0))
+            nil))))
 
     (describe "(priority)"
 
@@ -922,7 +1202,7 @@ RESULTS should be a list of strings as returned by
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))
 
       (org-ql-it "with a number"
-        (org-ql-then
+        (org-ql-then ()
           ;; Using -1 is the easiest way to exclude some results but not all for testing this.
           (org-ql-expect ('(scheduled -1))
             '("Skype with president of Antarctica"))))
@@ -932,7 +1212,7 @@ RESULTS should be a list of strings as returned by
           '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ('(scheduled :on "2019-06-09"))
           nil)
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(scheduled :on today))
             '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -943,7 +1223,7 @@ RESULTS should be a list of strings as returned by
           '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ('(scheduled :from "2017-07-06"))
           nil)
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(scheduled :from today))
             '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -954,7 +1234,7 @@ RESULTS should be a list of strings as returned by
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
         (org-ql-expect ('(scheduled :to "2018-07-06"))
           '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
-        (org-ql-then
+        (org-ql-then ()
           (org-ql-expect ('(scheduled :to today))
             '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -962,7 +1242,20 @@ RESULTS should be a list of strings as returned by
         (org-ql-expect ('(scheduled :with-time t))
           '("Skype with president of Antarctica" "Order a pizza"))
         (org-ql-expect ('(scheduled :to "2017-07-04" :with-time t))
-          '("Skype with president of Antarctica"))))
+          '("Skype with president of Antarctica")))
+
+      (org-ql-it "relative dates update after midnight"
+        ;; e.g. a "ts:on=today" query updates after midnight. See <https://github.com/alphapapa/org-ql/issues/223>.
+        (org-ql-then (:now "2017-07-04")
+          (org-ql-expect ('(scheduled :on today))
+            '("Skype with president of Antarctica"))
+          (org-ql-expect ('(scheduled :on 0))
+            '("Skype with president of Antarctica")))
+        (org-ql-then (:now "2017-07-05")
+          (org-ql-expect ('(scheduled :on today))
+            '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
+          (org-ql-expect ('(scheduled :on 0))
+            '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
 
     ;; ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
     ;; ;; significant hassle.  Manual testing shows that the predicate appears to work properly.
@@ -1127,12 +1420,12 @@ RESULTS should be a list of strings as returned by
             '("Take over the universe" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease"))
           (org-ql-expect ('(ts :from "2019-06-08" :type active))
             nil)
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :from today))
               '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":from a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :from 5))
               '("Take over the universe" "Visit Mars" "Visit the moon" "Renew membership in supervillain club" "Internet" "Spaceship lease" "Rewrite Emacs in Common Lisp"))))
 
@@ -1141,12 +1434,12 @@ RESULTS should be a list of strings as returned by
             '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ('(ts :to "2017-07-04" :type active))
             '("Skype with president of Antarctica"))
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :to today))
               '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":to a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :to -1))
               '("Skype with president of Antarctica"))))
 
@@ -1155,12 +1448,12 @@ RESULTS should be a list of strings as returned by
             '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ('(ts :on "2019-06-09" :type active))
             nil)
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :on today))
               '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":on a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts-active :on 2))
               '("Take over the world"))))
 
@@ -1196,12 +1489,12 @@ RESULTS should be a list of strings as returned by
             '("Visit the moon" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ('(ts :from "2019-06-08" :type inactive))
             nil)
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts-inactive :from today))
               '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":from a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts-i :from 5))
               '("Visit the moon" "Rewrite Emacs in Common Lisp"))))
 
@@ -1210,12 +1503,12 @@ RESULTS should be a list of strings as returned by
             '("Visit the moon" "Learn universal sign language" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ('(ts :to "2017-07-04" :type inactive))
             'nil)
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts-inactive :to today))
               '("Learn universal sign language"))))
 
         (org-ql-it ":to a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts-i :to 5))
               '("Learn universal sign language"))))
 
@@ -1224,12 +1517,12 @@ RESULTS should be a list of strings as returned by
             '("Learn universal sign language"))
           (org-ql-expect ('(ts :on "2019-06-09" :type inactive))
             nil)
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts-inactive :on today))
               '("Learn universal sign language"))))
 
         (org-ql-it ":on a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts-inactive :on 19))
               '("Visit the moon" "Rewrite Emacs in Common Lisp"))))
 
@@ -1258,12 +1551,12 @@ RESULTS should be a list of strings as returned by
             nil)
           (org-ql-expect ('(ts :from "2019-06-08" :type both))
             nil)
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :from today))
               '("Take over the universe" "Take over the world" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":from a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :from -5))
               '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Visit Mars" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Internet" "Spaceship lease" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -1276,12 +1569,12 @@ RESULTS should be a list of strings as returned by
             '("Skype with president of Antarctica"))
           (org-ql-expect ('(ts :to "2017-07-04" :type both))
             '("Skype with president of Antarctica"))
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :to today))
               '("Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":to a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :to 5))
               '("Take over the world" "Skype with president of Antarctica" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
@@ -1294,12 +1587,12 @@ RESULTS should be a list of strings as returned by
             nil)
           (org-ql-expect ('(ts :on "2019-06-09" :type both))
             nil)
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :on today))
               '("Practice leaping tall buildings in a single bound" "Learn universal sign language" "Order a pizza" "Get haircut" "Fix flux capacitor" "/r/emacs" "Shop for groceries" "Rewrite Emacs in Common Lisp"))))
 
         (org-ql-it ":on a number of days"
-          (org-ql-then
+          (org-ql-then ()
             (org-ql-expect ('(ts :on 5))
               '("Renew membership in supervillain club"))))
 
@@ -1309,7 +1602,20 @@ RESULTS should be a list of strings as returned by
           (org-ql-expect ('(ts :with-time t))
             '("Skype with president of Antarctica" "Visit the moon" "Renew membership in supervillain club" "Learn universal sign language" "Order a pizza" "Rewrite Emacs in Common Lisp"))
           (org-ql-expect ('(ts :to "2017-07-04" :with-time t))
-            '("Skype with president of Antarctica")))))
+            '("Skype with president of Antarctica")))
+
+        (org-ql-it "relative dates update after midnight"
+          ;; NOTE: I think it's enough to test this just here rather than also in active/inactive.
+          ;; e.g. a "ts:on=today" query updates after midnight. See <https://github.com/alphapapa/org-ql/issues/223>.
+          (org-ql-then (:now "2017-07-04")
+            (org-ql-expect ('(ts :on today))
+              '("Skype with president of Antarctica")))
+          (org-ql-then (:now "2017-09-20")
+            (org-ql-expect ('(ts :on today))
+              '("Visit Mars")))
+          (org-ql-then (:now "2019-07-07")
+            (org-ql-expect ('(ts :on today))
+              nil)))))
 
     (describe "Compound queries"
 

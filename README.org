@@ -251,7 +251,7 @@ These predicates take optional keyword arguments:
 +  ~:on~: Match entries whose timestamp is on date ~:on~.
 +  ~:with-time~: If unspecified, match timestamps with or without times (i.e. HH:MM).  If nil, match timestamps without times.  If t, match timestamps with times.
 
-Timestamp/date arguments should be either a number of days (positive to look forward, or negative to look backward), a string parseable by ~parse-time-string~ (the string may omit the time value), or a ~ts~ struct.
+Timestamp/date arguments should be either a number of days (positive to look forward, or negative to look backward), a string parseable by ~parse-time-string~ (the string may omit the time value), the symbol ~today~, or a ~ts~ struct.
 
 +  *Predicates*
      -  =ts= :: Return non-nil if current entry has a timestamp in given period.  Without arguments, return non-nil if entry has a timestamp.
@@ -260,9 +260,13 @@ Timestamp/date arguments should be either a number of days (positive to look for
 
 The following predicates, in addition to the keyword arguments, can also take a single argument, a number, which looks backward or forward a number of days.  The number can be negative to invert the direction.
 
+These two predicates interpret a single number argument as if it were passed to the ~:from~ keyword argument, which eases the common case of searching for items clocked or closed in the past few days:
+
 +  *Backward-looking*
      -  =clocked= :: Return non-nil if current entry was clocked in given period.  Without arguments, return non-nil if entry was ever clocked.  Note: Clock entries are expected to be clocked out.  Currently clocked entries (i.e. with unclosed timestamp ranges) are ignored.
      -  =closed= :: Return non-nil if current entry was closed in given period.  Without arguments, return non-nil if entry is closed.
+
+These predicates interpret a single number argument as if it were passed to the ~:to~ keyword argument, which eases the common case of searching for items planned in the next few days:
 
 +  *Forward-looking*
      -  =deadline= :: Return non-nil if current entry has deadline in given period.  If argument is =auto=, return non-nil if entry has deadline within =org-deadline-warning-days=.  Without arguments, return non-nil if entry has any deadline.
@@ -440,7 +444,7 @@ Define an ~org-ql~ selector predicate named ~org-ql--predicate-NAME~.  ~NAME~ ma
 
 ~PREAMBLES~ and ~NORMALIZERS~ are lists of ~pcase~ forms matched against Org ~QL~ query sexps.  They are spliced into ~pcase~ forms in the definitions of the functions ~org-ql--query-preamble~ and ~org-ql--normalize-query~, which see.  Those functions are redefined when this macro is expanded, unless variable ~org-ql-defpred-defer~ is non-nil, in which case those functions should be redefined manually after defining predicates by calling ~org-ql--define-query-preamble-fn~ and ~org-ql--define-normalize-query-fn~.
 
-~NORMALIZERS~ are used to normalize query expressions to standard forms.  For example, when the predicate has aliases, the aliases should be replaced with predicate names using a normalizer.  Also, predicate arguments may be put into a more optimal form so that the predicate has less work to do at query time.
+~NORMALIZERS~ are used to normalize query expressions to standard forms.  For example, when the predicate has aliases, the aliases should be replaced with predicate names using a normalizer.  Also, predicate arguments may be put into a more optimal form so that the predicate has less work to do at query time.  NOTE: Normalizers are applied to a query repeatedly until the query is fully normalized, so normalizers should be carefully written to avoid infinite loops.
 
 ~PREAMBLES~ refer to regular expressions which may be used to search through a buffer directly to a potential match rather than testing the predicate body on each heading.  (Naming things is hard.)  In each ~pcase~ form in ~PREAMBLES~, the ~pcase~ expression (not the pattern) should be a plist with the following keys, each value of which should be an expression which may refer to variables bound in the pattern:
 
@@ -531,9 +535,14 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Predicate ~heading~ now matches plain strings instead of regular expressions.
 +  Update =dash= dependency, and remove dependency on obsolete =dash-functional=.  (Fixes [[https://github.com/alphapapa/org-ql/issues/179][#179]], [[https://github.com/alphapapa/org-ql/issues/209][#209]].  Thanks to [[https://github.com/landakram][Mark Hudnall]], [[https://github.com/akirak][Akira Komamura]], [[https://github.com/natask][Nathanael kinfe]], [[https://github.com/benthamite][Pablo Stafforini]], [[https://github.com/jmay][Jason May]], and [[https://github.com/basil-conto][Basil L. Contovounesios]].)
 
+*Fixed*
++  Timestamp-related predicates called with relative-date arguments did not properly invalidate the query cache.  (Fixes [[https://github.com/alphapapa/org-ql/issues/223][#223]].  Thanks to [[https://github.com/yantar92][Ihor Radchenko]] for reporting.)
+
 *Internal*
 +  Predicates are now defined more cleanly with a macro (=org-ql-defpred=) that consolidates functionality related to each predicate.  This will also allow users to more easily define custom predicates.
 +  Version 1.0 of library ~peg~ is now required.
++  Improvements to how arguments to timestamp-related predicates are processed.
++  Predicate normalizers are now applied repeatedly until a query is fully normalized.  (Normalizers should be written with this in mind to avoid infinite loops.)
 
 ** 0.5.2
 

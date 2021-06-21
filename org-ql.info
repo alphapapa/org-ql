@@ -543,8 +543,8 @@ These predicates take optional keyword arguments:
 
    Timestamp/date arguments should be either a number of days (positive
 to look forward, or negative to look backward), a string parseable by
-‘parse-time-string’ (the string may omit the time value), or a ‘ts’
-struct.
+‘parse-time-string’ (the string may omit the time value), the symbol
+‘today’, or a ‘ts’ struct.
 
    • *Predicates*
      ‘ts’
@@ -560,6 +560,10 @@ struct.
 also take a single argument, a number, which looks backward or forward a
 number of days.  The number can be negative to invert the direction.
 
+   These two predicates interpret a single number argument as if it were
+passed to the ‘:from’ keyword argument, which eases the common case of
+searching for items clocked or closed in the past few days:
+
    • *Backward-looking*
      ‘clocked’
           Return non-nil if current entry was clocked in given period.
@@ -570,6 +574,10 @@ number of days.  The number can be negative to invert the direction.
      ‘closed’
           Return non-nil if current entry was closed in given period.
           Without arguments, return non-nil if entry is closed.
+
+   These predicates interpret a single number argument as if it were
+passed to the ‘:to’ keyword argument, which eases the common case of
+searching for items planned in the next few days:
 
    • *Forward-looking*
      ‘deadline’
@@ -815,7 +823,9 @@ File: README.info,  Node: Custom predicates,  Prev: Listing / acting-on results,
      forms.  For example, when the predicate has aliases, the aliases
      should be replaced with predicate names using a normalizer.  Also,
      predicate arguments may be put into a more optimal form so that the
-     predicate has less work to do at query time.
+     predicate has less work to do at query time.  NOTE: Normalizers are
+     applied to a query repeatedly until the query is fully normalized,
+     so normalizers should be carefully written to avoid infinite loops.
 
      ‘PREAMBLES’ refer to regular expressions which may be used to
      search through a buffer directly to a potential match rather than
@@ -1002,12 +1012,23 @@ File: README.info,  Node: 06-pre,  Next: 052,  Up: Changelog
      (https://github.com/jmay), and Basil L. Contovounesios
      (https://github.com/basil-conto).)
 
+   *Fixed*
+   • Timestamp-related predicates called with relative-date arguments
+     did not properly invalidate the query cache.  (Fixes #223
+     (https://github.com/alphapapa/org-ql/issues/223).  Thanks to Ihor
+     Radchenko (https://github.com/yantar92) for reporting.)
+
    *Internal*
    • Predicates are now defined more cleanly with a macro
      (org-ql-defpred) that consolidates functionality related to each
      predicate.  This will also allow users to more easily define custom
      predicates.
    • Version 1.0 of library ‘peg’ is now required.
+   • Improvements to how arguments to timestamp-related predicates are
+     processed.
+   • Predicate normalizers are now applied repeatedly until a query is
+     fully normalized.  (Normalizers should be written with this in mind
+     to avoid infinite loops.)
 
 
 File: README.info,  Node: 052,  Next: 051,  Prev: 06-pre,  Up: Changelog
@@ -1538,40 +1559,40 @@ Node: Non-sexp query syntax9485
 Node: General predicates11209
 Node: Ancestor/descendant predicates17430
 Node: Date/time predicates18558
-Node: Functions / Macros21220
-Node: Agenda-like views21518
-Node: Listing / acting-on results22923
-Node: Custom predicates28545
-Node: Dynamic block32036
-Node: Links34734
-Node: Tips35421
-Node: Changelog35739
-Node: 06-pre36465
-Node: 05238038
-Node: 05138342
-Node: 0538759
-Node: 04940233
-Node: 04840507
-Node: 04740854
-Node: 04641249
-Node: 04541649
-Node: 04442008
-Node: 04342367
-Node: 04242564
-Node: 04142725
-Node: 0442966
-Node: 03246899
-Node: 03147278
-Node: 0347475
-Node: 02350450
-Node: 02250678
-Node: 02150946
-Node: 0251145
-Node: 0155180
-Node: Notes55281
-Node: Comparison with Org Agenda searches55443
-Node: org-sidebar56315
-Node: License56594
+Node: Functions / Macros21646
+Node: Agenda-like views21944
+Node: Listing / acting-on results23349
+Node: Custom predicates28971
+Node: Dynamic block32630
+Node: Links35328
+Node: Tips36015
+Node: Changelog36333
+Node: 06-pre37059
+Node: 05239177
+Node: 05139481
+Node: 0539898
+Node: 04941372
+Node: 04841646
+Node: 04741993
+Node: 04642388
+Node: 04542788
+Node: 04443147
+Node: 04343506
+Node: 04243703
+Node: 04143864
+Node: 0444105
+Node: 03248038
+Node: 03148417
+Node: 0348614
+Node: 02351589
+Node: 02251817
+Node: 02152085
+Node: 0252284
+Node: 0156319
+Node: Notes56420
+Node: Comparison with Org Agenda searches56582
+Node: org-sidebar57454
+Node: License57733
 
 End Tag Table
 
