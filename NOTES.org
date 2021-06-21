@@ -26,7 +26,6 @@
 | A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]           |
 |   |     | TODO    | [[Move from-to-on argument processing to query normalizers][Move from-to-on argument processing to query normalizers]] |
 |   |     | TODO    | [[Update defpred docs][Update defpred docs]]                                      |
-|   |     | TODO    | [[closed][closed]]                                                   |
 |   |     | TODO    | [[Remove old ~--from-to-on~ macro completely][Remove old ~--from-to-on~ macro completely]]                 |
 |   |     | NEXT    | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]            |
 #+END:
@@ -379,15 +378,15 @@ Could fix this in a 0.5.3 release, but I think too much code changes are involve
 +  [ ] Update docstring
 +  [ ] Update readme
 
-**** TODO closed
-
-+  [ ] Use new ~--normalize-from-to-on~ macro
-+  [ ] Remove old ~--from-to-on~ from ~--query-predicate~
-+  [ ] Add tests
-     -  [ ] Query normalization
-     -  [ ] Results
-
 **** TODO Remove old ~--from-to-on~ macro completely
+
+**** DONE closed
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
 
 **** DONE clocked
 
