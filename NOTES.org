@@ -20,24 +20,16 @@
 ** Bugs ([[org-ql-search:todo%253A%2520tags%253Abug?super-groups=%2528%2528%253Aauto-property%2520%2522Milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Bugs%2522][view]])
 
 #+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
-| P |   M | Keyword | Heading                                                  |
-|---+-----+---------+----------------------------------------------------------|
-| A | 0.6 | PROJECT | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]]  |
-| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]           |
-|   |     | TODO    | [[Add tests for ts-related predicates][Add tests for ts-related predicates]]                      |
-|   |     | TODO    | [[deadline][deadline]]                                                 |
-|   |     | TODO    | [[clocked][clocked]]                                                  |
-|   |     | TODO    | [[closed][closed]]                                                   |
-|   |     | TODO    | [[planning][planning]]                                                 |
-|   |     | TODO    | [[ts][ts]]                                                       |
-|   |     | TODO    | [[Move from-to-on argument processing to query normalizers][Move from-to-on argument processing to query normalizers]] |
-|   |     | TODO    | [[deadline][deadline]]                                                 |
-|   |     | TODO    | [[scheduled][scheduled]]                                                |
-|   |     | TODO    | [[clocked][clocked]]                                                  |
-|   |     | TODO    | [[closed][closed]]                                                   |
-|   |     | TODO    | [[planning][planning]]                                                 |
-|   |     | TODO    | [[ts][ts]]                                                       |
-|   |     | NEXT    | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]            |
+| P |   M | Keyword  | Heading                                                  |
+|---+-----+----------+----------------------------------------------------------|
+| A | 0.6 | PROJECT  | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]]  |
+| A | 0.6 | PROJECT  | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]           |
+|   |     | TODO     | [[Move from-to-on argument processing to query normalizers][Move from-to-on argument processing to query normalizers]] |
+|   |     | TODO     | [[clocked][clocked]]                                                  |
+|   |     | TODO     | [[closed][closed]]                                                   |
+|   |     | TODO     | [[Remove old ~--from-to-on~ macro completely][Remove old ~--from-to-on~ macro completely]]                 |
+|   |     | NEXT     | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]            |
+|   |     | UNDERWAY | [[ts][ts]]                                                       |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
@@ -61,8 +53,10 @@
 #+BEGIN: org-ql :query (or (todo "UNDERWAY") (and (todo "PROJECT") (descendants (todo "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") (todo "Keyword") heading) :sort (priority date) :ts-format "%Y-%m-%d %H:%M"
 |   M | P | Keyword  | Heading                                                            |
 |-----+---+----------+--------------------------------------------------------------------|
+| 0.6 | A | PROJECT  | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]]            |
 | 0.7 | B | PROJECT  | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                         |
 | 0.7 | B | PROJECT  | [[Group tag support][Group tag support]]                                                  |
+|     |   | UNDERWAY | [[ts][ts]]                                                                 |
 |     |   | UNDERWAY | [[~clocked~][~clocked~]]                                                          |
 |     |   | UNDERWAY | [[~closed~][~closed~]]                                                           |
 |     |   | UNDERWAY | [[~deadline~][~deadline~]]                                                         |
@@ -87,15 +81,15 @@
 ** Stuck projects ([[org-ql-search:%2528and%2520%2528todo%2520%2522PROJECT%2522%2529%2520%2528not%2520%2528descendants%2520%2528todo%2520%2522NEXT%2522%2520%2522UNDERWAY%2522%2529%2529%2529%2529?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528priority%2529&title=%2522Stuck%2520Projects%2522][view]])
 
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
-|      M | P | Heading                                                 |
-|--------+---+---------------------------------------------------------|
-|    0.6 | A | [[Timestamp predicates using relative dates break caching][Timestamp predicates using relative dates break caching]] |
-|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]                 |
-|    0.6 | A | [[Reverse sorting][Reverse sorting]]                                         |
-|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                                    |
-|        | B | [[Outline path predicate][Outline path predicate]]                                  |
-|        | B | [[Document the sorting functions][Document the sorting functions]]                          |
-| future | B | [[Recursive queries][Recursive queries]]                                       |
+| M      | P | Heading                                 |
+|--------+---+-----------------------------------------|
+|        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]] |
+| 0.6    | A | [[Reverse sorting][Reverse sorting]]                         |
+|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                    |
+|        | B | [[Outline path predicate][Outline path predicate]]                  |
+|        | B | [[Document the sorting functions][Document the sorting functions]]          |
+| future | B | [[Recursive queries][Recursive queries]]                       |
+| future | B | [[Timeline view][Timeline view]]                           |
 #+END:
 
 * [#A] Tasks
@@ -358,41 +352,63 @@ When tag inheritance is enabled, and the given tags aren't file-level tags, we c
 ** PROJECT [#A] Timestamp predicates using relative dates break caching :bug:
 :PROPERTIES:
 :milestone: 0.6
+:branch:   wip/fix-223
+:issue-link: [[https://github.com/alphapapa/org-ql/issues/223][Cache is not invalidated for relative date/time queries · Issue #223 · alphapapa/org-ql · GitHub]]
 :END:
-
-+  [[https://github.com/alphapapa/org-ql/issues/223][Cache is not invalidated for relative date/time queries · Issue #223 · alphapapa/org-ql · GitHub]]
 
 Could fix this in a 0.5.3 release, but I think too much code changes are involved for a bugfix release.
 
-*** TODO Add tests for ts-related predicates
-
-I think it's necessary to do this for every one, unfortunately.
-
-**** TODO deadline
+*** TODO Move from-to-on argument processing to query normalizers
 
 **** TODO clocked
 
++  [ ] Use new ~--normalize-from-to-on~ macro
++  [ ] Remove old ~--from-to-on~ from ~--query-predicate~
++  [ ] Add tests
+     -  [ ] Query normalization
+     -  [ ] Results
+
 **** TODO closed
 
-**** TODO planning
++  [ ] Use new ~--normalize-from-to-on~ macro
++  [ ] Remove old ~--from-to-on~ from ~--query-predicate~
++  [ ] Add tests
+     -  [ ] Query normalization
+     -  [ ] Results
 
-**** TODO ts
+**** TODO Remove old ~--from-to-on~ macro completely
+
+**** UNDERWAY ts
+
++  [ ] Use new ~--normalize-from-to-on~ macro
++  [ ] Remove old ~--from-to-on~ from ~--query-predicate~
++  [-] Add tests
+     -  [X] Query normalization
+     -  [ ] Results
+
+**** DONE planning
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
+
+**** DONE deadline
+
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
 
 **** DONE scheduled
 
-*** TODO Move from-to-on argument processing to query normalizers
-
-**** TODO deadline
-
-**** TODO scheduled
-
-**** TODO clocked
-
-**** TODO closed
-
-**** TODO planning
-
-**** TODO ts
++  [X] Use new ~--normalize-from-to-on~ macro
++  [X] Remove old ~--from-to-on~ from ~--query-predicate~
++  [X] Add tests
+     -  [X] Query normalization
+     -  [X] Results
 
 ** PROJECT [#A] Compatibility with Org 9.4 custom link changes          :bug:
 :PROPERTIES:
