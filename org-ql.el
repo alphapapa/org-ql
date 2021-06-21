@@ -1481,6 +1481,7 @@ any link is found."
                                        (match-string org-ql-link-description-group)))))))))
 
 ;; MAYBE: Preambles for outline-path predicates.  Not sure if possible without complicated logic.
+;; FIXME: These preds say they accept regexps but the strings get regexp-quoted.  They should probably just take strings.
 
 (org-ql-defpred (outline-path olp) (&rest regexps)
   "Return non-nil if current node's outline path matches all of REGEXPS.
@@ -1496,7 +1497,7 @@ the following queries:
   (olp \"Food\" \"Grapes\")"
   :normalizers ((`(,predicate-names . ,strings)
                  ;; Regexp quote headings.
-                 `(outline-path ,@(mapcar #'regexp-quote strings))))
+                 `(org-ql--predicate-outline-path ,@(mapcar #'regexp-quote strings))))
   :body (let ((entry-olp (org-ql--value-at (point) #'org-ql--outline-path)))
           (cl-loop for h in regexps
                    always (cl-member h entry-olp :test #'string-match))))

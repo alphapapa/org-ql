@@ -251,6 +251,12 @@ with keyword arg NOW in PLIST."
                 :to-equal '(link :description "DESCRIPTION" :target "TARGET"
                                  :regexp-p t))))
 
+    (describe "(outline-path)"
+      (it "with a regexp metacharacter"
+        ;; Ensures that normalizer doesn't infinitely loop.
+        (expect (org-ql--normalize-query '(olp "a." "b"))
+                :to-equal '(org-ql--predicate-outline-path "a\\." "b"))))
+
     (describe "timestamp predicates"
       ;; NOTE: (clocked) and (closed) don't accept :with-time arguments.
       (describe "(clocked)"
