@@ -153,7 +153,7 @@ regexps.")
 
 (defvar org-ql-regexp-part-ts-repeaters
   ;; Repeaters (not sure if the colon is necessary, but it's in the org.el one)
-  (rx (repeat 1 2 (seq " " (repeat 1 2 (any "-+:")) (1+ digit) (any "hdwmy"))))
+  (rx (repeat 1 2 (seq " " (repeat 1 2 (any "-+:.")) (1+ digit) (any "hdwmy"))))
   "Matches the repeater part of an Org timestamp.
 Includes leading space character.")
 
