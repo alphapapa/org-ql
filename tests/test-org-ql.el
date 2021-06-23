@@ -257,6 +257,20 @@ with keyword arg NOW in PLIST."
         (expect (org-ql--normalize-query '(olp "a." "b"))
                 :to-equal '(org-ql--predicate-outline-path "a\\." "b"))))
 
+    (describe "(tags-inherited)"
+      (expect (org-ql--normalize-query '(tags-inherited))
+              :to-equal '(tags-inherited))
+      (expect (org-ql--normalize-query '(itags))
+              :to-equal '(tags-inherited))
+      (expect (org-ql--normalize-query '(tags-inherited "foo"))
+              :to-equal '(tags-inherited "foo"))
+      (expect (org-ql--normalize-query '(itags "foo"))
+              :to-equal '(tags-inherited "foo"))
+      (expect (org-ql--normalize-query '(tags-inherited "foo" "bar"))
+              :to-equal '(tags-inherited "foo" "bar"))
+      (expect (org-ql--normalize-query '(itags "foo" "bar"))
+              :to-equal '(tags-inherited "foo" "bar")))
+
     (describe "timestamp predicates"
       ;; NOTE: (clocked) and (closed) don't accept :with-time arguments.
       (describe "(clocked)"
