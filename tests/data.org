@@ -89,7 +89,7 @@ Gotta buy one first, though.  [[https://example.com/][This one]] looks suitable.
 :END:
 
 ** CHECK /r/emacs                                            :website:Emacs:
-DEADLINE: <2017-07-05 Wed +1w>
+DEADLINE: <2017-07-05 Wed .+1w>
 
 +  [[http://reddit.com/r/emacs][Link to /r/emacs]]
 
