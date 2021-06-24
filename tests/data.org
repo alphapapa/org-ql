@@ -37,7 +37,7 @@ DEADLINE: <2017-08-27 Sun -2m>
   Just waiting on that callback from NASA...
 
 ** TODO Practice leaping tall buildings in a single bound         :personal:
-SCHEDULED: <2017-07-05 Wed +2d>
+SCHEDULED: <2017-07-05 Wed .+2d/3d>
 :PROPERTIES:
 :STYLE:    habit
 :END:
