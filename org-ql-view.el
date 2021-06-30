@@ -1054,8 +1054,9 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
   "Return value for `org-ql-view-buffers-files' using completion."
   (cl-labels ((initial-input
                () (when org-ql-view-buffers-files
-                    (org-ql-view--contract-buffers-files
-                     org-ql-view-buffers-files))))
+                    (cons (car (org-ql-view--contract-buffers-files
+                                org-ql-view-buffers-files))
+                          0))))
     (if (and org-ql-view-buffers-files
              (bufferp org-ql-view-buffers-files))
         ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
