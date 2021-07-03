@@ -1051,21 +1051,23 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
       (_ buffers-files))))
 
 (defun org-ql-view--complete-buffers-files ()
-  "Return value for `org-ql-view-buffers-files' using completion."
-  (cl-labels ((initial-input
-               () (when org-ql-view-buffers-files
-                    (cons (car (org-ql-view--contract-buffers-files
-                                org-ql-view-buffers-files))
-                          0))))
-    (if (and org-ql-view-buffers-files
-             (bufferp org-ql-view-buffers-files))
-        ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
-        ;; TODO: Find a way to fix this.
-        org-ql-view-buffers-files
-      (org-ql-view--expand-buffers-files
-       (completing-read "Buffers/Files: "
-                        (list 'buffer 'org-agenda-files 'org-directory 'all)
-                        nil nil (initial-input))))))
+  "Return value for `org-ql-view-buffers-files' using completion.
+When `org-ql-view-buffers-files' cannot be contracted to a string
+representation `org-ql-view-buffers-files' is returned."
+  (if (and org-ql-view-buffers-files
+           (bufferp org-ql-view-buffers-files))
+      ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
+      ;; TODO: Find a way to fix this.
+      org-ql-view-buffers-files
+    (let ((initial-input (when org-ql-view-buffers-files
+                           (org-ql-view--contract-buffers-files
+                            org-ql-view-buffers-files))))
+      (if (or (not initial-input) (stringp initial-input))
+          (org-ql-view--expand-buffers-files
+           (completing-read "Buffers/Files: "
+                            (list 'buffer 'org-agenda-files 'org-directory 'all)
+                            nil nil initial-input))
+        org-ql-view-buffers-files))))
 
 (defun org-ql-view--expand-buffers-files (buffers-files)
   "Return BUFFERS-FILES expanded to a list of files or buffers.
