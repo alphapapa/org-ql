@@ -495,22 +495,22 @@ with keyword arg NOW in PLIST."
     ;; to comment out the test.  But it doesn't matter much, anyway,
     ;; because I know it works properly.
 
-    ;; (expect (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
-    ;;                                       (ts-a :on "2019-01-01")
-    ;;                                       (ts-inactive :on "2019-01-01")
-    ;;                                       (ts-i :on "2019-01-01")))
-    ;;         :to-equal `(or (ts :type active
-    ;;                            :from ,(make-ts :unix 1546322400.0)
-    ;;                            :to ,(make-ts :unix 1546408799.0))
-    ;;                        (ts :type active
-    ;;                            :from ,(make-ts :unix 1546322400.0)
-    ;;                            :to ,(make-ts :unix 1546408799.0))
-    ;;                        (ts :type inactive
-    ;;                            :from ,(make-ts :unix 1546322400.0)
-    ;;                            :to ,(make-ts :unix 1546408799.0))
-    ;;                        (ts :type inactive
-    ;;                            :from ,(make-ts :unix 1546322400.0)
-    ;;                            :to ,(make-ts :unix 1546408799.0))))
+    (expect (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
+                                          (ts-a :on "2019-01-01")
+                                          (ts-inactive :on "2019-01-01")
+                                          (ts-i :on "2019-01-01")))
+            :to-equal `(or (ts :type active
+                               :from ,(make-ts :unix 1546322400.0)
+                               :to ,(make-ts :unix 1546408799.0))
+                           (ts :type active
+                               :from ,(make-ts :unix 1546322400.0)
+                               :to ,(make-ts :unix 1546408799.0))
+                           (ts :type inactive
+                               :from ,(make-ts :unix 1546322400.0)
+                               :to ,(make-ts :unix 1546408799.0))
+                           (ts :type inactive
+                               :from ,(make-ts :unix 1546322400.0)
+                               :to ,(make-ts :unix 1546408799.0))))
     )
 
   (describe "Query preambles"
