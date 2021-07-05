@@ -41,9 +41,9 @@
 
 ;;;; Functions
 
-(ert-deftest org-ql--normalize-query ()
-  (let ((print-level nil)
-        (print-length nil))
+(let ((print-level nil)
+      (print-length nil))
+  (ert-deftest org-ql--normalize-query ()
     (should (equal (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
                                                  (ts-a :on "2019-01-01")
                                                  (ts-inactive :on "2019-01-01")
