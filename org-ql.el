@@ -1162,8 +1162,11 @@ result form."
   ;; do with the version of map.el being used (although it happens locally even in
   ;; a clean sandbox, which should produce the same result as on CI).  Maybe the
   ;; real fix would be to make makem.sh support dependency versions...
-  `(-let (((&keys :from :to :on :type) rest)
-          (result))
+  `(let ((from (plist-get rest :from))
+         (to (plist-get rest :to))
+         (on (plist-get rest :on))
+         (type (plist-get rest :type))
+         (result))
      (ignore type) ;; Only (ts) uses it.
      (pcase rest
        (`(,(and num (pred numberp)) . ,rest*)
