@@ -1148,9 +1148,9 @@ It would be expanded to:
 Expands into a form that processes arguments to timestamp-related
 predicates and evaluates BODY, which is expected to evaluate to a
 timestamp-related query predicate form.  It expects the variable
-`rest' to be bound to a list of the predicate's arguments.  In
+`argh' to be bound to a list of the predicate's arguments.  In
 BODY, these variables are bound to normalized values, when
-applicable: `from', `to', `on', `type'.  If `rest' includes a
+applicable: `from', `to', `on', `type'.  If `argh' includes a
 `:with-time' argument, it is automatically added to BODY's
 result form."
   ;; Several attempts to use `cl-macrolet' and `cl-symbol-macrolet' failed, so I resorted
@@ -1162,16 +1162,16 @@ result form."
   ;; do with the version of map.el being used (although it happens locally even in
   ;; a clean sandbox, which should produce the same result as on CI).  Maybe the
   ;; real fix would be to make makem.sh support dependency versions...
-  `(let ((from (plist-get rest :from))
-         (to (plist-get rest :to))
-         (on (plist-get rest :on))
-         (type (plist-get rest :type))
+  `(let ((from (plist-get argh :from))
+         (to (plist-get argh :to))
+         (on (plist-get argh :on))
+         (type (plist-get argh :type))
          (result))
      (ignore type) ;; Only (ts) uses it.
-     (pcase rest
+     (pcase argh
        (`(,(and num (pred numberp)) . ,rest*)
         (setf on num
-              rest rest*)))
+              argh rest*)))
      (when on
        (setq from on
              to on))
@@ -1210,9 +1210,9 @@ result form."
      (setf result (progn ,@body))
      ;; Add :with-time to the result when necessary, but only when it's not already present.
      ;; (This is messy, but we do this to make predicate definition and normalization easier.)
-     (when (and (plist-member rest :with-time)
+     (when (and (plist-member argh :with-time)
                 (not (memq :with-time result)))
-       (setf result (append result (list :with-time (plist-get rest :with-time)))))
+       (setf result (append result (list :with-time (plist-get argh :with-time)))))
      ;; Remove certain keyword arguments whose value is nil.  This is
      ;; a little bit ugly, but it allows us to normalize queries more
      ;; easily, without leaving useless arguments in the result.
@@ -1952,10 +1952,10 @@ ignored."
   :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
                  ;; (clocked) and (closed) implicitly look into the past.
                  (let* ((from-day (* -1 num-days))
-                        (rest (list :from from-day)))
+                        (argh (list :from from-day)))
                    (org-ql--normalize-from-to-on
                      `(clocked :from ,from))))
-                (`(,predicate-names . ,rest)
+                (`(,predicate-names . ,argh)
                  (org-ql--normalize-from-to-on
                    `(clocked :from ,from :to ,to))))
   :preambles ((`(,predicate-names ,(pred numberp))
@@ -1972,10 +1972,10 @@ Without arguments, return non-nil if entry is closed."
   :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
                  ;; (clocked) and (closed) implicitly look into the past.
                  (let* ((from-day (* -1 num-days))
-                        (rest (list :from from-day)))
+                        (argh (list :from from-day)))
                    (org-ql--normalize-from-to-on
                      `(closed :from ,from))))
-                (`(,predicate-names . ,rest)
+                (`(,predicate-names . ,argh)
                  (org-ql--normalize-from-to-on
                    `(closed :from ,from :to ,to))))
   :preambles ((`(,predicate-names . ,_)
@@ -1990,23 +1990,23 @@ Without arguments, return non-nil if entry is closed."
 If argument is `auto', return non-nil if entry has deadline
 within `org-deadline-warning-days'.  Without arguments, return
 non-nil if entry has a deadline."
-  :normalizers ((`(,predicate-names auto . ,rest)
+  :normalizers ((`(,predicate-names auto . ,argh)
                  ;; Use `org-deadline-warning-days' as the :to arg.
                  (let ((ts (->> (ts-now)
                              (ts-adjust 'day org-deadline-warning-days)
                              (ts-apply :hour 23 :minute 59 :second 59))))
-                   `(deadline-warning :to ,ts ,@rest)))
-                (`(,predicate-names . ,(and rest (guard (numberp (car rest)))))
+                   `(deadline-warning :to ,ts ,@argh)))
+                (`(,predicate-names . ,(and argh (guard (numberp (car argh)))))
                  (org-ql--normalize-from-to-on
                    `(deadline :to ,to)))
-                (`(,predicate-names . ,rest)
+                (`(,predicate-names . ,argh)
                  (org-ql--normalize-from-to-on
                    `(deadline :from ,from :to ,to))))
   ;; NOTE: Does this normalizer cause the preamble to not be used?
   ;; (Adding one to the deadline-warning definition to be sure.)
-  :preambles ((`(,predicate-names . ,rest)
+  :preambles ((`(,predicate-names . ,argh)
                (list :query query
-                     :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                     :regexp (pcase-exhaustive (org-ql--plist-get* argh :with-time)
                                ((or 't "t") org-ql-regexp-deadline-with-time)
                                ((or 'nil "nil") org-ql-regexp-deadline-without-time)
                                ('not-found org-ql-regexp-deadline)))))
@@ -2047,15 +2047,15 @@ non-nil if entry has a deadline."
 (org-ql-defpred planning (&key from to _on regexp _with-time)
   "Return non-nil if current entry has planning timestamp in given period.
 Without arguments, return non-nil if entry has any planning timestamp."
-  :normalizers ((`(,predicate-names . ,(and rest (guard (numberp (car rest)))))
+  :normalizers ((`(,predicate-names . ,(and argh (guard (numberp (car argh)))))
                  (org-ql--normalize-from-to-on
                    `(planning :to ,to)))
-                (`(,predicate-names . ,rest)
+                (`(,predicate-names . ,argh)
                  (org-ql--normalize-from-to-on
                    `(planning :from ,from :to ,to))))
-  :preambles ((`(,predicate-names . ,rest)
+  :preambles ((`(,predicate-names . ,argh)
                (list :query query
-                     :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                     :regexp (pcase-exhaustive (org-ql--plist-get* argh :with-time)
                                ((or 't "t") org-ql-regexp-planning-with-time)
                                ((or 'nil "nil") org-ql-regexp-planning-without-time)
                                ('not-found org-ql-regexp-planning)))))
@@ -2068,12 +2068,12 @@ Without arguments, return non-nil if entry has any planning timestamp."
 (org-ql-defpred scheduled (&key from to _on regexp _with-time)
   "Return non-nil if current entry is scheduled in given period.
 Without arguments, return non-nil if entry is scheduled."
-  :normalizers ((`(,predicate-names . ,rest)
+  :normalizers ((`(,predicate-names . ,argh)
                  (org-ql--normalize-from-to-on
                    `(scheduled :from ,from :to ,to))))
-  :preambles ((`(,predicate-names . ,rest)
+  :preambles ((`(,predicate-names . ,argh)
                (list :query query
-                     :regexp (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                     :regexp (pcase-exhaustive (org-ql--plist-get* argh :with-time)
                                ((or 't "t") org-ql-regexp-scheduled-with-time)
                                ((or 'nil "nil") org-ql-regexp-scheduled-without-time)
                                ('not-found org-ql-regexp-scheduled)))))
@@ -2099,32 +2099,32 @@ of REGEXP's group that matches the Org timestamp (i.e. excluding
 any planning prefix); it defaults to 0 (i.e. the whole regexp)."
   ;; MAYBE: Define active/inactive ones separately?
   :normalizers
-  ((`(,(or 'ts-active 'ts-a) . ,rest) `(ts :type active ,@rest))
-   (`(,(or 'ts-inactive 'ts-i) . ,rest) `(ts :type inactive ,@rest))
-   (`(,predicate-names . ,(and rest (guard (numberp (car rest)))))
+  ((`(,(or 'ts-active 'ts-a) . ,argh) `(ts :type active ,@argh))
+   (`(,(or 'ts-inactive 'ts-i) . ,argh) `(ts :type inactive ,@argh))
+   (`(,predicate-names . ,(and argh (guard (numberp (car argh)))))
     (org-ql--normalize-from-to-on
       `(ts :type ,type :to ,to)))
-   (`(,predicate-names . ,rest)
+   (`(,predicate-names . ,argh)
     (org-ql--normalize-from-to-on
       `(ts :type ,type :from ,from :to ,to))))
 
   :preambles
-  ((`(,predicate-names . ,rest)
-    (list :regexp (pcase (plist-get rest :type)
-                    ((or 'nil 'both) (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+  ((`(,predicate-names . ,argh)
+    (list :regexp (pcase (plist-get argh :type)
+                    ((or 'nil 'both) (pcase-exhaustive (org-ql--plist-get* argh :with-time)
                                        ((or 't "t") org-ql-regexp-ts-both-with-time)
                                        ((or 'nil "nil") org-ql-regexp-ts-both-without-time)
                                        ('not-found org-ql-regexp-ts-both)))
-                    ('active (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                    ('active (pcase-exhaustive (org-ql--plist-get* argh :with-time)
                                ((or 't "t") org-ql-regexp-ts-active-with-time)
                                ((or 'nil "nil") org-ql-regexp-ts-active-without-time)
                                ('not-found org-ql-regexp-ts-active)))
-                    ('inactive (pcase-exhaustive (org-ql--plist-get* rest :with-time)
+                    ('inactive (pcase-exhaustive (org-ql--plist-get* argh :with-time)
                                  ((or 't "t") org-ql-regexp-ts-inactive-with-time)
                                  ((or 'nil "nil") org-ql-regexp-ts-inactive-without-time)
                                  ('not-found org-ql-regexp-ts-inactive))))
           ;; Predicate needs testing only when args are present.
-          :query (-let (((&keys :from :to :on) rest))
+          :query (-let (((&keys :from :to :on) argh))
                    ;; TODO: This used to be (when (or from to on) query), but
                    ;; that doesn't seem right, so I changed it to this if, and the
                    ;; tests pass either way.  Might deserve a little scrutiny.
