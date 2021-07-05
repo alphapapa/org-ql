@@ -1048,26 +1048,29 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
        "org-agenda-files")
       ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
        (buffer-file-name buffers-files))
+      ((pred bufferp)
+       (buffer-name buffers-files))
       (_ buffers-files))))
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion.
 When `org-ql-view-buffers-files' cannot be contracted to a string
 representation `org-ql-view-buffers-files' is returned."
-  (if (and org-ql-view-buffers-files
-           (bufferp org-ql-view-buffers-files))
-      ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
-      ;; TODO: Find a way to fix this.
-      org-ql-view-buffers-files
-    (let ((initial-input (when org-ql-view-buffers-files
-                           (org-ql-view--contract-buffers-files
-                            org-ql-view-buffers-files))))
-      (if (or (not initial-input) (stringp initial-input))
-          (org-ql-view--expand-buffers-files
-           (completing-read "Buffers/Files: "
-                            (list 'buffer 'org-agenda-files 'org-directory 'all)
-                            nil nil initial-input))
-        org-ql-view-buffers-files))))
+  (let* ((contracted-org-ql-view-buffers-files
+          (when org-ql-view-buffers-files
+            (org-ql-view--contract-buffers-files
+             org-ql-view-buffers-files)))
+         (initial-input (if (or (not contracted-org-ql-view-buffers-files) ;; not nil
+                                (stringp contracted-org-ql-view-buffers-files))
+                            contracted-org-ql-view-buffers-files
+                          (format "%s" contracted-org-ql-view-buffers-files)))
+         (completion-read-result (completing-read
+                                  "Buffers/Files: "
+                                  (list 'buffer 'org-agenda-files 'org-directory 'all)
+                                  nil nil initial-input)))
+    (if (equalp completion-read-result initial-input)
+        org-ql-view-buffers-files
+      (org-ql-view--expand-buffers-files completion-read-result))))
 
 (defun org-ql-view--expand-buffers-files (buffers-files)
   "Return BUFFERS-FILES expanded to a list of files or buffers.
