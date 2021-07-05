@@ -367,6 +367,7 @@ returns nil or non-nil."
                                             ;; It feels unintuitive that `find-file-noselect' returns
                                             ;; a buffer if the filename doesn't exist.
                                             (find-file-noselect it))
+                                          (get-buffer it)
                                           (user-error "Can't open file: %s" it)))))
                      ;; Ignore special/hidden buffers.
                      (--remove (string-prefix-p " " (buffer-name it)))))
