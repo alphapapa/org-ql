@@ -3458,6 +3458,20 @@ When committing a fix:
         :title "Dashboard"))))
 #+END_SRC
 
+** [[https://github.com/tpeacock19/org-ql-config][Trey Peacock]]
+
+[2021-07-08 Thu 23:29]
+
+#+BEGIN_QUOTE
+A recent post on reddit asked the question, Why does the recent zettelkasten craze use one file per note rather than one headline per note? Naturally, it brought many differing perspectives and approaches to org-mode usage. I wanted to show my own configuration that largely leverages alphapapa’s wonderful package org-ql. Along with some built-in functionality of org-mode I’m able to search headlines across all of my org files and visit them in indirect buffers automatically. Additionally, you can search backlinks with similar functionality.
+
+This is not meant to be a standalone package by any means, but simply an example of what can be achieved using org-ql. My personal emacs configuration is named baal, so you can safely ignore or rename any references to it.
+#+END_QUOTE
+
+*** TODO Add to examples in docs
+
+Should probably ask him first.
+
 * Profiling
 :PROPERTIES:
 :TOC:      :include descendants :depth 1
