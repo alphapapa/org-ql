@@ -1060,11 +1060,14 @@ representation `org-ql-view-buffers-files' is returned."
           (when org-ql-view-buffers-files
             (org-ql-view--contract-buffers-files
              org-ql-view-buffers-files)))
-         (initial-input (if (or (not contracted-org-ql-view-buffers-files) ;; not nil
-                                (stringp contracted-org-ql-view-buffers-files))
-                            contracted-org-ql-view-buffers-files
-                          (format "%s" contracted-org-ql-view-buffers-files)))
-         (completion-read-result (completing-read
+         (initial-input (pcase contracted-org-ql-view-buffers-files
+                          ('nil nil)
+                          ('string contracted-org-ql-view-buffers-files)
+                          ((pred listp)
+                           (mapconcat 'identity contracted-org-ql-view-buffers-files
+                                      ","))
+                          (_ (format "%s" contracted-org-ql-view-buffers-files))))
+         (completion-read-result (completing-read-multiple
                                   "Buffers/Files: "
                                   (list 'buffer 'org-agenda-files 'org-directory 'all)
                                   nil nil initial-input)))
@@ -1075,17 +1078,24 @@ representation `org-ql-view-buffers-files' is returned."
 (defun org-ql-view--expand-buffers-files (buffers-files)
   "Return BUFFERS-FILES expanded to a list of files or buffers.
 The counterpart to `org-ql-view--contract-buffers-files'."
-  (pcase-exhaustive buffers-files
-    ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                     (buffer-list)))
-    ("org-agenda-files" (org-agenda-files))
-    ("org-directory" (org-ql-search-directories-files))
-    ((or "" "buffer") (current-buffer))
-    ((pred bufferp) buffers-files)
-    ((pred listp) buffers-files)
-    ;; A single filename.
-    ((pred stringp) buffers-files)))
-
+  (cl-labels
+      ((process-buffers-files-elements
+        (_buffers-files)
+        (pcase-exhaustive _buffers-files
+          ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                           (buffer-list)))
+          ("org-agenda-files" (org-agenda-files))
+          ("org-directory" (org-ql-search-directories-files))
+          ((or "" "buffer") (current-buffer))
+          ((pred bufferp) (list _buffers-files))
+          ((pred listp) (list _buffers-files))
+          ;; A single filename.
+          ((pred stringp) (list _buffers-files)))))
+    (-mapcat #'process-buffers-files-elements
+             (remove nil (if (listp buffers-files)
+                             buffers-files
+                           (list buffer-files))))))
+       
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."
   (when (bound-and-true-p org-super-agenda-auto-selector-keywords)
