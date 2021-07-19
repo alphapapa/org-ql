@@ -1091,10 +1091,11 @@ The counterpart to `org-ql-view--contract-buffers-files'."
           ((pred listp) (list _buffers-files))
           ;; A single filename.
           ((pred stringp) (list _buffers-files)))))
-    (-mapcat #'process-buffers-files-elements
-             (remove nil (if (listp buffers-files)
-                             buffers-files
-                           (list buffer-files))))))
+    (remove-duplicates (-mapcat #'process-buffers-files-elements
+                                (remove nil (if (listp buffers-files)
+                                                buffers-files
+                                              (list buffer-files))))
+                        :test 'equalp)))
        
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."
