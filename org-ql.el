@@ -2377,6 +2377,11 @@ any planning prefix); it defaults to 0 (i.e. the whole regexp)."
             (from (test-timestamps (ts<= from next-ts)))
             (to (test-timestamps (ts<= next-ts to)))))))
 
+(org-ql-defpred blocked ()
+  "Return non-nil if the entry is blocked."
+  :body
+  (org-entry-blocked-p))
+
 ;; NOTE: Predicates defined: stop deferring and define normalizer and
 ;; preamble functions now.  Reversing preserves the order in which
 ;; they were defined.  Generally it shouldn't matter, but it might...

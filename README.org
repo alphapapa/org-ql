@@ -254,6 +254,7 @@ Arguments are listed next to predicate names, where applicable.
 +  =tags-regexp (&rest regexps)= :: Return non-nil if current heading has tags matching one or more of ~REGEXPS~.  Tests both inherited and local tags.
      -  Aliases: ~tags*~.
 +  =todo (&optional keywords)= :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
++  =blocked= :: Return non-nil if current heading is blocked.
 
 *** Ancestor/descendant predicates
 
