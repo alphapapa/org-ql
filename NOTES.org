@@ -373,6 +373,10 @@ I should benchmark it to see how much difference it makes, because all those ~fs
 
 Could allow reusing results for different queries.  Mentioned in [[https://www.reddit.com/r/emacs/comments/kewl3a/how_are_folks_using_orgagenda_and_orgroam_together/gg8iytf/][Reddit discussion]].
 
+** MAYBE Use [[https://codeberg.org/FelipeLema/session-async.el][session-async]] to have a persistent search process
+
+That could run queries in the other process and then send results to the main Emacs process.
+
 ** MAYBE [#C] Overlay-based caching inspired by org-num-mode
 
 [2019-12-30 Mon 22:42]  Newer versions of Org have =org-num-mode=, which uses =font-lock= and =after-change-functions= to update overlays in the buffer with outline numbering.  Maybe a similar approach could be used to cache arbitrary values for headings in a buffer without having to discard the whole buffer's cache when the buffer changes.
