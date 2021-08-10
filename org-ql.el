@@ -1150,6 +1150,28 @@ It would be expanded to:
          (org-ql--define-query-preamble-fn (reverse org-ql-predicates))
          (org-ql--def-query-string-to-sexp-fn (reverse org-ql-predicates))))))
 
+(defmacro org-ql-defpred-alias (name args docstring query)
+  "Define an `org-ql' predicate alias to complex `org-ql' query.
+NAME may be a symbol or a list of symbols: if a list, the first
+is used as NAME and the rest are aliases.
+
+ARGS is an argument list. DOCSTRING is the function's docstring.
+
+QUERY is a valid `org-ql' query."
+  (declare (debug ([&or symbolp listp] listp stringp
+                   &rest (sexp query)))
+           (indent defun))
+  `(org-ql-defpred ,name ,args
+     ,docstring
+     :normalizers ((`(,predicate-names . ,arg-values)
+                    (cl-progv ',args arg-values
+                      (-tree-map
+                       (lambda (el)
+                         (if (cl-member el ',args)
+                             (symbol-value el)
+                           el))
+                       ',query))))))
+
 (defmacro org-ql--normalize-from-to-on (&rest body)
   "For internal use.
 Expands into a form that processes arguments to timestamp-related
