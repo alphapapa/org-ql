@@ -515,7 +515,8 @@ If NARROW is non-nil, buffer will not be widened."
       (unless narrow
         (widen))
       (goto-char (point-min))
-      (when (org-before-first-heading-p)
+      (when (and (org-before-first-heading-p)
+                 (not (org-at-heading-p)))
         (outline-next-heading))
       (if (not (org-at-heading-p))
           (progn
@@ -564,25 +565,26 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
                            'org-ql-nil))
            (inherited-tags (or (when org-use-tag-inheritance
                                  (save-excursion
-                                   (if (org-up-heading-safe)
-                                       ;; Return parent heading's tags.
-                                       (-let* (((inherited local) (org-ql--tags-at (point)))
-                                               (tags (when (or inherited local)
-                                                       (cond ((and (listp inherited)
-                                                                   (listp local))
-                                                              (->> (append inherited local)
-                                                                -non-nil -uniq))
-                                                             ((listp inherited) inherited)
-                                                             ((listp local) local)))))
-                                         (cl-typecase org-use-tag-inheritance
-                                           (list (setf tags (-intersection tags org-use-tag-inheritance)))
-                                           (string (setf tags (--select (string-match org-use-tag-inheritance it)
-                                                                        tags))))
-                                         (pcase org-tags-exclude-from-inheritance
-                                           ('nil tags)
-                                           (_ (-difference tags org-tags-exclude-from-inheritance))))
-                                     ;; Top-level heading: use file tags.
-                                     org-file-tags)))
+                                   (org-with-wide-buffer
+                                    (if (org-up-heading-safe)
+                                        ;; Return parent heading's tags.
+                                        (-let* (((inherited local) (org-ql--tags-at (point)))
+                                                (tags (when (or inherited local)
+                                                        (cond ((and (listp inherited)
+                                                                    (listp local))
+                                                               (->> (append inherited local)
+                                                                    -non-nil -uniq))
+                                                              ((listp inherited) inherited)
+                                                              ((listp local) local)))))
+                                          (cl-typecase org-use-tag-inheritance
+                                            (list (setf tags (-intersection tags org-use-tag-inheritance)))
+                                            (string (setf tags (--select (string-match org-use-tag-inheritance it)
+                                                                         tags))))
+                                          (pcase org-tags-exclude-from-inheritance
+                                            ('nil tags)
+                                            (_ (-difference tags org-tags-exclude-from-inheritance))))
+                                      ;; Top-level heading: use file tags.
+                                      org-file-tags))))
                                'org-ql-nil))
            (all-tags (list inherited-tags local-tags)))
       ;; Check caches again, because they may have been set now.
@@ -951,18 +953,8 @@ This function is defined by calling
 defined in `org-ql-predicates' by calling `org-ql-defpred'."
               (cl-labels ((rec (element)
                                (pcase element
-                                 (`(or . ,clauses) `(or ,@(mapcar #'rec clauses)))
-                                 (`(and . ,clauses) `(and ,@(mapcar #'rec clauses)))
-                                 (`(not . ,clauses) `(not ,@(mapcar #'rec clauses)))
-                                 (`(when ,condition . ,clauses) `(when ,(rec condition)
-                                                                   ,@(mapcar #'rec clauses)))
-                                 (`(unless ,condition . ,clauses) `(unless ,(rec condition)
-                                                                     ,@(mapcar #'rec clauses)))
-                                 ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
                                  ((pred stringp) `(regexp ,element))
-
                                  ,@normalizer-patterns
-
                                  ;; Any other form: passed through unchanged.
                                  (_ element))))
                 ;; Repeat normalization until result doesn't change (limiting to 10 in case of an infinite-loop bug).
@@ -984,12 +976,7 @@ PREDICATES should be the value of `org-ql-predicates'."
                          ;; NOTE: Using -let instead of pcase-let here because I can't make map 2.1 install in the test sandbox.
                          (--map (-let* (((&plist :preambles) (cdr it)))
                                   (--map (pcase-let* ((`(,pattern ,exp) it))
-                                           `(,pattern
-                                             (-let* (((&plist :regexp :case-fold :query) ,exp))
-                                               (setf org-ql-preamble regexp
-                                                     preamble-case-fold case-fold)
-                                               ;; NOTE: Even when `predicate' is nil, it must be returned in the pcase form.
-                                               query)))
+                                           `(,pattern ,exp))
                                          preambles))
                                 predicates)))))
     (fset 'org-ql--query-preamble
@@ -1014,30 +1001,21 @@ This function is defined by calling
 defined in `org-ql-predicates' by calling `org-ql-defpred'."
              (pcase org-ql-use-preamble
                ('nil (list :query query :preamble nil))
-               (_ (let ((preamble-case-fold t)
-                        org-ql-preamble)
-                    (cl-labels ((rec (element)
-                                     (or (when org-ql-preamble
-                                           ;; Only one preamble is allowed
-                                           element)
-                                         (pcase element
-                                           (`(or _) element)
-
-                                           ,@preamble-patterns
-
-                                           (`(and . ,rest)
-                                            (let ((clauses (mapcar #'rec rest)))
-                                              `(and ,@(-non-nil clauses))))
-                                           (_ element)))))
-                      (setq query (pcase (mapcar #'rec (list query))
-                                    ((or `(nil)
+               (_ (cl-labels ((rec (element)
+                                   (pcase element
+                                     ,@preamble-patterns
+                                     (_ (list :query element)))))
+                    (-let* (((&plist :regexp :case-fold :query) (funcall #'rec query)))
+                      (setq query (pcase query
+                                    ((or `nil
+                                         `(nil)
                                          `((nil))
                                          `((and))
                                          `((or)))
                                      t)
                                     (`(t) t)
-                                    (query (-flatten-n 1 query))))
-                      (list :query query :preamble org-ql-preamble :preamble-case-fold preamble-case-fold)))))))
+                                    (_ query)))
+                      (list :query query :preamble regexp :preamble-case-fold case-fold)))))))
     ;; For some reason, byte-compiling the backquoted lambda form directly causes a warning
     ;; that `query' refers to an unbound variable, even though that's not the case, and the
     ;; function still works.  But to avoid the warning, we byte-compile it afterward.
@@ -1233,6 +1211,93 @@ result form."
 ;; Improve load time by deferring the per-predicate preamble- and normalizer-function
 ;; redefinitions until all of the predicates have been defined.
 (setf org-ql-defpred-defer t)
+
+(org-ql-defpred org-ql--and (&rest _)
+  "Normalizers and preambles for boolean (and ...) query."
+  :normalizers ((`(and)
+                 nil)
+                (`(and . ,clauses)
+                 `(and ,@(mapcar #'rec clauses))))
+  :preambles ((`(and . ,clauses)
+               (let ((preambles (mapcar #'rec clauses))
+                     regexps regexp-max case-fold-max queries)
+                 (cl-loop for preamble in preambles
+                          for clause in clauses
+                          do
+                          (-let* (((&plist :regexp :case-fold :query) preamble))
+                            (if regexp
+                                (when (or (not query) (eq query t))
+                                  (setq query `(regexp ,regexp)))
+                              (unless query (setq query clause)))
+                            (push query queries)
+                            ;; Take the longest regexp.  It should be hardest to match.
+                            (when (length> regexp (length regexp-max))
+                              (setq regexp-max regexp)
+                              (setq case-fold-max case-fold))))
+                 (setq queries (reverse queries))
+                 (list :regexp regexp-max
+                       :case-fold case-fold-max
+                       :query `(and ,@queries))))))
+
+(org-ql-defpred org-ql--or (&rest _)
+  "Normalizers and preambles for boolean (or ...) query."
+  :normalizers ((`(or)
+                 nil)
+                (`(or . ,clauses)
+                 `(or ,@(mapcar #'rec clauses))))
+  :preambles ((`(or . ,clauses)
+               (let ((preambles (mapcar #'rec clauses))
+                     regexps regexp-null-p queries)
+                 (cl-loop for preamble in preambles
+                          for clause in clauses
+                          do
+                          (-let* (((&plist :regexp :case-fold :query) preamble))
+                            (if regexp
+                                (when (or (not query) (eq query t))
+                                  (setq query `(regexp ,regexp)))
+                              (unless query (setq query clause)))
+                            (push query queries)
+                            ;; Collect regexps for combining.
+                            (if regexp (push regexp regexps)
+                              (setq regexp-null-p t))))
+                 (setq queries (reverse queries))
+                 (list :regexp (unless regexp-null-p
+                                 (and regexps
+                                      (rx-to-string `(or ,@(mapcar (lambda (re) `(regex ,re)) regexps)))))
+                       :case-fold t
+                       :query `(or ,@queries))))))
+
+(org-ql-defpred org-ql--when (&rest _)
+  "Normalizers and preambles for (when ...) query."
+  :normalizers
+  ((`(when ,condition . ,clauses)
+    `(when ,(rec condition)
+       ,@(mapcar #'rec clauses))))
+  :preambles
+  ((`(when ,condition . ,clauses)
+    (-let* (((&plist :regexp :case-fold :query) (rec `(and ,condition ,(car (last clauses))))))
+      (list :regexp regexp
+            :case-fold case-fold
+            :query `(when ,condition ,@clauses))))))
+
+(org-ql-defpred org-ql--unless (&rest _)
+  "Normalizers and preambles for (unless ...) query."
+  :normalizers
+  ((`(unless ,condition . ,clauses)
+    `(unless (save-excursion ,(rec condition))
+       ,@(mapcar #'rec clauses))))
+  :preambles
+  ((`(unless ,condition . ,clauses)
+    (-let* (((&plist :regexp :case-fold :query) (rec ,(car (last clauses)))))
+      (list :regexp regexp
+            :case-fold case-fold
+            :query `(unless ,condition ,@clauses))))))
+
+(org-ql-defpred org-ql--not (_)
+  "Normalizers and preambles for (not ...) query."
+  :normalizers
+  ((`(not . ,clauses)
+    `(save-excursion (not ,@(mapcar #'rec clauses))))))
 
 (org-ql-defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
@@ -1750,10 +1815,10 @@ Tests both inherited and local tags."
 (org-ql-defpred (tags-inherited inherited-tags tags-i itags) (&rest tags)
   "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any inherited tags."
-  :normalizers ((`(,predicate-names . ,tags)
-                 `(tags-inherited ,@tags))
-                (`(,predicate-names)
-                 `(tags-inherited)))
+  :normalizers ((`(,predicate-names)
+                 `(tags-inherited))
+                (`(,predicate-names . ,tags)
+                 `(tags-inherited ,@tags)))
   :body (cl-macrolet ((tags-p (tags)
                               `(and ,tags
                                     (not (eq 'org-ql-nil ,tags)))))
