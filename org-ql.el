@@ -951,7 +951,7 @@ PREDICATES should be the value of `org-ql-predicates'."
 This function is defined by calling
 `org-ql--define-normalize-query-fn', which uses normalizer forms
 defined in `org-ql-predicates' by calling `org-ql-defpred'."
-              (cl-labels ((org-ql-normalize-query (element)
+              (cl-labels ((rec (element)
                                (pcase element
                                  ((pred stringp) `(regexp ,element))
                                  ,@normalizer-patterns
@@ -959,7 +959,7 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
                                  (_ element))))
                 ;; Repeat normalization until result doesn't change (limiting to 10 in case of an infinite-loop bug).
                 (cl-loop with limit = 10 and count = 0
-                         for new-query = (org-ql-normalize-query query)
+                         for new-query = (rec query)
                          until (equal new-query query)
                          do (progn
                               (setf query new-query)
@@ -1001,11 +1001,11 @@ This function is defined by calling
 defined in `org-ql-predicates' by calling `org-ql-defpred'."
              (pcase org-ql-use-preamble
                ('nil (list :query query :preamble nil))
-               (_ (cl-labels ((org-ql-query-preamble (element)
-                                               (pcase element
-                                                 ,@preamble-patterns
-                                                 (_ (list :query element)))))
-                    (-let* (((&plist :regexp :case-fold :query) (org-ql-query-preamble query)))
+               (_ (cl-labels ((rec (element)
+                                   (pcase element
+                                     ,@preamble-patterns
+                                     (_ (list :query element)))))
+                    (-let* (((&plist :regexp :case-fold :query) (funcall #'rec query)))
                       (setq query (pcase query
                                     ((or `nil
                                          `(nil)
@@ -1090,28 +1090,7 @@ Then if NORMALIZERS were:
 It would be expanded to:
 
   ((`(,(or 'heading 'h) . ,args)
-  `(heading ,@args)))
-
-Also, `org-ql-normalize-query' and `org-ql-query-preamble' are defined
-locally inside (respectively) normalizer and preamble forms. They can
-be used to perform normalization or generate preambles recursively.
-
-Example:
-
-The following naive definition will not normalize QUERIES passed to
-the predicate.
-
-(org-ql-defpred myxor (&rest _)
-  \"Apply boolean xor operation.\"
-  :normalizers ((`(,predicate-names . ,queries)
-                 `(xor ,@queries))))
-
-More optimal definition would be:
-
-(org-ql-defpred myxor (&rest _)
-  \"Apply boolean xor operation.\"
-  :normalizers ((`(,predicate-names . ,queries)
-                 `(xor ,@(mapcar #'org-ql-normalize-query queiries)))))"
+  `(heading ,@args)))"
   ;; NOTE: The debug form works, completely!  For example, use `edebug-defun'
   ;; on the `heading' predicate, then evaluate this form:
   ;; (let* ((query '(heading "HEADING"))
@@ -1238,9 +1217,9 @@ result form."
   :normalizers ((`(and)
                  nil)
                 (`(and . ,clauses)
-                 `(and ,@(mapcar #'org-ql-normalize-query clauses))))
+                 `(and ,@(mapcar #'rec clauses))))
   :preambles ((`(and . ,clauses)
-               (let ((preambles (mapcar #'org-ql-query-preamble clauses))
+               (let ((preambles (mapcar #'rec clauses))
                      regexps regexp-max case-fold-max queries)
                  (cl-loop for preamble in preambles
                           for clause in clauses
@@ -1265,9 +1244,9 @@ result form."
   :normalizers ((`(or)
                  nil)
                 (`(or . ,clauses)
-                 `(or ,@(mapcar #'org-ql-normalize-query clauses))))
+                 `(or ,@(mapcar #'rec clauses))))
   :preambles ((`(or . ,clauses)
-               (let ((preambles (mapcar #'org-ql-query-preamble clauses))
+               (let ((preambles (mapcar #'rec clauses))
                      regexps regexp-null-p queries)
                  (cl-loop for preamble in preambles
                           for clause in clauses
@@ -1292,11 +1271,11 @@ result form."
   "Normalizers and preambles for (when ...) query."
   :normalizers
   ((`(when ,condition . ,clauses)
-    `(when ,(org-ql-normalize-query condition)
-       ,@(mapcar #'org-ql-normalize-query clauses))))
+    `(when ,(rec condition)
+       ,@(mapcar #'rec clauses))))
   :preambles
   ((`(when ,condition . ,clauses)
-    (-let* (((&plist :regexp :case-fold :query) (org-ql-query-preamble `(and ,condition ,(car (last clauses))))))
+    (-let* (((&plist :regexp :case-fold :query) (rec `(and ,condition ,(car (last clauses))))))
       (list :regexp regexp
             :case-fold case-fold
             :query `(when ,condition ,@clauses))))))
@@ -1305,11 +1284,11 @@ result form."
   "Normalizers and preambles for (unless ...) query."
   :normalizers
   ((`(unless ,condition . ,clauses)
-    `(unless ,(org-ql-normalize-query condition)
-       ,@(mapcar #'org-ql-normalize-query clauses))))
+    `(unless (save-excursion ,(rec condition))
+       ,@(mapcar #'rec clauses))))
   :preambles
   ((`(unless ,condition . ,clauses)
-    (-let* (((&plist :regexp :case-fold :query) (org-ql-query-preamble (car (last clauses)))))
+    (-let* (((&plist :regexp :case-fold :query) (rec ,(car (last clauses)))))
       (list :regexp regexp
             :case-fold case-fold
             :query `(unless ,condition ,@clauses))))))
@@ -1318,7 +1297,7 @@ result form."
   "Normalizers and preambles for (not ...) query."
   :normalizers
   ((`(not . ,clauses)
-    `(not ,@(mapcar #'org-ql-normalize-query clauses)))))
+    `(save-excursion (not ,@(mapcar #'rec clauses))))))
 
 (org-ql-defpred category (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
@@ -1927,7 +1906,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   :normalizers ((`(,predicate-names
                    ;; Avoid infinitely compiling already-compiled functions.
                    ,(and query (guard (not (byte-code-function-p query)))))
-                 `(ancestors ,(org-ql--query-predicate (org-ql-normalize-query query))))
+                 `(ancestors ,(org-ql--query-predicate (rec query))))
                 (`(,predicate-names) '(ancestors (lambda () t))))
   :body
   (org-with-wide-buffer
@@ -1939,7 +1918,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strin
   :normalizers ((`(,predicate-names
                    ;; Avoid infinitely compiling already-compiled functions.
                    ,(and query (guard (not (byte-code-function-p query)))))
-                 `(parent ,(org-ql--query-predicate (org-ql-normalize-query query))))
+                 `(parent ,(org-ql--query-predicate (rec query))))
                 (`(,predicate-names) '(parent (lambda () t))))
   :body
   (org-with-wide-buffer
