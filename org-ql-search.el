@@ -285,9 +285,9 @@ For example, an org-ql dynamic block header could look like:
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
                  (cons 'heading (lambda (element)
-                                  (org-make-link-string (org-element-property :raw-value element)
+                                  (org-make-link-string (car (org-element-property :title element))
                                                         (org-link-display-format
-                                                         (org-element-property :raw-value element)))))
+                                                         (car (org-element-property :title element))))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
