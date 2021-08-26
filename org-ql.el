@@ -298,6 +298,11 @@ See Info node `(org-ql)Queries'."
   :type 'boolean
   :risky t)
 
+(defcustom org-ql-default-predicate-boolean 'and
+  "Default boolean to combine search terms."
+  :type 'boolean
+  :group 'org-ql)
+
 ;;;; Macros
 
 ;;;###autoload
@@ -868,8 +873,13 @@ value of `org-ql-predicates')."
                             ;; obscure bug in `peg': when one keyword is a substring of another,
                             ;; and the shorter one is listed first, the shorter one fails to match.
                             (-sort (-on #'> #'length))))
-         (pexs `((query (+ term
-                           (opt (+ (syntax-class whitespace) (any)))))
+         (pexs `((query sum (opt eol))
+                 (sum value  (* (or (and _ "and" _ value `(a b -- (list 'and a b)))
+                                    (and _ "or" _ value `(a b -- (list 'or a b)))
+                                    (and _ value `(a b -- (list org-ql-default-predicate-boolean a b))))))
+                 (value
+                  (or term
+                      (and "(" (opt _) sum (opt _) ")" (opt _))))
                  (term (or (and negation (list positive-term)
                                 ;; This is a bit confusing, but it seems to work.  There's probably a better way.
                                 `(pred -- (list 'not (car pred))))
@@ -883,18 +893,22 @@ value of `org-ql-predicates')."
                  (predicate (or ,@predicate-names))
                  (args (list (+ (and (or keyword-arg quoted-arg unquoted-arg) (opt separator)))))
                  (keyword-arg (and keyword "=" `(kw -- (intern (concat ":" kw)))))
-                 (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
+                 (keyword (substring (+ (not (or brackets separator "=" "\"" (syntax-class whitespace))) (any))))
                  (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
-                 (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
+                 (unquoted-arg (substring (+ (not (or brackets separator "\"" (syntax-class whitespace))) (any))))
                  (negation "!")
-                 (separator "," )))
+                 (separator "," )
+                 (operator (or "and" "or"))
+                 (brackets (or "(" ")"))
+                 (_ (* [" \t"]))
+                 (eol (or  "\n" "\r\n" "\r"))))
          (closure (lambda (input &optional boolean)
                     "Return query parsed from plain query string INPUT.
   Multiple predicate-names are combined with BOOLEAN (default: `and')."
                     ;; HACK: Silence unused lexical variable warnings.
                     (ignore predicates predicate-names names aliases)
                     (unless (s-blank-str? input)
-                      (let* ((boolean (or boolean 'and))
+                      (let* ((org-ql-default-predicate-boolean (or boolean org-ql-default-predicate-boolean))
                              (parsed-sexp
                               (with-temp-buffer
                                 (insert input)
@@ -908,8 +922,7 @@ value of `org-ql-predicates')."
                                 (eval `(with-peg-rules ,pexs
                                          (peg-run (peg ,(caar pexs)) #'peg-signal-failure))))))
                         (pcase parsed-sexp
-                          (`(,one-predicate) one-predicate)
-                          (`(,_ . ,_) (cons boolean (reverse parsed-sexp)))
+                          (`(,_) (car parsed-sexp))
                           (_ nil)))))))
     (fset 'org-ql--query-string-to-sexp closure)))
 
