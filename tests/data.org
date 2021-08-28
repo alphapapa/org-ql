@@ -15,7 +15,7 @@ DEADLINE: <2017-07-07 Fri>
  I'd like to be finished with this before the weekend...
 
 *** TODO [#A] Skype with president of Antarctica           :world:meetings:
-SCHEDULED: <2017-07-04 Tue 21:00>
+SCHEDULED: <2017-07-04 Tue 21:00-22:00>
 
   Not sure what his timezone is...
 
