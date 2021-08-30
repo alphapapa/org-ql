@@ -285,12 +285,14 @@ For example, an org-ql dynamic block header could look like:
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
                  (cons 'heading (lambda (element)
-                                  (org-make-link-string (replace-regexp-in-string "\[[[:digit:]]*/[[:digit:]]*\]\\|\[[[:digit:]]*\%\]" "" 
-										  (org-element-property :raw-value element))
-                                                        (org-link-display-format
-                                                         (replace-regexp-in-string "\[[[:digit:]]*/[[:digit:]]*\]\\|\[[[:digit:]]*\%\]" "" 
-										   (org-element-property :raw-value element))))))
-                 (cons 'priority (lambda (element)
+					(org-make-link-string (s-trim (org-element-interpret-data
+                                                      (--remove (eq 'statistics-cookie (org-element-type it))
+                                                                (org-element-property :title element))))
+                                             (org-link-display-format
+                                              (s-trim (org-element-interpret-data
+                                                       (--remove (eq 'statistics-cookie (org-element-type it))
+                                                                 (org-element-property :title element))))))))
+	         (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
                  (cons 'deadline (lambda (element)
