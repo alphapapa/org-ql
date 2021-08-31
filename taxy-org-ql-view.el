@@ -141,6 +141,34 @@ Returns in format \"%Y-%m-%d\"."
 	    (org-element-property :closed element))
     "Planned"))
 
+(taxy-org-ql-view-define-key category ()
+  "Return ELEMENT's category."
+  (org-with-point-at (org-element-property :org-hd-marker element)
+    (org-get-category)))
+
+(defun taxy-org-ql--latest-timestamp-in (regexp element)
+  "Return the latest timestamp matching REGEXP in ELEMENT.
+Searches in ELEMENT's buffer."
+  (org-with-point-at (org-element-property :org-hd-marker element)
+    (let* ((limit (org-entry-end-position))
+           (tss (cl-loop for next-ts =
+                         (when (re-search-forward regexp limit t)
+                           (ts-parse-org (match-string 1)))
+                         while next-ts
+                         collect next-ts)))
+      (when tss
+        (car (sort tss #'ts>))))))
+
+(taxy-org-ql-view-define-key ts-year ()
+  "Return the year of ELEMENT's latest timestamp."
+  (when-let ((latest-ts (taxy-org-ql--latest-timestamp-in org-element--timestamp-regexp element)))
+    (ts-format "%Y" latest-ts)))
+
+(taxy-org-ql-view-define-key ts-month ()
+  "Return the month of ELEMENT's latest timestamp."
+  (when-let ((latest-ts (taxy-org-ql--latest-timestamp-in org-element--timestamp-regexp element)))
+    (ts-format "%Y-%m (%B)" latest-ts)))
+
 (taxy-org-ql-view-define-key deadline (&rest args)
   "Return whether ELEMENT has a deadline according to ARGS."
   (when-let ((deadline-element (org-element-property :deadline element)))
