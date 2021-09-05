@@ -89,6 +89,17 @@ Based on `helm-map'.")
   :type '(alist :key-type (string :tag "Description")
                 :value-type (function :tag "Command")))
 
+(defcustom helm-org-ql-create-new t
+  "When non-nil, allow creating new heading using the search query.
+
+New heading will be added using `org-capture' according to
+`helm-org-ql-create-new-capture-template'."
+  :type 'boolean)
+(defcustom helm-org-ql-create-new-capture-template nil
+  "Capture template used to create a new heading.
+
+When non-nil, it should be a string associated with a template in `org-capture-templates'."
+  :type '(choice boolean string))
 ;;;; Commands
 
 ;;;###autoload
@@ -125,7 +136,11 @@ Is transformed into this query:
   (let ((boolean (if current-prefix-arg 'or boolean))
         (helm-input-idle-delay helm-org-ql-input-idle-delay))
     (helm :prompt (format "Query (boolean %s): " (-> boolean symbol-name upcase))
-          :sources (helm-org-ql-source buffers-files :name name))))
+          :sources (let ((main-source (helm-org-ql-source buffers-files :name name)))
+                     (if helm-org-ql-create-new
+                         (list main-source
+                               (helm-org-ql-create-new-source))
+                       main-source)))))
 
 ;;;###autoload
 (defun helm-org-ql-agenda-files ()
@@ -195,6 +210,24 @@ Is transformed into this query:
     :volatile t
     :keymap helm-org-ql-map
     :action helm-org-ql-actions))
+
+(defun helm-org-ql-create-new-source ()
+  "Helm source used to capture new headings."
+  (helm-build-sync-source "Create new"
+    :candidates
+    (lambda ()
+      (if (string-empty-p helm-pattern)
+          (list "New note")
+        (list (format "New note: \"%s\"" (string-clean-whitespace helm-pattern)))))
+    :match #'identity
+    :match-dynamic t
+    :nohighlight t
+    :action
+    '(("New note" . (lambda (_)
+                      (progn
+                        (org-link-store-props :annotation helm-pattern)
+                        (let ((org-capture-link-is-already-stored t))
+                          (org-capture nil helm-org-ql-create-new-capture-template))))))))
 
 (defun helm-org-ql--heading (window-width)
   "Return string for Helm for heading at point.
