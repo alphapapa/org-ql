@@ -22,8 +22,8 @@
 #+BEGIN: org-ql :query "todo: tags:bug" :columns ((priority "P") ((property "milestone") "M") (todo "Keyword") heading) :sort (priority todo date) :ts-format "%Y-%m-%d %H:%M"
 | P |   M | Keyword | Heading                                        |
 |---+-----+---------+------------------------------------------------|
-| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 |   |     | NEXT    | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]  |
+| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
@@ -107,12 +107,13 @@
 - [[#omnifocus-like-screencasts][OmniFocus-like screencasts]]
 - [[#use-ripgrep-to-search-unopened-files][Use ripgrep to search unopened files]]
 - [[#key-cache-results-by-action-function][Key cache results by action function]]
+- [[#use-session-async-to-have-a-persistent-search-process][Use session-async to have a persistent search process]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
-- [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
 - [[#reverse-sorting][Reverse sorting]]
+- [[#recursive-sub-queries-in-non-sexp-format][Recursive sub-queries in non-sexp format]]
 - [[#optimized-date-specific-timestamp-regexps][Optimized, date-specific timestamp regexps]]
 - [[#multi-pass-query-normalization][Multi-pass query normalization]]
 - [[#optimization-for-olp-predicate][Optimization for olp predicate]]
@@ -129,6 +130,7 @@
 - [[#normalize-queries][Normalize queries]]
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
+- [[#alternative-parsing-libraries][Alternative parsing libraries]]
 - [[#timestamp-predicates-using-relative-dates-break-caching][Timestamp predicates using relative dates break caching]]
 - [[#link-target-doesnt-work][~(link :target)~ doesn't work]]
 - [[#link-regexp-p-doesnt-work][~(link :regexp-p)~ doesn't work]]
@@ -385,12 +387,6 @@ That could run queries in the other process and then send results to the main Em
 
 However, there might still be a useful idea here somewhere...
 
-** MAYBE [#C] Alternative parsing libraries
-
-
-+  e.g. Bovine and Wisent come with Emacs, which would allow us to drop the =peg= dependency (which doesn't use lexical binding).
-+  [[https://github.com/cute-jumper/parsec.el][parsec]] is third-party, but looks powerful
-
 ** MAYBE [#C] Fancier searching for inherited tags
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
@@ -537,6 +533,46 @@ Maybe make it an option to automatically convert them when possible, because if 
 Need to mention incompatible change (though that isn't the best way to describe it) in the changelog.
 
 *** WAITING [[https://github.com/alphapapa/org-ql/issues/143#issuecomment-863638651][Get feedback]]
+
+** PROJECT Recursive sub-queries in non-sexp format
+
+[2021-09-08 Wed 15:41]  Eric Abrahamsen showed me this in =#emacs:matrix.org=:
+
+#+BEGIN_SRC elisp
+  (defvar test-pexs
+    '((query (+ (or compound-term term)))
+      (term (or subquery prefixed-term kv-term value) term-end)
+      (subquery "(" query ")"
+                `(query -- (if (= 1 (length query)) query (list query))))
+      (prefixed-term (or negated-term near-term))
+      (negated-term (or "not " "-") term
+                    `(term -- (list 'not term)))
+      (near-term "near " term
+                 `(term -- (list 'near term)))
+      (compound-term (or or-terms and-terms))
+      (or-terms (or subquery prefixed-term term) "or " (or subquery prefixed-term term)
+                `(t1 t2 -- (list 'or t1 t2)))
+      (and-terms (or subquery prefixed-term term) "and " (or subquery prefixed-term term)
+                 `(t1 t2 -- (list 'and t1 t2)))
+      (value (or quoted-value plain-value))
+      (plain-value (substring (+ [word])))
+      (quoted-value "\"" (substring (+ (not "\"") (any))) "\"")
+      (kv-term plain-value ":" value
+               `(k v -- (cons (intern k) v)))
+      (term-end (opt (+ [space])))))
+#+END_SRC
+
+#+BEGIN_QUOTE
+The INFINITE RECURSIVE SUBQUERIES is particularly nice 
+
+​BTW, I see what you mean about the peg macros, that's a real pain. I have a small patch that should fix that 
+
+​This was half-cribbed from org-ql to begin with, so it's only right that you get something in return :) 
+
+​The subtlety is all in the ordering of the or statements 
+#+END_QUOTE
+
+It should be pretty easy to add some of that to our query parsing.
 
 ** PROJECT [#B] Optimized, date-specific timestamp regexps     :enhancement:
 :PROPERTIES:
@@ -2133,6 +2169,13 @@ e.g. doesn't currently show the =View= header.
 
 See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test the caching explicitly, at least for some queries, because if I were to completely break it again, in such a way that results were stored but retrieval always failed, the tests wouldn't catch it.
 
+** CANCELED [#C] Alternative parsing libraries
+
++  e.g. Bovine and Wisent come with Emacs, which would allow us to drop the =peg= dependency +(which doesn't use lexical binding)+
++  [[https://github.com/cute-jumper/parsec.el][parsec]] is third-party, but looks powerful
+
+[2021-09-08 Wed 15:40]  (=peg= does use lexical binding now, and it's in ELPA and getting a bit of attention, so no need to drop it, I think.)
+
 ** DONE [#A] Timestamp predicates using relative dates break caching   :bug:
 :PROPERTIES:
 :milestone: 0.6
@@ -3256,6 +3299,7 @@ When committing a fix:
 - [[#benson-chu][Benson Chu]]
 - [[#kevin-brubeck-unhammer][Kevin Brubeck Unhammer]]
 - [[#mikhail-skorzhinskiy][Mikhail Skorzhinskiy]]
+- [[#trey-peacock][Trey Peacock]]
 :END:
 
 ** [[https://github.com/AloisJanicek/.doom.d-2nd][Alois Janicek]]
