@@ -38,11 +38,141 @@
 
 (cl-defstruct (taxy-org-ql-view-section
                (:include taxy-magit-section
-                         (format-fn #'org-ql-view--format-element)
-                         (indent 2)
                          (make #'make-taxy-org-ql-view-section))))
 
+;;;; Customization
+
+(defgroup org-ql-view-taxy nil
+  "Options for `org-ql-view-taxy'."
+  :group 'org-ql-view)
+
+(defcustom org-ql-view-taxy-blank-between-depth 1
+  "Insert blank lines between groups up to this depth."
+  :type 'integer)
+
+(defcustom org-ql-view-taxy-initial-depth 0
+  "Effective initial depth of first-level groups.
+Sets at which depth groups and items begin to be indented.  For
+example, setting to -1 prevents indentation of the first and
+second levels."
+  :type 'integer)
+
+(defcustom org-ql-view-taxy-level-indent 1
+  "Indentation per level of depth."
+  :type 'integer)
+
+(defcustom org-ql-view-taxy-item-indent 1
+  "Indentation of items relative to their level's indentation."
+  :type 'integer)
+
 ;;;; Macros
+
+;;;;; Columns
+
+(defvar org-ql-view-column-format-fns nil
+  "FIXME: Docstring.")
+
+(defvar org-ql-view-columns
+  '("Keyword" "Pri" "Heading" "Planning" "Tags")
+  "FIXME: Docstring.")
+
+(defmacro org-ql-view-define-column (name plist &rest body)
+  "Define a column formatting function with NAME.
+NAME should be a string.  BODY should return a string or nil.  In
+the BODY, `element' is bound to the Org element, and `depth' is
+bound to the buffer's depth in the group tree.
+
+PLIST may be a plist setting the following options:
+
+  `:face' is a face applied to the string.
+
+  `:max-width' defines a customization option for the column's
+  maximum width with the specified value as its default: an
+  integer limits the width, while nil does not."
+  (declare (indent defun))
+  (cl-check-type name string)
+  (pcase-let* ((fn-name (intern (concat "org-ql-view-column-format-" (downcase name))))
+               ((map :face :max-width) plist)
+               (max-width-variable (intern (concat "org-ql-view-column-" name "-max-width")))
+               (max-width-docstring (format "Maximum width of the %s column." name)))
+    `(progn
+       ,(when (plist-member plist :max-width)
+          `(defcustom ,max-width-variable
+             ,max-width
+             ,max-width-docstring
+             :type '(choice (integer :tag "Maximum width")
+                            (const :tag "Unlimited width" nil))))
+       (defun ,fn-name (element depth)
+         (if-let ((string (progn ,@body)))
+             (progn
+               ,(when max-width
+                  `(when ,max-width-variable
+                     (setf string (truncate-string-to-width string ,max-width-variable nil nil "…"))))
+               ,(when face
+                  ;; Faces are not defined until load time, while this checks type at expansion
+                  ;; time, so we can only test that the argument is a symbol, not a face.
+                  (cl-check-type face symbol ":face must be a face symbol")
+                  `(setf string (propertize string 'face ',face)))
+               string)
+           ""))
+       (setf (map-elt org-ql-view-column-format-fns ,name) #',fn-name))))
+
+(org-ql-view-define-column "Keyword" (:max-width nil)
+  (let ((indentation (make-string (+ (* depth org-ql-view-taxy-level-indent)
+				     org-ql-view-taxy-item-indent)
+				  ? ))
+	(keyword (or (org-element-property :todo-keyword element) "")))
+    (unless (string-empty-p keyword)
+      ;; NOTE: We use `substring-no-properties' to avoid propagating
+      ;; `wrap-prefix' and `line-prefix' properties that may be
+      ;; present on the source buffer's keyword.
+      (setf keyword (org-ql-view--add-todo-face (substring-no-properties keyword))))
+    (concat indentation keyword)))
+
+(org-ql-view-define-column "Heading" (:max-width 60)
+  (ignore depth)
+  (org-link-display-format
+   (org-element-property
+    :raw-value (org-ql-view--add-faces element))))
+
+(org-ql-view-define-column "Planning" (:max-width nil)
+  (ignore depth)
+  (when-let ((planning-element (or (org-element-property :deadline element)
+				   (org-element-property :scheduled element)
+				   (org-element-property :closed element))))
+    (org-ql-view--format-relative-date
+     (floor (/ (ts-diff (ts-now) (ts-parse-org-element planning-element))
+	       86400)))))
+
+(org-ql-view-define-column "Pri" (:max-width nil)
+  (ignore depth)
+  (or (-some->> (org-element-property :priority element)
+        (char-to-string)
+        (format "[#%s]")
+        (org-ql-view--add-priority-face))
+      ""))
+
+(org-ql-view-define-column "Tags" (:max-width nil)
+  (ignore depth)
+  ;; Copied from `org-ql-view--format-element'.
+  (when-let ((tags (if org-use-tag-inheritance
+		       ;; MAYBE: Use our own variable instead of `org-use-tag-inheritance'.
+		       (if-let ((marker (or (org-element-property :org-hd-marker element)
+					    (org-element-property :org-marker element))))
+			   (with-current-buffer (marker-buffer marker)
+			     (org-with-wide-buffer
+			      (goto-char marker)
+			      (cl-loop for type in (org-ql--tags-at marker)
+				       unless (or (eq 'org-ql-nil type)
+                                                  (not type))
+				       append type)))
+                         ;; No marker found
+                         ;; TODO: Use `display-warning' with `org-ql' as the type.
+                         (warn "No marker found for item: %s" element)
+                         (org-element-property :tags element))
+		     (org-element-property :tags element))))
+    (org-add-props (concat ":" (string-join tags ":") ":")
+	nil 'face 'org-tag)))
 
 ;;;; Defining taxy keys with macro
 
@@ -240,13 +370,14 @@ ad infinitum, approximately)."
        `(lambda (item taxy)
 	  (taxy-take-keyed (list ,@keys) item taxy))))))
 
-(defun taxy-org-ql-view-make-taxy (name keys)
+(defun taxy-org-ql-view-make-taxy (name keys &rest args)
   "Return a dynamic `taxy-org-ql-view-section' taxy named NAME having KEYS.
 KEYS is passed to `taxy-org-ql-view-take-fn', which see."
   (declare (indent defun))
-  (make-taxy-org-ql-view-section
-   :name name
-   :take (taxy-org-ql-view-take-fn keys)))
+  (apply #'make-taxy-org-ql-view-section
+	 :name name
+	 :take (taxy-org-ql-view-take-fn keys)
+	 args))
 
 ;;;; Variables
 
@@ -277,23 +408,42 @@ KEYS is passed to `taxy-org-ql-view-take-fn', which see."
     (buffers-or-files query &key taxy-keys sort)
   "Show Org QL QUERY on BUFFERS-OR-FILES with `taxy-org-ql-view'."
   (declare (indent 1))
-  (let* ((title (format "Query:%S  In:%S" query buffers-or-files))
-	 (taxy (taxy-org-ql-view-make-taxy title
-		 taxy-keys))
-	 (items (org-ql-select buffers-or-files query
-		  :action 'element-with-markers
-		  :sort sort))	 )
-    (let ((inhibit-read-only t))
-      (save-excursion
-	(goto-char (point-max))
-	(taxy-magit-section-insert
-	 (thread-last taxy
-	   (taxy-fill items)
-	   (taxy-mapc* (lambda (taxy)
-			 (setf (taxy-taxys taxy)
-			       (cl-sort (taxy-taxys taxy) #'string<
-					:key #'taxy-name)))))
-	 :items 'last)))))
+  (let (format-table column-sizes)
+    (cl-labels ((format-item (item) (gethash item format-table))
+		(make-fn (&rest args)
+			 (apply #'make-taxy-org-ql-view-section
+                                :make #'make-fn
+                                :format-fn #'format-item
+                                ;; :heading-face-fn #'heading-face
+                                :heading-indent org-ql-view-taxy-level-indent
+                                :item-indent 0
+                                args)))
+      (let* ((title (format "Query:%S  In:%S"
+			    (org-ql--query-sexp-to-string query) buffers-or-files))
+	     (items (org-ql-select buffers-or-files query
+		      :action 'element-with-markers
+		      :sort sort))
+	     (taxy (thread-last (make-fn
+				 :name title
+				 :take (taxy-org-ql-view-take-fn taxy-keys))
+		     (taxy-fill items)))
+	     (taxy-magit-section-insert-indent-items nil)
+	     format-cons header)
+	;; FIXME: Adding a search overwrites the `header-line-format'.
+	(setf format-cons (taxy-magit-section-format-items
+			   org-ql-view-columns org-ql-view-column-format-fns taxy)
+	      format-table (car format-cons)
+	      column-sizes (cdr format-cons)
+	      ;; NOTE: The first column is handled differently.
+	      header (concat (format (format " %%-%ss" (cdar column-sizes)) (caar column-sizes))
+			     (cl-loop for (name . size) in (cdr column-sizes)
+				      for spec = (format " %%-%ss" size)
+				      concat (format spec name)))
+	      header-line-format header)
+	(let ((inhibit-read-only t))
+	  (save-excursion
+	    (goto-char (point-max))
+	    (taxy-magit-section-insert taxy :items 'first)))))))
 
 ;;;; Footer
 
