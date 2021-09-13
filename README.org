@@ -529,8 +529,10 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Predicate ~effort~.
 +  Predicate ~heading-regexp~, which matches regular expressions against heading text (alias: ~h*~).
 +  Timestamp-related predicates now accept an optional ~:with-time~ argument, which allows matching timestamps with or without times (i.e. HH:MM).
++  Sorting method ~reverse~.
 
 *Changed*
++  The order in which sorting functions is applied has been reversed.  For example, ~:sort '(todo priority date)~ now does what ~:sort '(date priority todo)~ did in earlier versions.  (This change is made to enable the new ~reverse~ sorting method.)  Users who have customized =org-ql-views= will need to update the stored views' sorting methods to preserve the desired sort order.
 +  Helm support (including the command =helm-org-ql=) has been moved to a separate package, =helm-org-ql=.
 +  Predicate ~heading~ now matches plain strings instead of regular expressions.
 +  Update =dash= dependency, and remove dependency on obsolete =dash-functional=.  (Fixes [[https://github.com/alphapapa/org-ql/issues/179][#179]], [[https://github.com/alphapapa/org-ql/issues/209][#209]].  Thanks to [[https://github.com/landakram][Mark Hudnall]], [[https://github.com/akirak][Akira Komamura]], [[https://github.com/natask][Nathanael kinfe]], [[https://github.com/benthamite][Pablo Stafforini]], [[https://github.com/jmay][Jason May]], and [[https://github.com/basil-conto][Basil L. Contovounesios]].)
