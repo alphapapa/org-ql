@@ -1686,19 +1686,19 @@ with keyword arg NOW in PLIST."
                 (unquoted-lambda-in-list-link "[[org-ql-search:todo:?buffers-files%3D%28%28lambda%20nil%20%28error%20%22UNSAFE%22%29%29%29]]"))
           (it "Errors for a quoted lambda"
             (expect (open-link quoted-lambda-link)
-                    :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: (lambda nil (error UNSAFE))")))
+                    :to-throw 'error '("Value lambda is not a valid buffer/file")))
           (it "Errors for an unquoted lambda"
             (expect (open-link unquoted-lambda-link)
-                    :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: (lambda nil (error UNSAFE))")))
+                    :to-throw 'error '("Value lambda is not a valid buffer/file")))
           (it "Errors for a quoted lambda in a list"
             (if (version< (org-version) "9.3")
                 (expect (open-link quoted-lambda-in-list-link)
-                        :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: ((quote (lambda nil (error UNSAFE))))"))
+                        :to-throw 'error '("Value (quote (lambda nil (error UNSAFE))) is not a valid buffer/file"))
               (expect (open-link quoted-lambda-in-list-link)
-                      :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: ('(lambda nil (error UNSAFE)))"))))
+                      :to-throw 'error '("Value (quote (lambda nil (error UNSAFE))) is not a valid buffer/file"))))
           (it "Errors for an unquoted lambda in a list"
             (expect (open-link unquoted-lambda-in-list-link)
-                    :to-throw 'error '("CAUTION: Link not opened because unsafe buffers-files parameter detected: ((lambda nil (error UNSAFE)))"))))
+                    :to-throw 'error '("Value (lambda nil (error UNSAFE)) is not a valid buffer/file"))))
 
         (describe "super-groups parameter"
           :var ((quoted-lambda-link "[[org-ql-search:todo:?super-groups%3D%28lambda%20nil%20%28error%20%22UNSAFE%22%29%29]]")
@@ -2068,7 +2068,7 @@ with keyword arg NOW in PLIST."
           (it "Can search a file by filename"
             (expect (var-after-link-save-open 'org-ql-view-buffers-files one-filename query
                                               :store-input "M-n M-n RET")
-                    :to-equal one-filename))
+                    :to-equal (list one-filename)))
           (it "Can search multiple files by filename"
             (expect (var-after-link-save-open 'org-ql-view-buffers-files temp-filenames query
                                               :store-input "M-n M-n RET")
@@ -2112,83 +2112,83 @@ with keyword arg NOW in PLIST."
             (expect (var-after-link-save-open 'org-ql-view-buffers-files link-buffer query
                                               :buffer link-buffer)
                     :to-throw 'user-error '("Views that search non-file-backed buffers can’t be linked to"))))
-        (describe "Completion for Files/buffers"
-          (describe "Contracting org-ql-view-buffers-files"
-            (it "org-agenda-files from list"
+        (describe "while completion for files/buffers"
+          (describe "contracting org-ql-view-buffers-files"
+            (it "list of files to \"org-agenda-files\""
               (spy-on 'org-agenda-files :and-return-value temp-filenames)
               (expect (org-ql-view--contract-buffers-files temp-filenames) :to-equal "org-agenda-files"))
-            (it "org-directory"
-              (spy-on 'org-ql-search-directories-files :and-return-value temp-filenames)
+            (it "list of files to \"org-directory\""
               (spy-on 'org-agenda-files :and-return-value '())
-              (expect (org-ql-view--contract-buffers-files temp-filenames) :to-equal temp-filenames))
-            (it "buffer"
+              ;; Also indirectly tests org-ql-search-directories-files
+              (let ((org-directory temp-dir))  ;; the :var binding does not work? https://github.com/jorgenschaefer/emacs-buttercup/issues/127
+                (expect (org-ql-view--contract-buffers-files temp-filenames) :to-equal "org-directory")))
+            (it "to \"buffer\" when passing current-buffer"
               (with-current-buffer (org-ql-test-data-buffer "data.org")
                 (expect (org-ql-view--contract-buffers-files (current-buffer)) :to-equal "buffer")))
-            (it "org-agenda-files from symbol"
+            (it "to \"org-agenda-files\" from symbol values ('org-agenda-files or #'org-agenda-files)"
               (spy-on 'org-agenda-files :and-return-value temp-filenames)
               (expect (org-ql-view--contract-buffers-files 'org-agenda-files) :to-equal "org-agenda-files")
               (expect (org-ql-view--contract-buffers-files #'org-agenda-files) :to-equal "org-agenda-files"))
-            (it "Non specific list"
+            (it "arbitarary list of buffers/files"
               (let ((value1 '("a.org" "b.org"))
                     (value2 'a))
                 (expect (org-ql-view--contract-buffers-files value1) :to-equal value1)
-                (expect (org-ql-view--contract-buffers-files value2) :to-equal value2))))
-          (describe "Expanding org-ql-view-buffers-files"
-            (it "all"
-              (let* ((buffer-names (list (make-temp-file "test" nil ".org") (make-temp-file "test" nil ".other")))
-                     (buffers (mapcar #'get-buffer-create buffer-names)))
-                (save-excursion
-                  (switch-to-buffer (car buffers))
+                ;; If the value does not result to a buffer, file, or string, throws error
+                (expect (org-ql-view--contract-buffers-files value2) :to-throw))))
+          (describe "expanding org-ql-view-buffers-files"
+            (it "returns all buffers with `org-mode' as the major-mode"
+              (let ((buffers (list (generate-new-buffer "test.org") (generate-new-buffer "test.other"))))
+                (with-current-buffer (car buffers)
                   (org-mode))
                 (spy-on 'buffer-list :and-return-value buffers)
-                (expect (org-ql-view--expand-buffers-files "all") :to-equal (list (car buffers)))))
-            (it "org-agenda-files"
-              (spy-on 'org-agenda-files :and-return-value "value for org-agenda-files")
-              (expect (org-ql-view--expand-buffers-files "org-agenda-files") :to-equal "value for org-agenda-files"))
-            (it "org-directory"
-              (spy-on 'org-ql-search-directories-files :and-return-value "value for org-directory")
-              (expect (org-ql-view--expand-buffers-files "org-directory") :to-equal "value for org-directory"))
-            (it "buffer"
+                (expect (org-ql-view--expand-buffers-files "all") :to-equal (list (buffer-name (car buffers))))))
+            (it "returns values of \"org-agenda-files\""
+              (let ((org-agenda-files (mapcar
+                                       (lambda (it)
+                                         (buffer-name it))
+                                       (list (generate-new-buffer "test1")
+                                             (generate-new-buffer "test2")))))
+                (expect (org-ql-view--expand-buffers-files "org-agenda-files") :to-equal org-agenda-files)))
+            (it "returns values of \"org-directory\""
+              ;; Also indirectly tests `org-ql-view--expand-buffers-files'
+              (let ((org-directory temp-dir))
+                (expect (org-ql-view--expand-buffers-files "org-directory") :to-equal temp-filenames)))
+            (it "returns the current buffer"
               (with-temp-buffer
-                (expect (org-ql-view--expand-buffers-files "buffer") :to-equal (current-buffer))))
-            (it "literal values"
+                (expect (org-ql-view--expand-buffers-files "buffer") :to-equal (list (buffer-name (current-buffer))))))
+            (it "returns literal value(s)"
               (with-temp-buffer
-                (expect (org-ql-view--expand-buffers-files (current-buffer)) :to-equal (current-buffer)))
-              (let ((test-buffer (get-buffer-create (make-temp-file "test"))))
-                (expect (org-ql-view--expand-buffers-files test-buffer) :to-equal test-buffer))
-              (let ((test-list '(1 2 3)))
-                (expect (org-ql-view--expand-buffers-files test-list) :to-equal test-list))
-              (let ((string-literal "this is a string"))
-                (expect (org-ql-view--expand-buffers-files string-literal) :to-equal string-literal))))
-          (describe "Testing org-ql-view--complete-buffers-files"
-            (it "org-agenda-files"
+                (expect (org-ql-view--expand-buffers-files (current-buffer)) :to-equal (list (buffer-name (current-buffer)))))
+              (let ((test-buffer (generate-new-buffer "test")))
+                (expect (org-ql-view--expand-buffers-files test-buffer) :to-equal (list (buffer-name test-buffer))))
+              (let ((list-of-numbers '(1 2 3))
+                    (literal-string "random string"))
+                ;; If the value does not result to a buffer, file, or string, throws error
+                (expect (org-ql-view--expand-buffers-files list-of-numbers) :to-throw)
+                (expect (org-ql-view--expand-buffers-files literal-string) :to-equal (list literal-string)))))
+          (describe "testing `org-ql-view--complete-buffers-files'"
+            (it "returns `org-agenda-files'"
               (let ((org-ql-view-buffers-files temp-filenames))
                 (spy-on 'org-ql-view--contract-buffers-files :and-call-through)
                 (spy-on 'org-agenda-files :and-return-value temp-filenames)
-                (spy-on 'completing-read :and-return-value "org-agenda-files")
+                (spy-on 'completing-read-multiple :and-return-value "org-agenda-files")
                 (expect (org-ql-view--complete-buffers-files) :to-equal temp-filenames)
                 (expect 'org-ql-view--contract-buffers-files :to-have-been-called-with temp-filenames)
-                (expect 'completing-read :to-have-been-called-with "Buffers/Files: "
-                            (list 'buffer 'org-agenda-files 'org-directory 'all)
-                            nil nil "org-agenda-files")))
-            (it "nil"
+                ;; Also testing if the initial values are set correctly
+                (expect 'completing-read-multiple :to-have-been-called-with "Buffers/Files: "
+                        (list 'buffer 'org-agenda-files 'org-directory 'all)
+                        nil nil "org-agenda-files")))
+            (it "returns nil"
               (let ((org-ql-view-buffers-files nil))
-                (spy-on 'completing-read :and-return-value nil)
+                (spy-on 'completing-read-multiple :and-return-value nil)
                 (expect (org-ql-view--complete-buffers-files) :to-equal nil)
-                (expect 'completing-read :to-have-been-called-with "Buffers/Files: "
+                (expect 'completing-read-multiple :to-have-been-called-with "Buffers/Files: "
                         (list 'buffer 'org-agenda-files 'org-directory 'all)
                         nil nil nil)))
-            (it "list"
-              (let ((org-ql-view-buffers-files '(1 2 3)))
-                (spy-on 'completing-read :and-return-value nil)
-                (expect (org-ql-view--complete-buffers-files) :to-equal org-ql-view-buffers-files)
-                (expect 'completing-read :not :to-have-been-called)))
-            (it "buffer"
-              (let ((org-ql-view-buffers-files (get-buffer-create (make-temp-file "test"))))
-                (spy-on 'completing-read :and-return-value nil)
-                (expect (org-ql-view--complete-buffers-files) :to-equal org-ql-view-buffers-files)
-                (expect 'completing-read :not :to-have-been-called)))))))
-
+            (it "returna a list of buffers/files"
+              (let ((list-of-files temp-filenames))
+                (spy-on 'completing-read-multiple :and-return-value list-of-files)
+                (expect (org-ql-view--complete-buffers-files) :to-equal list-of-files)))))))
 
     ;; MAYBE: Also test `org-ql-views', although I already know it works now.
     ;; (describe "org-ql-views")

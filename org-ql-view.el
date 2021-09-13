@@ -1032,26 +1032,39 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
                                (string (expand-file-name it))
                                (otherwise it))
                              list)))
-    ;; TODO: Test this more exhaustively.
-    (pcase buffers-files
-      ((pred listp)
-       (pcase (expand-files buffers-files)
-         ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
-          "org-agenda-files")
-         ((and (guard (file-exists-p org-directory))
-               (pred (seq-set-equal-p (org-ql-search-directories-files
-                                       :directories (list org-directory)))))
-          "org-directory")
-         (_ buffers-files)))
-      ((pred (equal (current-buffer)))
-       "buffer")
-      ((or 'org-agenda-files '(function org-agenda-files))
-       "org-agenda-files")
-      ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
-       (buffer-file-name buffers-files))
-      ((pred bufferp)
-       (buffer-name buffers-files))
-      (_ buffers-files))))
+    (-->
+        ;; TODO: Test this more exhaustively.
+        (pcase buffers-files
+          ((pred listp)
+           (pcase (expand-files buffers-files)
+             ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
+              "org-agenda-files")
+             ((and (guard (file-exists-p org-directory))
+                   (pred (seq-set-equal-p (org-ql-search-directories-files
+                                           :directories (list org-directory)))))
+              "org-directory")
+             (_ buffers-files)))
+          ((pred (equal (current-buffer)))
+           "buffer")
+          ((or 'org-agenda-files '(function org-agenda-files))
+           "org-agenda-files")
+          ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
+           (buffer-file-name buffers-files))
+          ((pred bufferp)
+           (buffer-name buffers-files))
+          (_ buffers-files))
+      ;; All items needs to be strings to pick duplicates when used with the extend conterpart.
+      ;; So making sure the buffers are convered to file names
+      (if (stringp it)
+          it
+        (-map
+         (lambda (buffer-file)
+           (if (bufferp buffer-file)
+               (--if-let (buffer-file-name buffer-file)
+                   it
+                 (buffer-name buffer-file))
+             buffer-file))
+         it)))))
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion.
@@ -1072,26 +1085,39 @@ representation `org-ql-view-buffers-files' is returned."
                                   "Buffers/Files: "
                                   (list 'buffer 'org-agenda-files 'org-directory 'all)
                                   nil nil initial-input)))
-    (if (equalp completion-read-result initial-input)
+    (if (equal completion-read-result initial-input)
         org-ql-view-buffers-files
       (org-ql-view--expand-buffers-files completion-read-result))))
 
 (defun org-ql-view--expand-buffers-files (buffers-files)
   "Return BUFFERS-FILES expanded to a list of files or buffers.
-The counterpart to `org-ql-view--contract-buffers-files'."
-  (--> (-list buffers-files)
-    (pcase-exhaustive it
-      ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                       (buffer-list)))
-      ("org-agenda-files" (org-agenda-files))
-      ("org-directory" (org-ql-search-directories-files))
-      ((or "" "buffer") (current-buffer))
-      ((pred bufferp) (list it))
-      ((pred listp) (list it))
-      ;; A single filename.
-      ((pred stringp) (list it)))
-    -non-nil -uniq -flatten))
-       
+The counterpart to `org-ql-view--contract-buffers-files'.
+This always returns a list of string values."
+  (-->
+      (-map (lambda (buffer-file)
+                (pcase-exhaustive buffer-file
+                  ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                                   (buffer-list)))
+                  ("org-agenda-files" (org-agenda-files))
+                  ("org-directory" (org-ql-search-directories-files))
+                  ((or "" "buffer")
+                   (current-buffer))
+                  ((pred bufferp) (list buffer-file))
+                  ;; A single filename.
+                  ((pred stringp) (list buffer-file))
+                  (_ (error (format "Value %s is not a valid buffer/file" buffer-file)))))
+            (-list buffers-files))
+    -flatten -non-nil
+    ;; expanding all file-buffers to file names to avoid duplicate entries being formed
+    (-map (lambda (buffer-file)
+            (if (bufferp buffer-file)
+                (--if-let (buffer-file-name buffer-file)
+                    it
+                  (buffer-name buffer-file))
+              buffer-file))
+          it)
+    -uniq))
+
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."
   (when (bound-and-true-p org-super-agenda-auto-selector-keywords)
