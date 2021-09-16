@@ -1032,39 +1032,41 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
                                (string (expand-file-name it))
                                (otherwise it))
                              list)))
-    (-->
-        ;; TODO: Test this more exhaustively.
-        (pcase buffers-files
-          ((pred listp)
-           (pcase (expand-files buffers-files)
-             ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
+    (let ((contracted-buffers-files
+           ;; TODO: Test this more exhaustively.
+           (pcase buffers-files
+             ((pred listp)
+              (pcase (expand-files buffers-files)
+                ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
+                 "org-agenda-files")
+                ((and (guard (file-exists-p org-directory))
+                      (pred (seq-set-equal-p (org-ql-search-directories-files
+                                              :directories (list org-directory)))))
+                 "org-directory")
+                (_ buffers-files)))
+             ((pred (equal (current-buffer)))
+              "buffer")
+             ((or 'org-agenda-files '(function org-agenda-files))
               "org-agenda-files")
-             ((and (guard (file-exists-p org-directory))
-                   (pred (seq-set-equal-p (org-ql-search-directories-files
-                                           :directories (list org-directory)))))
-              "org-directory")
-             (_ buffers-files)))
-          ((pred (equal (current-buffer)))
-           "buffer")
-          ((or 'org-agenda-files '(function org-agenda-files))
-           "org-agenda-files")
-          ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
-           (buffer-file-name buffers-files))
-          ((pred bufferp)
-           (buffer-name buffers-files))
-          (_ buffers-files))
-      ;; All items needs to be strings to pick duplicates when used with the extend conterpart.
-      ;; So making sure the buffers are convered to file names
-      (if (stringp it)
-          it
-        (-map
-         (lambda (buffer-file)
-           (if (bufferp buffer-file)
-               (--if-let (buffer-file-name buffer-file)
-                   it
-                 (buffer-name buffer-file))
-             buffer-file))
-         it)))))
+             ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
+              (buffer-file-name buffers-files))
+             ((pred bufferp)
+              (buffer-name buffers-files))
+             (_ buffers-files))))
+      ;; To filter duplicates with the extend counterpart of this function,
+      ;; this needs to be a string or a list of string.
+      ;; Hence, making sure the buffers are convered to file names or buffer names.
+      ;; Using file-names when it's a file-buffer to avoid duplicates resulting from
+      ;; the file-buffer and file name being entered.
+      (cl-typecase contracted-buffers-files
+        (string contracted-buffers-files)
+        (list (--map
+               (pcase-exhaustive it
+                 ((pred stringp) it)
+                 ((pred bufferp) (or (buffer-file-name it)
+                                     (buffer-name buffer-file))))
+               contracted-buffers-files))
+        (t (error (format "Value %s is not a string or a list of buffer/strings" contracted-buffers-files)))))))
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion.
@@ -1093,30 +1095,37 @@ representation `org-ql-view-buffers-files' is returned."
   "Return BUFFERS-FILES expanded to a list of files or buffers.
 The counterpart to `org-ql-view--contract-buffers-files'.
 This always returns a list of string values."
-  (-->
-      (-map (lambda (buffer-file)
-                (pcase-exhaustive buffer-file
-                  ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                                   (buffer-list)))
-                  ("org-agenda-files" (org-agenda-files))
-                  ("org-directory" (org-ql-search-directories-files))
-                  ((or "" "buffer")
-                   (current-buffer))
-                  ((pred bufferp) (list buffer-file))
-                  ;; A single filename.
-                  ((pred stringp) (list buffer-file))
-                  (_ (error (format "Value %s is not a valid buffer/file" buffer-file)))))
-            (-list buffers-files))
-    -flatten -non-nil
-    ;; expanding all file-buffers to file names to avoid duplicate entries being formed
-    (-map (lambda (buffer-file)
-            (if (bufferp buffer-file)
-                (--if-let (buffer-file-name buffer-file)
-                    it
-                  (buffer-name buffer-file))
-              buffer-file))
-          it)
-    -uniq))
+  (let ((expanded-buffers-files
+         (--> buffers-files
+           -list -non-nil
+           (-map (lambda (buffer-file)
+                   (pcase-exhaustive buffer-file
+                     ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                                      (buffer-list)))
+                     ("org-agenda-files" (org-agenda-files))
+                     ("org-directory" (org-ql-search-directories-files))
+                     ((or "" "buffer")
+                      (current-buffer))
+                     ((or (pred bufferp)
+                          ;; A single filename.
+                          (pred stringp))
+                      buffer-file)
+                     (_ (error (format "Value %s is not a valid buffer/file" buffer-file)))))
+                 it))))
+    (--> expanded-buffers-files
+      -flatten
+      ;; removing `nil' again as some values have been expanded.
+      -non-nil
+      ;; Expanding all buffers to file names or buffer names to remove duplicate entries.
+      (--map
+       (pcase-exhaustive it
+         ((pred bufferp) (or (buffer-file-name it)
+                             (buffer-name it)))
+         ;; Any values at this point should be a buffer or string.
+         ;; Testing for string anyways.
+         ((pred stringp) it))
+       it)
+      -uniq)))
 
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."

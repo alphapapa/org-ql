@@ -2130,11 +2130,11 @@ with keyword arg NOW in PLIST."
               (expect (org-ql-view--contract-buffers-files 'org-agenda-files) :to-equal "org-agenda-files")
               (expect (org-ql-view--contract-buffers-files #'org-agenda-files) :to-equal "org-agenda-files"))
             (it "arbitarary list of buffers/files"
-              (let ((value1 '("a.org" "b.org"))
-                    (value2 'a))
-                (expect (org-ql-view--contract-buffers-files value1) :to-equal value1)
-                ;; If the value does not result to a buffer, file, or string, throws error
-                (expect (org-ql-view--contract-buffers-files value2) :to-throw))))
+              (let ((list-of-strings '("a.org" "b.org"))
+                    (invalid-type 'a))
+                (expect (org-ql-view--contract-buffers-files list-of-strings) :to-equal list-of-strings)
+                ;; Signal error if value is not a buffer, file, or string.
+                (expect (org-ql-view--contract-buffers-files invalid-type) :to-throw))))
           (describe "expanding org-ql-view-buffers-files"
             (it "returns all buffers with `org-mode' as the major-mode"
               (let ((buffers (list (generate-new-buffer "test.org") (generate-new-buffer "test.other"))))
@@ -2150,7 +2150,7 @@ with keyword arg NOW in PLIST."
                                              (generate-new-buffer "test2")))))
                 (expect (org-ql-view--expand-buffers-files "org-agenda-files") :to-equal org-agenda-files)))
             (it "returns values of \"org-directory\""
-              ;; Also indirectly tests `org-ql-view--expand-buffers-files'
+              ;; Also indirectly tests `org-ql-view--expand-buffers-files'.
               (let ((org-directory temp-dir))
                 (expect (org-ql-view--expand-buffers-files "org-directory") :to-equal temp-filenames)))
             (it "returns the current buffer"
@@ -2163,7 +2163,7 @@ with keyword arg NOW in PLIST."
                 (expect (org-ql-view--expand-buffers-files test-buffer) :to-equal (list (buffer-name test-buffer))))
               (let ((list-of-numbers '(1 2 3))
                     (literal-string "random string"))
-                ;; If the value does not result to a buffer, file, or string, throws error
+                ;; Signal error if any of the values are not a buffer, file, or string.
                 (expect (org-ql-view--expand-buffers-files list-of-numbers) :to-throw)
                 (expect (org-ql-view--expand-buffers-files literal-string) :to-equal (list literal-string)))))
           (describe "testing `org-ql-view--complete-buffers-files'"
@@ -2174,7 +2174,7 @@ with keyword arg NOW in PLIST."
                 (spy-on 'completing-read-multiple :and-return-value "org-agenda-files")
                 (expect (org-ql-view--complete-buffers-files) :to-equal temp-filenames)
                 (expect 'org-ql-view--contract-buffers-files :to-have-been-called-with temp-filenames)
-                ;; Also testing if the initial values are set correctly
+                ;; Also testing if the initial values are set correctly.
                 (expect 'completing-read-multiple :to-have-been-called-with "Buffers/Files: "
                         (list 'buffer 'org-agenda-files 'org-directory 'all)
                         nil nil "org-agenda-files")))
