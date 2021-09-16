@@ -658,9 +658,12 @@ When opened, the link searches the buffer it's opened from."
                                                  '("file link is in" "files currently searched")
                                                  nil t nil nil "file link is in")
                               ("file link is in" nil)
-                              ("files currently searched" buffers-files)))
+                              ("files currently searched" (cl-typecase buffers-files
+                                                            (function (funcall buffers-files))
+                                                            (otherwise buffers-files)))))
                 (strings-or-file-buffers-p
                  (thing) (cl-etypecase thing
+                           (functionp t)
                            (list (cl-every #'strings-or-file-buffers-p thing))
                            (string thing)
                            (buffer (or (buffer-file-name thing)
@@ -1035,6 +1038,7 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
     (let ((contracted-buffers-files
            ;; TODO: Test this more exhaustively.
            (pcase buffers-files
+             ((pred functionp) buffers-files)
              ((pred listp)
               (pcase (expand-files buffers-files)
                 ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
@@ -1059,6 +1063,7 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
       ;; Using file-names when it's a file-buffer to avoid duplicates resulting from
       ;; the file-buffer and file name being entered.
       (cl-typecase contracted-buffers-files
+        (function contracted-buffers-files)
         (string contracted-buffers-files)
         (list (--map
                (pcase-exhaustive it
@@ -1066,7 +1071,7 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
                  ((pred bufferp) (or (buffer-file-name it)
                                      (buffer-name buffer-file))))
                contracted-buffers-files))
-        (t (error (format "Value %s is not a string or a list of buffer/strings" contracted-buffers-files)))))))
+        (t (error (format "Value %s is not a string, a valid function or a list of buffer/strings" contracted-buffers-files)))))))
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion.
@@ -1079,14 +1084,17 @@ representation `org-ql-view-buffers-files' is returned."
          (initial-input (pcase contracted-org-ql-view-buffers-files
                           ('nil nil)
                           ('string contracted-org-ql-view-buffers-files)
+                          ((pred functionp) contracted-org-ql-view-buffers-files)
                           ((pred listp)
                            (mapconcat 'identity contracted-org-ql-view-buffers-files
                                       ","))
                           (_ (format "%s" contracted-org-ql-view-buffers-files))))
-         (completion-read-result (completing-read-multiple
-                                  "Buffers/Files: "
-                                  (list 'buffer 'org-agenda-files 'org-directory 'all)
-                                  nil nil initial-input)))
+         (completion-read-result (if (functionp contracted-org-ql-view-buffers-files)
+                                     contracted-org-ql-view-buffers-files
+                                   (completing-read-multiple
+                                    "Buffers/Files: "
+                                    (list 'buffer 'org-agenda-files 'org-directory 'all)
+                                    nil nil initial-input))))
     (if (equal completion-read-result initial-input)
         org-ql-view-buffers-files
       (org-ql-view--expand-buffers-files completion-read-result))))
