@@ -2129,14 +2129,25 @@ with keyword arg NOW in PLIST."
               (spy-on 'org-agenda-files :and-return-value temp-filenames)
               (expect (org-ql-view--contract-buffers-files 'org-agenda-files) :to-equal "org-agenda-files")
               (expect (org-ql-view--contract-buffers-files #'org-agenda-files) :to-equal "org-agenda-files"))
-            (it "arbitarary list of buffers/files"
-              (let ((list-of-strings '("a.org" "b.org"))
-                    (invalid-type 'a))
-                (expect (org-ql-view--contract-buffers-files list-of-strings) :to-equal list-of-strings)
-                ;; Signal error if value is not a buffer, file, or string.
-                (expect (org-ql-view--contract-buffers-files invalid-type) :to-throw))))
+            (it "returns function"
+              (let ((quoted-function (lambda nil temp-filenames))
+                    (unquoted-function '(lambda nil temp-filenames)))
+                (expect (org-ql-view--contract-buffers-files quoted-function) :to-equal quoted-function)
+                (expect (org-ql-view--contract-buffers-files unquoted-function) :to-equal unquoted-function)))
+            (it "with a list of strings"
+              (let ((list-of-strings '("a.org" "b.org")))
+                (expect (org-ql-view--contract-buffers-files list-of-strings) :to-equal list-of-strings)))
+            (describe "invalid values"
+              :var ((list-of-strings-and-functions '("a.org" "b.org" 'org-agenda-files))
+                    (invalid-type 'a)
+                    (invalid-type-list '(a)))
+                (it "signals error if called with value not a buffer, or string"
+                  (expect (org-ql-view--contract-buffers-files list-of-strings-and-functions) :to-throw)
+                  (expect (org-ql-view--contract-buffers-files invalid-type) :to-throw)  
+                  (expect (org-ql-view--contract-buffers-files invalid-type-list) :to-throw))))
+            (describe "handles duplicate values")
           (describe "expanding org-ql-view-buffers-files"
-            (it "returns all buffers with `org-mode' as the major-mode"
+            (it "with \"all\" returns all buffers with `org-mode' as the major-mode"
               (let ((buffers (list (generate-new-buffer "test.org") (generate-new-buffer "test.other"))))
                 (with-current-buffer (car buffers)
                   (org-mode))
@@ -2156,6 +2167,8 @@ with keyword arg NOW in PLIST."
             (it "returns the current buffer"
               (with-temp-buffer
                 (expect (org-ql-view--expand-buffers-files "buffer") :to-equal (list (buffer-name (current-buffer))))))
+            (it "signals error when called with a function"
+                (expect (org-ql-view--expand-buffers-files '((lambda nil temp-filenames))) :to-throw 'error '("Value (lambda nil temp-filenames) is not a valid buffer/file")))
             (it "returns literal value(s)"
               (with-temp-buffer
                 (expect (org-ql-view--expand-buffers-files (current-buffer)) :to-equal (list (buffer-name (current-buffer)))))
@@ -2163,9 +2176,21 @@ with keyword arg NOW in PLIST."
                 (expect (org-ql-view--expand-buffers-files test-buffer) :to-equal (list (buffer-name test-buffer))))
               (let ((list-of-numbers '(1 2 3))
                     (literal-string "random string"))
-                ;; Signal error if any of the values are not a buffer, file, or string.
+                ;; Signal error if any of the values are not a buffer, function, or string.
                 (expect (org-ql-view--expand-buffers-files list-of-numbers) :to-throw)
-                (expect (org-ql-view--expand-buffers-files literal-string) :to-equal (list literal-string)))))
+                (expect (org-ql-view--expand-buffers-files literal-string) :to-equal (list literal-string))))
+            (it "contracts to a list without duplicates"
+              (let* ((list-of-strings '("a.org" "b.org"))
+                     (duplicate-buffer-and-file (list (find-file-noselect (car temp-filenames))
+                                                      (car temp-filenames)))
+                     (org-agenda-files (list (car temp-filenames)))
+                     (random-buffer (generate-new-buffer "new-buffer"))
+                     (random-buffer-name (buffer-name random-buffer))
+                     (duplicate-buffer-and-name (list random-buffer-name random-buffer))
+                     (buffer-collection (append org-agenda-files (list random-buffer-name))))
+                (expect (org-ql-view--expand-buffers-files duplicate-buffer-and-file) :to-equal (list (car temp-filenames)))
+                (expect (org-ql-view--expand-buffers-files duplicate-buffer-and-name) :to-equal (list random-buffer-name))
+                (expect (org-ql-view--expand-buffers-files (list "org-agenda-files" random-buffer)) :to-equal buffer-collection))))
           (describe "testing `org-ql-view--complete-buffers-files'"
             (it "returns `org-agenda-files'"
               (let ((org-ql-view-buffers-files temp-filenames))

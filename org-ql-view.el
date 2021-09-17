@@ -1038,7 +1038,9 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
     (let ((contracted-buffers-files
            ;; TODO: Test this more exhaustively.
            (pcase buffers-files
-             ((pred functionp) buffers-files)
+             ((pred functionp) (pcase buffers-files
+                                 ('org-agenda-files "org-agenda-files")
+                                 (_ buffers-files)))
              ((pred listp)
               (pcase (expand-files buffers-files)
                 ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
@@ -1065,12 +1067,15 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
       (cl-typecase contracted-buffers-files
         (function contracted-buffers-files)
         (string contracted-buffers-files)
-        (list (--map
-               (pcase-exhaustive it
-                 ((pred stringp) it)
-                 ((pred bufferp) (or (buffer-file-name it)
-                                     (buffer-name buffer-file))))
-               contracted-buffers-files))
+        (list (--> contracted-buffers-files
+                -flatten -non-nil
+                (--map
+                 (pcase-exhaustive it
+                   ((pred stringp) it)
+                   ((pred bufferp) (or (buffer-file-name it)
+                                       (buffer-name buffer-file))))
+                 it)
+                -uniq))
         (t (error (format "Value %s is not a string, a valid function or a list of buffer/strings" contracted-buffers-files)))))))
 
 (defun org-ql-view--complete-buffers-files ()
