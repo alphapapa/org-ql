@@ -529,7 +529,10 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Predicate ~effort~.
 +  Predicate ~heading-regexp~, which matches regular expressions against heading text (alias: ~h*~).
 +  Timestamp-related predicates now accept an optional ~:with-time~ argument, which allows matching timestamps with or without times (i.e. HH:MM).
-+  Sorting method ~reverse~.
++  Sorting methods:
+     -  ~reverse~
+     -  ~closed~  (Thanks to [[https://github.com/yejianye][Ryan Ye]].)
++  Dynamic block column ~closed~.  (Thanks to [[https://github.com/yejianye][Ryan Ye]].)
 
 *Changed*
 +  The order in which sorting functions is applied has been reversed.  For example, ~:sort '(todo priority date)~ now does what ~:sort '(date priority todo)~ did in earlier versions.  (This change is made to enable the new ~reverse~ sorting method.)  Users who have customized =org-ql-views= will need to update the stored views' sorting methods to preserve the desired sort order.
