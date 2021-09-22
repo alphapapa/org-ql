@@ -1743,17 +1743,15 @@ Tests both inherited and local tags."
   "Return non-nil if current heading has all of TAGS (a list of strings).
 Tests both inherited and local tags."
   ;; MAYBE: -all versions for inherited and local.
-  :normalizers ((`(,predicate-names) `(tags))
-                (`(,predicate-names . ,tags) `(and ,@(--map `(tags ,it) tags))))
+  :normalizers ((`(,predicate-names . ,tags)
+                 `(and ,@(--map `(tags ,it) tags))))
   :body (apply #'org-ql--predicate-tags tags))
 
 (org-ql-defpred (tags-inherited inherited-tags tags-i itags) (&rest tags)
   "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any inherited tags."
   :normalizers ((`(,predicate-names . ,tags)
-                 `(tags-inherited ,@tags))
-                (`(,predicate-names)
-                 `(tags-inherited)))
+                 `(tags-inherited ,@tags)))
   :body (cl-macrolet ((tags-p (tags)
                               `(and ,tags
                                     (not (eq 'org-ql-nil ,tags)))))
@@ -1766,8 +1764,8 @@ If TAGS is nil, return non-nil if heading has any inherited tags."
 (org-ql-defpred (tags-local local-tags tags-l ltags) (&rest tags)
   "Return non-nil if current heading's local tags include one or more of TAGS (a list of strings).
 If TAGS is nil, return non-nil if heading has any local tags."
-  :normalizers ((`(,predicate-names) `(tags-local))
-                (`(,predicate-names . ,tags) `(tags-local ,@tags)))
+  :normalizers ((`(,predicate-names . ,tags)
+                 `(tags-local ,@tags)))
   :preambles ((`(,predicate-names . ,(and tags (guard tags)))
                ;; When searching for local, non-inherited tags, we can
                ;; search directly to headings containing one of the tags.
