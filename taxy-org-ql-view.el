@@ -321,7 +321,8 @@ Searches in ELEMENT's buffer."
                            org-ql-view-columns org-ql-view-column-formatters taxy)
               format-table (car format-cons)
               column-sizes (cdr format-cons)
-              header-line-format (taxy-magit-section-format-header column-sizes org-ql-view-column-formatters))
+              header-line-format (taxy-magit-section-format-header
+				  column-sizes org-ql-view-column-formatters))
         (let ((inhibit-read-only t))
           (save-excursion
             (goto-char (point-max))
