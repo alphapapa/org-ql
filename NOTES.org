@@ -3134,6 +3134,10 @@ When committing a fix:
 +  [ ] Merge to master or make stable branch
 +  [ ] Push master/stable
 +  [ ] Delete WIP branch
++  [ ] Make GitHub release
++  [ ] Announce
+     -  [ ] Reddit
+     -  [ ] org-mode mailing list
 
 ** Archive
 
@@ -3195,6 +3199,32 @@ When committing a fix:
 +  [X] Merge to master or make stable branch
 +  [X] Push master/stable
 +  [X] Delete WIP branch
+
+*** DONE Release: 0.6
+:PROPERTIES:
+:ID:       db2ed038-b8b4-45c1-8b12-d450a95d69b1
+:END:
+
++  [X] Make WIP branch
++  [X] =Meta= pre-release commit
+     -  [X] Update version numbers
+          +  [X] =org-ql.el=
+          +  [X] =helm-org-ql.el=
+          +  [X] =README.org=
++  [X] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
++  [X] Changelog entry
++  [ ] Merge to stable branch
+     -  [ ] Non-fast-forward merge WIP branch into stable branch
+     -  [ ] Tag and sign merge commit
++  [X] Push stable branch
++  [X] Push tags
++  [X] Merge to master or make stable branch
++  [X] Push master/stable
++  [X] Delete WIP branch
++  [X] Make GitHub release
++  [X] Announce
+     -  [X] Reddit
+     -  [X] org-mode mailing list
 
 * Examples / testing
 :PROPERTIES:
