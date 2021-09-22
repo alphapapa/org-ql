@@ -348,7 +348,7 @@ Return items matching ~QUERY~ in ~BUFFERS-OR-FILES~.
 
 If ~NARROW~ is non-nil, buffers are not widened (the default is to widen and search the entire buffer).
 
-~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods (~date~, ~deadline~, ~scheduled~, ~todo~, ~priority~, or ~random~); or a user-defined comparator function that accepts two items as arguments and returns nil or non-nil.
+~SORT~ is either nil, in which case items are not sorted; or one or a list of defined ~org-ql~ sorting methods (~date~, ~deadline~, ~scheduled~, ~closed~, ~todo~, ~priority~, or ~random~); or a user-defined comparator function that accepts two items as arguments and returns nil or non-nil.
 
 Examples:
 
@@ -471,7 +471,7 @@ It would be expanded to:
 Org QL provides a dynamic block that lists entries in the current document matching a query.  In the header, these parameters are supported:
 
 +  ~:query~: An Org QL query expression in either sexp or non-sexp form.
-+  ~:columns~ A list of columns, including ~heading~, ~todo~, ~property~, ~priority~, ~deadline~, ~scheduled~.
++  ~:columns~ A list of columns, including ~heading~, ~todo~, ~property~, ~priority~, ~deadline~, ~scheduled~, ~closed~.
      -  Each column may also be specified as a list with the second element being a header string.  For example, to abbreviate the priority column: ~(priority "P")~.
      -  For certain columns, like =property=, arguments may be passed by specifying the column type itself as a list.  For example, to display a column showing the values of a ~property~ named ~milestone~, with the header being abbreviated to ~M~: ~((property "milestone") "M")~.
 +  ~:sort~ One or a list of Org QL sorting methods (see ~org-ql-select~).
@@ -529,7 +529,10 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Predicate ~effort~.
 +  Predicate ~heading-regexp~, which matches regular expressions against heading text (alias: ~h*~).
 +  Timestamp-related predicates now accept an optional ~:with-time~ argument, which allows matching timestamps with or without times (i.e. HH:MM).
-+  Sorting method ~reverse~.
++  Sorting methods:
+     -  ~reverse~
+     -  ~closed~  (Thanks to [[https://github.com/yejianye][Ryan Ye]].)
++  Dynamic block column ~closed~.  (Thanks to [[https://github.com/yejianye][Ryan Ye]].)
 
 *Changed*
 +  The order in which sorting functions is applied has been reversed.  For example, ~:sort '(todo priority date)~ now does what ~:sort '(date priority todo)~ did in earlier versions.  (This change is made to enable the new ~reverse~ sorting method.)  Users who have customized =org-ql-views= will need to update the stored views' sorting methods to preserve the desired sort order.

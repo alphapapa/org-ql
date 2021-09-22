@@ -698,9 +698,9 @@ File: README.info,  Node: Listing / acting-on results,  Next: Custom predicates,
 
      ‘SORT’ is either nil, in which case items are not sorted; or one or
      a list of defined ‘org-ql’ sorting methods (‘date’, ‘deadline’,
-     ‘scheduled’, ‘todo’, ‘priority’, or ‘random’); or a user-defined
-     comparator function that accepts two items as arguments and returns
-     nil or non-nil.
+     ‘scheduled’, ‘closed’, ‘todo’, ‘priority’, or ‘random’); or a
+     user-defined comparator function that accepts two items as
+     arguments and returns nil or non-nil.
 
      Examples:
 
@@ -875,7 +875,7 @@ supported:
    • ‘:query’: An Org QL query expression in either sexp or non-sexp
      form.
    • ‘:columns’ A list of columns, including ‘heading’, ‘todo’,
-     ‘property’, ‘priority’, ‘deadline’, ‘scheduled’.
+     ‘property’, ‘priority’, ‘deadline’, ‘scheduled’, ‘closed’.
         • Each column may also be specified as a list with the second
           element being a header string.  For example, to abbreviate the
           priority column: ‘(priority "P")’.
@@ -995,7 +995,11 @@ File: README.info,  Node: 06-pre,  Next: 052,  Up: Changelog
    • Timestamp-related predicates now accept an optional ‘:with-time’
      argument, which allows matching timestamps with or without times
      (i.e.  HH:MM).
-   • Sorting method ‘reverse’.
+   • Sorting methods:
+        • ‘reverse’
+        • ‘closed’ (Thanks to Ryan Ye (https://github.com/yejianye).)
+   • Dynamic block column ‘closed’.  (Thanks to Ryan Ye
+     (https://github.com/yejianye).)
 
    *Changed*
    • The order in which sorting functions is applied has been reversed.
@@ -1569,37 +1573,37 @@ Node: Date/time predicates18558
 Node: Functions / Macros21646
 Node: Agenda-like views21944
 Node: Listing / acting-on results23349
-Node: Custom predicates28971
-Node: Dynamic block32630
-Node: Links35328
-Node: Tips36015
-Node: Changelog36333
-Node: 06-pre37059
-Node: 05239636
-Node: 05139940
-Node: 0540357
-Node: 04941831
-Node: 04842105
-Node: 04742452
-Node: 04642847
-Node: 04543247
-Node: 04443606
-Node: 04343965
-Node: 04244162
-Node: 04144323
-Node: 0444564
-Node: 03248497
-Node: 03148876
-Node: 0349073
-Node: 02352048
-Node: 02252276
-Node: 02152544
-Node: 0252743
-Node: 0156778
-Node: Notes56879
-Node: Comparison with Org Agenda searches57041
-Node: org-sidebar57913
-Node: License58192
+Node: Custom predicates28985
+Node: Dynamic block32644
+Node: Links35356
+Node: Tips36043
+Node: Changelog36361
+Node: 06-pre37087
+Node: 05239852
+Node: 05140156
+Node: 0540573
+Node: 04942047
+Node: 04842321
+Node: 04742668
+Node: 04643063
+Node: 04543463
+Node: 04443822
+Node: 04344181
+Node: 04244378
+Node: 04144539
+Node: 0444780
+Node: 03248713
+Node: 03149092
+Node: 0349289
+Node: 02352264
+Node: 02252492
+Node: 02152760
+Node: 0252959
+Node: 0156994
+Node: Notes57095
+Node: Comparison with Org Agenda searches57257
+Node: org-sidebar58129
+Node: License58408
 
 End Tag Table
 
