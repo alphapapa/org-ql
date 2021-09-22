@@ -1000,6 +1000,8 @@ File: README.info,  Node: 06-pre,  Next: 052,  Up: Changelog
         • ‘closed’ (Thanks to Ryan Ye (https://github.com/yejianye).)
    • Dynamic block column ‘closed’.  (Thanks to Ryan Ye
      (https://github.com/yejianye).)
+   • Abbreviate filenames in bookmarks.  (Thanks to Akira Komamura
+     (https://github.com/akirak).)
 
    *Changed*
    • The order in which sorting functions is applied has been reversed.
@@ -1579,31 +1581,31 @@ Node: Links35356
 Node: Tips36043
 Node: Changelog36361
 Node: 06-pre37087
-Node: 05239852
-Node: 05140156
-Node: 0540573
-Node: 04942047
-Node: 04842321
-Node: 04742668
-Node: 04643063
-Node: 04543463
-Node: 04443822
-Node: 04344181
-Node: 04244378
-Node: 04144539
-Node: 0444780
-Node: 03248713
-Node: 03149092
-Node: 0349289
-Node: 02352264
-Node: 02252492
-Node: 02152760
-Node: 0252959
-Node: 0156994
-Node: Notes57095
-Node: Comparison with Org Agenda searches57257
-Node: org-sidebar58129
-Node: License58408
+Node: 05239956
+Node: 05140260
+Node: 0540677
+Node: 04942151
+Node: 04842425
+Node: 04742772
+Node: 04643167
+Node: 04543567
+Node: 04443926
+Node: 04344285
+Node: 04244482
+Node: 04144643
+Node: 0444884
+Node: 03248817
+Node: 03149196
+Node: 0349393
+Node: 02352368
+Node: 02252596
+Node: 02152864
+Node: 0253063
+Node: 0157098
+Node: Notes57199
+Node: Comparison with Org Agenda searches57361
+Node: org-sidebar58233
+Node: License58512
 
 End Tag Table
 
