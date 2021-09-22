@@ -541,6 +541,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Predicate ~heading~ now matches plain strings instead of regular expressions.
 +  Update =dash= dependency, and remove dependency on obsolete =dash-functional=.  (Fixes [[https://github.com/alphapapa/org-ql/issues/179][#179]], [[https://github.com/alphapapa/org-ql/issues/209][#209]].  Thanks to [[https://github.com/landakram][Mark Hudnall]], [[https://github.com/akirak][Akira Komamura]], [[https://github.com/natask][Nathanael kinfe]], [[https://github.com/benthamite][Pablo Stafforini]], [[https://github.com/jmay][Jason May]], and [[https://github.com/basil-conto][Basil L. Contovounesios]].)
 
+*Removed*
++  Obsolete macro ~org-ql~ (obsolete since 0.5, replaced by functions ~org-ql-select~ and ~org-ql-query~).
+
 *Fixed*
 +  Timestamp-related predicates called with relative-date arguments did not properly invalidate the query cache.  (Fixes [[https://github.com/alphapapa/org-ql/issues/223][#223]].  Thanks to [[https://github.com/yantar92][Ihor Radchenko]] for reporting.)
 

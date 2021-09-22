@@ -1025,6 +1025,10 @@ File: README.info,  Node: 06-pre,  Next: 052,  Up: Changelog
      (https://github.com/jmay), and Basil L. Contovounesios
      (https://github.com/basil-conto).)
 
+   *Removed*
+   • Obsolete macro ‘org-ql’ (obsolete since 0.5, replaced by functions
+     ‘org-ql-select’ and ‘org-ql-query’).
+
    *Fixed*
    • Timestamp-related predicates called with relative-date arguments
      did not properly invalidate the query cache.  (Fixes #223
@@ -1581,31 +1585,31 @@ Node: Links35356
 Node: Tips36043
 Node: Changelog36361
 Node: 06-pre37087
-Node: 05239956
-Node: 05140260
-Node: 0540677
-Node: 04942151
-Node: 04842425
-Node: 04742772
-Node: 04643167
-Node: 04543567
-Node: 04443926
-Node: 04344285
-Node: 04244482
-Node: 04144643
-Node: 0444884
-Node: 03248817
-Node: 03149196
-Node: 0349393
-Node: 02352368
-Node: 02252596
-Node: 02152864
-Node: 0253063
-Node: 0157098
-Node: Notes57199
-Node: Comparison with Org Agenda searches57361
-Node: org-sidebar58233
-Node: License58512
+Node: 05240098
+Node: 05140402
+Node: 0540819
+Node: 04942293
+Node: 04842567
+Node: 04742914
+Node: 04643309
+Node: 04543709
+Node: 04444068
+Node: 04344427
+Node: 04244624
+Node: 04144785
+Node: 0445026
+Node: 03248959
+Node: 03149338
+Node: 0349535
+Node: 02352510
+Node: 02252738
+Node: 02153006
+Node: 0253205
+Node: 0157240
+Node: Notes57341
+Node: Comparison with Org Agenda searches57503
+Node: org-sidebar58375
+Node: License58654
 
 End Tag Table
 

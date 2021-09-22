@@ -207,12 +207,6 @@ with keyword arg NOW in PLIST."
 
   (describe "Query functions/macros"
 
-    (it "org-ql"
-      ;; FIXME: Remove when org-ql macro is removed.
-      (expect (length (org-ql org-ql-test-buffer
-                        (category)
-                        :sort deadline))
-              :to-equal org-ql-test-num-headings))
     (it "org-ql-select"
       (expect (length (org-ql-select org-ql-test-buffer
                         '(category)
