@@ -1021,6 +1021,27 @@ property."
 ;; source code of `check-declare' shows that it searches for "cl-defun" declarations.
 (declare-function org-ql-search-directories-files "org-ql-search" t)
 
+(defun org-ql-view--buffers-files-to-uniq-strings (buffers-files)
+  "Flatten, remove duplicates and convert elements in BUFFERS-FILES to strings.
+This used by `org-ql-view--contract-buffers-files' and
+`org-ql-view--expand-buffers-files'.  Would signal error
+if an element is not a buffer or string."
+  (cl-labels ((convert-to-strings
+               ;; Expanding all buffers to file names or buffer names to remove duplicate entries.
+               (list) (--map
+                       (pcase-exhaustive it
+                         ((pred bufferp) (or (buffer-file-name it)
+                                             (buffer-name it)))
+                         ;; Any values at this point should be a buffer or string.
+                         ;; Testing for string anyways.
+                         ((pred stringp) it))
+                       list)))
+    (--> buffers-files
+      -flatten
+      -non-nil
+      convert-to-strings
+      -uniq)))
+
 (defun org-ql-view--contract-buffers-files (buffers-files)
   "Return BUFFERS-FILES in its \"contracted\" form.
 The contracted form is \"org-agenda-files\" if BUFFERS-FILES
@@ -1067,15 +1088,7 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
       (cl-typecase contracted-buffers-files
         (function contracted-buffers-files)
         (string contracted-buffers-files)
-        (list (--> contracted-buffers-files
-                -flatten -non-nil
-                (--map
-                 (pcase-exhaustive it
-                   ((pred stringp) it)
-                   ((pred bufferp) (or (buffer-file-name it)
-                                       (buffer-name buffer-file))))
-                 it)
-                -uniq))
+        (list (org-ql-view--buffers-files-to-uniq-strings contracted-buffers-files))
         (t (error (format "Value %s is not a string, a valid function or a list of buffer/strings" contracted-buffers-files)))))))
 
 (defun org-ql-view--complete-buffers-files ()
@@ -1125,20 +1138,7 @@ This always returns a list of string values."
                       buffer-file)
                      (_ (error (format "Value %s is not a valid buffer/file" buffer-file)))))
                  it))))
-    (--> expanded-buffers-files
-      -flatten
-      ;; removing `nil' again as some values have been expanded.
-      -non-nil
-      ;; Expanding all buffers to file names or buffer names to remove duplicate entries.
-      (--map
-       (pcase-exhaustive it
-         ((pred bufferp) (or (buffer-file-name it)
-                             (buffer-name it)))
-         ;; Any values at this point should be a buffer or string.
-         ;; Testing for string anyways.
-         ((pred stringp) it))
-       it)
-      -uniq)))
+    (org-ql-view--buffers-files-to-uniq-strings expanded-buffers-files)))
 
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."
