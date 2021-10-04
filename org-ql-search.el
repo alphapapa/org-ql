@@ -299,9 +299,19 @@ For example, an org-ql dynamic block header could look like:
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
                  (cons 'heading (lambda (element)
-                                  (org-make-link-string (org-element-property :raw-value element)
-                                                        (org-link-display-format
-                                                         (org-element-property :raw-value element)))))
+                                  (cond
+                                   ((and org-id-link-to-org-use-id
+                                         (org-element-property :ID element))
+                                    (org-make-link-string (format "id:%s" (org-element-property :ID element))
+                                                          (org-element-property :raw-value element)))
+                                   ((org-element-property :file element)
+                                    (org-make-link-string (format "file:%s::*%s"
+                                                                  (org-element-property :file element)
+                                                                  (org-element-property :raw-value element))
+                                                          (org-element-property :raw-value element)))
+                                   (t (org-make-link-string (org-element-property :raw-value element)
+                                                            (org-link-display-format
+                                                             (org-element-property :raw-value element)))))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
@@ -318,7 +328,7 @@ For example, an org-ql dynamic block header could look like:
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
           (elements (org-ql-query :from scope
                                   :where query
-                                  :select '(org-element-headline-parser (line-end-position))
+                                  :select '(org-element-put-property (org-element-headline-parser (line-end-position)) :file (buffer-file-name))
                                   :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
