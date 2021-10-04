@@ -248,7 +248,7 @@ Valid parameters include:
             `buffer'              the current buffer
             `org-agenda-files'    all agenda files
             `org-directory'       all org files
-            `(list-of-files ...)' a list of org files
+            `(\"path\" ...)'      list of buffer names or file paths
             `all'                 all agenda files, and org-mode buffers
 
   :query    An Org QL query expression in either sexp or string
@@ -287,7 +287,7 @@ For example, an org-ql dynamic block header could look like:
                     (org-ql--ask-unsafe-query query)
                     query)))
           (columns (or columns '(heading todo (priority "P"))))
-          (scope (cond ((listp scope) scope)
+          (scope (cond ((and (listp scope) (seq-every-p #'stringp scope)) scope)
                        ((string-equal scope "org-agenda-files") (org-agenda-files))
                        ((or (not scope) (string-equal scope "buffer")) (current-buffer))
                        ((string-equal scope "org-directory") (org-ql-search-directories-files))
