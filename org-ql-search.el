@@ -271,7 +271,7 @@ Valid parameters include:
 For example, an org-ql dynamic block header could look like:
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take) params)
+  (-let* (((&plist :query :columns :sort :ts-format :take :skip-subtrees) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
@@ -304,7 +304,12 @@ For example, an org-ql dynamic block header could look like:
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
           (elements (org-ql-query :from (current-buffer)
                                   :where query
-                                  :select '(org-element-headline-parser (line-end-position))
+                                  :select (if skip-subtrees
+                                              '(prog1 (org-element-headline-parser
+                                                       (line-end-position))
+                                                 (org-end-of-subtree t t))
+                                            '(org-element-headline-parser
+                                              (line-end-position)))
                                   :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
