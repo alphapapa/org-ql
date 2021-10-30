@@ -67,6 +67,12 @@ directories, etc, which would make it slow to list the
 `org-directory' files recursively."
   :type 'boolean)
 
+(defcustom org-ql-dblock-defaults
+  (list :columns '(heading todo (priority "P"))
+        :subtrees t)
+  "Default parameters of org-ql dynamic blocks."
+  :type 'plist)
+
 ;;;; Commands
 
 ;;;###autoload
@@ -271,13 +277,13 @@ Valid parameters include:
 For example, an org-ql dynamic block header could look like:
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take :skip-subtrees) params)
+  (-let* (((&plist :query :columns :sort :ts-format :take :subtrees)
+           (org-combine-plists org-ql-dblock-defaults params))
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
                     (org-ql--ask-unsafe-query query)
                     query)))
-          (columns (or columns '(heading todo (priority "P"))))
           ;; MAYBE: Custom column functions.
           (format-fns
            ;; NOTE: Backquoting this alist prevents the lambdas from seeing
@@ -304,12 +310,12 @@ For example, an org-ql dynamic block header could look like:
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
           (elements (org-ql-query :from (current-buffer)
                                   :where query
-                                  :select (if skip-subtrees
-                                              '(prog1 (org-element-headline-parser
-                                                       (line-end-position))
-                                                 (org-end-of-subtree t t))
-                                            '(org-element-headline-parser
-                                              (line-end-position)))
+                                  :select (if subtrees
+                                              '(org-element-headline-parser
+                                                (line-end-position))
+                                            '(prog1 (org-element-headline-parser
+                                                     (line-end-position))
+                                               (org-end-of-subtree t t)))
                                   :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
