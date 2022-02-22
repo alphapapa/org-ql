@@ -34,12 +34,12 @@
 |    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
 |    0.6 | A | PROJECT | [[Reverse sorting][Reverse sorting]]                                                                |
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
+|    0.7 | B | TODO    | [[Logbook state change predicate][Logbook state change predicate]]                                                 |
 |    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.7 | B | TODO    | [[Change ~clocked~ and ~closed~'s behavior with just-number args][Change ~clocked~ and ~closed~'s behavior with just-number args]]                     |
 |    0.6 | B | TODO    | [[Review all normalizers for potential loops][Review all normalizers for potential loops]]                                     |
 |    0.6 | B | TODO    | [[Normalize query while preserving body][Normalize query while preserving body]]                                          |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
-|    0.7 | B | PROJECT | [[Optimized, date-specific timestamp regexps][Optimized, date-specific timestamp regexps]]                                     |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -89,6 +89,7 @@
 :END:
 :CONTENTS:
 - [[#sorter-for-property-values][Sorter for property values]]
+- [[#logbook-state-change-predicate][Logbook state change predicate]]
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#bookmarks-save-list-of-files-instead-of-eg-org-agenda-files-when-appropriate][Bookmarks save list of files instead of e.g. org-agenda-files when appropriate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
@@ -167,6 +168,16 @@
     '(todo)
     :sort '((property "milestone") priority))
 #+END_SRC
+
+** TODO [#B] Logbook state change predicate                    :enhancement:
+:PROPERTIES:
+:milestone: 0.7
+:END:
+
++  [[https://github.com/alphapapa/org-ql/issues/192][Feature Request : Search Logbook to find all tasks that changed state on a specific date · Issue #192 · alphapapa/org-ql · GitHub]]
++  [[https://github.com/alphapapa/org-ql/pull/245][add predicate for checking DONE state changes by teeann · Pull Request #245 · alphapapa/org-ql · GitHub]]
+
+[2022-02-21 Mon 19:32]  I'd like to use this myself right now.
 
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
 
