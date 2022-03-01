@@ -156,6 +156,14 @@
 - [[#use-macros-for-date][Use macros for date]]
 :END:
 
+** DONE [#A] [[https://github.com/alphapapa/org-ql/issues/248][Links are broken in dynamic blocks when the task has the cookies {/} or {%} · Issue #248 · alphapapa/org-ql · GitHub]] :bug:
+:PROPERTIES:
+:milestone: 0.7
+:END:
+:LOGBOOK:
+CLOCK: [2022-03-01 Tue 02:26]--[2022-03-01 Tue 02:47] =>  0:21
+:END:
+
 ** TODO [#B] Sorter for property values                        :enhancement:
 :PROPERTIES:
 :milestone: future
