@@ -23,7 +23,7 @@
 | P |   M | Keyword | Heading                                        |
 |---+-----+---------+------------------------------------------------|
 |   |     | NEXT    | [[Check Org 9.4 source code for second argument][Check Org 9.4 source code for second argument]]  |
-| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
+| A | 0.7 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 #+END:
 
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
@@ -31,15 +31,15 @@
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 9
 |      M | P | Todo    | Heading                                                                        |
 |--------+---+---------+--------------------------------------------------------------------------------|
-|    0.6 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
-|    0.6 | A | PROJECT | [[Reverse sorting][Reverse sorting]]                                                                |
+|    0.7 | A | PROJECT | [[Taxy-based search view][Taxy-based search view]]                                                         |
+|    0.7 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
-|    0.7 | B | TODO    | [[Logbook state change predicate][Logbook state change predicate]]                                                 |
 |    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.7 | B | TODO    | [[Change ~clocked~ and ~closed~'s behavior with just-number args][Change ~clocked~ and ~closed~'s behavior with just-number args]]                     |
-|    0.6 | B | TODO    | [[Review all normalizers for potential loops][Review all normalizers for potential loops]]                                     |
-|    0.6 | B | TODO    | [[Normalize query while preserving body][Normalize query while preserving body]]                                          |
+|    0.7 | B | TODO    | [[Review all normalizers for potential loops][Review all normalizers for potential loops]]                                     |
+|    0.7 | B | TODO    | [[Normalize query while preserving body][Normalize query while preserving body]]                                          |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
+|    0.7 | B | PROJECT | [[Logbook state change predicate][Logbook state change predicate]]                                                 |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -63,9 +63,9 @@
 #+BEGIN: org-ql :query "todo: priority:A" :columns ((priority "P") ((property "milestone") "M") todo heading) :sort (priority date) :take 7
 | P |   M | Todo    | Heading                                        |
 |---+-----+---------+------------------------------------------------|
-| A | 0.6 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
+| A | 0.7 | PROJECT | [[Taxy-based search view][Taxy-based search view]]                         |
+| A | 0.7 | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]] |
 | A |     | PROJECT | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]]        |
-| A | 0.6 | PROJECT | [[Reverse sorting][Reverse sorting]]                                |
 | A |     | PROJECT | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                           |
 #+END:
 
@@ -74,8 +74,8 @@
 #+BEGIN: org-ql :query (and (todo "PROJECT") (not (descendants (todo "NEXT" "UNDERWAY")))) :columns (((property "milestone") "M") (priority "P") heading) :sort (priority date) :take 7
 | M      | P | Heading                                 |
 |--------+---+-----------------------------------------|
+| 0.7    | A | [[Taxy-based search view][Taxy-based search view]]                  |
 |        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]] |
-| 0.6    | A | [[Reverse sorting][Reverse sorting]]                         |
 |        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                    |
 |        | B | [[Outline path predicate][Outline path predicate]]                  |
 |        | B | [[Document the sorting functions][Document the sorting functions]]          |
@@ -89,7 +89,6 @@
 :END:
 :CONTENTS:
 - [[#sorter-for-property-values][Sorter for property values]]
-- [[#logbook-state-change-predicate][Logbook state change predicate]]
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#bookmarks-save-list-of-files-instead-of-eg-org-agenda-files-when-appropriate][Bookmarks save list of files instead of e.g. org-agenda-files when appropriate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
@@ -111,9 +110,10 @@
 - [[#use-session-async-to-have-a-persistent-search-process][Use session-async to have a persistent search process]]
 - [[#overlay-based-caching-inspired-by-org-num-mode][Overlay-based caching inspired by org-num-mode]]
 - [[#fancier-searching-for-inherited-tags][Fancier searching for inherited tags]]
+- [[#taxy-based-search-view][Taxy-based search view]]
 - [[#compatibility-with-org-94-custom-link-changes][Compatibility with Org 9.4 custom link changes]]
 - [[#convert-simple-sexp-queries-to-non-sexp][Convert simple sexp queries to non-sexp]]
-- [[#reverse-sorting][Reverse sorting]]
+- [[#logbook-state-change-predicate][Logbook state change predicate]]
 - [[#recursive-sub-queries-in-non-sexp-format][Recursive sub-queries in non-sexp format]]
 - [[#optimized-date-specific-timestamp-regexps][Optimized, date-specific timestamp regexps]]
 - [[#multi-pass-query-normalization][Multi-pass query normalization]]
@@ -132,6 +132,8 @@
 - [[#update-view-screenshots][Update view screenshots]]
 - [[#test-caching][Test caching]]
 - [[#alternative-parsing-libraries][Alternative parsing libraries]]
+- [[#links-are-broken-in-dynamic-blocks-when-the-task-has-the-cookies--or---issue-248--alphapapaorg-ql--github][Links are broken in dynamic blocks when the task has the cookies {/} or {%} · Issue #248 · alphapapa/org-ql · GitHub]]
+- [[#reverse-sorting][Reverse sorting]]
 - [[#timestamp-predicates-using-relative-dates-break-caching][Timestamp predicates using relative dates break caching]]
 - [[#link-target-doesnt-work][~(link :target)~ doesn't work]]
 - [[#link-regexp-p-doesnt-work][~(link :regexp-p)~ doesn't work]]
@@ -156,14 +158,6 @@
 - [[#use-macros-for-date][Use macros for date]]
 :END:
 
-** DONE [#A] [[https://github.com/alphapapa/org-ql/issues/248][Links are broken in dynamic blocks when the task has the cookies {/} or {%} · Issue #248 · alphapapa/org-ql · GitHub]] :bug:
-:PROPERTIES:
-:milestone: 0.7
-:END:
-:LOGBOOK:
-CLOCK: [2022-03-01 Tue 02:26]--[2022-03-01 Tue 02:47] =>  0:21
-:END:
-
 ** TODO [#B] Sorter for property values                        :enhancement:
 :PROPERTIES:
 :milestone: future
@@ -176,16 +170,6 @@ CLOCK: [2022-03-01 Tue 02:26]--[2022-03-01 Tue 02:47] =>  0:21
     '(todo)
     :sort '((property "milestone") priority))
 #+END_SRC
-
-** TODO [#B] Logbook state change predicate                    :enhancement:
-:PROPERTIES:
-:milestone: 0.7
-:END:
-
-+  [[https://github.com/alphapapa/org-ql/issues/192][Feature Request : Search Logbook to find all tasks that changed state on a specific date · Issue #192 · alphapapa/org-ql · GitHub]]
-+  [[https://github.com/alphapapa/org-ql/pull/245][add predicate for checking DONE state changes by teeann · Pull Request #245 · alphapapa/org-ql · GitHub]]
-
-[2022-02-21 Mon 19:32]  I'd like to use this myself right now.
 
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
 
@@ -268,14 +252,18 @@ Searching that with a query like =property:author=Fabrice= returns nothing; the 
 
 ** TODO [#B] Review all normalizers for potential loops
 :PROPERTIES:
-:milestone: 0.6
+:milestone: 0.7
+:END:
+:LOGBOOK:
+-  Note taken on [2022-03-04 Fri 03:27] \\
+   Moving to 0.7 since I tagged 0.6 already.
 :END:
 
 Since I found (and fixed) one after I made normalizers apply repeatedly, I should check the rest, because there might be a few more that could do it.
 
 ** TODO [#B] Normalize query while preserving body             :enhancement:
 :PROPERTIES:
-:milestone: 0.6
+:milestone: 0.7
 :END:
 
 Sometimes it would be helpful to define a predicate that normalizes to another predicate while having a different body.  [[https://github.com/plundaahl/dotfiles/blob/ef4d25498ab895c3c22b588ae2506fd69bdd8755/emacs/package-defs/org-ql/pred-created.el#L19][For example]]:
@@ -410,9 +398,20 @@ However, there might still be a useful idea here somewhere...
 
 When tag inheritance is enabled, and the given tags aren't file-level tags, we could search directly to headings containing the matching tags, and then only do per-heading matching on the subtrees.  Sometimes that would be much faster.  However, that might make the logic special-cased and complicated.  Might need a redesign of the whole matching/predicate system to do cleanly.
 
+** PROJECT [#A] Taxy-based search view
+:PROPERTIES:
+:milestone: 0.7
+:END:
+
+[2022-03-04 Fri 03:45]  For 0.7, this should be optional, and org-super-agenda should still be supported for grouping.  Maybe in the future that wouldn't be necessary, especially if org-super-agenda were also to use Taxy.
+
 ** PROJECT [#A] Compatibility with Org 9.4 custom link changes          :bug:
 :PROPERTIES:
-:milestone: 0.6
+:milestone: 0.7
+:END:
+:LOGBOOK:
+-  Note taken on [2022-03-04 Fri 03:29] \\
+   Not sure if I already did this for 0.6.  Retargeting for 0.7.
 :END:
 
 [2020-11-13 Fri 22:36]  From [[https://www.orgmode.org/Changes.html][the changelog]]:
@@ -540,18 +539,29 @@ Unfortunately it does not say what the new, required second argument is.
 
 Maybe make it an option to automatically convert them when possible, because if a user wanted to add complexity to a string query, he'd have to rewrite it as a sexp.
 
-** PROJECT [#A] Reverse sorting
+** PROJECT [#B] Logbook state change predicate                 :enhancement:
 :PROPERTIES:
-:milestone: 0.6
+:milestone: 0.7
 :END:
 
-+  [[https://github.com/alphapapa/org-ql/issues/143][Reverse sort order? · Issue #143 · alphapapa/org-ql · GitHub]]
++  [[https://github.com/alphapapa/org-ql/issues/192][Feature Request : Search Logbook to find all tasks that changed state on a specific date · Issue #192 · alphapapa/org-ql · GitHub]]
++  [[https://github.com/alphapapa/org-ql/pull/245][add predicate for checking DONE state changes by teeann · Pull Request #245 · alphapapa/org-ql · GitHub]]
 
-*** TODO Update docs
+[2022-02-21 Mon 19:32]  I'd like to use this myself right now.
 
-Need to mention incompatible change (though that isn't the best way to describe it) in the changelog.
+[2022-03-04 Fri 03:30]  Some early plans:
 
-*** WAITING [[https://github.com/alphapapa/org-ql/issues/143#issuecomment-863638651][Get feedback]]
++  A simple string argument, like ~(logbook "foo")~, should match if an entry has that string in a logbook drawer.
++  A sexp argument, like ~(logbook (ts :from "2022-01-01"))~, should match if an entry matches that sexp while narrowed to its logbook.
+     -  This might allow for optimizations such as searching for the timestamp regexp across an entire buffer and then confirming with a body predicate (which would be faster than checking every entry for a logbook).
++  State changes could be handled something like ~(logbook :from "TODO" :to "NEXT")~.
+     -  OTOH, the ~:from~ and ~:to~ could be confused with timestamp arguments.  And maybe those should be used directly, rather than using a sexp argument, e.g. ~(logbook :from "2022-01-01")~.
+     -  Alternative: ~(logbook :state ("TODO" "NEXT"))~ would search for changes from TODO to NEXT.  It could be combined with a date, like ~(logbook :state ("TODO" "NEXT") :on "2022-01-01")~, and to search for any state change on that date could be something like ~(logbook :state t :on "2022-01-01")~.
+
+I posted these to #192.
+
+*** NEXT Check feedback on #192
+SCHEDULED: <2022-03-18 Fri>
 
 ** PROJECT Recursive sub-queries in non-sexp format
 
@@ -2194,6 +2204,27 @@ See notes on 1dce9467f25428b5289d3665cd840820969ed65a.  It would be good to test
 +  [[https://github.com/cute-jumper/parsec.el][parsec]] is third-party, but looks powerful
 
 [2021-09-08 Wed 15:40]  (=peg= does use lexical binding now, and it's in ELPA and getting a bit of attention, so no need to drop it, I think.)
+
+** DONE [#A] [[https://github.com/alphapapa/org-ql/issues/248][Links are broken in dynamic blocks when the task has the cookies {/} or {%} · Issue #248 · alphapapa/org-ql · GitHub]] :bug:
+:PROPERTIES:
+:milestone: 0.7
+:END:
+:LOGBOOK:
+CLOCK: [2022-03-01 Tue 02:26]--[2022-03-01 Tue 02:47] =>  0:21
+:END:
+
+** DONE [#A] Reverse sorting
+:PROPERTIES:
+:milestone: 0.6
+:END:
+
++  [[https://github.com/alphapapa/org-ql/issues/143][Reverse sort order? · Issue #143 · alphapapa/org-ql · GitHub]]
+
+*** DONE Update docs
+
+Need to mention incompatible change (though that isn't the best way to describe it) in the changelog.
+
+*** DONE [[https://github.com/alphapapa/org-ql/issues/143#issuecomment-863638651][Get feedback]]
 
 ** DONE [#A] Timestamp predicates using relative dates break caching   :bug:
 :PROPERTIES:
