@@ -34,12 +34,12 @@
 |    0.7 | A | PROJECT | [[Taxy-based search view][Taxy-based search view]]                                                         |
 |    0.7 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
 | future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
+|    0.7 | B | TODO    | [[Verify that ~(clocked)~ regexp matches happen in logbook drawers][Verify that ~(clocked)~ regexp matches happen in logbook drawers]]                 |
 |    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
 |    0.7 | B | TODO    | [[Change ~clocked~ and ~closed~'s behavior with just-number args][Change ~clocked~ and ~closed~'s behavior with just-number args]]                     |
 |    0.7 | B | TODO    | [[Review all normalizers for potential loops][Review all normalizers for potential loops]]                                     |
 |    0.7 | B | TODO    | [[Normalize query while preserving body][Normalize query while preserving body]]                                          |
 |    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
-|    0.7 | B | PROJECT | [[Logbook state change predicate][Logbook state change predicate]]                                                 |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -89,6 +89,7 @@
 :END:
 :CONTENTS:
 - [[#sorter-for-property-values][Sorter for property values]]
+- [[#verify-that-clocked-regexp-matches-happen-in-logbook-drawers][Verify that (clocked) regexp matches happen in logbook drawers]]
 - [[#add-auto-keyword-to-planning-predicate][Add :auto keyword to (planning) predicate]]
 - [[#bookmarks-save-list-of-files-instead-of-eg-org-agenda-files-when-appropriate][Bookmarks save list of files instead of e.g. org-agenda-files when appropriate]]
 - [[#change-deadlines-auto-argument-to-auto-andor-auto-t][Change (deadline)'s auto argument to :auto and/or :auto t]]
@@ -170,6 +171,13 @@
     '(todo)
     :sort '((property "milestone") priority))
 #+END_SRC
+
+** TODO [#B] Verify that ~(clocked)~ regexp matches happen in logbook drawers
+:PROPERTIES:
+:milestone: 0.7
+:END:
+
+[2022-03-07 Mon 12:45]  Just realized that it doesn't already verify this.
 
 ** TODO [#B] Add ~:auto~ keyword to ~(planning)~ predicate
 
@@ -559,6 +567,10 @@ Maybe make it an option to automatically convert them when possible, because if 
      -  Alternative: ~(logbook :state ("TODO" "NEXT"))~ would search for changes from TODO to NEXT.  It could be combined with a date, like ~(logbook :state ("TODO" "NEXT") :on "2022-01-01")~, and to search for any state change on that date could be something like ~(logbook :state t :on "2022-01-01")~.
 
 I posted these to #192.
+
+[2022-03-07 Mon 12:42]  New branch =wip/logbook-predicate=.
+
+[2022-03-07 Mon 13:50]  Did some work on the predicate.  Regexp-making function works.
 
 *** NEXT Check feedback on #192
 SCHEDULED: <2022-03-18 Fri>
