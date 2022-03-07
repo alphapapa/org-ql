@@ -2134,6 +2134,77 @@ any planning prefix); it defaults to 0 (i.e. the whole regexp)."
             (from (test-timestamps (ts<= from next-ts)))
             (to (test-timestamps (ts<= next-ts to)))))))
 
+;;;;;; Logbooks
+
+(org-ql-defpred logbook (&key string from to on state regexp)
+  "Return non-nil if current entry has a logbook matching arguments.
+FIXME: Document remaining arguments.  NOTE: STRING argument is
+accepted as first argument rather than only as keyword argument."
+  ;; TODO: Optionally use (org-log-into-drawer) to detect per-entry
+  ;; logbook drawers.  (It would preclude various optimizations, but
+  ;; some users might need it.)
+  :normalizers
+  ((`(,predicate-names . ,rest)
+    (let ((string (if (stringp (car rest))
+                      (prog1
+                          (regexp-quote (car rest))
+                        (setf rest (cdr rest)))
+                    (plist-get rest :string)))
+          (regexp (plist-get rest :regexp))
+          (state (plist-get rest :state)))
+      (org-ql--normalize-from-to-on
+        `(logbook :string ,string :regexp ,regexp :state ,state
+                  :from ,from :to ,to :on ,on)))))
+
+  ;; TODO: :preambles
+
+  :body
+  ;; For now, we'll model part of this on `org-log-beginning', though
+  ;; it may not be fast enough to run on every potential match.
+  (when-let ((drawer-name (org-log-into-drawer)))
+    ;; Look for logbook drawer in entry.
+    (save-excursion
+      (org-end-of-meta-data)
+      (let ((drawer-regexp (concat "^[ \t]*:" (regexp-quote drawer-name) ":[ \t]*$"))
+            (end (if (org-at-heading-p)
+                     (point)
+                   (save-excursion
+                     (outline-next-heading)
+                     (point))))
+            (case-fold-search t))
+        (when-let ((drawer-element (cl-loop while (re-search-forward drawer-regexp end t)
+                                            for element = (org-element-at-point)
+                                            when (eq 'drawer (org-element-type element))
+                                            return element)))
+          ;; Logbook drawer found: narrow to it and confirm that
+          ;; arguments are found in it.
+          (save-restriction
+            (narrow-to-region (point) (org-element-property :contents-end drawer-element))
+            (and (or (not string)
+                     (save-excursion
+                       (re-search-forward string nil t)))
+                 (or (not regexp)
+                     (save-excursion
+                       (re-search-forward regexp nil t)))
+                 ;; TODO: from, to, on, state
+
+                 ;; TODO: Search notes added like "- Note taken on
+                 ;; [2022-03-07 Mon 13:55] \\" (this starts to get
+                 ;; complicated; org-element might help, but might
+                 ;; also be too slow..
+                 )))))))
+
+(defun org-ql--state-change-regexp (to &optional from)
+  "Return regexp matching logbook state-change line for states TO and FROM.
+Regexp includes an inactive timestamp with hour:minute at
+end-of-line."
+  (let ((from-regexp (if from
+                         `(,(concat "\"" from "\"") (1+ blank))
+                       "")))
+    (rx-to-string `(seq bol (0+ blank) "-" (repeat 1 2 " ") "State " "\"" ,to "\"" (1+ blank)
+                        "from " ,@from-regexp (1+ blank)
+                        (regexp ,org-ql-regexp-ts-inactive-with-time)))))
+
 ;; NOTE: Predicates defined: stop deferring and define normalizer and
 ;; preamble functions now.  Reversing preserves the order in which
 ;; they were defined.  Generally it shouldn't matter, but it might...

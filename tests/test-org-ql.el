@@ -245,6 +245,13 @@ with keyword arg NOW in PLIST."
                 :to-equal '(link :description "DESCRIPTION" :target "TARGET"
                                  :regexp-p t))))
 
+    (describe "(logbook)"
+      (it "with only string argument"
+        (expect (org-ql--normalize-query '(logbook "String ending in a period."))
+                :to-equal '(logbook "String ending in a period\\\."))
+        (expect (org-ql--query-string-to-sexp "logbook:called")
+                :to-equal '(logbook "called"))))
+
     (describe "(outline-path)"
       (it "with a regexp metacharacter"
         ;; Ensures that normalizer doesn't infinitely loop.
