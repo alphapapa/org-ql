@@ -2140,9 +2140,6 @@ any planning prefix); it defaults to 0 (i.e. the whole regexp)."
   "Return non-nil if current entry has a logbook matching arguments.
 FIXME: Document remaining arguments.  NOTE: STRING argument is
 accepted as first argument rather than only as keyword argument."
-  ;; TODO: Optionally use (org-log-into-drawer) to detect per-entry
-  ;; logbook drawers.  (It would preclude various optimizations, but
-  ;; some users might need it.)
   :normalizers
   ((`(,predicate-names . ,rest)
     (let ((string (if (stringp (car rest))
@@ -2156,11 +2153,23 @@ accepted as first argument rather than only as keyword argument."
         `(logbook :string ,string :regexp ,regexp :state ,state
                   :from ,from :to ,to :on ,on)))))
 
-  ;; TODO: :preambles
+  ;; TODO: :preambles.  When arguments are given, search for an
+  ;; appropriate regexp, then use the :body predicate to confirm it's
+  ;; in a logbook drawer.  Without arguments, simply search for a
+  ;; logbook drawer (though note that this would preclude using
+  ;; entry-specific logbook drawer names).
 
   :body
   ;; For now, we'll model part of this on `org-log-beginning', though
   ;; it may not be fast enough to run on every potential match.
+
+  ;; NOTE: It's regrettable, but since any entry or subtree may define
+  ;; its own logbook drawer name, to be correct, we must call
+  ;; `org-log-into-drawer' for each entry.  This also means concatting
+  ;; a regexp string to match such a drawer.
+
+  ;; TODO: Optionally assume default logbook drawer names and optimize
+  ;; for that case.
   (when-let ((drawer-name (org-log-into-drawer)))
     ;; Look for logbook drawer in entry.
     (save-excursion
@@ -2191,7 +2200,10 @@ accepted as first argument rather than only as keyword argument."
                  ;; TODO: Search notes added like "- Note taken on
                  ;; [2022-03-07 Mon 13:55] \\" (this starts to get
                  ;; complicated; org-element might help, but might
-                 ;; also be too slow..
+                 ;; also be too slow).
+
+                 ;; TODO: Without arguments, search for any logbook
+                 ;; entries.
                  )))))))
 
 (defun org-ql--state-change-regexp (to &optional from)
@@ -2200,7 +2212,7 @@ Regexp includes an inactive timestamp with hour:minute at
 end-of-line."
   (let ((from-regexp (if from
                          `(,(concat "\"" from "\"") (1+ blank))
-                       "")))
+                       '(""))))
     (rx-to-string `(seq bol (0+ blank) "-" (repeat 1 2 " ") "State " "\"" ,to "\"" (1+ blank)
                         "from " ,@from-regexp (1+ blank)
                         (regexp ,org-ql-regexp-ts-inactive-with-time)))))
