@@ -524,7 +524,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.6.1-pre
 
-Nothing new yet.
+*Fixed*
++  In dynamic blocks, links to headings with statistics cookies were broken.  (Fixes [[https://github.com/alphapapa/org-ql/issues/248][#248]].  Thanks to [[https://github.com/maikol-solis][Maikol Solis]] and [[https://github.com/yantar92][Ihor Radchenko]].)
 
 ** 0.6
 

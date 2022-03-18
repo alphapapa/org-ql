@@ -988,7 +988,12 @@ File: README.info,  Node: 061-pre,  Next: 06,  Up: Changelog
 5.1 0.6.1-pre
 =============
 
-Nothing new yet.
+*Fixed*
+   • In dynamic blocks, links to headings with statistics cookies were
+     broken.  (Fixes #248
+     (https://github.com/alphapapa/org-ql/issues/248).  Thanks to Maikol
+     Solis (https://github.com/maikol-solis) and Ihor Radchenko
+     (https://github.com/yantar92).)
 
 
 File: README.info,  Node: 06,  Next: 052,  Prev: 061-pre,  Up: Changelog
@@ -1595,32 +1600,32 @@ Node: Links35371
 Node: Tips36058
 Node: Changelog36376
 Node: 061-pre37117
-Node: 0637228
-Node: 05240243
-Node: 05140543
-Node: 0540960
-Node: 04942434
-Node: 04842708
-Node: 04743055
-Node: 04643450
-Node: 04543850
-Node: 04444211
-Node: 04344570
-Node: 04244767
-Node: 04144928
-Node: 0445169
-Node: 03249102
-Node: 03149481
-Node: 0349678
-Node: 02352653
-Node: 02252881
-Node: 02153149
-Node: 0253348
-Node: 0157383
-Node: Notes57484
-Node: Comparison with Org Agenda searches57646
-Node: org-sidebar58518
-Node: License58797
+Node: 0637492
+Node: 05240507
+Node: 05140807
+Node: 0541224
+Node: 04942698
+Node: 04842972
+Node: 04743319
+Node: 04643714
+Node: 04544114
+Node: 04444475
+Node: 04344834
+Node: 04245031
+Node: 04145192
+Node: 0445433
+Node: 03249366
+Node: 03149745
+Node: 0349942
+Node: 02352917
+Node: 02253145
+Node: 02153413
+Node: 0253612
+Node: 0157647
+Node: Notes57748
+Node: Comparison with Org Agenda searches57910
+Node: org-sidebar58782
+Node: License59061
 
 End Tag Table
 
