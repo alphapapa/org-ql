@@ -345,7 +345,9 @@ Searches in ELEMENT's buffer."
                                 :item-indent org-ql-view-item-indent
                                 args)))
       (let* ((title (format "Query:%S  In:%S"
-                            (org-ql--query-sexp-to-string query) buffers-or-files))
+                            (or (org-ql--query-sexp-to-string query)
+				(prin1-to-string query))
+			    buffers-or-files))
              (items (org-ql-select buffers-or-files query
                       :action 'element-with-markers
                       :sort sort))
