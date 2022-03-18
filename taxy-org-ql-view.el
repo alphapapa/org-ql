@@ -303,7 +303,7 @@ Searches in ELEMENT's buffer."
                                 :take (taxy-make-take-function taxy-keys taxy-org-ql-view-keys)
                                 :format-fn #'format-item
                                 ;; :heading-face-fn #'heading-face
-                                :heading-indent org-ql-view-level-indent
+                                :level-indent org-ql-view-level-indent
                                 :item-indent org-ql-view-item-indent
                                 args)))
       (let* ((title (format "Query:%S  In:%S"
