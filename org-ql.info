@@ -995,6 +995,11 @@ File: README.info,  Node: 061-pre,  Next: 06,  Up: Changelog
      Solis (https://github.com/maikol-solis) and Ihor Radchenko
      (https://github.com/yantar92).)
 
+   *Updated*
+   • Compatibility with new macro names in Transient.  (#269
+     (https://github.com/alphapapa/org-ql/pull/269).  Thanks to Jonas
+     Bernoulli (https://github.com/tarsius).)
+
 
 File: README.info,  Node: 06,  Next: 052,  Prev: 061-pre,  Up: Changelog
 
@@ -1600,32 +1605,32 @@ Node: Links35371
 Node: Tips36058
 Node: Changelog36376
 Node: 061-pre37117
-Node: 0637492
-Node: 05240507
-Node: 05140807
-Node: 0541224
-Node: 04942698
-Node: 04842972
-Node: 04743319
-Node: 04643714
-Node: 04544114
-Node: 04444475
-Node: 04344834
-Node: 04245031
-Node: 04145192
-Node: 0445433
-Node: 03249366
-Node: 03149745
-Node: 0349942
-Node: 02352917
-Node: 02253145
-Node: 02153413
-Node: 0253612
-Node: 0157647
-Node: Notes57748
-Node: Comparison with Org Agenda searches57910
-Node: org-sidebar58782
-Node: License59061
+Node: 0637685
+Node: 05240700
+Node: 05141000
+Node: 0541417
+Node: 04942891
+Node: 04843165
+Node: 04743512
+Node: 04643907
+Node: 04544307
+Node: 04444668
+Node: 04345027
+Node: 04245224
+Node: 04145385
+Node: 0445626
+Node: 03249559
+Node: 03149938
+Node: 0350135
+Node: 02353110
+Node: 02253338
+Node: 02153606
+Node: 0253805
+Node: 0157840
+Node: Notes57941
+Node: Comparison with Org Agenda searches58103
+Node: org-sidebar58975
+Node: License59254
 
 End Tag Table
 
