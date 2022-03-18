@@ -335,12 +335,20 @@ Searches in ELEMENT's buffer."
 			       (propertize string
 					   'org-hd-marker marker
 					   'org-marker marker)))
+		(heading-face (depth)
+			      ;; TODO: Make customizeable.
+			      (let ((height (pcase depth
+					      ((pred (> 0)) 1.3)
+					      (0 1.2)
+					      (1 1.1)
+					      (_ 1.0))))
+				(list :inherit 'magit-section-heading :height height)))
                 (make-fn (&rest args)
                          (apply #'make-taxy-magit-section
                                 :make #'make-fn
                                 :take (taxy-make-take-function taxy-keys taxy-org-ql-view-keys)
                                 :format-fn #'format-item
-                                ;; :heading-face-fn #'heading-face
+                                :heading-face-fn #'heading-face
                                 :level-indent org-ql-view-level-indent
                                 :item-indent org-ql-view-item-indent
                                 args)))
