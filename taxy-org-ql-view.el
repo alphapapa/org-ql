@@ -291,7 +291,9 @@ Searches in ELEMENT's buffer."
     map))
 
 (define-derived-mode org-ql-view-mode magit-section-mode "Org QL View"
-  "TODO: Docstring.")
+  "TODO: Docstring."
+  ;; For compatibility with Org Agenda commands.
+  (setq-local org-agenda-type 'search))
 
 ;;;; Functions
 
