@@ -3134,7 +3134,7 @@ Also, maybe instead of having a single =date= selector, I should have =scheduled
 
 ** Commits
 :PROPERTIES:
-:ID:       d8d7b88e-5737-437e-af76-2253f8340de3
+:ID:       b164b539-dfac-4f47-a48f-7e060705468a
 :END:
 
 To complete before and after pushing any commit.
@@ -3186,7 +3186,7 @@ When committing a fix:
           +  [ ] =org-ql.el=
           +  [ ] =helm-org-ql.el=
           +  [ ] =README.org=
-+  [ ] Complete [[id:d8d7b88e-5737-437e-af76-2253f8340de3][commit checklist]]
++  [ ] Complete [[id:b164b539-dfac-4f47-a48f-7e060705468a][commit checklist]].
 +  [ ] Changelog entry
 +  [ ] Merge to stable branch
      -  [ ] Non-fast-forward merge WIP branch into stable branch
@@ -3261,6 +3261,29 @@ When committing a fix:
 +  [X] Merge to master or make stable branch
 +  [X] Push master/stable
 +  [X] Delete WIP branch
+
+*** DONE Release 0.6.1
+
++  [X] Make WIP branch
++  [X] =Meta= pre-release commit
+     -  [X] Update version numbers
+          +  [X] =org-ql.el=
+          +  [X] =helm-org-ql.el=
+          +  [X] =README.org=
++  [X] Complete [[id:b164b539-dfac-4f47-a48f-7e060705468a][commit checklist]].
++  [X] Changelog entry
++  [-] Merge to stable branch
+     -  [ ] Non-fast-forward merge WIP branch into stable branch
+     -  [X] Tag and sign merge commit
++  [X] Push stable branch
++  [X] Push tags
++  [X] Merge to master or make stable branch
++  [X] Push master/stable
++  [X] Delete WIP branch
++  [X] Make GitHub release
++  [ ] Announce
+     -  [ ] Reddit
+     -  [ ] org-mode mailing list
 
 *** DONE Release: 0.6
 :PROPERTIES:
