@@ -269,6 +269,30 @@ Searches in ELEMENT's buffer."
                                (ts>= (ts-parse to-ts) element-ts))))
               (format "Due from: %s to %s" from-ts to-ts))))))))
 
+;;;; Mode
+
+(defvar org-ql-view-mode-map
+  (let* ((org-agenda-mode-map-copy (copy-keymap org-agenda-mode-map))
+	 map)
+    (cl-loop for key in (where-is-internal #'org-agenda-goto org-agenda-mode-map-copy)
+	     do (define-key org-agenda-mode-map-copy key nil))
+    (setf map (make-composed-keymap magit-section-mode-map org-agenda-mode-map-copy))
+    (define-key map "g" #'org-ql-view-refresh)
+    (define-key map "r" #'org-ql-view-refresh)
+    (define-key map "q" #'bury-buffer)
+    (define-key map "v" #'org-ql-view-dispatch)
+    (define-key map (kbd "C-x C-s") #'org-ql-view-save)
+    ;; HACK: Undefine Org's extra "<tab>" binding from
+    ;; org-agenda-mode-map, which interferes with the "TAB" binding
+    ;; from magit-section-mode-map.  (This shouldn't be necessary
+    ;; since we're already looping through the bindings earlier, but
+    ;; for some reason, it is.)
+    (define-key map (kbd "<tab>") nil)
+    map))
+
+(define-derived-mode org-ql-view-mode magit-section-mode "Org QL View"
+  "TODO: Docstring.")
+
 ;;;; Functions
 
 (cl-defun taxy-org-ql-search
@@ -286,8 +310,7 @@ Searches in ELEMENT's buffer."
       ;; to avoid this.
       (kill-buffer buffer-name))
     (with-current-buffer (get-buffer-create buffer-name)
-      (magit-section-mode)
-      (use-local-map (make-composed-keymap (list magit-section-mode-map org-ql-view-map)))
+      (org-ql-view-mode)
       (taxy-org-ql-view--add-search buffers-or-files
 	query :sort sort :taxy-keys taxy-keys)
       (pop-to-buffer (current-buffer)))))
