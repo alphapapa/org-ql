@@ -67,9 +67,10 @@ second levels."
     keyword))
 
 (org-ql-view-define-column "Heading" (:max-width 60)
-  (org-link-display-format
-   (org-element-property
-    :raw-value (org-ql-view--add-faces item))))
+  (propertize (org-link-display-format
+	       (org-element-property
+		:raw-value (org-ql-view--add-faces item)))
+	      :org-hd-marker (org-element-property :org-hd-marker item)))
 
 (org-ql-view-define-column "Pri" (:max-width nil)
   (or (-some->> (org-element-property :priority item)
@@ -296,7 +297,21 @@ Searches in ELEMENT's buffer."
   "Show Org QL QUERY on BUFFERS-OR-FILES with `taxy-org-ql-view'."
   (declare (indent 1))
   (let (format-table column-sizes)
-    (cl-labels ((format-item (item) (gethash item format-table))
+    (cl-labels ((format-item (item)
+			     ;; For compatibility with Org Agenda, we
+			     ;; add the marker property to the whole
+			     ;; string (though it only seems to check
+			     ;; at BOL).
+			     (let* ((string (gethash item format-table))
+				    (marker (or (get-text-property 0 :org-hd-marker string)
+						(when-let ((pos (next-single-property-change 0 :org-hd-marker string)))
+						  (get-text-property pos :org-hd-marker string)))))
+			       ;; I don't understand why Org sometimes
+			       ;; uses one property and sometimes the
+			       ;; other.
+			       (propertize string
+					   'org-hd-marker marker
+					   'org-marker marker)))
                 (make-fn (&rest args)
                          (apply #'make-taxy-magit-section
                                 :make #'make-fn
