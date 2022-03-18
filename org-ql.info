@@ -69,7 +69,7 @@ Functions / Macros
 
 Changelog
 
-* 0.6.1-pre: 061-pre. 
+* 0.6.1: 061. 
 * 0.6: 06. 
 * 0.5.2: 052. 
 * 0.5.1: 051. 
@@ -958,7 +958,7 @@ releases.
 
 * Menu:
 
-* 0.6.1-pre: 061-pre. 
+* 0.6.1: 061. 
 * 0.6: 06. 
 * 0.5.2: 052. 
 * 0.5.1: 051. 
@@ -983,10 +983,10 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 061-pre,  Next: 06,  Up: Changelog
+File: README.info,  Node: 061,  Next: 06,  Up: Changelog
 
-5.1 0.6.1-pre
-=============
+5.1 0.6.1
+=========
 
 *Fixed*
    • In dynamic blocks, links to headings with statistics cookies were
@@ -1001,7 +1001,7 @@ File: README.info,  Node: 061-pre,  Next: 06,  Up: Changelog
      Bernoulli (https://github.com/tarsius).)
 
 
-File: README.info,  Node: 06,  Next: 052,  Prev: 061-pre,  Up: Changelog
+File: README.info,  Node: 06,  Next: 052,  Prev: 061,  Up: Changelog
 
 5.2 0.6
 =======
@@ -1578,59 +1578,59 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1712
-Node: Screenshots1835
-Node: Installation1953
-Node: Quelpa2449
-Node: Helm support2977
-Node: Usage3368
-Node: Commands3766
-Node: org-ql-search4239
-Node: helm-org-ql5889
-Node: org-ql-view6249
-Node: org-ql-view-sidebar6749
-Node: org-ql-view-recent-items7105
-Node: org-ql-sparse-tree7589
-Node: Queries8389
-Node: Non-sexp query syntax9500
-Node: General predicates11224
-Node: Ancestor/descendant predicates17445
-Node: Date/time predicates18573
-Node: Functions / Macros21661
-Node: Agenda-like views21959
-Node: Listing / acting-on results23364
-Node: Custom predicates29000
-Node: Dynamic block32659
-Node: Links35371
-Node: Tips36058
-Node: Changelog36376
-Node: 061-pre37117
-Node: 0637685
-Node: 05240700
-Node: 05141000
-Node: 0541417
-Node: 04942891
-Node: 04843165
-Node: 04743512
-Node: 04643907
-Node: 04544307
-Node: 04444668
-Node: 04345027
-Node: 04245224
-Node: 04145385
-Node: 0445626
-Node: 03249559
-Node: 03149938
-Node: 0350135
-Node: 02353110
-Node: 02253338
-Node: 02153606
-Node: 0253805
-Node: 0157840
-Node: Notes57941
-Node: Comparison with Org Agenda searches58103
-Node: org-sidebar58975
-Node: License59254
+Node: Contents1704
+Node: Screenshots1827
+Node: Installation1945
+Node: Quelpa2441
+Node: Helm support2969
+Node: Usage3360
+Node: Commands3758
+Node: org-ql-search4231
+Node: helm-org-ql5881
+Node: org-ql-view6241
+Node: org-ql-view-sidebar6741
+Node: org-ql-view-recent-items7097
+Node: org-ql-sparse-tree7581
+Node: Queries8381
+Node: Non-sexp query syntax9492
+Node: General predicates11216
+Node: Ancestor/descendant predicates17437
+Node: Date/time predicates18565
+Node: Functions / Macros21653
+Node: Agenda-like views21951
+Node: Listing / acting-on results23356
+Node: Custom predicates28992
+Node: Dynamic block32651
+Node: Links35363
+Node: Tips36050
+Node: Changelog36368
+Node: 06137101
+Node: 0637657
+Node: 05240668
+Node: 05140968
+Node: 0541385
+Node: 04942859
+Node: 04843133
+Node: 04743480
+Node: 04643875
+Node: 04544275
+Node: 04444636
+Node: 04344995
+Node: 04245192
+Node: 04145353
+Node: 0445594
+Node: 03249527
+Node: 03149906
+Node: 0350103
+Node: 02353078
+Node: 02253306
+Node: 02153574
+Node: 0253773
+Node: 0157808
+Node: Notes57909
+Node: Comparison with Org Agenda searches58071
+Node: org-sidebar58943
+Node: License59222
 
 End Tag Table
 
