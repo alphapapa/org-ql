@@ -354,10 +354,11 @@ Searches in ELEMENT's buffer."
                                 :level-indent org-ql-view-level-indent
                                 :item-indent org-ql-view-item-indent
                                 args)))
-      (let* ((title (format "Query:%S  In:%S"
-                            (or (org-ql--query-sexp-to-string query)
-				(prin1-to-string query))
-			    buffers-or-files))
+      (let* ((title (org-ql-view--header-line-format
+		     :buffers-files buffers-or-files
+		     :query query
+		     ;; FIXME: View titles.
+		     ))
              (items (org-ql-select buffers-or-files query
                       :action 'element-with-markers
                       :sort sort))
