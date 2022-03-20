@@ -53,6 +53,37 @@ example, setting to -1 prevents indentation of the first and
 second levels."
   :type 'integer)
 
+;;;;; Faces
+
+(defgroup org-ql-view-faces nil
+  "Faces for Org QL View buffers."
+  :group 'org-ql-view-taxy)
+
+(defface org-ql-view-header-line
+  '((t (:inherit header-line :weight bold)))
+  "Header line.")
+
+(defface org-ql-view-query-heading
+  '((t (:inherit header-line :height 1.3)))
+  "Query headings.")
+
+(defface org-ql-view-heading
+  `((t (:inherit magit-section-heading :weight bold)))
+  "Group headings.
+Inherited by level-specific faces.")
+
+(defface org-ql-view-heading-1
+  `((t (:inherit org-ql-view-heading
+		 :height 1.2 :overline t
+		 :background ,(face-background 'header-line))))
+  "Level-1 group headings.")
+
+(defface org-ql-view-heading-2
+  `((t (:inherit org-ql-view-heading
+		 :height 1.1 :overline t
+		 :background ,(face-background 'header-line))))
+  "Level-2 group headings.")
+
 ;;;;; Columns
 
 (taxy-magit-section-define-column-definer "org-ql-view")
@@ -337,14 +368,15 @@ Searches in ELEMENT's buffer."
 			       (propertize string
 					   'org-hd-marker marker
 					   'org-marker marker)))
-		(heading-face (depth)
-			      ;; TODO: Make customizeable.
-			      (let ((height (pcase depth
-					      ((pred (> 0)) 1.3)
-					      (0 1.2)
-					      (1 1.1)
-					      (_ 1.0))))
-				(list :inherit 'magit-section-heading :height height)))
+		(heading-face
+		 (depth) (pcase depth
+			   (-1 'org-ql-view-query-heading)
+			   ;; NOTE: Faces count from 1 (like
+			   ;; `outline-` faces), but depth from 0 (or
+			   ;; -1 for query headings).
+			   (0 'org-ql-view-heading-1)
+			   (1 'org-ql-view-heading-2)
+			   (_ 'org-ql-view-heading)))
                 (make-fn (&rest args)
                          (apply #'make-taxy-magit-section
                                 :make #'make-fn
@@ -374,6 +406,8 @@ Searches in ELEMENT's buffer."
               column-sizes (cdr format-cons)
               header-line-format (taxy-magit-section-format-header
 				  column-sizes org-ql-view-column-formatters))
+	(add-face-text-property 0 (length header-line-format) 'org-ql-view-header-line
+				nil header-line-format)
         (let ((inhibit-read-only t))
           (save-excursion
             (goto-char (point-max))
