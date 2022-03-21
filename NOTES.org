@@ -159,7 +159,19 @@
 - [[#use-macros-for-date][Use macros for date]]
 :END:
 
-** TODO [#B] Sorter for property values                        :enhancement:
+** PROJECT [#B] Sorters with arguments
+
+*** TODO Document new sorters
+
+*** TODO [#B] New sorter validator function
+
+Needs to handle all valid sorting arguments.
+
+*** MAYBE Sorter-defining macro
+
+*** TODO Sorter for tags
+
+*** TODO Sorter for property values                             :enhancement:
 :PROPERTIES:
 :milestone: future
 :END:
