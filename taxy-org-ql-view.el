@@ -88,6 +88,11 @@ Inherited by level-specific faces.")
 
 (taxy-magit-section-define-column-definer "org-ql-view")
 
+(org-ql-view-define-column "Category" (:max-width nil :align 'right)
+  (or (org-with-point-at (org-element-property :org-hd-marker item)
+	(org-get-category (point)))
+      ""))
+
 (org-ql-view-define-column "Keyword" (:max-width nil :align 'right)
   (let ((keyword (or (org-element-property :todo-keyword item) "")))
     (unless (string-empty-p keyword)
