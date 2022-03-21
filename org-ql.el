@@ -2166,6 +2166,13 @@ PREDICATES is a list of one or more sorting methods, including:
                                   (= 0 (random 2))))
                        ;; NOTE: reverse and todo are handled below.
                        ;; TODO: Add more.
+		       (`(tags . ,tags) (lambda (a b)
+					  "Return non-nil if A has certain tags and B doesn't."
+					  (cl-flet ((test-entry
+						     (entry) (org-with-point-at (org-element-property :org-hd-marker entry)
+							       (apply #'org-ql--predicate-tags tags))))
+					    (and (test-entry a)
+						 (not (test-entry b))))))
                        (_ (user-error "Invalid sorting predicate: %s" symbol))))
              (sort-by-todo-keyword (items)
                                    (let* ((grouped-items (--group-by (when-let (keyword (org-element-property :todo-keyword it))
