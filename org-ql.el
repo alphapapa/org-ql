@@ -2160,7 +2160,8 @@ PREDICATES is a list of one or more sorting methods, including:
                        ((or 'deadline 'scheduled 'closed)
                         (apply-partially #'org-ql--date-type< (intern (concat ":" (symbol-name symbol)))))
                        ;; TODO: Rename `date' to `planning'.  `date' should be something else.
-                       ('date #'org-ql--date<)
+                       ('category #'org-ql--category<)
+		       ('date #'org-ql--date<)
                        ('priority #'org-ql--priority<)
                        ('random (lambda (&rest _ignore)
                                   (= 0 (random 2))))
@@ -2194,6 +2195,17 @@ PREDICATES is a list of one or more sorting methods, including:
                     ('todo (sort-by-todo-keyword items))
                     (_ (-sort (sorter pred) items)))))
     items))
+
+(defun org-ql--category< (a b)
+  "Return non-nil if A's category is alphabetically less than B's."
+  (cl-macrolet ((category (element)
+			  `(org-with-point-at (org-element-property :org-hd-marker ,element)
+			     (org-get-category (point)))))
+    (let ((a-category (category a))
+	  (b-category (category b)))
+      (if (and a-category b-category)
+	  (string< a-category b-category)
+	a-category))))
 
 ;; TODO: Rewrite date sorters using `ts'.
 
