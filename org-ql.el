@@ -417,7 +417,10 @@ each priority the newest items would appear first."
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
       ((pred functionp) (-sort sort items))
-      (_ (user-error "SORT must be either nil, one or a list of the defined sorting methods (see documentation), or a comparison function of two arguments")))))
+      ;; FIXME: Test more carefully for sorters with arguments.  In the meantime, just try to sort.
+      (_ (org-ql--sort-by items (-list sort)))
+      ;; (_ (user-error "SORT must be either nil, one or a list of the defined sorting methods (see documentation), or a comparison function of two arguments"))
+      )))
 
 ;;;###autoload
 (cl-defun org-ql-query (&key (select 'element-with-markers) from where narrow order-by)
