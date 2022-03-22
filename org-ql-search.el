@@ -102,7 +102,7 @@ matches, which allows stacking calls to this command.
 
 Runs `org-occur-hook' after making the sparse tree."
   ;; Code based on `org-occur'.
-  (interactive (list (read-minibuffer "Query: ")
+  (interactive (list (read-string "Query: ")
                      :keep-previous current-prefix-arg))
   (with-current-buffer buffer
     (unless keep-previous
@@ -110,7 +110,15 @@ Runs `org-occur-hook' after making the sparse tree."
       ;; we remove existing `org-occur' highlights, just in case.
       (org-remove-occur-highlights nil nil t)
       (org-overview))
-    (let ((num-results 0))
+    (let ((num-results 0)
+          (query (cl-etypecase query
+                   (string (if (or (string-prefix-p "(" query)
+                                   (string-prefix-p "\"" query))
+                               ;; Read sexp query.
+                               (read query)
+                             ;; Parse non-sexp query into sexp query.
+                             (org-ql--query-string-to-sexp query)))
+                   (list query))))
       ;; FIXME: Accept plain queries as well.
       (org-ql-select buffer query
         :action (lambda ()
