@@ -93,8 +93,8 @@ directories, etc, which would make it slow to list the
 The tree will show the lines where the query matches, and any
 other context defined in `org-show-context-detail', which see.
 
-QUERY is an `org-ql' query sexp (quoted, since this is a
-function).  BUFFER defaults to the current buffer.
+QUERY: An `org-ql' query in either sexp or non-sexp form (see
+Info node `(org-ql)Queries').
 
 When KEEP-PREVIOUS is non-nil (interactively, with prefix), the
 outline is not reset to the overview state before finding
