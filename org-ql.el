@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.6.1
+;; Version: 0.6.2
 ;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -1461,7 +1461,8 @@ any link is found."
               (setf description (regexp-quote description)))
             (when target
               (setf target (regexp-quote target))))
-          (when (re-search-forward org-ql-link-regexp (org-entry-end-position) t)
+          (when (save-excursion
+                  (re-search-forward org-ql-link-regexp (org-entry-end-position) t))
             (pcase description-or-target
               ('nil (and (or (null target)
                              (string-match-p target (match-string 1)))
