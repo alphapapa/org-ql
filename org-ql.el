@@ -1461,7 +1461,8 @@ any link is found."
               (setf description (regexp-quote description)))
             (when target
               (setf target (regexp-quote target))))
-          (when (re-search-forward org-ql-link-regexp (org-entry-end-position) t)
+          (when (save-excursion
+                  (re-search-forward org-ql-link-regexp (org-entry-end-position) t))
             (pcase description-or-target
               ('nil (and (or (null target)
                              (string-match-p target (match-string 1)))

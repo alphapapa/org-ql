@@ -526,6 +526,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 Nothing new yet.
 
+** 0.6.2
+
+*Fixed*
++  ~link~ predicate when used in an ~or~'ed query.  ([[https://github.com/alphapapa/org-ql/issues/279][#279]].  Thanks to [[https://github.com/telenieko][Marc Fargas]] for reporting.)
+
 ** 0.6.1
 
 *Fixed*
