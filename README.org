@@ -94,6 +94,9 @@ Lisp code examples are in [[examples.org]].
 :TOC:      ignore-children
 :END:
 
++  *Jumping to an entry:*
+     -  [[#org-ql-find][org-ql-find]] (command)
+     -  [[#helm-org-ql][helm-org-ql]] (command)
 +  *Showing an agenda-like view:*
      -  [[#org-ql-search][org-ql-search]] (command)
      -  [[#org-ql-view][org-ql-view]] (command)
@@ -101,8 +104,18 @@ Lisp code examples are in [[examples.org]].
      -  [[#org-ql-view-recent-items][org-ql-view-recent-items]] (command)
 +  *Showing a tree in a buffer:*
      -  [[#org-ql-sparse-tree][org-ql-sparse-tree]] (command)
-+  *Showing results with Helm*:
-     -  [[#helm-org-ql][helm-org-ql]] (command)
+
+*** org-ql-find
+
+/Note: These commands use [[#non-sexp-query-syntax][non-sexp queries]]./
+
+These commands jump to a heading selected using Emacs's built-in completion facilities with an Org QL query:
+
+- ~org-ql-find~ searches all entry content.
+- ~org-ql-find-path~ searches only headings (using the ~outline-path:~ predicate).
+- ~org-ql-find-heading~ searches only headings (using the ~heading:~ predicate).
+
+[[images/org-ql-find.png]]
 
 *** org-ql-search
 
@@ -524,7 +537,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.7-pre
 
-Nothing new yet.
+*Added*
++  Commands ~org-ql-find~, ~org-ql-find-heading~, and ~org-ql-find-path~, which jump to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
 
 ** 0.6.2
 
