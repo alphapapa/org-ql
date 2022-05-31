@@ -1009,6 +1009,9 @@ File: README.info,  Node: 07-pre,  Next: 062,  Up: Changelog
      built-in completion facilities and Org QL queries (like
      ‘helm-org-ql’, but doesn’t require Helm.).
 
+   *Changed*
+   • Give more useful error message for invalid queries.
+
 
 File: README.info,  Node: 062,  Next: 061,  Prev: 07-pre,  Up: Changelog
 
@@ -1653,34 +1656,34 @@ Node: Links36258
 Node: Tips36945
 Node: Changelog37269
 Node: 07-pre38037
-Node: 06238392
-Node: 06138700
-Node: 0639268
-Node: 05242322
-Node: 05142622
-Node: 0543045
-Node: 04944574
-Node: 04844854
-Node: 04745201
-Node: 04645610
-Node: 04546018
-Node: 04446379
-Node: 04346738
-Node: 04246941
-Node: 04147102
-Node: 0447349
-Node: 03251450
-Node: 03151853
-Node: 0352050
-Node: 02355350
-Node: 02255584
-Node: 02155864
-Node: 0256069
-Node: 0160147
-Node: Notes60248
-Node: Comparison with Org Agenda searches60410
-Node: org-sidebar61299
-Node: License61578
+Node: 06238465
+Node: 06138773
+Node: 0639341
+Node: 05242395
+Node: 05142695
+Node: 0543118
+Node: 04944647
+Node: 04844927
+Node: 04745274
+Node: 04645683
+Node: 04546091
+Node: 04446452
+Node: 04346811
+Node: 04247014
+Node: 04147175
+Node: 0447422
+Node: 03251523
+Node: 03151926
+Node: 0352123
+Node: 02355423
+Node: 02255657
+Node: 02155937
+Node: 0256142
+Node: 0160220
+Node: Notes60321
+Node: Comparison with Org Agenda searches60483
+Node: org-sidebar61372
+Node: License61651
 
 End Tag Table
 

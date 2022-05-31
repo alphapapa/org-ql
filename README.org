@@ -540,6 +540,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Added*
 +  Commands ~org-ql-find~, ~org-ql-find-heading~, and ~org-ql-find-path~, which jump to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
 
+*Changed*
++  Give more useful error message for invalid queries.
+
 ** 0.6.2
 
 *Fixed*
