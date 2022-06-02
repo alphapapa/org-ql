@@ -159,6 +159,31 @@
 - [[#use-macros-for-date][Use macros for date]]
 :END:
 
+** TODO org-rifle-like predicate
+
+Seems to work really well.  I think it should probably be the default predicate, rather than ~regexp~, because it's so useful and intuitive.
+
+#+begin_src elisp
+  (org-ql-defpred (rifle R) (&rest args)
+    "Docstring"
+    :preambles ((`(,predicate-names . ,args)
+                 (list :regexp (rx-to-string `(seq bow (or ,@args)))
+                       :case-fold t :query query)))
+    :body (cl-loop for arg in args
+                   always (or (regexp arg)
+                              (outline-path arg))))
+#+end_src
+
+That's easily used in the new ~org-ql-find~ command like so:
+
+#+begin_src elisp
+  (defun ap/org-ql-rifle ()
+    (interactive)
+    (org-ql-find (current-buffer) :query-prefix "rifle:"
+                 :query-filter (lambda (string)
+                                 (replace-regexp-in-string (rx (1+ space)) "," string t t))))
+#+end_src
+
 ** PROJECT [#B] Sorters with arguments
 
 *** TODO Document new sorters
@@ -170,6 +195,8 @@ Needs to handle all valid sorting arguments.
 *** MAYBE Sorter-defining macro
 
 *** TODO Sorter for tags
+
+*** TODO Sorter for category
 
 *** TODO Sorter for property values                             :enhancement:
 :PROPERTIES:
