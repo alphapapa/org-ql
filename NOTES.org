@@ -160,6 +160,9 @@
 :END:
 
 ** TODO org-rifle-like predicate
+:PROPERTIES:
+:milestone: 0.7
+:END:
 
 Seems to work really well.  I think it should probably be the default predicate, rather than ~regexp~, because it's so useful and intuitive.
 
