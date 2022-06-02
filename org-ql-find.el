@@ -51,15 +51,21 @@
 ;;;; Functions
 
 ;;;###autoload
-(cl-defun org-ql-find (buffers-files &key query-prefix
+(cl-defun org-ql-find (buffers-files &key query-prefix query-filter
                                      (prompt "Find entry: "))
   "Go to an Org entry in BUFFERS-FILES selected by searching entries with `org-ql'.
 Interactively, with universal prefix, select multiple buffers to
 search with completion.
 
-If QUERY-PREFIX, prepend it to the query (e.g. use \"heading:\"
-to only search headings, easily creating a custom command that
-saves the user from having to type it)."
+QUERY-PREFIX may be a string to prepend to the query (e.g. use
+\"heading:\" to only search headings, easily creating a custom
+command that saves the user from having to type it).
+
+QUERY-FILTER may be a function through which the query the user
+types is filtered before execution (e.g. it could replace spaces
+with commas to turn multiple tokens, which would normally be
+treated as multiple predicates, into multiple arguments to a
+single predicate)."
   (interactive
    (list (if current-prefix-arg
              (mapcar #'get-buffer
@@ -126,6 +132,8 @@ saves the user from having to type it)."
                                                (cons 'affixation-function #'affix)
                                                (cons 'annotation-function #'annotate)))
                               (`t (unless (string-empty-p str)
+                                    (when query-filter
+                                      (setf str (funcall query-filter str)))
                                     (org-ql-select buffers-files (org-ql--query-string-to-sexp (concat query-prefix str))
                                       :action #'action))))))
       (let* ((completion-styles '(org-ql-find))
