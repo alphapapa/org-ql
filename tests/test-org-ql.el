@@ -2105,7 +2105,7 @@ with keyword arg NOW in PLIST."
           (it "Refuses to link to non-file-backed buffer"
             (expect (var-after-link-save-open 'org-ql-view-buffers-files link-buffer query
                                               :buffer link-buffer)
-                    :to-throw 'user-error '("Views that search non-file-backed buffers can’t be linked to"))))))
+                    :to-throw 'user-error '("Views that search non-file-backed buffers can't be linked to"))))))
 
     ;; MAYBE: Also test `org-ql-views', although I already know it works now.
     ;; (describe "org-ql-views")
