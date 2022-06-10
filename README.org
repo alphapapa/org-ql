@@ -544,6 +544,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Changed*
 +  Give more useful error message for invalid queries.
 
+*Internal*
++  Certain query predicates, when called multiple times in an ~and~ sub-expression, are optimized to a single call.
+
 ** 0.6.2
 
 *Fixed*

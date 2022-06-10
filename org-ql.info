@@ -1015,6 +1015,10 @@ File: README.info,  Node: 07-pre,  Next: 062,  Up: Changelog
    *Changed*
    • Give more useful error message for invalid queries.
 
+   *Internal*
+   • Certain query predicates, when called multiple times in an ‘and’
+     sub-expression, are optimized to a single call.
+
 
 File: README.info,  Node: 062,  Next: 061,  Prev: 07-pre,  Up: Changelog
 
@@ -1659,34 +1663,34 @@ Node: Links36258
 Node: Tips36945
 Node: Changelog37269
 Node: 07-pre38037
-Node: 06238642
-Node: 06138950
-Node: 0639518
-Node: 05242572
-Node: 05142872
-Node: 0543295
-Node: 04944824
-Node: 04845104
-Node: 04745451
-Node: 04645860
-Node: 04546268
-Node: 04446629
-Node: 04346988
-Node: 04247191
-Node: 04147352
-Node: 0447599
-Node: 03251700
-Node: 03152103
-Node: 0352300
-Node: 02355600
-Node: 02255834
-Node: 02156114
-Node: 0256319
-Node: 0160397
-Node: Notes60498
-Node: Comparison with Org Agenda searches60660
-Node: org-sidebar61549
-Node: License61828
+Node: 06238786
+Node: 06139094
+Node: 0639662
+Node: 05242716
+Node: 05143016
+Node: 0543439
+Node: 04944968
+Node: 04845248
+Node: 04745595
+Node: 04646004
+Node: 04546412
+Node: 04446773
+Node: 04347132
+Node: 04247335
+Node: 04147496
+Node: 0447743
+Node: 03251844
+Node: 03152247
+Node: 0352444
+Node: 02355744
+Node: 02255978
+Node: 02156258
+Node: 0256463
+Node: 0160541
+Node: Notes60642
+Node: Comparison with Org Agenda searches60804
+Node: org-sidebar61693
+Node: License61972
 
 End Tag Table
 
