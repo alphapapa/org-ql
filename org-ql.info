@@ -1008,6 +1008,9 @@ File: README.info,  Node: 07-pre,  Next: 062,  Up: Changelog
      ‘org-ql-find-path’, which jump to entries selected using Emacs’s
      built-in completion facilities and Org QL queries (like
      ‘helm-org-ql’, but doesn’t require Helm.).
+   • Option ‘org-ql-default-predicate’, applied to plain-string query
+     tokens (before, the ‘regexp’ predicate was always used, but now it
+     may be customized).
 
    *Changed*
    • Give more useful error message for invalid queries.
@@ -1656,34 +1659,34 @@ Node: Links36258
 Node: Tips36945
 Node: Changelog37269
 Node: 07-pre38037
-Node: 06238465
-Node: 06138773
-Node: 0639341
-Node: 05242395
-Node: 05142695
-Node: 0543118
-Node: 04944647
-Node: 04844927
-Node: 04745274
-Node: 04645683
-Node: 04546091
-Node: 04446452
-Node: 04346811
-Node: 04247014
-Node: 04147175
-Node: 0447422
-Node: 03251523
-Node: 03151926
-Node: 0352123
-Node: 02355423
-Node: 02255657
-Node: 02155937
-Node: 0256142
-Node: 0160220
-Node: Notes60321
-Node: Comparison with Org Agenda searches60483
-Node: org-sidebar61372
-Node: License61651
+Node: 06238642
+Node: 06138950
+Node: 0639518
+Node: 05242572
+Node: 05142872
+Node: 0543295
+Node: 04944824
+Node: 04845104
+Node: 04745451
+Node: 04645860
+Node: 04546268
+Node: 04446629
+Node: 04346988
+Node: 04247191
+Node: 04147352
+Node: 0447599
+Node: 03251700
+Node: 03152103
+Node: 0352300
+Node: 02355600
+Node: 02255834
+Node: 02156114
+Node: 0256319
+Node: 0160397
+Node: Notes60498
+Node: Comparison with Org Agenda searches60660
+Node: org-sidebar61549
+Node: License61828
 
 End Tag Table
 

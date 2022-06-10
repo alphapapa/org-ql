@@ -539,6 +539,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Added*
 +  Commands ~org-ql-find~, ~org-ql-find-heading~, and ~org-ql-find-path~, which jump to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
++  Option ~org-ql-default-predicate~, applied to plain-string query tokens (before, the ~regexp~ predicate was always used, but now it may be customized).
 
 *Changed*
 +  Give more useful error message for invalid queries.

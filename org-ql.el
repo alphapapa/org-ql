@@ -298,6 +298,14 @@ See Info node `(org-ql)Queries'."
   :type 'boolean
   :risky t)
 
+(defcustom org-ql-default-predicate 'regexp
+  "Predicate used for plain-string tokens without a specified predicate."
+  :type '(choice (const heading)
+                 (const heading-regexp)
+                 (const regexp)
+                 (const outline-path)
+                 (const outline-path-segment)))
+
 ;;;; Functions
 
 ;;;;; Query execution
@@ -862,7 +870,7 @@ value of `org-ql-predicates')."
                            positive-term))
                  (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
                                     (and predicate-without-args `(pred -- (list (intern pred))))
-                                    (and plain-string `(s -- (list 'regexp s)))))
+                                    (and plain-string `(s -- (list org-ql-default-predicate s)))))
                  (plain-string (or quoted-arg unquoted-arg))
                  (predicate-with-args (substring predicate) ":" args)
                  (predicate-without-args (substring predicate) ":")
@@ -945,7 +953,7 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
                                  (`(unless ,condition . ,clauses) `(unless ,(rec condition)
                                                                      ,@(mapcar #'rec clauses)))
                                  ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
-                                 ((pred stringp) `(regexp ,element))
+                                 ((pred stringp) `(,org-ql-default-predicate ,element))
 
                                  ,@normalizer-patterns
 
