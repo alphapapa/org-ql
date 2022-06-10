@@ -1628,6 +1628,7 @@ contiguous segment of the outline path:
 (org-ql-defpred path (&rest regexps)
   "Return non-nil if current heading's buffer's filename path matches any of REGEXPS (regexp strings).
 Without arguments, return non-nil if buffer is file-backed."
+  ;; FIXME: This should AND the regexps together, not OR them.
   :body (when (buffer-file-name)
           (cl-typecase regexps
             (null t)
