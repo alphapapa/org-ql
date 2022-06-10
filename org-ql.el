@@ -735,7 +735,7 @@ be coalesced."
                            (`(,(or 'or 'not) . ,_)
                             (push (rec sexp) new-sexp))
                            (`(,predicate . ,args)
-                            (pcase-exhaustive (plist-get (alist-get predicate org-ql-predicates) :coalesce-multiple-calls)
+                            (pcase-exhaustive (plist-get (alist-get predicate org-ql-predicates) :coalesce)
                               (`nil (push sexp new-sexp))
                               (`t (setf (alist-get predicate anded-predicates)
                                         (append (alist-get predicate anded-predicates) args)))
@@ -1089,7 +1089,7 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
     ;; function still works.  But to avoid the warning, we byte-compile it afterward.
     (byte-compile 'org-ql--query-preamble)))
 
-(cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers coalesce-multiple-calls)
+(cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers coalesce)
   "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
 NAME may be a symbol or a list of symbols: if a list, the first
 is used as NAME and the rest are aliases.  A function is only
@@ -1143,21 +1143,23 @@ to variables bound in the pattern:
               query expression with no work to do, which improves
               performance.
 
-When COALESCE-MULTIPLE-CALLS is t, multiple calls to this
-predicate within a query clause may be combined into a single
-call to this predicate (so it is expected that this predicate
-treats multiple arguments as being boolean AND'ed together).
+When COALESCE is t, multiple calls to this predicate within a
+boolean AND query clause may be combined into a single call to
+this predicate (so it is expected that this predicate treats
+multiple arguments as being boolean AND'ed together; if it does
+not, then it should not be set to coalesce).
 
-This value may also be a function called to do coalescing of two
-predicate expressions.  It is called with two arguments: the list
-of already-coalesced arguments to an expression, and the list of
-arguments to the call being coalesced (note that a query's
-arguments are normalized before the query is coalesced).  If it
-returns nil, the expression is not coalesced; otherwise, it
+This argument may also be a function called to do coalescing of
+two predicate expressions.  It is called with two arguments: the
+list of already-coalesced arguments to an expression, and the
+list of arguments to the call being coalesced (note that a
+query's arguments are normalized before the query is coalesced).
+If it returns nil, the expression is not coalesced; otherwise, it
 should return a new list of arguments coalescing the given
-arguments, with new arguments being first.  (This is useful,
-e.g. when a predicate takes keyword arguments, which means that
-multiple calls to it can't be simply appended.)
+arguments, with new arguments being first.  (Using a
+predicate-specific function to coalesce arguments is useful when,
+e.g. a predicate takes keyword arguments, so arguments to
+multiple calls can't be simply appended.)
 
 For convenience, within the `pcase' patterns, the symbol
 `predicate-names' is a special form which is replaced with a
@@ -1175,7 +1177,7 @@ It would be expanded to:
 
   ((`(,(or 'heading 'h) . ,args)
   `(heading ,@args)))"
-  ;; FIXME: Update defpred tutorial to include :coalesce-multiple-calls.
+  ;; FIXME: Update defpred tutorial to include :coalesce.
 
   ;; NOTE: The debug form works, completely!  For example, use `edebug-defun'
   ;; on the `heading' predicate, then evaluate this form:
@@ -1186,7 +1188,7 @@ It would be expanded to:
   ;;         :normalized normalized
   ;;         :preamble preamble))
   (declare (debug ([&or symbolp listp] listp stringp
-                   &rest [&or [":coalesce-multiple-calls" form]
+                   &rest [&or [":coalesce" form]
                               [":body" def-body]
                               [":normalizers" (&rest (sexp def-body))]
                               [":preambles" (&rest (sexp def-body))]]))
@@ -1209,7 +1211,7 @@ It would be expanded to:
        (setf (alist-get ',predicate-name org-ql-predicates)
              `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,(\, docstring) :args ,',args
                      :normalizers ,',normalizers :preambles ,',preambles
-                     :coalesce-multiple-calls ,,coalesce-multiple-calls))
+                     :coalesce ,,coalesce))
        (unless org-ql-defpred-defer
          ;; Reversing preserves the order in which predicates were defined.
          (org-ql--define-normalize-query-fn (reverse org-ql-predicates))
@@ -1392,7 +1394,7 @@ Org effort string, like \"5\" or \"0:05\"."
 (org-ql-defpred (heading h) (&rest strings)
   "Return non-nil if current entry's heading matches all STRINGS.
 Matching is done case-insensitively."
-  :coalesce-multiple-calls t
+  :coalesce t
   :normalizers ((`(,predicate-names . ,args)
                  ;; "h" alias.
                  `(heading ,@args)))
@@ -1419,7 +1421,7 @@ Matching is done case-insensitively."
 (org-ql-defpred (heading-regexp h*) (&rest regexps)
   "Return non-nil if current entry's heading matches all REGEXPS (regexp strings).
 Matching is done case-insensitively."
-  :coalesce-multiple-calls t
+  :coalesce t
   :normalizers ((`(,predicate-names . ,args)
                  ;; "h" alias.
                  `(heading-regexp ,@args)))
@@ -1564,11 +1566,11 @@ intuitive, general-purpose predicate."
   ;; NOTE: This predicate advertises that it takes strings, but they
   ;; are normalized to regexps.  Because of that, we must use a
   ;; coalescing function.
-  :coalesce-multiple-calls (lambda (coalesced-args current-args)
-                             (setf (plist-get coalesced-args :regexps)
-                                   (list 'quote (append (cadr (plist-get coalesced-args :regexps))
-                                                        (cadr (plist-get current-args :regexps)))))
-                             coalesced-args)
+  :coalesce (lambda (coalesced-args current-args)
+              (setf (plist-get coalesced-args :regexps)
+                    (list 'quote (append (cadr (plist-get coalesced-args :regexps))
+                                         (cadr (plist-get current-args :regexps)))))
+              coalesced-args)
   :normalizers ((`(,predicate-names . ,(and rest (guard (cl-every #'stringp rest))))
                  ;; If this doesn't match, it's already normalized.
                  `(rifle :regexps ',(mapcar #'regexp-quote rest))))
@@ -1594,7 +1596,7 @@ the following queries:
   (olp \"Food\" \"Fruits\")
   (olp \"Fruits\" \"Grapes\")
   (olp \"Food\" \"Grapes\")"
-  :coalesce-multiple-calls t
+  :coalesce t
   :normalizers ((`(,predicate-names . ,strings)
                  ;; Regexp quote headings.
                  `(org-ql--predicate-outline-path ,@(mapcar #'regexp-quote strings))))
@@ -1750,7 +1752,7 @@ priority B)."
 
 (org-ql-defpred (regexp r) (&rest regexps)
   "Return non-nil if current entry matches all of REGEXPS (regexp strings)."
-  :coalesce-multiple-calls t
+  :coalesce t
   :normalizers ((`(,predicate-names . ,args)
                  `(regexp ,@args)))
   ;; MAYBE: Separate case-sensitive (Regexp) predicate.
@@ -1773,15 +1775,15 @@ priority B)."
   "Return non-nil if current entry contains an Org source block matching all of REGEXPS.
 If keyword argument LANG is non-nil, the block must be in that
 language."
-  :coalesce-multiple-calls (lambda (coalesced-args current-args)
-                             (when (or (not coalesced-args)
-                                       (equal (plist-get current-args :lang)
-                                              (plist-get coalesced-args :lang)))
-                               (setf (plist-get coalesced-args :regexps)
-                                     (append (plist-get coalesced-args :regexps)
-                                             (plist-get current-args :regexps))
-                                     (plist-get coalesced-args :lang) (plist-get current-args :lang))
-                               coalesced-args))
+  :coalesce (lambda (coalesced-args current-args)
+              (when (or (not coalesced-args)
+                        (equal (plist-get current-args :lang)
+                               (plist-get coalesced-args :lang)))
+                (setf (plist-get coalesced-args :regexps)
+                      (append (plist-get coalesced-args :regexps)
+                              (plist-get current-args :regexps))
+                      (plist-get coalesced-args :lang) (plist-get current-args :lang))
+                coalesced-args))
   :normalizers ((`(,predicate-names . ,args)
                  ;; Rewrite to use keyword args.
                  (cond ((cl-every #'stringp args)
@@ -1847,7 +1849,7 @@ Tests both inherited and local tags."
 (org-ql-defpred (tags-all tags&) (&rest tags)
   "Return non-nil if current heading has all of TAGS (a list of strings).
 Tests both inherited and local tags."
-  :coalesce-multiple-calls t
+  :coalesce t
   ;; MAYBE: -all versions for inherited and local.
   :normalizers ((`(,predicate-names . ,tags)
                  `(and ,@(--map `(tags ,it) tags))))
