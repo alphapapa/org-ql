@@ -205,475 +205,556 @@ with keyword arg NOW in PLIST."
         (expect (org-ql--value-at (point-min) #'org-get-local-tags)
                 :to-be nil))))
 
-  (describe "Query functions/macros"
-
-    (it "org-ql-select"
-      (expect (length (org-ql-select org-ql-test-buffer
-                        '(category)
-                        :sort 'deadline))
-              :to-equal org-ql-test-num-headings))
-    (it "org-ql-query"
-      (expect (length (org-ql-query :select 'element
-                                    :from org-ql-test-buffer
-                                    :where '(category)
-                                    :order-by 'date))
-              :to-equal org-ql-test-num-headings)))
-
   (describe "Query pre-processing"
 
-    (describe "(level)"
-      (it "with one level"
-        (expect (org-ql--normalize-query '(level "1"))
-                :to-equal '(level 1)))
-      (it "with two levels"
-        (expect (org-ql--normalize-query '(level "1" "2"))
-                :to-equal '(level 1 2)))
-      (it "with a comparator and a level"
-        (expect (org-ql--normalize-query '(level ">" "1"))
-                :to-equal '(level > 1))))
+    (describe "Coalescing"
+      ;; NOTE: Queries are expected to be normalized before being coalesced,
+      ;; and `org-ql--normalize-query' calls `org-ql--coalesce-ands' as its
+      ;; final step, so in these tests we just call the former.
+      (it "coalesces a single AND clause that uses one predicate (and preserves argument order)"
+        (expect (org-ql--normalize-query '(and (rifle "foo") (rifle "bar")))
+                :to-equal '(and (rifle :regexps '("foo" "bar")))))
+      (it "coalesces a single AND clause that uses two predicates (and preserves predicate order)"
+        (expect (org-ql--normalize-query '(and (rifle "foo") (rifle "bar")
+                                               (heading "baz") (heading "buz")))
+                :to-equal '(and (rifle :regexps '("foo" "bar")) (heading "baz" "buz"))))
+      (it "preserves independent OR clauses"
+        (expect (org-ql--normalize-query '(and (or (rifle "foo") (rifle "bar"))
+                                               (or (rifle "baz") (rifle "buz"))))
+                :to-equal '(and (or (rifle :regexps '("foo")) (rifle :regexps '("bar"))) (or (rifle :regexps '("baz")) (rifle :regexps '("buz"))))))
+      (it "coalesces an AND clause within an OR clause"
+        (expect (org-ql--normalize-query '(or (regexp "bar") (and (rifle "foo") (rifle "bar"))))
+                :to-equal '(or (regexp "bar") (and (rifle :regexps '("foo" "bar"))))))
+      (it "coalesces multiple AND clauses within an OR clause"
+        (expect (org-ql--normalize-query '(or (and (rifle "foo") (rifle "bar"))
+                                              (and (rifle "baz") (rifle "buz"))))
+                :to-equal '(or (and (rifle :regexps '("foo" "bar"))) (and (rifle :regexps '("baz" "buz"))))))
+      (it "coalesces arguments to predicates which use coalescing functions and whose calls are eligible for coalescing"
+        (expect (org-ql--normalize-query '(and (src "foo") (src "bar")))
+                :to-equal '(and (src :lang nil :regexps ("foo" "bar"))))
+        (expect (org-ql--normalize-query '(and (src "foo" :lang "elisp") (src "bar" :lang "elisp")))
+                :to-equal '(and (src :lang "elisp" :regexps ("foo" "bar")))))
+      (it "does not coalesce arguments to predicates which use coalescing functions and whose calls are ineligible for coalescing"
+        (expect (org-ql--normalize-query '(and (src "foo" :lang "elisp") (src "bar")))
+                ;; NOTE: The current implementation of `org-ql--normalize-query'
+                ;; reorders clauses in this case.  Fixing that would probably
+                ;; not be worth the effort in code or runtime.
+                :to-equal '(and (src :regexps ("bar")) (src :lang "elisp" :regexps ("foo"))))
+        (expect (org-ql--normalize-query '(and (src "foo" :lang "elisp") (src "bar" :lang "python")))
+                :to-equal '(and (src :lang "python" :regexps ("bar")) (src :lang "elisp" :regexps ("foo"))))))
 
-    (describe "(link)"
-      (it "with one argument"
-        (expect (org-ql--normalize-query '(link "DESC-OR-TARGET"))
-                :to-equal '(link "DESC-OR-TARGET")))
-      (it "with one argument and :regexp-p"
-        (expect (org-ql--normalize-query '(link "DESC-OR-TARGET" :regexp-p t))
-                :to-equal '(link "DESC-OR-TARGET" :regexp-p t)))
-      (it "with keyword arguments"
-        (expect (org-ql--normalize-query '(link :description "DESCRIPTION" :target "TARGET"
-                                                :regexp-p t))
-                :to-equal '(link :description "DESCRIPTION" :target "TARGET"
-                                 :regexp-p t))))
+    (describe "Normalization"
 
-    (describe "(outline-path)"
-      (it "with a regexp metacharacter"
-        ;; Ensures that normalizer doesn't infinitely loop.
-        (expect (org-ql--normalize-query '(olp "a." "b"))
-                :to-equal '(org-ql--predicate-outline-path "a\\." "b"))))
+      (it "Default predicate"
+        (expect (org-ql--normalize-query "scheduled")
+                ;; No colon after keyword, so not a predicate query.
+                :to-equal '(rifle :regexps '("scheduled")))
+        (expect (org-ql--normalize-query "\"quoted phrase\"")
+                :to-equal '(rifle :regexps '("\"quoted phrase\""))))
 
-    (describe "(tags-inherited)"
-      (it "handles 0 arguments"
-        (expect (org-ql--normalize-query '(tags-inherited))
-                :to-equal '(tags-inherited)))
-      (it "handles 1 argument"
-        (expect (org-ql--normalize-query '(tags-inherited "foo"))
-                :to-equal '(tags-inherited "foo")))
-      (it "handles 2 arguments"
-        (expect (org-ql--normalize-query '(tags-inherited "foo" "bar"))
-                :to-equal '(tags-inherited "foo" "bar")))
-      (it "aliases to `itags'"
-        (expect (org-ql--normalize-query '(itags))
-                :to-equal '(tags-inherited)))
-      (it "aliases to `itags' with one argument"
-        (expect (org-ql--normalize-query '(itags "foo"))
-                :to-equal '(tags-inherited "foo")))
-      (it "aliases to `itags' with two arguments"
-        (expect (org-ql--normalize-query '(itags "foo" "bar"))
-                :to-equal '(tags-inherited "foo" "bar"))))
+      (describe "Plain strings"
+        (it "normalizes plain strings to the default predicate (using AND)"
+          (expect (org-ql--normalize-query '(and "string1" "string2"))
+                  :to-equal '(and (rifle :regexps '("string1" "string2")))))
+        (it "normalizes plain strings to the default predicate (using OR)"
+          (expect (org-ql--normalize-query '(or "string1" "string2"))
+                  :to-equal '(or (rifle :regexps '("string1")) (rifle :regexps '("string2")))))
+        (it "normalizes plain strings within sub-expressions to the default predicate"
+          (expect (org-ql--normalize-query '(and (todo "TODO")
+                                                 (or "string1" "string2")))
+                  :to-equal '(and (todo "TODO") (or (rifle :regexps '("string1")) (rifle :regexps '("string2")))))
+          (expect (org-ql--normalize-query '(when (todo "TODO")
+                                              (or "string1" "string2")))
+                  :to-equal '(when (todo "TODO") (or (rifle :regexps '("string1")) (rifle :regexps '("string2")))))
+          (expect (org-ql--normalize-query '(when "string-cond1"
+                                              (or "string1" "string2")))
+                  :to-equal '(when (rifle :regexps '("string-cond1")) (or (rifle :regexps '("string1")) (rifle :regexps '("string2")))))
+          (expect (org-ql--normalize-query '(when (and "string-cond1" "string-cond2")
+                                              (or "string1" "string2")))
+                  :to-equal '(when (and (rifle :regexps '("string-cond1")) (rifle :regexps '("string-cond2"))) (or (rifle :regexps '("string1")) (rifle :regexps '("string2")))))
+          (expect (org-ql--normalize-query '(unless (and "stringcondition1" "stringcond2")
+                                              (or "string1" "string2")))
+                  :to-equal '(unless (and (rifle :regexps '("stringcondition1")) (rifle :regexps '("stringcond2"))) (or (rifle :regexps '("string1")) (rifle :regexps '("string2")))))))
 
-    (describe "timestamp predicates"
-      ;; NOTE: (clocked) and (closed) don't accept :with-time arguments.
-      (describe "(clocked)"
-        (let ((beg-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 0 :minute 0 :second 0)))
-              (end-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 23 :minute 59 :second 59))))
-          ;; MAYBE: While it seems helpful for (clocked) and (close) to
-          ;; implicitly look into the past (because entries can't be
-          ;; clocked or closed in the future), it makes the API
-          ;; inconsistent.  It would be better to be consistent and
-          ;; require the user to pass these predicates a negative number.
-          (it "with a number"
-            (expect (org-ql--normalize-query '(clocked 0))
-                    :to-equal `(clocked :from ,beg-of-today-ts))
-            (expect (org-ql--normalize-query '(clocked 1))
-                    :to-equal `(clocked :from ,(ts-inc 'day -1 beg-of-today-ts))))
-          (it ":from/:to/:on"
-            (expect (org-ql--normalize-query '(clocked :on today))
-                    :to-equal `(clocked :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(clocked :on 0))
-                    :to-equal `(clocked :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(clocked :on 1))
-                    :to-equal `(clocked :from ,(ts-inc 'day 1 beg-of-today-ts)
-                                        :to ,(ts-inc 'day 1 end-of-today-ts))))))
-      (describe "(closed)"
-        (let ((beg-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 0 :minute 0 :second 0)))
-              (end-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 23 :minute 59 :second 59))))
-          (it "with a number"
-            (expect (org-ql--normalize-query '(closed 0))
-                    :to-equal `(closed :from ,beg-of-today-ts))
-            (expect (org-ql--normalize-query '(closed 1))
-                    :to-equal `(closed :from ,(ts-inc 'day -1 beg-of-today-ts))))
-          (it ":from/:to/:on"
-            (expect (org-ql--normalize-query '(closed :on today))
-                    :to-equal `(closed :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(closed :on 0))
-                    :to-equal `(closed :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(closed :on 1))
-                    :to-equal `(closed :from ,(ts-inc 'day 1 beg-of-today-ts)
-                                       :to ,(ts-inc 'day 1 end-of-today-ts))))))
+      (describe "(rifle)"
+        (it "with one argument"
+          (expect (org-ql--normalize-query '(rifle "foo."))
+                  :to-equal '(rifle :regexps '("foo\\."))))
+        (it "with two arguments"
+          (expect (org-ql--normalize-query '(rifle "foo." "bar"))
+                  :to-equal '(rifle :regexps '("foo\\." "bar")))))
 
-      ;; NOTE: The rest of them do accept :with-time.
-      (describe "(deadline)"
-        (let ((beg-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 0 :minute 0 :second 0)))
-              (end-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 23 :minute 59 :second 59))))
-          (it "with auto"
-            (let ((auto-ts (->> (ts-now)
-                             (ts-adjust 'day org-deadline-warning-days)
-                             (ts-apply :hour 23 :minute 59 :second 59))))
-              (expect (org-ql--normalize-query '(deadline auto))
-                      :to-equal `(deadline-warning :to ,auto-ts))
-              (expect (org-ql--normalize-query '(deadline auto :with-time t))
-                      :to-equal `(deadline-warning :to ,auto-ts :with-time t))
-              (expect (org-ql--normalize-query '(deadline auto :with-time nil))
-                      :to-equal `(deadline-warning :to ,auto-ts :with-time nil))))
-          (it "with a number"
-            (expect (org-ql--normalize-query '(deadline 0))
-                    :to-equal `(deadline :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(deadline 0 :with-time t))
-                    :to-equal `(deadline :to ,end-of-today-ts :with-time t))
-            (expect (org-ql--normalize-query '(deadline 0 :with-time nil))
-                    :to-equal `(deadline :to ,end-of-today-ts :with-time nil))
-            (expect (org-ql--normalize-query '(deadline 2))
-                    :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)))
-            (expect (org-ql--normalize-query '(deadline 2 :with-time nil))
-                    :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)
-                                         :with-time nil))
-            (expect (org-ql--normalize-query '(deadline 2 :with-time t))
-                    :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)
-                                         :with-time t)))
-          (it ":from/:to/:on"
-            (expect (org-ql--normalize-query '(deadline :on today))
-                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(deadline :on today :with-time t))
-                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
-                                         :with-time t))
-            (expect (org-ql--normalize-query '(deadline :on today :with-time nil))
-                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
-                                         :with-time nil))
-            (expect (org-ql--normalize-query '(deadline :on 0))
-                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(deadline :on 0 :with-time t))
-                    :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
-                                         :with-time t))
-            (expect (org-ql--normalize-query '(deadline :on 1))
-                    :to-equal `(deadline :from ,(ts-inc 'day 1 beg-of-today-ts)
-                                         :to ,(ts-inc 'day 1 end-of-today-ts))))))
-      (describe "(scheduled)"
-        (let ((beg-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 0 :minute 0 :second 0)))
-              (end-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 23 :minute 59 :second 59))))
-          (it "with a number"
-            (expect (org-ql--normalize-query '(scheduled 0))
-                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(scheduled 0 :with-time t))
-                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
-                                          :with-time t))
-            (expect (org-ql--normalize-query '(scheduled 0 :with-time nil))
-                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
-                                          :with-time nil))
-            (expect (org-ql--normalize-query '(scheduled 1))
-                    :to-equal `(scheduled :from ,(ts-inc 'day 1 beg-of-today-ts)
-                                          :to ,(ts-inc 'day 1 end-of-today-ts))))
-          (it ":from/:to/:on"
-            (expect (org-ql--normalize-query '(scheduled :on today))
-                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(scheduled :on today :with-time t))
-                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
-                                          :with-time t))
-            (expect (org-ql--normalize-query '(scheduled :on today :with-time nil))
-                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
-                                          :with-time nil))
-            (expect (org-ql--normalize-query '(scheduled :on 0))
-                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(scheduled :on 0 :with-time t))
-                    :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
-                                          :with-time t))
-            (expect (org-ql--normalize-query '(scheduled :on 1))
-                    :to-equal `(scheduled :from ,(ts-inc 'day 1 beg-of-today-ts)
+      (describe "(level)"
+        (it "with one level"
+          (expect (org-ql--normalize-query '(level "1"))
+                  :to-equal '(level 1)))
+        (it "with two levels"
+          (expect (org-ql--normalize-query '(level "1" "2"))
+                  :to-equal '(level 1 2)))
+        (it "with a comparator and a level"
+          (expect (org-ql--normalize-query '(level ">" "1"))
+                  :to-equal '(level > 1))))
+
+      (describe "(link)"
+        (it "with one argument"
+          (expect (org-ql--normalize-query '(link "DESC-OR-TARGET"))
+                  :to-equal '(link "DESC-OR-TARGET")))
+        (it "with one argument and :regexp-p"
+          (expect (org-ql--normalize-query '(link "DESC-OR-TARGET" :regexp-p t))
+                  :to-equal '(link "DESC-OR-TARGET" :regexp-p t)))
+        (it "with keyword arguments"
+          (expect (org-ql--normalize-query '(link :description "DESCRIPTION" :target "TARGET"
+                                                  :regexp-p t))
+                  :to-equal '(link :description "DESCRIPTION" :target "TARGET"
+                                   :regexp-p t))))
+
+      (describe "(outline-path)"
+        (it "with a regexp metacharacter"
+          ;; Ensures that normalizer doesn't infinitely loop.
+          (expect (org-ql--normalize-query '(olp "a." "b"))
+                  :to-equal '(org-ql--predicate-outline-path "a\\." "b"))))
+
+      (describe "(src)"
+        (it "normalizes a non-keyword arg to keywords"
+          (expect (org-ql--normalize-query '(src "foo"))
+                  :to-equal '(src :regexps ("foo"))))
+        (it "normalizes non-keyword args to keywords"
+          (expect (org-ql--normalize-query '(src "foo" "bar"))
+                  :to-equal '(src :regexps ("foo" "bar"))))
+        (it "normalizes a non-keyword arg with a :lang keyword arg to keywords"
+          (expect (org-ql--normalize-query '(src "foo" :lang "bar"))
+                  :to-equal '(src :lang "bar" :regexps ("foo"))))
+        (it "normalizes non-keyword args with a :lang keyword arg to keywords"
+          (expect (org-ql--normalize-query '(src "foo" "bar" :lang "baz"))
+                  :to-equal '(src :lang "baz" :regexps ("foo" "bar"))))
+        (it "normalizes all-keyword args without looping"
+          (expect (org-ql--normalize-query '(src :regexps ("foo") :lang "bar"))
+                  :to-equal '(src :lang "bar" :regexps ("foo")))
+          (expect (org-ql--normalize-query '(src :regexps ("foo") :lang))
+                  :to-equal '(src :regexps ("foo")))))
+
+      (describe "(tags-inherited)"
+        (it "handles 0 arguments"
+          (expect (org-ql--normalize-query '(tags-inherited))
+                  :to-equal '(tags-inherited)))
+        (it "handles 1 argument"
+          (expect (org-ql--normalize-query '(tags-inherited "foo"))
+                  :to-equal '(tags-inherited "foo")))
+        (it "handles 2 arguments"
+          (expect (org-ql--normalize-query '(tags-inherited "foo" "bar"))
+                  :to-equal '(tags-inherited "foo" "bar")))
+        (it "aliases to `itags'"
+          (expect (org-ql--normalize-query '(itags))
+                  :to-equal '(tags-inherited)))
+        (it "aliases to `itags' with one argument"
+          (expect (org-ql--normalize-query '(itags "foo"))
+                  :to-equal '(tags-inherited "foo")))
+        (it "aliases to `itags' with two arguments"
+          (expect (org-ql--normalize-query '(itags "foo" "bar"))
+                  :to-equal '(tags-inherited "foo" "bar"))))
+
+      (describe "timestamp predicates"
+        ;; NOTE: (clocked) and (closed) don't accept :with-time arguments.
+        (describe "(clocked)"
+          (let ((beg-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                (end-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 23 :minute 59 :second 59))))
+            ;; MAYBE: While it seems helpful for (clocked) and (close) to
+            ;; implicitly look into the past (because entries can't be
+            ;; clocked or closed in the future), it makes the API
+            ;; inconsistent.  It would be better to be consistent and
+            ;; require the user to pass these predicates a negative number.
+            (it "with a number"
+              (expect (org-ql--normalize-query '(clocked 0))
+                      :to-equal `(clocked :from ,beg-of-today-ts))
+              (expect (org-ql--normalize-query '(clocked 1))
+                      :to-equal `(clocked :from ,(ts-inc 'day -1 beg-of-today-ts))))
+            (it ":from/:to/:on"
+              (expect (org-ql--normalize-query '(clocked :on today))
+                      :to-equal `(clocked :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(clocked :on 0))
+                      :to-equal `(clocked :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(clocked :on 1))
+                      :to-equal `(clocked :from ,(ts-inc 'day 1 beg-of-today-ts)
                                           :to ,(ts-inc 'day 1 end-of-today-ts))))))
-      (describe "(planning)"
-        (let ((beg-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 0 :minute 0 :second 0)))
-              (end-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 23 :minute 59 :second 59))))
-          (it "with a number"
-            (expect (org-ql--normalize-query '(planning 0))
-                    :to-equal `(planning :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(planning 0 :with-time t))
-                    :to-equal `(planning :to ,end-of-today-ts :with-time t))
-            (expect (org-ql--normalize-query '(planning 0 :with-time nil))
-                    :to-equal `(planning :to ,end-of-today-ts :with-time nil))
-            (expect (org-ql--normalize-query '(planning 1))
-                    :to-equal `(planning :to ,(ts-inc 'day 1 end-of-today-ts))))
-          (it ":from/:to/:on"
-            (expect (org-ql--normalize-query '(planning :on today))
-                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(planning :on today :with-time t))
-                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
-                                         :with-time t))
-            (expect (org-ql--normalize-query '(planning :on today :with-time nil))
-                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
-                                         :with-time nil))
-            (expect (org-ql--normalize-query '(planning :on 0))
-                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(planning :on 0 :with-time t))
-                    :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
-                                         :with-time t))
-            (expect (org-ql--normalize-query '(planning :on 1))
-                    :to-equal `(planning :from ,(ts-inc 'day 1 beg-of-today-ts)
+        (describe "(closed)"
+          (let ((beg-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                (end-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 23 :minute 59 :second 59))))
+            (it "with a number"
+              (expect (org-ql--normalize-query '(closed 0))
+                      :to-equal `(closed :from ,beg-of-today-ts))
+              (expect (org-ql--normalize-query '(closed 1))
+                      :to-equal `(closed :from ,(ts-inc 'day -1 beg-of-today-ts))))
+            (it ":from/:to/:on"
+              (expect (org-ql--normalize-query '(closed :on today))
+                      :to-equal `(closed :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(closed :on 0))
+                      :to-equal `(closed :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(closed :on 1))
+                      :to-equal `(closed :from ,(ts-inc 'day 1 beg-of-today-ts)
                                          :to ,(ts-inc 'day 1 end-of-today-ts))))))
-      (describe "(ts)"
-        (let ((beg-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 0 :minute 0 :second 0)))
-              (end-of-today-ts (->> (ts-now)
-                                 (ts-apply :hour 23 :minute 59 :second 59))))
-          (it "with a number"
-            ;; NOTE: For consistency with the other ts-related predicates, a number argument means ":to NUMBER".
-            ;; MAYBE: Mention this in docs.  Or remove this, because it's ambiguous.
-            (expect (org-ql--normalize-query '(ts 0))
-                    :to-equal `(ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(ts 0 :with-time t))
-                    :to-equal `(ts :to ,end-of-today-ts :with-time t))
-            (expect (org-ql--normalize-query '(ts 0 :with-time nil))
-                    :to-equal `(ts :to ,end-of-today-ts :with-time nil))
-            (expect (org-ql--normalize-query '(ts 1))
-                    :to-equal `(ts :to ,(ts-inc 'day 1 end-of-today-ts))))
-          (it ":from/:to/:on"
-            (expect (org-ql--normalize-query '(ts :on today))
-                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(ts :on today :with-time t))
-                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
-                                   :with-time t))
-            (expect (org-ql--normalize-query '(ts :on today :with-time nil))
-                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
-                                   :with-time nil))
-            (expect (org-ql--normalize-query '(ts :on 0))
-                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts))
-            (expect (org-ql--normalize-query '(ts :on 0 :with-time t))
-                    :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
-                                   :with-time t))
-            (expect (org-ql--normalize-query '(ts :on 1))
-                    :to-equal `(ts :from ,(ts-inc 'day 1 beg-of-today-ts)
-                                   :to ,(ts-inc 'day 1 end-of-today-ts)))))))
 
-    (describe "Plain strings"
-      (it "normalizes plain strings to the default predicate (using AND)"
-        (expect (org-ql--normalize-query '(and "string1" "string2"))
-                :to-equal '(and (regexp "string1") (regexp "string2"))))
-      (it "normalizes plain strings to the default predicate (using OR)"
-        (expect (org-ql--normalize-query '(or "string1" "string2"))
-                :to-equal '(or (regexp "string1") (regexp "string2"))))
-      (it "normalizes plain strings within sub-expressions to the default predicate"
-        (expect (org-ql--normalize-query '(and (todo "TODO")
-                                               (or "string1" "string2")))
-                :to-equal '(and (todo "TODO") (or (regexp "string1") (regexp "string2"))))
-        (expect (org-ql--normalize-query '(when (todo "TODO")
-                                            (or "string1" "string2")))
-                :to-equal '(when (todo "TODO") (or (regexp "string1") (regexp "string2"))))
-        (expect (org-ql--normalize-query '(when "string-cond1"
-                                            (or "string1" "string2")))
-                :to-equal '(when (regexp "string-cond1") (or (regexp "string1") (regexp "string2"))))
-        (expect (org-ql--normalize-query '(when (and "string-cond1" "string-cond2")
-                                            (or "string1" "string2")))
-                :to-equal '(when (and (regexp "string-cond1") (regexp "string-cond2")) (or (regexp "string1") (regexp "string2"))))
-        (expect (org-ql--normalize-query '(unless (and "stringcondition1" "stringcond2")
-                                            (or "string1" "string2")))
-                :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2"))))))
+        ;; NOTE: The rest of them do accept :with-time.
+        (describe "(deadline)"
+          (let ((beg-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                (end-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 23 :minute 59 :second 59))))
+            (it "with auto"
+              (let ((auto-ts (->> (ts-now)
+                                  (ts-adjust 'day org-deadline-warning-days)
+                                  (ts-apply :hour 23 :minute 59 :second 59))))
+                (expect (org-ql--normalize-query '(deadline auto))
+                        :to-equal `(deadline-warning :to ,auto-ts))
+                (expect (org-ql--normalize-query '(deadline auto :with-time t))
+                        :to-equal `(deadline-warning :to ,auto-ts :with-time t))
+                (expect (org-ql--normalize-query '(deadline auto :with-time nil))
+                        :to-equal `(deadline-warning :to ,auto-ts :with-time nil))))
+            (it "with a number"
+              (expect (org-ql--normalize-query '(deadline 0))
+                      :to-equal `(deadline :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(deadline 0 :with-time t))
+                      :to-equal `(deadline :to ,end-of-today-ts :with-time t))
+              (expect (org-ql--normalize-query '(deadline 0 :with-time nil))
+                      :to-equal `(deadline :to ,end-of-today-ts :with-time nil))
+              (expect (org-ql--normalize-query '(deadline 2))
+                      :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)))
+              (expect (org-ql--normalize-query '(deadline 2 :with-time nil))
+                      :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)
+                                           :with-time nil))
+              (expect (org-ql--normalize-query '(deadline 2 :with-time t))
+                      :to-equal `(deadline :to ,(ts-inc 'day 2 end-of-today-ts)
+                                           :with-time t)))
+            (it ":from/:to/:on"
+              (expect (org-ql--normalize-query '(deadline :on today))
+                      :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(deadline :on today :with-time t))
+                      :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
+                                           :with-time t))
+              (expect (org-ql--normalize-query '(deadline :on today :with-time nil))
+                      :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
+                                           :with-time nil))
+              (expect (org-ql--normalize-query '(deadline :on 0))
+                      :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(deadline :on 0 :with-time t))
+                      :to-equal `(deadline :from ,beg-of-today-ts :to ,end-of-today-ts
+                                           :with-time t))
+              (expect (org-ql--normalize-query '(deadline :on 1))
+                      :to-equal `(deadline :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                           :to ,(ts-inc 'day 1 end-of-today-ts))))))
+        (describe "(scheduled)"
+          (let ((beg-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                (end-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 23 :minute 59 :second 59))))
+            (it "with a number"
+              (expect (org-ql--normalize-query '(scheduled 0))
+                      :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(scheduled 0 :with-time t))
+                      :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                            :with-time t))
+              (expect (org-ql--normalize-query '(scheduled 0 :with-time nil))
+                      :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                            :with-time nil))
+              (expect (org-ql--normalize-query '(scheduled 1))
+                      :to-equal `(scheduled :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                            :to ,(ts-inc 'day 1 end-of-today-ts))))
+            (it ":from/:to/:on"
+              (expect (org-ql--normalize-query '(scheduled :on today))
+                      :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(scheduled :on today :with-time t))
+                      :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                            :with-time t))
+              (expect (org-ql--normalize-query '(scheduled :on today :with-time nil))
+                      :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                            :with-time nil))
+              (expect (org-ql--normalize-query '(scheduled :on 0))
+                      :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(scheduled :on 0 :with-time t))
+                      :to-equal `(scheduled :from ,beg-of-today-ts :to ,end-of-today-ts
+                                            :with-time t))
+              (expect (org-ql--normalize-query '(scheduled :on 1))
+                      :to-equal `(scheduled :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                            :to ,(ts-inc 'day 1 end-of-today-ts))))))
+        (describe "(planning)"
+          (let ((beg-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                (end-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 23 :minute 59 :second 59))))
+            (it "with a number"
+              (expect (org-ql--normalize-query '(planning 0))
+                      :to-equal `(planning :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(planning 0 :with-time t))
+                      :to-equal `(planning :to ,end-of-today-ts :with-time t))
+              (expect (org-ql--normalize-query '(planning 0 :with-time nil))
+                      :to-equal `(planning :to ,end-of-today-ts :with-time nil))
+              (expect (org-ql--normalize-query '(planning 1))
+                      :to-equal `(planning :to ,(ts-inc 'day 1 end-of-today-ts))))
+            (it ":from/:to/:on"
+              (expect (org-ql--normalize-query '(planning :on today))
+                      :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(planning :on today :with-time t))
+                      :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
+                                           :with-time t))
+              (expect (org-ql--normalize-query '(planning :on today :with-time nil))
+                      :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
+                                           :with-time nil))
+              (expect (org-ql--normalize-query '(planning :on 0))
+                      :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(planning :on 0 :with-time t))
+                      :to-equal `(planning :from ,beg-of-today-ts :to ,end-of-today-ts
+                                           :with-time t))
+              (expect (org-ql--normalize-query '(planning :on 1))
+                      :to-equal `(planning :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                           :to ,(ts-inc 'day 1 end-of-today-ts))))))
+        (describe "(ts)"
+          (let ((beg-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                (end-of-today-ts (->> (ts-now)
+                                      (ts-apply :hour 23 :minute 59 :second 59))))
+            (it "with a number"
+              ;; NOTE: For consistency with the other ts-related predicates, a number argument means ":to NUMBER".
+              ;; MAYBE: Mention this in docs.  Or remove this, because it's ambiguous.
+              (expect (org-ql--normalize-query '(ts 0))
+                      :to-equal `(ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(ts 0 :with-time t))
+                      :to-equal `(ts :to ,end-of-today-ts :with-time t))
+              (expect (org-ql--normalize-query '(ts 0 :with-time nil))
+                      :to-equal `(ts :to ,end-of-today-ts :with-time nil))
+              (expect (org-ql--normalize-query '(ts 1))
+                      :to-equal `(ts :to ,(ts-inc 'day 1 end-of-today-ts))))
+            (it ":from/:to/:on"
+              (expect (org-ql--normalize-query '(ts :on today))
+                      :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(ts :on today :with-time t))
+                      :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
+                                     :with-time t))
+              (expect (org-ql--normalize-query '(ts :on today :with-time nil))
+                      :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
+                                     :with-time nil))
+              (expect (org-ql--normalize-query '(ts :on 0))
+                      :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts))
+              (expect (org-ql--normalize-query '(ts :on 0 :with-time t))
+                      :to-equal `(ts :from ,beg-of-today-ts :to ,end-of-today-ts
+                                     :with-time t))
+              (expect (org-ql--normalize-query '(ts :on 1))
+                      :to-equal `(ts :from ,(ts-inc 'day 1 beg-of-today-ts)
+                                     :to ,(ts-inc 'day 1 end-of-today-ts)))
 
-    ;; FIXME: This test fails, but only on GitHub CI; it works fine
-    ;; locally.  It seems to be something to do with Buttercup and
-    ;; comparing the structs.  It only started happening after I moved
-    ;; the predicate argument processing into the newer
-    ;; --normalize-from-to-on macro.  I can't explain why it works
-    ;; fine locally, even in a clean sandbox with newly installed
-    ;; packages, yet fails entirely on GitHub CI.  The only
-    ;; possibility I can think of might be a difference in how the
-    ;; Emacs being installed into CI is built, but that seems very
-    ;; unlikely, so I don't know.  For now, I have no alternative but
-    ;; to comment out the test.  But it doesn't matter much, anyway,
-    ;; because I know it works properly.
+              ;; FIXME: This test fails, but only on GitHub CI; it works fine
+              ;; locally.  It seems to be something to do with Buttercup and
+              ;; comparing the structs.  It only started happening after I moved
+              ;; the predicate argument processing into the newer
+              ;; --normalize-from-to-on macro.  I can't explain why it works
+              ;; fine locally, even in a clean sandbox with newly installed
+              ;; packages, yet fails entirely on GitHub CI.  The only
+              ;; possibility I can think of might be a difference in how the
+              ;; Emacs being installed into CI is built, but that seems very
+              ;; unlikely, so I don't know.  For now, I have no alternative but
+              ;; to comment out the test.  But it doesn't matter much, anyway,
+              ;; because I know it works properly.
 
-    ;; (expect (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
-    ;;                                       (ts-a :on "2019-01-01")
-    ;;                                       (ts-inactive :on "2019-01-01")
-    ;;                                       (ts-i :on "2019-01-01")))
-    ;;         :to-equal `(or (ts :type active
-    ;;                            :from ,(make-ts :unix 1546322400.0)
-    ;;                            :to ,(make-ts :unix 1546408799.0))
-    ;;                        (ts :type active
-    ;;                            :from ,(make-ts :unix 1546322400.0)
-    ;;                            :to ,(make-ts :unix 1546408799.0))
-    ;;                        (ts :type inactive
-    ;;                            :from ,(make-ts :unix 1546322400.0)
-    ;;                            :to ,(make-ts :unix 1546408799.0))
-    ;;                        (ts :type inactive
-    ;;                            :from ,(make-ts :unix 1546322400.0)
-    ;;                            :to ,(make-ts :unix 1546408799.0))))
-    )
+              ;; (expect (org-ql--normalize-query '(or (ts-active :on "2019-01-01")
+              ;;                                       (ts-a :on "2019-01-01")
+              ;;                                       (ts-inactive :on "2019-01-01")
+              ;;                                       (ts-i :on "2019-01-01")))
+              ;;         :to-equal `(or (ts :type active
+              ;;                            :from ,(make-ts :unix 1546322400.0)
+              ;;                            :to ,(make-ts :unix 1546408799.0))
+              ;;                        (ts :type active
+              ;;                            :from ,(make-ts :unix 1546322400.0)
+              ;;                            :to ,(make-ts :unix 1546408799.0))
+              ;;                        (ts :type inactive
+              ;;                            :from ,(make-ts :unix 1546322400.0)
+              ;;                            :to ,(make-ts :unix 1546408799.0))
+              ;;                        (ts :type inactive
+              ;;                            :from ,(make-ts :unix 1546322400.0)
+              ;;                            :to ,(make-ts :unix 1546408799.0)))))
+              )))))
 
-  (describe "Query preambles"
+    (describe "Query preambles"
 
-    ;; TODO: Other predicates.
+      ;; TODO: Other predicates.
 
-    (describe "(clocked)"
-      (it "without arguments"
-        (expect (org-ql--query-preamble '(clocked))
-                :to-equal (list :query t
-                                :preamble org-ql-clock-regexp
-                                :preamble-case-fold nil)))
-      (it "with a number of days"
-        (expect (org-ql--query-preamble '(clocked 1))
-                :to-equal (list :query t
-                                :preamble org-ql-clock-regexp
-                                :preamble-case-fold nil)))
-      ;; TODO: Other arguments for (clocked).
-      )
+      (describe "(rifle)"
+        (it "with one argument"
+          (expect (org-ql--query-preamble (org-ql--normalize-query '(rifle "foo.")))
+                  :to-equal (list :query '(rifle :regexps '("foo\\."))
+                                  :preamble "\\(?:\\<\\(?:foo\\.\\)\\)"
+                                  :preamble-case-fold t)))
+        (it "with two arguments"
+          (expect (org-ql--query-preamble (org-ql--normalize-query '(rifle "foo." "bar")))
+                  :to-equal (list :query '(rifle :regexps '("foo\\." "bar"))
+                                  :preamble "\\(?:\\<\\(?:foo\\.\\|bar\\)\\)"
+                                  :preamble-case-fold t))))
 
-    (describe "(level)"
-      (it "with a number"
-        (expect (org-ql--query-preamble '(level 2))
-                :to-equal (list :query t
-                                :preamble (rx bol (repeat 2 "*") " ")
-                                :preamble-case-fold t)))
-      (it "with two numbers"
-        (expect (org-ql--query-preamble '(level 2 4))
-                :to-equal (list :query t
-                                :preamble (rx bol (repeat 2 4 "*") " ")
-                                :preamble-case-fold t)))
-      (it "<"
-        (expect (org-ql--query-preamble '(level < 3))
-                :to-equal (list :query t
-                                :preamble (rx bol (repeat 1 2 "*") " ")
-                                :preamble-case-fold t)))
-      (it "<="
-        (expect (org-ql--query-preamble '(level <= 2))
-                :to-equal (list :query t
-                                :preamble (rx bol (repeat 1 2 "*") " ")
-                                :preamble-case-fold t)))
-      (it ">"
-        (expect (org-ql--query-preamble '(level > 2))
-                :to-equal (list :query t
-                                :preamble (rx bol (>= 3 "*") " ")
-                                :preamble-case-fold t)))
-      (it ">="
-        (expect (org-ql--query-preamble '(level >= 2))
-                :to-equal (list :query t
-                                :preamble (rx bol (>= 2 "*") " ")
-                                :preamble-case-fold t)))))
+      (describe "(clocked)"
+        (it "without arguments"
+          (expect (org-ql--query-preamble '(clocked))
+                  :to-equal (list :query t
+                                  :preamble org-ql-clock-regexp
+                                  :preamble-case-fold nil)))
+        (it "with a number of days"
+          (expect (org-ql--query-preamble '(clocked 1))
+                  :to-equal (list :query t
+                                  :preamble org-ql-clock-regexp
+                                  :preamble-case-fold nil)))
+        ;; TODO: Other arguments for (clocked).
+        )
 
-  (describe "Plain query parsing"
+      (describe "(level)"
+        (it "with a number"
+          (expect (org-ql--query-preamble '(level 2))
+                  :to-equal (list :query t
+                                  :preamble (rx bol (repeat 2 "*") " ")
+                                  :preamble-case-fold t)))
+        (it "with two numbers"
+          (expect (org-ql--query-preamble '(level 2 4))
+                  :to-equal (list :query t
+                                  :preamble (rx bol (repeat 2 4 "*") " ")
+                                  :preamble-case-fold t)))
+        (it "<"
+          (expect (org-ql--query-preamble '(level < 3))
+                  :to-equal (list :query t
+                                  :preamble (rx bol (repeat 1 2 "*") " ")
+                                  :preamble-case-fold t)))
+        (it "<="
+          (expect (org-ql--query-preamble '(level <= 2))
+                  :to-equal (list :query t
+                                  :preamble (rx bol (repeat 1 2 "*") " ")
+                                  :preamble-case-fold t)))
+        (it ">"
+          (expect (org-ql--query-preamble '(level > 2))
+                  :to-equal (list :query t
+                                  :preamble (rx bol (>= 3 "*") " ")
+                                  :preamble-case-fold t)))
+        (it ">="
+          (expect (org-ql--query-preamble '(level >= 2))
+                  :to-equal (list :query t
+                                  :preamble (rx bol (>= 2 "*") " ")
+                                  :preamble-case-fold t)))))
 
-    ;; TODO: Other predicates.
+    (describe "Plain query parsing"
 
-    (it "Negated terms"
-      (expect (org-ql--query-string-to-sexp "todo: !todo:CHECK,SOMEDAY")
-              :to-equal '(and (todo) (not (todo "CHECK" "SOMEDAY"))))
-      (expect (org-ql--query-string-to-sexp "!todo:CHECK,SOMEDAY todo:")
-              :to-equal '(and (not (todo "CHECK" "SOMEDAY")) (todo)))
-      (expect (org-ql--query-string-to-sexp "tags:universe !moon")
-              :to-equal '(and (tags "universe") (not (regexp "moon"))))
-      (expect (org-ql--query-string-to-sexp "!moon tags:universe")
-              :to-equal '(and (not (regexp "moon")) (tags "universe")))
-      (expect (org-ql--query-string-to-sexp "mars !ts:on=today")
-              :to-equal '(and (regexp "mars") (not (ts :on "today"))))
-      (expect (org-ql--query-string-to-sexp "!\"quoted phrase\"")
-              :to-equal '(not (regexp "quoted phrase"))))
-    (it "Regexp predicates"
-      (expect (org-ql--query-string-to-sexp "scheduled")
-              ;; No colon after keyword, so not a predicate query.
-              :to-equal '(regexp "scheduled"))
-      (expect (org-ql--query-string-to-sexp "\"quoted phrase\"")
-              :to-equal '(regexp "quoted phrase"))
-      (expect (org-ql--query-string-to-sexp "regexp:word")
-              :to-equal '(regexp "word"))
-      (expect (org-ql--query-string-to-sexp "regexp:\"quoted phrase\"")
-              :to-equal '(regexp "quoted phrase")))
-    (it "Timestamp-based predicates"
-      (expect (org-ql--query-string-to-sexp "scheduled:on=2017-07-07")
-              :to-equal '(scheduled :on "2017-07-07"))
-      (expect (org-ql--query-string-to-sexp "deadline:from=2017-07-07,to=2017-07-09")
-              :to-equal '(deadline :from "2017-07-07" :to "2017-07-09"))
-      (expect (org-ql--query-string-to-sexp "planning:from=2017-07-07")
-              :to-equal '(planning :from "2017-07-07"))
-      (expect (org-ql--query-string-to-sexp "closed:from=2017-07-07")
-              :to-equal '(closed :from "2017-07-07"))
-      (expect (org-ql--query-string-to-sexp "ts-active:to=2017-07-07")
-              :to-equal '(ts-active :to "2017-07-07"))
-      (expect (org-ql--query-string-to-sexp "ts-inactive:to=2017-07-07")
-              :to-equal '(ts-inactive :to "2017-07-07"))
-      (expect (org-ql--query-string-to-sexp "ts-a:to=2017-07-07")
-              :to-equal '(ts-a :to "2017-07-07"))
-      (expect (org-ql--query-string-to-sexp "ts-i:on=2017-07-07")
-              :to-equal '(ts-i :on "2017-07-07"))
-      (expect (org-ql--query-string-to-sexp "ts:")
-              :to-equal '(ts))
-      (expect (org-ql--query-string-to-sexp "clocked:")
-              :to-equal '(clocked)))
-    (it "To-do predicates"
-      (expect (org-ql--query-string-to-sexp "todo:")
-              :to-equal '(todo))
-      (expect (org-ql--query-string-to-sexp "todo:TODO")
-              :to-equal '(todo "TODO"))
-      (expect (org-ql--query-string-to-sexp "todo:TODO,SOMEDAY")
-              :to-equal '(todo "TODO" "SOMEDAY")))
-    (it "Compound queries"
-      (expect (org-ql--query-string-to-sexp "todo:SOMEDAY ts-a:from=2020-01-01,to=2021-01-01")
-              :to-equal '(and (todo "SOMEDAY") (ts-a :from "2020-01-01" :to "2021-01-01")))
-      (expect (org-ql--query-string-to-sexp "regexp:\"quoted phrase\" todo:SOMEDAY")
-              :to-equal '(and (regexp "quoted phrase") (todo "SOMEDAY")))))
+      ;; TODO: Other predicates.
 
-  (describe "Convert sexp queries to non-sexp queries"
+      (it "Negated terms"
+        (expect (org-ql--query-string-to-sexp "todo: !todo:CHECK,SOMEDAY")
+                :to-equal '(and (todo) (not (todo "CHECK" "SOMEDAY"))))
+        (expect (org-ql--query-string-to-sexp "!todo:CHECK,SOMEDAY todo:")
+                :to-equal '(and (not (todo "CHECK" "SOMEDAY")) (todo)))
+        (expect (org-ql--query-string-to-sexp "tags:universe !moon")
+                :to-equal '(and (tags "universe") (not (rifle "moon"))))
+        (expect (org-ql--query-string-to-sexp "!moon tags:universe")
+                :to-equal '(and (not (rifle "moon")) (tags "universe")))
+        (expect (org-ql--query-string-to-sexp "mars !ts:on=today")
+                :to-equal '(and (rifle "mars") (not (ts :on "today"))))
+        (expect (org-ql--query-string-to-sexp "!\"quoted phrase\"")
+                :to-equal '(not (rifle "quoted phrase"))))
+      (it "Regexp predicates"
+        (expect (org-ql--query-string-to-sexp "regexp:word")
+                :to-equal '(regexp "word"))
+        (expect (org-ql--query-string-to-sexp "regexp:\"quoted phrase\"")
+                :to-equal '(regexp "quoted phrase")))
+      (it "Timestamp-based predicates"
+        (expect (org-ql--query-string-to-sexp "scheduled:on=2017-07-07")
+                :to-equal '(scheduled :on "2017-07-07"))
+        (expect (org-ql--query-string-to-sexp "deadline:from=2017-07-07,to=2017-07-09")
+                :to-equal '(deadline :from "2017-07-07" :to "2017-07-09"))
+        (expect (org-ql--query-string-to-sexp "planning:from=2017-07-07")
+                :to-equal '(planning :from "2017-07-07"))
+        (expect (org-ql--query-string-to-sexp "closed:from=2017-07-07")
+                :to-equal '(closed :from "2017-07-07"))
+        (expect (org-ql--query-string-to-sexp "ts-active:to=2017-07-07")
+                :to-equal '(ts-active :to "2017-07-07"))
+        (expect (org-ql--query-string-to-sexp "ts-inactive:to=2017-07-07")
+                :to-equal '(ts-inactive :to "2017-07-07"))
+        (expect (org-ql--query-string-to-sexp "ts-a:to=2017-07-07")
+                :to-equal '(ts-a :to "2017-07-07"))
+        (expect (org-ql--query-string-to-sexp "ts-i:on=2017-07-07")
+                :to-equal '(ts-i :on "2017-07-07"))
+        (expect (org-ql--query-string-to-sexp "ts:")
+                :to-equal '(ts))
+        (expect (org-ql--query-string-to-sexp "clocked:")
+                :to-equal '(clocked)))
+      (it "To-do predicates"
+        (expect (org-ql--query-string-to-sexp "todo:")
+                :to-equal '(todo))
+        (expect (org-ql--query-string-to-sexp "todo:TODO")
+                :to-equal '(todo "TODO"))
+        (expect (org-ql--query-string-to-sexp "todo:TODO,SOMEDAY")
+                :to-equal '(todo "TODO" "SOMEDAY")))
+      (it "Compound queries"
+        (expect (org-ql--query-string-to-sexp "todo:SOMEDAY ts-a:from=2020-01-01,to=2021-01-01")
+                :to-equal '(and (todo "SOMEDAY") (ts-a :from "2020-01-01" :to "2021-01-01")))
+        (expect (org-ql--query-string-to-sexp "regexp:\"quoted phrase\" todo:SOMEDAY")
+                :to-equal '(and (regexp "quoted phrase") (todo "SOMEDAY")))))
 
-    ;; FIXME: Test (src) after converting it is implemented.
-    ;; (src :lang "elisp" :regexps ("defun"))
+    (describe "Convert sexp queries to non-sexp queries"
 
-    ;; MAYBE: Other predicates?  Or should these cover the other
-    ;; cases, because the others use the same format?
+      ;; FIXME: Test (src) after converting it is implemented.
+      ;; (src :lang "elisp" :regexps ("defun"))
 
-    (it "(heading)"
-      (expect (org-ql--query-sexp-to-string '(heading "quoted phrase" "word"))
-              :to-equal "heading:word,\"quoted phrase\""))
-    (it "(priority)"
-      (expect (org-ql--query-sexp-to-string '(priority >= B))
-              :to-equal "priority:A,B")
-      (expect (org-ql--query-sexp-to-string '(priority > B))
-              :to-equal "priority:A")
-      (expect (org-ql--query-sexp-to-string '(priority < B))
-              :to-equal "priority:C")
-      (expect (org-ql--query-sexp-to-string '(priority < A))
-              :to-equal "priority:B,C")
-      (expect (org-ql--query-sexp-to-string '(priority <= B))
-              :to-equal "priority:B,C")
-      (expect (org-ql--query-sexp-to-string '(priority = A))
-              :to-equal "priority:A"))
-    (it "(todo)"
-      (expect (org-ql--query-sexp-to-string '(todo))
-              :to-equal "todo:")
-      (expect (org-ql--query-sexp-to-string '(todo "TODO"))
-              :to-equal "todo:TODO")
-      (expect (org-ql--query-sexp-to-string '(todo "TODO" "NEXT"))
-              :to-equal "todo:NEXT,TODO"))
-    (it "(ts)"
-      (expect (org-ql--query-sexp-to-string '(ts :from -1 :to 1))
-              :to-equal "ts:from=-1,to=1")
-      (expect (org-ql--query-sexp-to-string '(ts :on today))
-              :to-equal "ts:on=today")
-      (expect (org-ql--query-sexp-to-string '(ts-active :from "2017-01-01" :to "2018-01-01"))
-              :to-equal "ts-active:from=2017-01-01,to=2018-01-01"))
-    (it "(and ...)"
-      (expect (org-ql--query-sexp-to-string '(and (tags "book" "books") (priority "A")))
-              :to-equal "tags:books,book priority:A")
-      (expect (org-ql--query-sexp-to-string '(and (tags "space") (not (regexp "moon"))))
-              :to-equal "tags:space !regexp:moon"))
-    (it "(or ...)"
-      (expect (org-ql--query-sexp-to-string '(or (tags "book" "books") (priority "A")))
-              :to-equal nil)))
+      ;; MAYBE: Other predicates?  Or should these cover the other
+      ;; cases, because the others use the same format?
+
+      (it "(heading)"
+        (expect (org-ql--query-sexp-to-string '(heading "quoted phrase" "word"))
+                :to-equal "heading:word,\"quoted phrase\""))
+      (it "(priority)"
+        (expect (org-ql--query-sexp-to-string '(priority >= B))
+                :to-equal "priority:A,B")
+        (expect (org-ql--query-sexp-to-string '(priority > B))
+                :to-equal "priority:A")
+        (expect (org-ql--query-sexp-to-string '(priority < B))
+                :to-equal "priority:C")
+        (expect (org-ql--query-sexp-to-string '(priority < A))
+                :to-equal "priority:B,C")
+        (expect (org-ql--query-sexp-to-string '(priority <= B))
+                :to-equal "priority:B,C")
+        (expect (org-ql--query-sexp-to-string '(priority = A))
+                :to-equal "priority:A"))
+      (it "(todo)"
+        (expect (org-ql--query-sexp-to-string '(todo))
+                :to-equal "todo:")
+        (expect (org-ql--query-sexp-to-string '(todo "TODO"))
+                :to-equal "todo:TODO")
+        (expect (org-ql--query-sexp-to-string '(todo "TODO" "NEXT"))
+                :to-equal "todo:NEXT,TODO"))
+      (it "(ts)"
+        (expect (org-ql--query-sexp-to-string '(ts :from -1 :to 1))
+                :to-equal "ts:from=-1,to=1")
+        (expect (org-ql--query-sexp-to-string '(ts :on today))
+                :to-equal "ts:on=today")
+        (expect (org-ql--query-sexp-to-string '(ts-active :from "2017-01-01" :to "2018-01-01"))
+                :to-equal "ts-active:from=2017-01-01,to=2018-01-01"))
+      (it "(and ...)"
+        (expect (org-ql--query-sexp-to-string '(and (tags "book" "books") (priority "A")))
+                :to-equal "tags:books,book priority:A")
+        (expect (org-ql--query-sexp-to-string '(and (tags "space") (not (regexp "moon"))))
+                :to-equal "tags:space !regexp:moon"))
+      (it "(or ...)"
+        (expect (org-ql--query-sexp-to-string '(or (tags "book" "books") (priority "A")))
+                :to-equal nil))))
+
+  (describe "Query functions"
+
+    (describe "org-ql-select"
+      (it "returns matching entries"
+        (expect (length (org-ql-select org-ql-test-buffer
+                          '(category)
+                          :sort 'deadline))
+                :to-equal org-ql-test-num-headings)))
+    (describe "org-ql-query"
+      (it "returns matching entries"
+        (expect (length (org-ql-query :select 'element
+                                      :from org-ql-test-buffer
+                                      :where '(category)
+                                      :order-by 'date))
+                :to-equal org-ql-test-num-headings))))
 
   (describe "Query results"
 
@@ -729,7 +810,7 @@ with keyword arg NOW in PLIST."
         (org-ql-expect ('(descendants (todo "CHECK")))
           '("Recurring")))
       (org-ql-it "with granddescendants query"
-        (org-ql-expect ('(descendants (descendants "moon")))
+        (org-ql-expect ('(descendants (descendants (regexp "moon"))))
           '("Take over the universe")))
       (org-ql-it "with query that should not match parent"
         ;; This test would fail if the `descendants' predicate did not properly exclude
@@ -1176,6 +1257,7 @@ with keyword arg NOW in PLIST."
       (org-ql-it ">= a priority"
         (org-ql-expect ('(priority >= "B"))
           '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Renew membership in supervillain club" "Learn universal sign language" "Internet" "Spaceship lease" "Fix flux capacitor"))))
+
     (describe "(property)"
 
       ;; MAYBE: Add support for (property) without arguments.
@@ -1202,22 +1284,25 @@ with keyword arg NOW in PLIST."
                         :sort 'todo)
           '("Take over the universe")))
 
-      (org-ql-it "with a plain string"
-        (org-ql-expect ("Take over"
-                        :sort 'todo)
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
-
-      (org-ql-it "with two plain strings in an OR"
-        (org-ql-expect ('(or "Take over" "universe")
-                        :sort 'todo)
-          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut")))
-
       (org-ql-it "case-folding predicate with non-case-folding preamble"
         ;; e.g. the (todo) predicate disables case-folding in its preamble, but that
         ;; should not prevent case-folding in this and other predicates (issue #114).
         (org-ql-expect ('(and (todo "TODO") (regexp "take over"))
                         :sort 'todo)
           '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon" "Get haircut"))))
+
+    (describe "(rifle)"
+      (org-ql-it "with one argument"
+        (org-ql-expect ('(rifle "weekend"))
+          ;; In entry text.
+          '("Take over the world"))
+        (org-ql-expect ('(rifle "moon"))
+          ;; In outline path.
+          '("Take over the moon" "Visit the moon")))
+      (org-ql-it "with two arguments"
+        (org-ql-expect ('(rifle "Take" "world"))
+          ;; In entry text (including tags) and/or outline path.
+          '("Take over the world" "Skype with president of Antarctica" "Get haircut"))))
 
     (describe "(scheduled)"
 
