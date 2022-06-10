@@ -483,6 +483,15 @@ Arguments are listed next to predicate names, where applicable.
      strings).  Matches against entire entry, from beginning of its
      heading to the next heading.
         • Aliases: ‘r’.
+‘rifle (&rest strings)’
+     Return non-nil if each string is found in either the entry or its
+     outline path.  Works like ‘org-rifle’.  This is probably the most
+     useful, intuitive, general-purpose predicate.
+        • Aliases: ‘smart’.
+        • *Note:* By default, this is the default predicate used for
+          plain-string query tokens (i.e.  given without a specified
+          predicate).  This can be customized with the option
+          ‘org-ql-default-predicate’.
 ‘src (&key lang regexps)’
      Return non-nil if current entry contains an Org Babel source block.
      If ‘LANG’ is non-nil, match blocks of that language.  If ‘REGEXPS’
@@ -1008,6 +1017,13 @@ File: README.info,  Node: 07-pre,  Next: 062,  Up: Changelog
      ‘org-ql-find-path’, which jump to entries selected using Emacs’s
      built-in completion facilities and Org QL queries (like
      ‘helm-org-ql’, but doesn’t require Helm.).
+   • Predicate ‘rifle’, which matches an entry if each of the given
+     arguments is found in either the entry’s contents or its outline
+     path.  This provides very intuitive results, mimicing the behavior
+     of ‘org-rifle’ (https://github.com/alphapapa/org-rifle).  In fact,
+     the results are so useful that it’s now the default predicate for
+     plain-string query tokens.  (It is also aliased to ‘smart’, since
+     it’s so "smart," and not all users have used ‘org-rifle’.)
    • Option ‘org-ql-default-predicate’, applied to plain-string query
      tokens (before, the ‘regexp’ predicate was always used, but now it
      may be customized).
@@ -1646,51 +1662,51 @@ Node: org-ql-sparse-tree8345
 Node: Queries9145
 Node: Non-sexp query syntax10262
 Node: General predicates12021
-Node: Ancestor/descendant predicates18260
-Node: Date/time predicates19388
-Node: Functions / Macros22512
-Node: Agenda-like views22810
-Ref: Function ‘org-ql-block’22972
-Node: Listing / acting-on results24233
-Ref: Caching24441
-Ref: Function ‘org-ql-select’25354
-Ref: Function ‘org-ql-query’27780
-Ref: Macro ‘org-ql’ (deprecated)29554
-Node: Custom predicates29869
-Ref: Macro ‘org-ql-defpred’30093
-Node: Dynamic block33534
-Node: Links36258
-Node: Tips36945
-Node: Changelog37269
-Node: 07-pre38037
-Node: 06238786
-Node: 06139094
-Node: 0639662
-Node: 05242716
-Node: 05143016
-Node: 0543439
-Node: 04944968
-Node: 04845248
-Node: 04745595
-Node: 04646004
-Node: 04546412
-Node: 04446773
-Node: 04347132
-Node: 04247335
-Node: 04147496
-Node: 0447743
-Node: 03251844
-Node: 03152247
-Node: 0352444
-Node: 02355744
-Node: 02255978
-Node: 02156258
-Node: 0256463
-Node: 0160541
-Node: Notes60642
-Node: Comparison with Org Agenda searches60804
-Node: org-sidebar61693
-Node: License61972
+Node: Ancestor/descendant predicates18763
+Node: Date/time predicates19891
+Node: Functions / Macros23015
+Node: Agenda-like views23313
+Ref: Function ‘org-ql-block’23475
+Node: Listing / acting-on results24736
+Ref: Caching24944
+Ref: Function ‘org-ql-select’25857
+Ref: Function ‘org-ql-query’28283
+Ref: Macro ‘org-ql’ (deprecated)30057
+Node: Custom predicates30372
+Ref: Macro ‘org-ql-defpred’30596
+Node: Dynamic block34037
+Node: Links36761
+Node: Tips37448
+Node: Changelog37772
+Node: 07-pre38540
+Node: 06239801
+Node: 06140109
+Node: 0640677
+Node: 05243731
+Node: 05144031
+Node: 0544454
+Node: 04945983
+Node: 04846263
+Node: 04746610
+Node: 04647019
+Node: 04547427
+Node: 04447788
+Node: 04348147
+Node: 04248350
+Node: 04148511
+Node: 0448758
+Node: 03252859
+Node: 03153262
+Node: 0353459
+Node: 02356759
+Node: 02256993
+Node: 02157273
+Node: 0257478
+Node: 0161556
+Node: Notes61657
+Node: Comparison with Org Agenda searches61819
+Node: org-sidebar62708
+Node: License62987
 
 End Tag Table
 

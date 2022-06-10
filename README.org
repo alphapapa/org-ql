@@ -236,6 +236,9 @@ Arguments are listed next to predicate names, where applicable.
 +  =property (property &optional value)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a custom predicate form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
 +  =regexp (&rest regexps)= :: Return non-nil if current entry matches all of ~REGEXPS~ (regexp strings).  Matches against entire entry, from beginning of its heading to the next heading.
      -  Aliases: =r=.
++  =rifle (&rest strings)= :: Return non-nil if each string is found in either the entry or its outline path.  Works like =org-rifle=.  This is probably the most useful, intuitive, general-purpose predicate.
+     - Aliases: ~smart~.
+     - *Note:* By default, this is the default predicate used for plain-string query tokens (i.e. given without a specified predicate).  This can be customized with the option ~org-ql-default-predicate~.
 +  ~src (&key lang regexps)~ :: Return non-nil if current entry contains an Org Babel source block.  If ~LANG~ is non-nil, match blocks of that language.  If ~REGEXPS~ is non-nil, require that block's contents match all regexps.
 +  =tags (&optional tags)= :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
 +  =tags-inherited (&optional tags)= :: Return non-nil if current heading's inherited tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any inherited tags.
@@ -539,6 +542,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Added*
 +  Commands ~org-ql-find~, ~org-ql-find-heading~, and ~org-ql-find-path~, which jump to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
++  Predicate ~rifle~, which matches an entry if each of the given arguments is found in either the entry's contents or its outline path.  This provides very intuitive results, mimicing the behavior of [[https://github.com/alphapapa/org-rifle][=org-rifle=]].  In fact, the results are so useful that it's now the default predicate for plain-string query tokens.  (It is also aliased to ~smart~, since it's so "smart," and not all users have used =org-rifle=.)
 +  Option ~org-ql-default-predicate~, applied to plain-string query tokens (before, the ~regexp~ predicate was always used, but now it may be customized).
 
 *Changed*

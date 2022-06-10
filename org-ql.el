@@ -298,11 +298,13 @@ See Info node `(org-ql)Queries'."
   :type 'boolean
   :risky t)
 
-(defcustom org-ql-default-predicate 'regexp
+(defcustom org-ql-default-predicate 'rifle
   "Predicate used for plain-string tokens without a specified predicate."
   :type '(choice (const heading)
                  (const heading-regexp)
                  (const regexp)
+                 (const rifle)
+                 (const smart)
                  (const outline-path)
                  (const outline-path-segment)))
 
@@ -1554,6 +1556,28 @@ any link is found."
                    (or (string-match-p description-or-target (match-string 1))
                        (string-match-p description-or-target
                                        (match-string org-ql-link-description-group)))))))))
+
+(org-ql-defpred (rifle smart) (&rest strings)
+  "Return non-nil if each string argument is found in either the entry or its outline path.
+Works like `org-rifle'.  This is probably the most useful,
+intuitive, general-purpose predicate."
+  ;; NOTE: This predicate advertises that it takes strings, but they
+  ;; are normalized to regexps.  Because of that, we must use a
+  ;; coalescing function.
+  :coalesce-multiple-calls (lambda (coalesced-args current-args)
+                             (setf (plist-get coalesced-args :regexps)
+                                   (list 'quote (append (cadr (plist-get coalesced-args :regexps))
+                                                        (cadr (plist-get current-args :regexps)))))
+                             coalesced-args)
+  :normalizers ((`(,predicate-names . ,(and rest (guard (cl-every #'stringp rest))))
+                 ;; If this doesn't match, it's already normalized.
+                 `(rifle :regexps ',(mapcar #'regexp-quote rest))))
+  :preambles ((`(,predicate-names :regexps ',regexps)
+               (list :regexp (rx-to-string `(seq bow (or ,@(mapcar (lambda (s) `(regexp ,s)) regexps))))
+                     :case-fold t :query query)))
+  :body (cl-loop for regexp in (plist-get strings :regexps)
+                 always (or (org-ql--predicate-regexp regexp)
+                            (org-ql--predicate-outline-path regexp))))
 
 ;; MAYBE: Preambles for outline-path predicates.  Not sure if possible without complicated logic.
 ;; FIXME: These preds say they accept regexps but the strings get regexp-quoted.  They should probably just take strings.
