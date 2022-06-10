@@ -1668,22 +1668,24 @@ If keyword argument LANG is non-nil, the block must be in that
 language."
   :normalizers ((`(,predicate-names . ,args)
                  ;; Rewrite to use keyword args.
-                 (-let (regexps lang keyword-index)
-                   (cond ((plist-get args :lang)
-                          ;; Lang given first, or only lang given.
-                          (setf lang (plist-get args :lang)
-                                regexps (seq-difference args (list :lang lang))))
-                         ((setf keyword-index (-find-index #'keywordp args))
-                          ;; Regexps and lang given.
-                          (setf lang (plist-get (cl-subseq args keyword-index) :lang)
-                                regexps (cl-subseq args 0 keyword-index)))
-                         (t ;; Only regexps given.
-                          (setf regexps args)))
-                   (when regexps
-                     ;; This feels awkward and wrong, but we have to quote lists
-                     ;; and avoid quoting nil.  There must be a better way.
-                     (setf regexps `(',regexps)))
-                   `(src :lang ,lang :regexps ,@regexps))))
+                 (cond ((cl-every #'stringp args)
+                        ;; No keywords, only regexps.
+                        `(src :regexps ,args))
+                       ((and (stringp (car args)) (cl-some #'keywordp args))
+                        ;; Regexp as first arg with keyword later.
+                        (let* ((keyword-pos (cl-position :lang args))
+                               (regexps (cl-subseq args 0 keyword-pos))
+                               ;; We assume that if :lang is given, the string argument follows.
+                               (lang (nth (1+ (cl-position :lang args)) args)))
+                          `(src :lang ,lang
+                                :regexps ,regexps)))
+                       ((keywordp (car args))
+                        ;; All plist args.
+                        `(src ,@(delq nil
+                                      (append (when (plist-get args :lang)
+                                                (list :lang (plist-get args :lang)))
+                                              (when (plist-get args :regexps)
+                                                (list :regexps (plist-get args :regexps))))))))))
   :preambles ((`(,predicate-names . ,args)
                (list :regexp (org-ql--format-src-block-regexp (plist-get args :lang))
                      ;; Always check contents with predicate.
