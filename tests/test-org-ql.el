@@ -252,18 +252,24 @@ with keyword arg NOW in PLIST."
                 :to-equal '(org-ql--predicate-outline-path "a\\." "b"))))
 
     (describe "(tags-inherited)"
-      (expect (org-ql--normalize-query '(tags-inherited))
-              :to-equal '(tags-inherited))
-      (expect (org-ql--normalize-query '(itags))
-              :to-equal '(tags-inherited))
-      (expect (org-ql--normalize-query '(tags-inherited "foo"))
-              :to-equal '(tags-inherited "foo"))
-      (expect (org-ql--normalize-query '(itags "foo"))
-              :to-equal '(tags-inherited "foo"))
-      (expect (org-ql--normalize-query '(tags-inherited "foo" "bar"))
-              :to-equal '(tags-inherited "foo" "bar"))
-      (expect (org-ql--normalize-query '(itags "foo" "bar"))
-              :to-equal '(tags-inherited "foo" "bar")))
+      (it "handles 0 arguments"
+        (expect (org-ql--normalize-query '(tags-inherited))
+                :to-equal '(tags-inherited)))
+      (it "handles 1 argument"
+        (expect (org-ql--normalize-query '(tags-inherited "foo"))
+                :to-equal '(tags-inherited "foo")))
+      (it "handles 2 arguments"
+        (expect (org-ql--normalize-query '(tags-inherited "foo" "bar"))
+                :to-equal '(tags-inherited "foo" "bar")))
+      (it "aliases to `itags'"
+        (expect (org-ql--normalize-query '(itags))
+                :to-equal '(tags-inherited)))
+      (it "aliases to `itags' with one argument"
+        (expect (org-ql--normalize-query '(itags "foo"))
+                :to-equal '(tags-inherited "foo")))
+      (it "aliases to `itags' with two arguments"
+        (expect (org-ql--normalize-query '(itags "foo" "bar"))
+                :to-equal '(tags-inherited "foo" "bar"))))
 
     (describe "timestamp predicates"
       ;; NOTE: (clocked) and (closed) don't accept :with-time arguments.
@@ -456,25 +462,29 @@ with keyword arg NOW in PLIST."
                     :to-equal `(ts :from ,(ts-inc 'day 1 beg-of-today-ts)
                                    :to ,(ts-inc 'day 1 end-of-today-ts)))))))
 
-    (expect (org-ql--normalize-query '(and "string1" "string2"))
-            :to-equal '(and (regexp "string1") (regexp "string2")))
-    (expect (org-ql--normalize-query '(or "string1" "string2"))
-            :to-equal '(or (regexp "string1") (regexp "string2")))
-    (expect (org-ql--normalize-query '(and (todo "TODO")
-                                           (or "string1" "string2")))
-            :to-equal '(and (todo "TODO") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--normalize-query '(when (todo "TODO")
-                                        (or "string1" "string2")))
-            :to-equal '(when (todo "TODO") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--normalize-query '(when "string-cond1"
-                                        (or "string1" "string2")))
-            :to-equal '(when (regexp "string-cond1") (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--normalize-query '(when (and "string-cond1" "string-cond2")
-                                        (or "string1" "string2")))
-            :to-equal '(when (and (regexp "string-cond1") (regexp "string-cond2")) (or (regexp "string1") (regexp "string2"))))
-    (expect (org-ql--normalize-query '(unless (and "stringcondition1" "stringcond2")
-                                        (or "string1" "string2")))
-            :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2"))))
+    (describe "Plain strings"
+      (it "normalizes plain strings to the default predicate (using AND)"
+        (expect (org-ql--normalize-query '(and "string1" "string2"))
+                :to-equal '(and (regexp "string1") (regexp "string2"))))
+      (it "normalizes plain strings to the default predicate (using OR)"
+        (expect (org-ql--normalize-query '(or "string1" "string2"))
+                :to-equal '(or (regexp "string1") (regexp "string2"))))
+      (it "normalizes plain strings within sub-expressions to the default predicate"
+        (expect (org-ql--normalize-query '(and (todo "TODO")
+                                               (or "string1" "string2")))
+                :to-equal '(and (todo "TODO") (or (regexp "string1") (regexp "string2"))))
+        (expect (org-ql--normalize-query '(when (todo "TODO")
+                                            (or "string1" "string2")))
+                :to-equal '(when (todo "TODO") (or (regexp "string1") (regexp "string2"))))
+        (expect (org-ql--normalize-query '(when "string-cond1"
+                                            (or "string1" "string2")))
+                :to-equal '(when (regexp "string-cond1") (or (regexp "string1") (regexp "string2"))))
+        (expect (org-ql--normalize-query '(when (and "string-cond1" "string-cond2")
+                                            (or "string1" "string2")))
+                :to-equal '(when (and (regexp "string-cond1") (regexp "string-cond2")) (or (regexp "string1") (regexp "string2"))))
+        (expect (org-ql--normalize-query '(unless (and "stringcondition1" "stringcond2")
+                                            (or "string1" "string2")))
+                :to-equal '(unless (and (regexp "stringcondition1") (regexp "stringcond2")) (or (regexp "string1") (regexp "string2"))))))
 
     ;; FIXME: This test fails, but only on GitHub CI; it works fine
     ;; locally.  It seems to be something to do with Buttercup and
