@@ -1567,10 +1567,9 @@ intuitive, general-purpose predicate."
   ;; are normalized to regexps.  Because of that, we must use a
   ;; coalescing function.
   :coalesce (lambda (coalesced-args current-args)
-              (setf (plist-get coalesced-args :regexps)
-                    (list 'quote (append (cadr (plist-get coalesced-args :regexps))
-                                         (cadr (plist-get current-args :regexps)))))
-              coalesced-args)
+              (plist-put coalesced-args :regexps
+                         (list 'quote (append (cadr (plist-get coalesced-args :regexps))
+                                              (cadr (plist-get current-args :regexps))))))
   :normalizers ((`(,predicate-names . ,(and rest (guard (cl-every #'stringp rest))))
                  ;; If this doesn't match, it's already normalized.
                  `(rifle :regexps ',(mapcar #'regexp-quote rest))))
@@ -1779,11 +1778,9 @@ language."
               (when (or (not coalesced-args)
                         (equal (plist-get current-args :lang)
                                (plist-get coalesced-args :lang)))
-                (setf (plist-get coalesced-args :regexps)
-                      (append (plist-get coalesced-args :regexps)
-                              (plist-get current-args :regexps))
-                      (plist-get coalesced-args :lang) (plist-get current-args :lang))
-                coalesced-args))
+                (plist-put coalesced-args :regexps (append (plist-get coalesced-args :regexps)
+                                                           (plist-get current-args :regexps)))
+                (plist-put coalesced-args :lang (plist-get current-args :lang))))
   :normalizers ((`(,predicate-names . ,args)
                  ;; Rewrite to use keyword args.
                  (cond ((cl-every #'stringp args)
