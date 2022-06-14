@@ -550,6 +550,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Internal*
 +  Certain query predicates, when called multiple times in an ~and~ sub-expression, are optimized to a single call.
++  Use ~buffer-chars-modified-tick~ instead of ~buffer-modified-tick~.  (Thanks to [[https://github.com/yantar92][Ihor Radchenko]].)
 
 ** 0.6.2
 

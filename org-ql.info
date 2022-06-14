@@ -1034,6 +1034,8 @@ File: README.info,  Node: 07-pre,  Next: 062,  Up: Changelog
    *Internal*
    • Certain query predicates, when called multiple times in an ‘and’
      sub-expression, are optimized to a single call.
+   • Use ‘buffer-chars-modified-tick’ instead of ‘buffer-modified-tick’.
+     (Thanks to Ihor Radchenko (https://github.com/yantar92).)
 
 
 File: README.info,  Node: 062,  Next: 061,  Prev: 07-pre,  Up: Changelog
@@ -1679,34 +1681,34 @@ Node: Links36761
 Node: Tips37448
 Node: Changelog37772
 Node: 07-pre38540
-Node: 06239801
-Node: 06140109
-Node: 0640677
-Node: 05243731
-Node: 05144031
-Node: 0544454
-Node: 04945983
-Node: 04846263
-Node: 04746610
-Node: 04647019
-Node: 04547427
-Node: 04447788
-Node: 04348147
-Node: 04248350
-Node: 04148511
-Node: 0448758
-Node: 03252859
-Node: 03153262
-Node: 0353459
-Node: 02356759
-Node: 02256993
-Node: 02157273
-Node: 0257478
-Node: 0161556
-Node: Notes61657
-Node: Comparison with Org Agenda searches61819
-Node: org-sidebar62708
-Node: License62987
+Node: 06239947
+Node: 06140255
+Node: 0640823
+Node: 05243877
+Node: 05144177
+Node: 0544600
+Node: 04946129
+Node: 04846409
+Node: 04746756
+Node: 04647165
+Node: 04547573
+Node: 04447934
+Node: 04348293
+Node: 04248496
+Node: 04148657
+Node: 0448904
+Node: 03253005
+Node: 03153408
+Node: 0353605
+Node: 02356905
+Node: 02257139
+Node: 02157419
+Node: 0257624
+Node: 0161702
+Node: Notes61803
+Node: Comparison with Org Agenda searches61965
+Node: org-sidebar62854
+Node: License63133
 
 End Tag Table
 
