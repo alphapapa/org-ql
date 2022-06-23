@@ -1410,7 +1410,7 @@ Matching is done case-insensitively."
                ;; Multiple strings: use preamble to match against first
                ;; string, then let the predicate match the rest.
                (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
-                                                 ,(car strings))
+                                                 ,(or (car strings) ""))
                                            'no-group)
                      :case-fold t :query query)))
   ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
