@@ -1066,15 +1066,19 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
                                      (or (when org-ql-preamble
                                            ;; Only one preamble is allowed
                                            element)
-                                         (pcase element
-                                           (`(or _) element)
+                                         (condition-case err
+                                             (pcase element
+                                               (`(or _) element)
 
-                                           ,@preamble-patterns
+                                               ,@preamble-patterns
 
-                                           (`(and . ,rest)
-                                            (let ((clauses (mapcar #'rec rest)))
-                                              `(and ,@(-non-nil clauses))))
-                                           (_ element)))))
+                                               (`(and . ,rest)
+                                                (let ((clauses (mapcar #'rec rest)))
+                                                  `(and ,@(-non-nil clauses))))
+                                               (_ element))
+                                           (error
+                                            (message "Preamble error: %s" err)
+                                            nil)))))
                       (setq query (pcase (mapcar #'rec (list query))
                                     ((or `(nil)
                                          `((nil))
