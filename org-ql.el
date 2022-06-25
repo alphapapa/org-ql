@@ -362,18 +362,18 @@ each priority the newest items would appear first."
                           (function (funcall buffers-or-files))
                           (list buffers-or-files)
                           (otherwise (list buffers-or-files)))
-                     (--map (cl-etypecase it
-                              ;; NOTE: This etypecase is essential to opening links safely,
-                              ;; as it rejects, e.g. lambdas in the buffers-files argument.
-                              (buffer it)
-                              (string (or (find-buffer-visiting it)
-                                          (when (file-readable-p it)
-                                            ;; It feels unintuitive that `find-file-noselect' returns
-                                            ;; a buffer if the filename doesn't exist.
-                                            (find-file-noselect it))
-                                          (user-error "Can't open file: %s" it)))))
-                     ;; Ignore special/hidden buffers.
-                     (--remove (string-prefix-p " " (buffer-name it)))))
+                        (--map (cl-etypecase it
+                                 ;; NOTE: This etypecase is essential to opening links safely,
+                                 ;; as it rejects, e.g. lambdas in the buffers-files argument.
+                                 (buffer it)
+                                 (string (or (find-buffer-visiting it)
+                                             (when (file-readable-p it)
+                                               ;; It feels unintuitive that `find-file-noselect' returns
+                                               ;; a buffer if the filename doesn't exist.
+                                               (find-file-noselect it))
+                                             (display-warning 'org-ql-select (format "Can't open file: %s" it) :error)))))
+                        ;; Ignore special/hidden buffers.
+                        (--remove (string-prefix-p " " (buffer-name it)))))
           (query (org-ql--normalize-query query))
           ((&plist :query :preamble :preamble-case-fold) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
@@ -409,12 +409,12 @@ each priority the newest items would appear first."
                              (fset name fn)))
                          ;; Run query on buffers.
                          (->> buffers
-                           (--map (with-current-buffer it
-                                    (unless (derived-mode-p 'org-mode)
-                                      (user-error "Not an Org buffer: %s" (buffer-name)))
-                                    (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                           :predicate predicate :action action :narrow narrow)))
-                           (-flatten-n 1)))
+                              (--map (with-current-buffer it
+                                       (unless (derived-mode-p 'org-mode)
+                                         (display-warning 'org-ql-select (format  "Not an Org buffer: %s" (buffer-name)) :error))
+                                       (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
+                                                              :predicate predicate :action action :narrow narrow)))
+                              (-flatten-n 1)))
                      (--each orig-fns
                        ;; Restore original function mappings.
                        (-let (((&plist :name :fn) it))
