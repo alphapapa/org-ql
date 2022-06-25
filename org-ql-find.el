@@ -194,40 +194,8 @@ single predicate)."
           (run-hook-with-args 'org-ql-find-goto-hook))))))
 
 ;;;###autoload
-(defun org-ql-find-heading (buffers-files)
-  "Go to an Org entry in BUFFERS-FILES selected by searching with `org-ql'.
-Only headings are searched (using the \"heading:\" predicate).
-Interactively, with universal prefix, select multiple buffers to
-search with completion."
-  (interactive
-   (list (if current-prefix-arg
-             (mapcar #'get-buffer
-                     (completing-read-multiple
-                      "Buffers: "
-                      (mapcar #'buffer-name
-                              (cl-remove-if-not (lambda (buffer)
-                                                  (eq 'org-mode (buffer-local-value 'major-mode buffer)))
-                                                (buffer-list))) nil t))
-           (current-buffer))))
-  (org-ql-find buffers-files :prompt "Find heading: " :query-prefix "heading:"))
 
 ;;;###autoload
-(defun org-ql-find-path (buffers-files)
-  "Go to an Org entry in BUFFERS-FILES selected by searching with `org-ql'.
-Only outline paths are searched (using the \"outline-path:\"
-predicate).  Interactively, with universal prefix, select
-multiple buffers to search with completion."
-  (interactive
-   (list (if current-prefix-arg
-             (mapcar #'get-buffer
-                     (completing-read-multiple
-                      "Buffers: "
-                      (mapcar #'buffer-name
-                              (cl-remove-if-not (lambda (buffer)
-                                                  (eq 'org-mode (buffer-local-value 'major-mode buffer)))
-                                                (buffer-list))) nil t))
-           (current-buffer))))
-  (org-ql-find buffers-files :prompt "Find outline path: " :query-prefix "outline-path:"))
 
 (defun org-ql-find--snippet-simple (&optional _regexp)
   "Return a snippet of the current entry.

@@ -112,8 +112,6 @@ Lisp code examples are in [[examples.org]].
 These commands jump to a heading selected using Emacs's built-in completion facilities with an Org QL query:
 
 - ~org-ql-find~ searches all entry content.
-- ~org-ql-find-path~ searches only headings (using the ~outline-path:~ predicate).
-- ~org-ql-find-heading~ searches only headings (using the ~heading:~ predicate).
 
 [[images/org-ql-find.png]]
 
