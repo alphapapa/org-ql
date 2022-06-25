@@ -30,6 +30,7 @@
 
 (require 'org)
 (require 'org-ql)
+(require 'org-ql-search)
 
 ;;;; Customization
 
@@ -207,8 +208,16 @@ single predicate)."
           (run-hook-with-args 'org-ql-find-goto-hook))))))
 
 ;;;###autoload
+(defun org-ql-find-in-agenda ()
+  "Call `org-ql-find' on `org-agenda-files'."
+  (interactive)
+  (org-ql-find (org-agenda-files)))
 
 ;;;###autoload
+(defun org-ql-find-in-org-directory ()
+  "Call `org-ql-find' on files in `org-directory'."
+  (interactive)
+  (org-ql-find (org-ql-search-directories-files)))
 
 (defun org-ql-find--snippet-simple (&optional _regexp)
   "Return a snippet of the current entry.

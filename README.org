@@ -95,15 +95,15 @@ Lisp code examples are in [[examples.org]].
 :END:
 
 +  *Jumping to an entry:*
-     -  [[#org-ql-find][org-ql-find]] (command)
-     -  [[#helm-org-ql][helm-org-ql]] (command)
+     -  [[#org-ql-find][org-ql-find]] and related commands
+     -  [[#helm-org-ql][helm-org-ql]]
 +  *Showing an agenda-like view:*
-     -  [[#org-ql-search][org-ql-search]] (command)
-     -  [[#org-ql-view][org-ql-view]] (command)
-     -  [[#org-ql-view-sidebar][org-ql-view-sidebar]] (command)
-     -  [[#org-ql-view-recent-items][org-ql-view-recent-items]] (command)
+     -  [[#org-ql-search][org-ql-search]]
+     -  [[#org-ql-view][org-ql-view]]
+     -  [[#org-ql-view-sidebar][org-ql-view-sidebar]]
+     -  [[#org-ql-view-recent-items][org-ql-view-recent-items]]
 +  *Showing a tree in a buffer:*
-     -  [[#org-ql-sparse-tree][org-ql-sparse-tree]] (command)
+     -  [[#org-ql-sparse-tree][org-ql-sparse-tree]]
 
 *** org-ql-find
 
@@ -111,7 +111,9 @@ Lisp code examples are in [[examples.org]].
 
 These commands jump to a heading selected using Emacs's built-in completion facilities with an Org QL query:
 
-- ~org-ql-find~ searches all entry content.
+- ~org-ql-find~ searches in the current buffer.
+- ~org-ql-find-in-agenda~ searches in ~(org-agenda-files)~.
+- ~org-ql-find-in-org-directory~ searches in ~org-directory~.
 
 [[images/org-ql-find.png]]
 
