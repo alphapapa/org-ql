@@ -184,6 +184,19 @@ single predicate)."
                                                                                   (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))))
                                     (org-ql-select buffers-files (org-ql--query-string-to-sexp (concat query-prefix str))
                                       :action #'action))))))
+      ;; NOTE: It seems that the `completing-read' machinery can call,
+      ;; abort, and re-call the collection function while the user is
+      ;; typing, which can interrupt the machinery Org uses to prepare
+      ;; an Org buffer when an Org file is loaded.  This results in,
+      ;; e.g. the buffer being left in fundamental-mode, unprepared to
+      ;; be used as an Org buffer, which breaks many things and is
+      ;; very confusing for the user.  Ideally, of course, we would
+      ;; solve this in `org-ql-select', and we already attempt to, but
+      ;; that function is called by the `completing-read' machinery,
+      ;; which interrupts it, so we must work around this problem by
+      ;; ensuring all of the BUFFERS-FILES are loaded and initialized
+      ;; before calling `completing-read'.
+      (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-find))
              (completion-styles-alist (list (list 'org-ql-find #'try #'all "Org QL Find")))
              (selected (completing-read prompt #'collection nil))

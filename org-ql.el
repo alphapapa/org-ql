@@ -535,6 +535,20 @@ If NARROW is non-nil, buffer will not be widened."
 
 ;;;;; Helpers
 
+(defun org-ql--ensure-buffer (file-or-buffer)
+  "Ensure a buffer is named or visiting FILE-OR-BUFFER.
+If no such buffer exists with the name, and it is the name of a
+readable file, `find-file-noselect' it into a buffer."
+  ;; See comment in `org-ql-find'.
+  ;; FIXME: Use this in `helm-org-ql' the same way it's used in
+  ;; `org-ql-find'.
+  (unless (or (get-buffer file-or-buffer)
+              (find-buffer-visiting file-or-buffer))
+    (if (file-readable-p file-or-buffer)
+        (with-current-buffer (find-file-noselect file-or-buffer)
+          (cl-assert (eq 'org-mode major-mode) nil (format "Not an Org buffer: %S" file-or-buffer)))
+      (display-warning 'org-ql (format "Not a readable file: %S" file-or-buffer) :error))))
+
 (defun org-ql--tags-at (position)
   ;; FIXME: This function actually assumes that point is already at POSITION.
   "Return tags for POSITION in current buffer.
