@@ -175,14 +175,15 @@ single predicate)."
                                              (--select (not (or (string-match-p (rx bos (1+ (not (any ":"))) ":") it)
                                                                 (< (length it) org-ql-find-snippet-minimum-token-length)))
                                                        (split-string str nil t (rx space)))
-                                             snippet-regexp (when query-tokens
-                                                              ;; Limiting each context word to 15 characters
-                                                              ;; prevents excessively long, non-word strings
-                                                              ;; from ending up in snippets, which can
-                                                              ;; adversely affect performance.
-                                                              (rx-to-string `(seq (optional (repeat 1 3 (repeat 1 15 (not space)) (0+ space)))
-                                                                                  bow (or ,@query-tokens) (0+ (not space))
-                                                                                  (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))))
+                                             snippet-regexp
+                                             (when query-tokens
+                                               ;; Limiting each context word to 15 characters
+                                               ;; prevents excessively long, non-word strings
+                                               ;; from ending up in snippets, which can
+                                               ;; adversely affect performance.
+                                               (rx-to-string `(seq (optional (repeat 1 3 (repeat 1 15 (not space)) (0+ space)))
+                                                                   bow (or ,@query-tokens) (0+ (not space))
+                                                                   (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))))
                                     (org-ql-select buffers-files (org-ql--query-string-to-sexp (concat query-prefix str))
                                       :action #'action))))))
       ;; NOTE: It seems that the `completing-read' machinery can call,
