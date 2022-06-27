@@ -198,6 +198,9 @@ single predicate)."
       ;; which interrupts it, so we must work around this problem by
       ;; ensuring all of the BUFFERS-FILES are loaded and initialized
       ;; before calling `completing-read'.
+      (unless (listp buffers-files)
+        ;; Since we map across this argument, we ensure it's a list.
+        (setf buffers-files (list buffers-files)))
       (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-find))
              (completion-styles-alist (list (list 'org-ql-find #'try #'all "Org QL Find")))
