@@ -211,6 +211,7 @@ single predicate)."
         (with-current-buffer (marker-buffer marker)
           (goto-char marker)
           (display-buffer (current-buffer))
+          (select-window (get-buffer-window (current-buffer)))
           (run-hook-with-args 'org-ql-find-goto-hook))))))
 
 ;;;###autoload
