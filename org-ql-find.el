@@ -160,6 +160,8 @@ single predicate)."
                 (all (string table pred _point)
                      (all-completions string table pred))
                 (collection (str _pred flag)
+                            (when query-prefix
+                              (setf str (concat query-prefix str)))
                             (pcase flag
                               ('metadata (list 'metadata
                                                (cons 'group-function #'group)
@@ -184,7 +186,7 @@ single predicate)."
                                                (rx-to-string `(seq (optional (repeat 1 3 (repeat 1 15 (not space)) (0+ space)))
                                                                    bow (or ,@query-tokens) (0+ (not space))
                                                                    (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))))
-                                    (org-ql-select buffers-files (org-ql--query-string-to-sexp (concat query-prefix str))
+                                    (org-ql-select buffers-files (org-ql--query-string-to-sexp str)
                                       :action #'action))))))
       ;; NOTE: It seems that the `completing-read' machinery can call,
       ;; abort, and re-call the collection function while the user is
