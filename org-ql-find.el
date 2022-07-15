@@ -110,7 +110,10 @@ single predicate)."
                               (cl-remove-if-not (lambda (buffer)
                                                   (eq 'org-mode (buffer-local-value 'major-mode buffer)))
                                                 (buffer-list))) nil t))
-           (current-buffer))))
+           (progn
+             (unless (eq major-mode 'org-mode)
+               (user-error "This is not an Org buffer: %S" (current-buffer)))
+             (current-buffer)))))
   ;; Emacs's completion API is not always easy to understand,
   ;; especially when using "programmed completion."  This code was
   ;; made possible by the example Clemens Radermacher shared at
