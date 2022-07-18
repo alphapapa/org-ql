@@ -239,6 +239,23 @@ Returns in format \"%Y-%m-%d\"."
             (org-element-property :closed item))
     "Planned"))
 
+(taxy-org-ql-view-define-key agenda
+  (&optional (days (pcase org-agenda-span
+		     ('week 7)
+		     ('day 1)
+		     ('month (date-days-in-month (ts-year (ts-now)) (ts-month (ts-now))))
+		     ('year 365)
+		     ((pred numberp) org-agenda-span))))
+  ;; FIXME: This isn't quite how Org Agenda works.
+  "Return ITEM's planning date if it's within DAYS of the current date."
+  (when-let ((planning-element (or (org-element-property :deadline item)
+				   (org-element-property :scheduled item)
+				   (org-element-property :closed item))))
+    (let ((parsed-ts (ts-parse-org-element planning-element)))
+      (when (<= (ts-diff (ts-apply 'hour 0 'minute 0 'second 0 (ts-now)) parsed-ts)
+		(* days 86400))
+	(ts-format "Agenda: %Y-%m-%d" parsed-ts)))))
+
 (taxy-org-ql-view-define-key category ()
   "Return ITEM's category."
   (org-with-point-at (org-element-property :org-hd-marker item)
