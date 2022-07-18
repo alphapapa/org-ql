@@ -427,7 +427,10 @@ each priority the newest items would appear first."
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
       ((pred functionp) (-sort sort items))
-      (_ (user-error "SORT must be either nil, one or a list of the defined sorting methods (see documentation), or a comparison function of two arguments")))))
+      ;; FIXME: Test more carefully for sorters with arguments.  In the meantime, just try to sort.
+      (_ (org-ql--sort-by items (-list sort)))
+      ;; (_ (user-error "SORT must be either nil, one or a list of the defined sorting methods (see documentation), or a comparison function of two arguments"))
+      )))
 
 ;;;###autoload
 (cl-defun org-ql-query (&key (select 'element-with-markers) from where narrow order-by)
@@ -2296,6 +2299,13 @@ PREDICATES is a list of one or more sorting methods, including:
                                   (= 0 (random 2))))
                        ;; NOTE: reverse and todo are handled below.
                        ;; TODO: Add more.
+		       (`(tags . ,tags) (lambda (a b)
+					  "Return non-nil if A has certain tags and B doesn't."
+					  (cl-flet ((test-entry
+						     (entry) (org-with-point-at (org-element-property :org-hd-marker entry)
+							       (apply #'org-ql--predicate-tags tags))))
+					    (and (test-entry a)
+						 (not (test-entry b))))))
                        (_ (user-error "Invalid sorting predicate: %s" symbol))))
              (sort-by-todo-keyword (items)
                                    (let* ((grouped-items (--group-by (when-let (keyword (org-element-property :todo-keyword it))
