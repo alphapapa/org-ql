@@ -26,6 +26,7 @@
 
 ;;;; Requirements
 
+(require 'cl-lib)
 (require 'map)
 (require 'seq)
 
@@ -86,7 +87,8 @@ Inherited by level-specific faces.")
 
 ;;;;; Columns
 
-(taxy-magit-section-define-column-definer "org-ql-view")
+(eval-and-compile
+  (taxy-magit-section-define-column-definer "org-ql-view"))
 
 (org-ql-view-define-column "Category" (:max-width nil :align 'right)
   (or (org-with-point-at (org-element-property :org-hd-marker item)
@@ -150,15 +152,16 @@ Inherited by level-specific faces.")
 
 ;;;; Taxy keys
 
-(taxy-define-key-definer taxy-org-ql-view-define-key
-  taxy-org-ql-view-keys "taxy-org-ql--key"
-  "Define a `taxy-org-ql-view' key function by NAME having BODY taking ARGS.
-Within BODY, `item' is bound to the `org-element' element
-being tested.
+(eval-and-compile
+  (taxy-define-key-definer taxy-org-ql-view-define-key
+    taxy-org-ql-view-keys "taxy-org-ql--key"
+    "Define a `taxy-org-ql-view' key function by NAME having BODY taking ARGS.
+Within BODY, `item' is bound to the `org-element' element being
+tested.
 
 Defines a function named `taxy-org-ql--predicate-NAME', and adds
 an entry to `taxy-org-ql-view-keys' mapping NAME to the new
-function symbol.")
+function symbol."))
 
 (taxy-org-ql-view-define-key heading (&rest strings)
   "Return STRINGS that ITEM's heading matches."
