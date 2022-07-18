@@ -83,12 +83,6 @@ For an experience like `org-rifle', use a newline."
 (defface org-ql-find-snippet '((t (:inherit font-lock-comment-face)))
   "Snippets.")
 
-;;;; Variables
-
-;; TODO: When Ivy no longer requires this workaround, remove it.  See
-;; <https://github.com/alphapapa/org-ql/issues/284>.
-(defvar ivy-completing-read-dynamic-collection)
-
 ;;;; Functions
 
 ;;;###autoload
@@ -215,10 +209,6 @@ single predicate)."
       (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-find))
              (completion-styles-alist (list (list 'org-ql-find #'try #'all "Org QL Find")))
-             ;; TODO: When Ivy no longer requires this workaround,
-             ;; remove it and the corresponding defvar.  See
-             ;; <https://github.com/alphapapa/org-ql/issues/284>.
-             (ivy-completing-read-dynamic-collection t)
              (selected (completing-read prompt #'collection nil))
              (marker (gethash selected table)))
         (with-current-buffer (marker-buffer marker)
