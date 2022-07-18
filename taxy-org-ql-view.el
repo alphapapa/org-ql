@@ -75,13 +75,13 @@ Inherited by level-specific faces.")
 
 (defface org-ql-view-heading-1
   `((t (:inherit org-ql-view-heading
-		 :height 1.2 :overline t
+		 :height 1.1 :overline t
 		 :background ,(face-background 'header-line))))
   "Level-1 group headings.")
 
 (defface org-ql-view-heading-2
   `((t (:inherit org-ql-view-heading
-		 :height 1.1 :overline t
+		 :height 1.0 :overline nil
 		 :background ,(face-background 'header-line))))
   "Level-2 group headings.")
 
