@@ -87,6 +87,7 @@ For an experience like `org-rifle', use a newline."
 
 ;;;###autoload
 (cl-defun org-ql-find (buffers-files &key query-prefix query-filter
+                                     fallback
                                      (prompt "Find entry: "))
   "Go to an Org entry in BUFFERS-FILES selected by searching entries with `org-ql'.
 Interactively, with universal prefix, select multiple buffers to
@@ -100,7 +101,10 @@ QUERY-FILTER may be a function through which the query the user
 types is filtered before execution (e.g. it could replace spaces
 with commas to turn multiple tokens, which would normally be
 treated as multiple predicates, into multiple arguments to a
-single predicate)."
+single predicate).
+
+If no candidate matches the input, FALLBACK function is called on
+the input."
   (interactive
    (list (if current-prefix-arg
              (mapcar #'get-buffer
@@ -211,11 +215,13 @@ single predicate)."
              (completion-styles-alist (list (list 'org-ql-find #'try #'all "Org QL Find")))
              (selected (completing-read prompt #'collection nil))
              (marker (gethash selected table)))
-        (with-current-buffer (marker-buffer marker)
-          (goto-char marker)
-          (display-buffer (current-buffer))
-          (select-window (get-buffer-window (current-buffer)))
-          (run-hook-with-args 'org-ql-find-goto-hook))))))
+        (if marker
+            (with-current-buffer (marker-buffer marker)
+              (goto-char marker)
+              (display-buffer (current-buffer))
+              (select-window (get-buffer-window (current-buffer)))
+              (run-hook-with-args 'org-ql-find-goto-hook))
+          (funcall fallback selected))))))
 
 ;;;###autoload
 (defun org-ql-find-in-agenda ()
