@@ -232,29 +232,31 @@ single predicate)."
 (defun org-ql-find--snippet-simple (&optional _regexp)
   "Return a snippet of the current entry.
 Returns up to `org-ql-find-snippet-length' characters."
-  (org-end-of-meta-data t)
-  (unless (org-at-heading-p)
-    (let ((end (min (+ (point) org-ql-find-snippet-length)
-                    (org-entry-end-position))))
-      (concat org-ql-find-snippet-prefix
-              (truncate-string-to-width
-               (replace-regexp-in-string "\n" " " (buffer-substring (point) end)
-                                         t t)
-               50 nil nil t)))))
+  (save-excursion
+    (org-end-of-meta-data t)
+    (unless (org-at-heading-p)
+      (let ((end (min (+ (point) org-ql-find-snippet-length)
+                      (org-entry-end-position))))
+        (concat org-ql-find-snippet-prefix
+                (truncate-string-to-width
+                 (replace-regexp-in-string "\n" " " (buffer-substring (point) end)
+                                           t t)
+                 50 nil nil t))))))
 
 (defun org-ql-find--snippet-regexp (regexp)
   "Return a snippet of the current entry's matches for REGEXP."
   ;; REGEXP may be nil if there are no qualifying tokens in the query.
   (when regexp
-    (org-end-of-meta-data t)
-    (unless (org-at-heading-p)
-      (let* ((end (org-entry-end-position))
-             (snippets (cl-loop while (re-search-forward regexp end t)
-                                concat (match-string 0) concat "…"
-                                do (goto-char (match-end 0)))))
-        (unless (string-empty-p snippets)
-          (concat org-ql-find-snippet-prefix
-                  (replace-regexp-in-string (rx (1+ "\n")) "  " snippets t t)))))))
+    (save-excursion
+      (org-end-of-meta-data t)
+      (unless (org-at-heading-p)
+        (let* ((end (org-entry-end-position))
+               (snippets (cl-loop while (re-search-forward regexp end t)
+                                  concat (match-string 0) concat "…"
+                                  do (goto-char (match-end 0)))))
+          (unless (string-empty-p snippets)
+            (concat org-ql-find-snippet-prefix
+                    (replace-regexp-in-string (rx (1+ "\n")) "  " snippets t t))))))))
 
 (provide 'org-ql-find)
 
