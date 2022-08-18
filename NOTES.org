@@ -159,6 +159,42 @@
 - [[#use-macros-for-date][Use macros for date]]
 :END:
 
+** TODO Refile command
+:PROPERTIES:
+:milestone: 0.7
+:END:
+
+#+begin_src elisp
+  (defun org-ql-find-refile (marker)
+    "Refile current entry to MARKER.
+  Interactively, refile to one selected with `org-ql-find'."
+    (interactive (let* ((marker)
+                        ;; HACK: It would be better if `org-ql-find'
+                        ;; accepted an action function as an argument.
+                        (org-ql-find-goto-hook
+                         (list (lambda ()
+                                 (setf marker (point-marker))))))
+                   (save-excursion
+                     (save-window-excursion
+                       ;; HACK: Working around `org-ql-find's changing buffer and window.
+                       (org-ql-find (org-ql-search-directories-files)
+                                    :prompt "Refile to: ")))
+                   (list marker)))
+    (org-refile
+     nil nil
+     ;; The RFLOC argument:
+     (list
+      ;; Name
+      (org-with-point-at marker
+        (nth 4 (org-heading-components)))
+      ;; File
+      (buffer-file-name (marker-buffer marker))
+      ;; nil
+      nil
+      ;; Position
+      marker)))
+#+end_src
+
 ** TODO org-rifle-like predicate
 :PROPERTIES:
 :milestone: 0.7
