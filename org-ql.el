@@ -1,18 +1,12 @@
 ;;; org-ql.el --- Org Query Language, search command, and agenda-like view  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2017-2022  Adam Porter
+
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 ;; Version: 0.7-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
-
-;;; Commentary:
-
-;; `org-ql' is a lispy query language for Org files.  It allows you to
-;; find Org entries matching certain criteria and return a list of
-;; them or perform actions on them.  Commands are also provided which
-;; display a buffer with matching results, similar to an Org Agenda
-;; buffer.
 
 ;;; License:
 
@@ -28,6 +22,14 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; `org-ql' is a Lispy query language for Org files.  It allows you to
+;; find Org entries matching certain criteria and return a list of
+;; them or perform actions on them.  Commands are also provided which
+;; display a buffer with matching results, similar to an Org Agenda
+;; buffer.
 
 ;;; Code:
 
