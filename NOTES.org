@@ -159,7 +159,37 @@
 - [[#use-macros-for-date][Use macros for date]]
 :END:
 
-** TODO Refile command
+** PROJECT org-notebook idea
+:PROPERTIES:
+:ID:       892fb332-be66-4b7b-a031-a20d3a1b842a
+:END:
+:LOGBOOK:
+- State "PROJECT"    from "TODO"       [2022-08-19 Fri 03:57]
+- Refiled on [2022-08-19 Fri 03:49]
+-  State "TODO"       from              [2020-01-16 Thu 07:20]
+:END:
+
+[2020-01-16 Thu 07:18]  
+
+1.  The popnote command used for org-notebook should only create  a new heading if there isn't already a blank one at the place a new one would be created.
+      1)  That may require checking and updating a timestamp at the beginning of the empty heading's content as well.
+2.  The tree sidebar should be displayed, as well as the item sidebar listing entries grouped by date, similar to the alpha-org screenshots.
+3.  If the command is called twice in a row, close the notebook.
+      1)  This probably will require some additions to yequake to allow predicates to control the toggle action for some yequake-frames.
+
+[2022-08-19 Fri 03:48]  [[file:~/src/emacs/org-popnote/][Local repo]]
+
+*** org-notely lives
+:PROPERTIES:
+:ID:       879d690b-05ef-4d2a-ae69-5e0531bc33a5
+:END:
+:LOGBOOK:
+- Refiled on [2022-08-19 Fri 03:52]
+:END:
+
+[2022-08-15 Mon 19:33]  Renamed org-notepad, after talking with benoitj in #systemcrafters.  Yeah, it's another package that ends in Y, but...
+
+** DONE Refile command
 :PROPERTIES:
 :milestone: 0.7
 :END:
