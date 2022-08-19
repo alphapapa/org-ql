@@ -85,6 +85,35 @@ single predicate)."
       (run-hook-with-args 'org-ql-find-goto-hook))))
 
 ;;;###autoload
+(defun org-ql-refile (marker)
+  "Refile current entry to MARKER (interactively, one selected with `org-ql').
+Interactive completion uses files listed in `org-refile-targets',
+which see (but only the files are used)."
+  (interactive (let ((buffers-files (delete-dups
+                                     ;; Always include the current buffer.
+                                     (cons (current-buffer)
+                                           (cl-loop for (files-spec . _candidate-spec) in org-refile-targets
+                                                    append (cl-typecase files-spec
+                                                             (null (list (current-buffer)))
+                                                             (symbol (pcase (funcall files-spec)
+                                                                       ((and (pred stringp) file) (list file))
+                                                                       ((and (pred listp) files) files)))
+                                                             (list files-spec)))))))
+                 (list (org-ql-completing-read buffers-files :prompt "Refile to: "))))
+  (org-refile nil nil
+              ;; The RFLOC argument:
+              (list
+               ;; Name
+               (org-with-point-at marker
+                 (nth 4 (org-heading-components)))
+               ;; File
+               (buffer-file-name (marker-buffer marker))
+               ;; nil
+               nil
+               ;; Position
+               marker)))
+
+;;;###autoload
 (defun org-ql-find-in-agenda ()
   "Call `org-ql-find' on `org-agenda-files'."
   (interactive)

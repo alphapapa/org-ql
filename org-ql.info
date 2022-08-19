@@ -48,6 +48,7 @@ Usage
 Commands
 
 * org-ql-find::
+* org-ql-refile::
 * org-ql-search::
 * helm-org-ql::
 * org-ql-view::
@@ -201,6 +202,7 @@ File: README.info,  Node: Commands,  Next: Queries,  Up: Usage
 * Menu:
 
 * org-ql-find::
+* org-ql-refile::
 * org-ql-search::
 * helm-org-ql::
 * org-ql-view::
@@ -209,7 +211,7 @@ File: README.info,  Node: Commands,  Next: Queries,  Up: Usage
 * org-ql-sparse-tree::
 
 
-File: README.info,  Node: org-ql-find,  Next: org-ql-search,  Up: Commands
+File: README.info,  Node: org-ql-find,  Next: org-ql-refile,  Up: Commands
 
 4.1.1 org-ql-find
 -----------------
@@ -224,9 +226,19 @@ completion facilities with an Org QL query:
    • ‘org-ql-find-in-org-directory’ searches in ‘org-directory’.
 
 
-File: README.info,  Node: org-ql-search,  Next: helm-org-ql,  Prev: org-ql-find,  Up: Commands
+File: README.info,  Node: org-ql-refile,  Next: org-ql-search,  Prev: org-ql-find,  Up: Commands
 
-4.1.2 org-ql-search
+4.1.2 org-ql-refile
+-------------------
+
+This command refiles the current Org entry to one selected by searching
+with Org QL completion.  It searches files listed in
+‘org-refile-targets’ as well as the current buffer.
+
+
+File: README.info,  Node: org-ql-search,  Next: helm-org-ql,  Prev: org-ql-refile,  Up: Commands
+
+4.1.3 org-ql-search
 -------------------
 
 _Note: This command supports both sexp queries and ._
@@ -269,7 +281,7 @@ text properties are placed on each item, imitating an Agenda buffer.)
 
 File: README.info,  Node: helm-org-ql,  Next: org-ql-view,  Prev: org-ql-search,  Up: Commands
 
-4.1.3 helm-org-ql
+4.1.4 helm-org-ql
 -----------------
 
 _Note: This command uses .  It is available separately in the package
@@ -283,7 +295,7 @@ _Note: This command uses .  It is available separately in the package
 
 File: README.info,  Node: org-ql-view,  Next: org-ql-view-sidebar,  Prev: helm-org-ql,  Up: Commands
 
-4.1.4 org-ql-view
+4.1.5 org-ql-view
 -----------------
 
 Choose and display a view stored in ‘org-ql-views’.
@@ -298,7 +310,7 @@ Choose and display a view stored in ‘org-ql-views’.
 
 File: README.info,  Node: org-ql-view-sidebar,  Next: org-ql-view-recent-items,  Prev: org-ql-view,  Up: Commands
 
-4.1.5 org-ql-view-sidebar
+4.1.6 org-ql-view-sidebar
 -------------------------
 
 Show a sidebar window listing views stored in ‘org-ql-views’ for easy
@@ -308,7 +320,7 @@ point, and press ‘c’ to customize the view at point.
 
 File: README.info,  Node: org-ql-view-recent-items,  Next: org-ql-sparse-tree,  Prev: org-ql-view-sidebar,  Up: Commands
 
-4.1.6 org-ql-view-recent-items
+4.1.7 org-ql-view-recent-items
 ------------------------------
 
 Show items in ‘FILES’ from last ‘DAYS’ days with timestamps of ‘TYPE’.
@@ -319,7 +331,7 @@ returned by the function ‘org-agenda-files’.
 
 File: README.info,  Node: org-ql-sparse-tree,  Prev: org-ql-view-recent-items,  Up: Commands
 
-4.1.7 org-ql-sparse-tree
+4.1.8 org-ql-sparse-tree
 ------------------------
 
 Arguments: ‘(query &key keep-previous (buffer (current-buffer)))’
@@ -1009,6 +1021,8 @@ File: README.info,  Node: 07-pre,  Next: 062,  Up: Changelog
      ‘org-ql-find-path’, which jump to entries selected using Emacs’s
      built-in completion facilities and Org QL queries (like
      ‘helm-org-ql’, but doesn’t require Helm.).
+   • Command ‘org-ql-refile’, which refiles the entry at point to one
+     selected using Org QL completion.
    • Predicate ‘rifle’, which matches an entry if each of the given
      arguments is found in either the entry’s contents or its outline
      path.  This provides very intuitive results, mimicing the behavior
@@ -1639,68 +1653,69 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1764
-Node: Screenshots1887
-Node: Installation2005
-Node: Quelpa2519
-Node: Helm support3047
-Node: Usage3450
-Node: Commands3848
-Node: org-ql-find4274
-Node: org-ql-search4740
-Node: helm-org-ql6434
-Node: org-ql-view6812
-Node: org-ql-view-sidebar7342
-Node: org-ql-view-recent-items7722
-Node: org-ql-sparse-tree8218
-Node: Queries9018
-Node: Non-sexp query syntax10135
-Node: General predicates11894
-Node: Ancestor/descendant predicates18636
-Node: Date/time predicates19764
-Node: Functions / Macros22888
-Node: Agenda-like views23186
-Ref: Function ‘org-ql-block’23348
-Node: Listing / acting-on results24609
-Ref: Caching24817
-Ref: Function ‘org-ql-select’25730
-Ref: Function ‘org-ql-query’28156
-Ref: Macro ‘org-ql’ (deprecated)29930
-Node: Custom predicates30245
-Ref: Macro ‘org-ql-defpred’30469
-Node: Dynamic block33910
-Node: Links36634
-Node: Tips37321
-Node: Changelog37645
-Node: 07-pre38413
-Node: 06239820
-Node: 06140128
-Node: 0640696
-Node: 05243750
-Node: 05144050
-Node: 0544473
-Node: 04946002
-Node: 04846282
-Node: 04746629
-Node: 04647038
-Node: 04547446
-Node: 04447807
-Node: 04348166
-Node: 04248369
-Node: 04148530
-Node: 0448777
-Node: 03252878
-Node: 03153281
-Node: 0353478
-Node: 02356778
-Node: 02257012
-Node: 02157292
-Node: 0257497
-Node: 0161575
-Node: Notes61676
-Node: Comparison with Org Agenda searches61838
-Node: org-sidebar62727
-Node: License63006
+Node: Contents1782
+Node: Screenshots1905
+Node: Installation2023
+Node: Quelpa2537
+Node: Helm support3065
+Node: Usage3468
+Node: Commands3866
+Node: org-ql-find4310
+Node: org-ql-refile4776
+Node: org-ql-search5099
+Node: helm-org-ql6795
+Node: org-ql-view7173
+Node: org-ql-view-sidebar7703
+Node: org-ql-view-recent-items8083
+Node: org-ql-sparse-tree8579
+Node: Queries9379
+Node: Non-sexp query syntax10496
+Node: General predicates12255
+Node: Ancestor/descendant predicates18997
+Node: Date/time predicates20125
+Node: Functions / Macros23249
+Node: Agenda-like views23547
+Ref: Function ‘org-ql-block’23709
+Node: Listing / acting-on results24970
+Ref: Caching25178
+Ref: Function ‘org-ql-select’26091
+Ref: Function ‘org-ql-query’28517
+Ref: Macro ‘org-ql’ (deprecated)30291
+Node: Custom predicates30606
+Ref: Macro ‘org-ql-defpred’30830
+Node: Dynamic block34271
+Node: Links36995
+Node: Tips37682
+Node: Changelog38006
+Node: 07-pre38774
+Node: 06240296
+Node: 06140604
+Node: 0641172
+Node: 05244226
+Node: 05144526
+Node: 0544949
+Node: 04946478
+Node: 04846758
+Node: 04747105
+Node: 04647514
+Node: 04547922
+Node: 04448283
+Node: 04348642
+Node: 04248845
+Node: 04149006
+Node: 0449253
+Node: 03253354
+Node: 03153757
+Node: 0353954
+Node: 02357254
+Node: 02257488
+Node: 02157768
+Node: 0257973
+Node: 0162051
+Node: Notes62152
+Node: Comparison with Org Agenda searches62314
+Node: org-sidebar63203
+Node: License63482
 
 End Tag Table
 

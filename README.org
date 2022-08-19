@@ -117,6 +117,10 @@ These commands jump to a heading selected using Emacs's built-in completion faci
 
 [[images/org-ql-find.png]]
 
+*** org-ql-refile
+
+This command refiles the current Org entry to one selected by searching with Org QL completion.  It searches files listed in ~org-refile-targets~ as well as the current buffer.
+
 *** org-ql-search
 
 /Note: This command supports both sexp queries and [[#non-sexp-query-syntax][non-sexp queries]]./
@@ -542,6 +546,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Added*
 +  Commands ~org-ql-find~, ~org-ql-find-heading~, and ~org-ql-find-path~, which jump to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
++  Command ~org-ql-refile~, which refiles the entry at point to one selected using Org QL completion.
 +  Predicate ~rifle~, which matches an entry if each of the given arguments is found in either the entry's contents or its outline path.  This provides very intuitive results, mimicing the behavior of [[https://github.com/alphapapa/org-rifle][=org-rifle=]].  In fact, the results are so useful that it's now the default predicate for plain-string query tokens.  (It is also aliased to ~smart~, since it's so "smart," and not all users have used =org-rifle=.)
 +  Option ~org-ql-default-predicate~, applied to plain-string query tokens (before, the ~regexp~ predicate was always used, but now it may be customized).
 
