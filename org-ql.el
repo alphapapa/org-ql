@@ -1318,7 +1318,7 @@ result form."
 ;; redefinitions until all of the predicates have been defined.
 (setf org-ql-defpred-defer t)
 
-(org-ql-defpred category (&rest categories)
+(org-ql-defpred (category c) (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
   :body (when-let ((category (org-get-category (point))))
           (cl-typecase categories

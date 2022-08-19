@@ -1033,6 +1033,7 @@ File: README.info,  Node: 07-pre,  Next: 062,  Up: Changelog
    • Option ‘org-ql-default-predicate’, applied to plain-string query
      tokens (before, the ‘regexp’ predicate was always used, but now it
      may be customized).
+   • Alias ‘c’ for predicate ‘category’.
 
    *Changed*
    • Give more useful error message for invalid queries.
@@ -1688,34 +1689,34 @@ Node: Links36995
 Node: Tips37682
 Node: Changelog38006
 Node: 07-pre38774
-Node: 06240296
-Node: 06140604
-Node: 0641172
-Node: 05244226
-Node: 05144526
-Node: 0544949
-Node: 04946478
-Node: 04846758
-Node: 04747105
-Node: 04647514
-Node: 04547922
-Node: 04448283
-Node: 04348642
-Node: 04248845
-Node: 04149006
-Node: 0449253
-Node: 03253354
-Node: 03153757
-Node: 0353954
-Node: 02357254
-Node: 02257488
-Node: 02157768
-Node: 0257973
-Node: 0162051
-Node: Notes62152
-Node: Comparison with Org Agenda searches62314
-Node: org-sidebar63203
-Node: License63482
+Node: 06240347
+Node: 06140655
+Node: 0641223
+Node: 05244277
+Node: 05144577
+Node: 0545000
+Node: 04946529
+Node: 04846809
+Node: 04747156
+Node: 04647565
+Node: 04547973
+Node: 04448334
+Node: 04348693
+Node: 04248896
+Node: 04149057
+Node: 0449304
+Node: 03253405
+Node: 03153808
+Node: 0354005
+Node: 02357305
+Node: 02257539
+Node: 02157819
+Node: 0258024
+Node: 0162102
+Node: Notes62203
+Node: Comparison with Org Agenda searches62365
+Node: org-sidebar63254
+Node: License63533
 
 End Tag Table
 
