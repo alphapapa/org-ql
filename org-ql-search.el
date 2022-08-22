@@ -242,15 +242,15 @@ automatically from the query."
   "Insert content for org-ql dynamic block at point according to PARAMS.
 Valid parameters include:
 
-  :scope    The scope to consider for the Org QL query. This can
-            be one of the following:
+  :buffers-files  The buffers or files to consider for the Org QL
+                  query. This can be one of the following:
 
-            `buffer'              the current buffer
-            `all'                 all agenda files, and org-mode buffers
-            `org-agenda-files'    all agenda files
-            `org-directory'       all org files
-            `(\"path\" ...)'      list of buffer names or file paths
-            `\"path\"'            a single file name
+                  `buffer'              the current buffer
+                  `all'                 all org-mode buffers
+                  `org-agenda-files'    all agenda files
+                  `org-directory'       all org files
+                  `(\"path\" ...)'      list of buffer names or file paths
+                  `\"path\"'            a single file name
 
   :query    An Org QL query expression in either sexp or string
             form.
@@ -281,25 +281,25 @@ Valid parameters include:
 For example, an org-ql dynamic block header could look like:
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :scope :query :columns :sort :ts-format :take) params)
+  (-let* (((&plist :buffers-files :query :columns :sort :ts-format :take) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
                     (org-ql--ask-unsafe-query query)
                     query)))
           (columns (or columns '(heading todo (priority "P"))))
-          (scope (pcase scope
-                   ('buffer (current-buffer))
-                   ('all (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                                    (buffer-list)))
-                   ('org-agenda-files (org-agenda-files))
-                   ('org-directory (org-ql-search-directories-files))
-                   ((and (pred listp) (pred seq-every-p #'stringp)) scope)
-                   ((pred stringp)
-                    (if (file-directory-p scope)
-                        (directory-files-recursively scope "\\.org$")
-                      scope))
-                   (_ (user-error "Unknown scope '%s'" scope))))
+          (buffers-files (pcase buffers-files
+                           ('buffer (current-buffer))
+                           ('all (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                                            (buffer-list)))
+                           ('org-agenda-files (org-agenda-files))
+                           ('oorg-directory (org-ql-search-directories-files))
+                           ((and (pred listp) (pred seq-every-p #'stringp)) buffers-files)
+                           ((pred stringp)
+                            (if (file-directory-p buffers-files)
+                                (directory-files-recursively buffers-files "\\.org$")
+                              buffers-files))
+                           (_ (user-error "Unknown buffers-files '%s'" buffers-files))))
           ;; MAYBE: Custom column functions.
           (format-fns
            ;; NOTE: Backquoting this alist prevents the lambdas from seeing
@@ -334,7 +334,7 @@ For example, an org-ql dynamic block header could look like:
                                    (ts-format ts-format (ts-parse-org-element it)))))
                  (cons 'property (lambda (element property)
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
-          (elements (org-ql-query :from scope
+          (elements (org-ql-query :from buffers-files
                                   :where query
                                   :select '(org-element-put-property (org-element-headline-parser (line-end-position)) :file (buffer-file-name))
                                   :order-by sort)))
