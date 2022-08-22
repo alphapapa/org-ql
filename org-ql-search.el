@@ -246,10 +246,11 @@ Valid parameters include:
             be one of the following:
 
             `buffer'              the current buffer
+            `all'                 all agenda files, and org-mode buffers
             `org-agenda-files'    all agenda files
             `org-directory'       all org files
             `(\"path\" ...)'      list of buffer names or file paths
-            `all'                 all agenda files, and org-mode buffers
+            `\"path\"'            a single file name
 
   :query    An Org QL query expression in either sexp or string
             form.
@@ -287,11 +288,18 @@ For example, an org-ql dynamic block header could look like:
                     (org-ql--ask-unsafe-query query)
                     query)))
           (columns (or columns '(heading todo (priority "P"))))
-          (scope (cond ((and (listp scope) (seq-every-p #'stringp scope)) scope)
-                       ((string-equal scope "org-agenda-files") (org-agenda-files))
-                       ((or (not scope) (string-equal scope "buffer")) (current-buffer))
-                       ((string-equal scope "org-directory") (org-ql-search-directories-files))
-                       (t (user-error "Unknown scope '%s'" scope))))
+          (scope (pcase scope
+                   ('buffer (current-buffer))
+                   ('all (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                                    (buffer-list)))
+                   ('org-agenda-files (org-agenda-files))
+                   ('org-directory (org-ql-search-directories-files))
+                   ((and (pred listp) (pred seq-every-p #'stringp)) scope)
+                   ((pred stringp)
+                    (if (file-directory-p scope)
+                        (directory-files-recursively scope "\\.org$")
+                      scope))
+                   (_ (user-error "Unknown scope '%s'" scope))))
           ;; MAYBE: Custom column functions.
           (format-fns
            ;; NOTE: Backquoting this alist prevents the lambdas from seeing
