@@ -39,7 +39,7 @@
   "Options for `org-ql-find'."
   :group 'org-ql)
 
-(defcustom org-ql-find-goto-hook '(org-show-entry)
+(defcustom org-ql-find-goto-hook '(org-show-entry org-reveal)
   "Functions called when selecting an entry."
   :type 'hook)
 
