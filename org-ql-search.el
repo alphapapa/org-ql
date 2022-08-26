@@ -38,6 +38,15 @@
 (require 'org-ql)
 (require 'org-ql-view)
 
+;;;; Compatibility
+
+(defalias 'org-ql-search--link-heading-search-string
+  (cond ((fboundp 'org-link--normalize-string) #'org-link--normalize-string)
+        ((fboundp 'org-link-heading-search-string) #'org-link-heading-search-string)
+        ((fboundp 'org-make-org-heading-search-string) #'org-make-org-heading-search-string)
+        (t (warn "org-ql: Unable to define alias `org-ql-search--link-heading-search-string'.  This may affect links in dynamic blocks.  Please report this as a bug.")
+           #'identity)))
+
 ;;;; Variables
 
 (defvar org-ql-block-header nil
@@ -307,19 +316,21 @@ For example, an org-ql dynamic block header could look like:
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
                  (cons 'heading (lambda (element)
-                                  (org-make-link-string
+                                  (let ((normalized-heading
+                                         (org-ql-search--link-heading-search-string (org-element-property :raw-value element))))
+                                    (org-make-link-string
                                      (cond
                                       ((or (eq org-id-link-to-org-use-id t)
                                            (and org-id-link-to-org-use-id
                                                 (org-element-property :ID element)))
                                        (format "id:%s" (org-element-property :ID element)))
                                       ((string-equal (org-element-property :file element) (buffer-file-name))
-                                       (org-element-property :raw-value element))
+                                       normalized-heading)
                                       (t
                                        (format "file:%s::*%s"
                                                (org-element-property :file element)
-                                               (org-element-property :raw-value element))))
-                                     (org-link-display-format (org-element-property :raw-value element)))))
+                                               normalized-heading)))
+                                     (org-link-display-format normalized-heading)))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))

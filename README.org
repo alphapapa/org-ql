@@ -94,15 +94,32 @@ Lisp code examples are in [[examples.org]].
 :TOC:      ignore-children
 :END:
 
++  *Jumping to an entry:*
+     -  [[#org-ql-find][org-ql-find]] and related commands
+     -  [[#helm-org-ql][helm-org-ql]]
 +  *Showing an agenda-like view:*
-     -  [[#org-ql-search][org-ql-search]] (command)
-     -  [[#org-ql-view][org-ql-view]] (command)
-     -  [[#org-ql-view-sidebar][org-ql-view-sidebar]] (command)
-     -  [[#org-ql-view-recent-items][org-ql-view-recent-items]] (command)
+     -  [[#org-ql-search][org-ql-search]]
+     -  [[#org-ql-view][org-ql-view]]
+     -  [[#org-ql-view-sidebar][org-ql-view-sidebar]]
+     -  [[#org-ql-view-recent-items][org-ql-view-recent-items]]
 +  *Showing a tree in a buffer:*
-     -  [[#org-ql-sparse-tree][org-ql-sparse-tree]] (command)
-+  *Showing results with Helm*:
-     -  [[#helm-org-ql][helm-org-ql]] (command)
+     -  [[#org-ql-sparse-tree][org-ql-sparse-tree]]
+
+*** org-ql-find
+
+/Note: These commands use [[#non-sexp-query-syntax][non-sexp queries]]./
+
+These commands jump to a heading selected using Emacs's built-in completion facilities with an Org QL query:
+
+- ~org-ql-find~ searches in the current buffer.
+- ~org-ql-find-in-agenda~ searches in ~(org-agenda-files)~.
+- ~org-ql-find-in-org-directory~ searches in ~org-directory~.
+
+[[images/org-ql-find.png]]
+
+*** org-ql-refile
+
+This command refiles the current Org entry to one selected by searching with Org QL completion.  It searches files listed in ~org-refile-targets~ as well as the current buffer.
 
 *** org-ql-search
 
@@ -223,6 +240,9 @@ Arguments are listed next to predicate names, where applicable.
 +  =property (property &optional value)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a custom predicate form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
 +  =regexp (&rest regexps)= :: Return non-nil if current entry matches all of ~REGEXPS~ (regexp strings).  Matches against entire entry, from beginning of its heading to the next heading.
      -  Aliases: =r=.
++  =rifle (&rest strings)= :: Return non-nil if each string is found in either the entry or its outline path.  Works like =org-rifle=.  This is probably the most useful, intuitive, general-purpose predicate.
+     - Aliases: ~smart~.
+     - *Note:* By default, this is the default predicate used for plain-string query tokens (i.e. given without a specified predicate).  This can be customized with the option ~org-ql-default-predicate~.
 +  ~src (&key lang regexps)~ :: Return non-nil if current entry contains an Org Babel source block.  If ~LANG~ is non-nil, match blocks of that language.  If ~REGEXPS~ is non-nil, require that block's contents match all regexps.
 +  =tags (&optional tags)= :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
 +  =tags-inherited (&optional tags)= :: Return non-nil if current heading's inherited tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any inherited tags.
@@ -521,6 +541,35 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 :END:
 
 /Note:/ Breaking changes may be made before version 1.0, but in the event of major changes, attempts at backward compatibility will be made with obsolescence declarations, translation of arguments, etc.  Users who need stability guarantees before 1.0 may choose to use tagged stable releases.
+
+** 0.7-pre
+
+*Added*
++  Commands ~org-ql-find~, ~org-ql-find-heading~, and ~org-ql-find-path~, which jump to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
++  Command ~org-ql-refile~, which refiles the entry at point to one selected using Org QL completion.
++  Predicate ~rifle~, which matches an entry if each of the given arguments is found in either the entry's contents or its outline path.  This provides very intuitive results, mimicing the behavior of [[https://github.com/alphapapa/org-rifle][=org-rifle=]].  In fact, the results are so useful that it's now the default predicate for plain-string query tokens.  (It is also aliased to ~smart~, since it's so "smart," and not all users have used =org-rifle=.)
++  Option ~org-ql-default-predicate~, applied to plain-string query tokens (before, the ~regexp~ predicate was always used, but now it may be customized).
++  Alias ~c~ for predicate ~category~.
+
+*Changed*
++  Give more useful error message for invalid queries.
+
+*Internal*
++  Certain query predicates, when called multiple times in an ~and~ sub-expression, are optimized to a single call.
++  Use ~buffer-chars-modified-tick~ instead of ~buffer-modified-tick~.  (Thanks to [[https://github.com/yantar92][Ihor Radchenko]].)
+
+** 0.6.2
+
+*Fixed*
++  ~link~ predicate when used in an ~or~'ed query.  ([[https://github.com/alphapapa/org-ql/issues/279][#279]].  Thanks to [[https://github.com/telenieko][Marc Fargas]] for reporting.)
+
+** 0.6.1
+
+*Fixed*
++  In dynamic blocks, links to headings with statistics cookies were broken.  (Fixes [[https://github.com/alphapapa/org-ql/issues/248][#248]].  Thanks to [[https://github.com/maikol-solis][Maikol Solis]] and [[https://github.com/yantar92][Ihor Radchenko]].)
+
+*Updated*
++  Compatibility with new macro names in Transient.  ([[https://github.com/alphapapa/org-ql/pull/269][#269]].  Thanks to [[https://github.com/tarsius][Jonas Bernoulli]].)
 
 ** 0.6
 

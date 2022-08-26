@@ -718,7 +718,7 @@ When opened, the link searches the buffer it's opened from."
     (unless (or value transient--prefix)
       (message "Unset %s" variable))))
 
-(define-transient-command org-ql-view-dispatch ()
+(transient-define-prefix org-ql-view-dispatch ()
   "Show Org QL View dispatcher."
   [["Edit"
     ("t" org-ql-view--transient-title)
@@ -753,7 +753,7 @@ When opened, the link searches the buffer it's opened from."
                         org-ql-view--format-query
                         (org-ql-view--font-lock-string 'emacs-lisp-mode)))))
 
-(define-infix-command org-ql-view--transient-title ()
+(transient-define-infix org-ql-view--transient-title ()
   ;; TODO: Add an asterisk or something when the view has been modified but not saved.
   :description (lambda () (org-ql-view--format-transient-key-value "Title" org-ql-view-title))
   :class 'org-ql-view--variable
@@ -766,7 +766,7 @@ When opened, the link searches the buffer it's opened from."
                                   (format "%s" org-ql-view-title))
                          history)))
 
-(define-infix-command org-ql-view--transient-query ()
+(transient-define-infix org-ql-view--transient-query ()
   :description (lambda () (org-ql-view--format-transient-lisp-argument "Query" org-ql-view-query))
   :class 'org-ql-view--variable
   :argument ""
@@ -784,7 +784,7 @@ When opened, the link searches the buffer it's opened from."
                 ;; Parse non-sexp query into sexp query.
                 (org-ql--query-string-to-sexp query)))))
 
-(define-infix-command org-ql-view--transient-in ()
+(transient-define-infix org-ql-view--transient-in ()
   :description (lambda () (org-ql-view--format-transient-lisp-argument "In buffers/files" org-ql-view-buffers-files))
   :class 'org-ql-view--variable
   :argument ""
@@ -795,7 +795,7 @@ When opened, the link searches the buffer it's opened from."
             ;; argument, but it gives the same result.
             (org-ql-view--complete-buffers-files)))
 
-(define-infix-command org-ql-view--transient-super-groups ()
+(transient-define-infix org-ql-view--transient-super-groups ()
   :description (lambda ()
                  (org-ql-view--format-transient-lisp-argument "Group by" org-ql-view-super-groups))
   :class 'org-ql-view--variable
@@ -806,7 +806,7 @@ When opened, the link searches the buffer it's opened from."
             ;; FIXME: Figure out how to integrate initial-input and history.
             (org-ql-view--complete-super-groups)))
 
-(define-infix-command org-ql-view--transient-sort ()
+(transient-define-infix org-ql-view--transient-sort ()
   :description
   (lambda ()
     (org-ql-view--format-transient-lisp-argument "Sort by" (or org-ql-view-sort 'buffer-order)))

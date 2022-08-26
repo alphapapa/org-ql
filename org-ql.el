@@ -1,18 +1,12 @@
 ;;; org-ql.el --- Org Query Language, search command, and agenda-like view  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2017-2022  Adam Porter
+
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.6
+;; Version: 0.7-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
-
-;;; Commentary:
-
-;; `org-ql' is a lispy query language for Org files.  It allows you to
-;; find Org entries matching certain criteria and return a list of
-;; them or perform actions on them.  Commands are also provided which
-;; display a buffer with matching results, similar to an Org Agenda
-;; buffer.
 
 ;;; License:
 
@@ -28,6 +22,14 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; `org-ql' is a Lispy query language for Org files.  It allows you to
+;; find Org entries matching certain criteria and return a list of
+;; them or perform actions on them.  Commands are also provided which
+;; display a buffer with matching results, similar to an Org Agenda
+;; buffer.
 
 ;;; Code:
 
@@ -298,6 +300,16 @@ See Info node `(org-ql)Queries'."
   :type 'boolean
   :risky t)
 
+(defcustom org-ql-default-predicate 'rifle
+  "Predicate used for plain-string tokens without a specified predicate."
+  :type '(choice (const heading)
+                 (const heading-regexp)
+                 (const regexp)
+                 (const rifle)
+                 (const smart)
+                 (const outline-path)
+                 (const outline-path-segment)))
+
 ;;;; Functions
 
 ;;;;; Query execution
@@ -352,18 +364,18 @@ each priority the newest items would appear first."
                           (function (funcall buffers-or-files))
                           (list buffers-or-files)
                           (otherwise (list buffers-or-files)))
-                     (--map (cl-etypecase it
-                              ;; NOTE: This etypecase is essential to opening links safely,
-                              ;; as it rejects, e.g. lambdas in the buffers-files argument.
-                              (buffer it)
-                              (string (or (find-buffer-visiting it)
-                                          (when (file-readable-p it)
-                                            ;; It feels unintuitive that `find-file-noselect' returns
-                                            ;; a buffer if the filename doesn't exist.
-                                            (find-file-noselect it))
-                                          (user-error "Can't open file: %s" it)))))
-                     ;; Ignore special/hidden buffers.
-                     (--remove (string-prefix-p " " (buffer-name it)))))
+                        (--map (cl-etypecase it
+                                 ;; NOTE: This etypecase is essential to opening links safely,
+                                 ;; as it rejects, e.g. lambdas in the buffers-files argument.
+                                 (buffer it)
+                                 (string (or (find-buffer-visiting it)
+                                             (when (file-readable-p it)
+                                               ;; It feels unintuitive that `find-file-noselect' returns
+                                               ;; a buffer if the filename doesn't exist.
+                                               (find-file-noselect it))
+                                             (display-warning 'org-ql-select (format "Can't open file: %s" it) :error)))))
+                        ;; Ignore special/hidden buffers.
+                        (--remove (string-prefix-p " " (buffer-name it)))))
           (query (org-ql--normalize-query query))
           ((&plist :query :preamble :preamble-case-fold) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
@@ -399,12 +411,12 @@ each priority the newest items would appear first."
                              (fset name fn)))
                          ;; Run query on buffers.
                          (->> buffers
-                           (--map (with-current-buffer it
-                                    (unless (derived-mode-p 'org-mode)
-                                      (user-error "Not an Org buffer: %s" (buffer-name)))
-                                    (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                           :predicate predicate :action action :narrow narrow)))
-                           (-flatten-n 1)))
+                              (--map (with-current-buffer it
+                                       (unless (derived-mode-p 'org-mode)
+                                         (display-warning 'org-ql-select (format  "Not an Org buffer: %s" (buffer-name)) :error))
+                                       (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
+                                                              :predicate predicate :action action :narrow narrow)))
+                              (-flatten-n 1)))
                      (--each orig-fns
                        ;; Restore original function mappings.
                        (-let (((&plist :name :fn) it))
@@ -471,7 +483,7 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
     (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
               (query-cache (cadr buffer-cache))
               (modified-tick (car buffer-cache))
-              (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+              (buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
               (cached-result (gethash query-cache-key query-cache)))
         (pcase cached-result
           ('org-ql-nil nil)
@@ -480,7 +492,7 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
         (cond ((or (not query-cache)
                    (not buffer-unmodified-p))
                (puthash (current-buffer)
-                        (list (buffer-modified-tick)
+                        (list (buffer-chars-modified-tick)
                               (let ((table (make-hash-table :test 'org-ql-hash-test)))
                                 (puthash query-cache-key (or new-result 'org-ql-nil) table)
                                 table))
@@ -525,6 +537,20 @@ If NARROW is non-nil, buffer will not be widened."
 
 ;;;;; Helpers
 
+(defun org-ql--ensure-buffer (file-or-buffer)
+  "Ensure a buffer is named or visiting FILE-OR-BUFFER.
+If no such buffer exists with the name, and it is the name of a
+readable file, `find-file-noselect' it into a buffer."
+  ;; See comment in `org-ql-find'.
+  ;; FIXME: Use this in `helm-org-ql' the same way it's used in
+  ;; `org-ql-find'.
+  (unless (or (get-buffer file-or-buffer)
+              (find-buffer-visiting file-or-buffer))
+    (if (file-readable-p file-or-buffer)
+        (with-current-buffer (find-file-noselect file-or-buffer)
+          (cl-assert (eq 'org-mode major-mode) nil (format "Not an Org buffer: %S" file-or-buffer)))
+      (display-warning 'org-ql (format "Not a readable file: %S" file-or-buffer) :error))))
+
 (defun org-ql--tags-at (position)
   ;; FIXME: This function actually assumes that point is already at POSITION.
   "Return tags for POSITION in current buffer.
@@ -535,7 +561,7 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
   (if-let* ((buffer-cache (gethash (current-buffer) org-ql-tags-cache))
             (modified-tick (car buffer-cache))
             (tags-cache (cdr buffer-cache))
-            (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+            (buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
             (cached-result (gethash position tags-cache)))
       ;; Found in cache: return them.
       ;; FIXME: Isn't `cached-result' a list of (INHERITED . LOCAL)?  It
@@ -576,12 +602,12 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
       (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
             modified-tick (car buffer-cache)
             tags-cache (cdr buffer-cache)
-            buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+            buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
       (unless (and buffer-cache buffer-unmodified-p)
         ;; Buffer-local tags cache empty or invalid: make new one.
         (setf tags-cache (make-hash-table))
         (puthash (current-buffer)
-                 (cons (buffer-modified-tick) tags-cache)
+                 (cons (buffer-chars-modified-tick) tags-cache)
                  org-ql-tags-cache))
       (puthash position all-tags tags-cache))))
 
@@ -612,7 +638,7 @@ Values compared with `equal'."
   (pcase (if-let* ((buffer-cache (gethash (current-buffer) org-ql-node-value-cache))
                    (modified-tick (car buffer-cache))
                    (position-cache (cdr buffer-cache))
-                   (buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                   (buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
                    (value-cache (gethash position position-cache))
                    (cached-value (alist-get fn value-cache nil nil #'equal)))
              ;; Found in cache: return it.
@@ -627,13 +653,13 @@ Values compared with `equal'."
                    position-cache (cdr buffer-cache)
                    value-cache (when position-cache
                                  (gethash position position-cache))
-                   buffer-unmodified-p (eq (buffer-modified-tick) modified-tick))
+                   buffer-unmodified-p (eq (buffer-chars-modified-tick) modified-tick))
              (unless (and buffer-cache buffer-unmodified-p)
                ;; Buffer-local node cache empty or invalid: make new one.
                (setf position-cache (make-hash-table)
                      value-cache (gethash position position-cache))
                (puthash (current-buffer)
-                        (cons (buffer-modified-tick) position-cache)
+                        (cons (buffer-chars-modified-tick) position-cache)
                         org-ql-node-value-cache))
              (setf (alist-get fn value-cache nil nil #'equal) new-value)
              (puthash position value-cache position-cache)
@@ -685,6 +711,56 @@ returns nil."
 ;; making it easier for the UI to avoid spurious warnings, e.g. for
 ;; partially typed queries in the Helm commands.
 (define-error 'org-ql-invalid-query "Invalid Org QL query" 'user-error)
+
+(defun org-ql--coalesce-ands (query)
+  "Return QUERY having coalesced any AND'ed clauses' predicates.
+Multiple calls to the same predicate within an `and' expression
+are coalesced into a single call to the predicate.
+
+Note that this is a relatively simple function which does not
+comprehensively coalesce every call that could be.  For example,
+if QUERY contained four calls to the `src' predicate with two
+unique language arguments, only the calls for one language would
+be coalesced."
+  ;; TODO: Use a per-predicate alist-getting function that accounts
+  ;; for arguments which must be unique...maybe...someday...
+
+  ;; NOTE: This implentation can sometimes reorder sub-expressions,
+  ;; like:
+  ;;
+  ;;   (and (src :regexps ("foo") :lang "elisp") (src :regexps ("bar")))
+  ;;
+  ;; becomes:
+  ;;
+  ;;   (and (src :regexps ("bar")) (src :regexps ("foo") :lang "elisp"))
+  ;;
+  ;; because the first one could be coalescable, but the second one
+  ;; can't be coalesced with it since they don't specify the same
+  ;; language.  That could be fixed, but it's probably not worth it.
+  (cl-labels ((rec (sexp)
+                   (pcase sexp
+                     (`(,(and boolean (or 'or 'not)) . ,sexps)
+                      `(,boolean ,@(mapcar #'rec sexps)))
+                     (`(and . ,sexps)
+                      (anded sexps))
+                     (_ sexp)))
+              (anded (sexps)
+                     (let (anded-predicates new-sexp)
+                       (dolist (sexp sexps)
+                         (pcase sexp
+                           (`(,(or 'or 'not) . ,_)
+                            (push (rec sexp) new-sexp))
+                           (`(,predicate . ,args)
+                            (pcase-exhaustive (plist-get (alist-get predicate org-ql-predicates) :coalesce)
+                              (`nil (push sexp new-sexp))
+                              (`t (setf (alist-get predicate anded-predicates)
+                                        (append (alist-get predicate anded-predicates) args)))
+                              ((and fn (pred functionp))
+                               (if-let (new-args (funcall fn (alist-get predicate anded-predicates) args))
+                                   (setf (alist-get predicate anded-predicates) new-args)
+                                 (push sexp new-sexp)))))))
+                       (delq nil `(and ,@(nreverse new-sexp) ,@(nreverse anded-predicates))))))
+    (rec query)))
 
 (defun org-ql--sanity-check-form (form)
   "Signal error if any forms in FORM do not have preconditions met.
@@ -765,12 +841,12 @@ respectively."
                       "#+end_src")
                 t))
 
-(defun org-ql--byte-compile-warning (_string _pos _fill level)
+(defun org-ql--byte-compile-warning (string _pos _fill level)
   "Signal an `org-ql-invalid-query' error.
 Arguments STRING, POS, FILL, and LEVEL are according to
 `byte-compile-log-warning-function'."
   ;; Used as the `byte-compile-log-warning-function' in `org-ql--query-preamble'.
-  (signal 'org-ql-invalid-query level))
+  (signal 'org-ql-invalid-query (list string level)))
 
 (defun org-ql--query-predicate (query)
   "Return predicate function for QUERY."
@@ -862,7 +938,7 @@ value of `org-ql-predicates')."
                            positive-term))
                  (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
                                     (and predicate-without-args `(pred -- (list (intern pred))))
-                                    (and plain-string `(s -- (list 'regexp s)))))
+                                    (and plain-string `(s -- (list org-ql-default-predicate s)))))
                  (plain-string (or quoted-arg unquoted-arg))
                  (predicate-with-args (substring predicate) ":" args)
                  (predicate-without-args (substring predicate) ":")
@@ -945,7 +1021,7 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
                                  (`(unless ,condition . ,clauses) `(unless ,(rec condition)
                                                                      ,@(mapcar #'rec clauses)))
                                  ;; TODO: Combine (regexp) when appropriate (i.e. inside an OR, not an AND).
-                                 ((pred stringp) `(regexp ,element))
+                                 ((pred stringp) `(,org-ql-default-predicate ,element))
 
                                  ,@normalizer-patterns
 
@@ -959,7 +1035,7 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
                               (setf query new-query)
                               (when (eq (cl-incf count) limit)
                                 (error "Query normalization limit exceeded: QUERY:%S" query)))
-                         finally return new-query)))))))
+                         finally return (org-ql--coalesce-ands new-query))))))))
 
 (defun org-ql--define-query-preamble-fn (predicates)
   "Define function `org-ql--query-preamble' for PREDICATES.
@@ -1029,7 +1105,7 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
     ;; function still works.  But to avoid the warning, we byte-compile it afterward.
     (byte-compile 'org-ql--query-preamble)))
 
-(cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers)
+(cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers coalesce)
   "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
 NAME may be a symbol or a list of symbols: if a list, the first
 is used as NAME and the rest are aliases.  A function is only
@@ -1083,6 +1159,24 @@ to variables bound in the pattern:
               query expression with no work to do, which improves
               performance.
 
+When COALESCE is t, multiple calls to this predicate within a
+boolean AND query clause may be combined into a single call to
+this predicate (so it is expected that this predicate treats
+multiple arguments as being boolean AND'ed together; if it does
+not, then it should not be set to coalesce).
+
+This argument may also be a function called to do coalescing of
+two predicate expressions.  It is called with two arguments: the
+list of already-coalesced arguments to an expression, and the
+list of arguments to the call being coalesced (note that a
+query's arguments are normalized before the query is coalesced).
+If it returns nil, the expression is not coalesced; otherwise, it
+should return a new list of arguments coalescing the given
+arguments, with new arguments being first.  (Using a
+predicate-specific function to coalesce arguments is useful when,
+e.g. a predicate takes keyword arguments, so arguments to
+multiple calls can't be simply appended.)
+
 For convenience, within the `pcase' patterns, the symbol
 `predicate-names' is a special form which is replaced with a
 pattern matching any of the predicate's name and aliases.  For
@@ -1099,6 +1193,8 @@ It would be expanded to:
 
   ((`(,(or 'heading 'h) . ,args)
   `(heading ,@args)))"
+  ;; FIXME: Update defpred tutorial to include :coalesce.
+
   ;; NOTE: The debug form works, completely!  For example, use `edebug-defun'
   ;; on the `heading' predicate, then evaluate this form:
   ;; (let* ((query '(heading "HEADING"))
@@ -1108,7 +1204,8 @@ It would be expanded to:
   ;;         :normalized normalized
   ;;         :preamble preamble))
   (declare (debug ([&or symbolp listp] listp stringp
-                   &rest [&or [":body" def-body]
+                   &rest [&or [":coalesce" form]
+                              [":body" def-body]
                               [":normalizers" (&rest (sexp def-body))]
                               [":preambles" (&rest (sexp def-body))]]))
            (indent defun))
@@ -1129,7 +1226,8 @@ It would be expanded to:
        ;; SOMEDAY: Use `map-elt' here, after map 2.1 can be automatically installed in CI sandbox...
        (setf (alist-get ',predicate-name org-ql-predicates)
              `(:name ,',name :aliases ,',aliases :fn ,',fn-name :docstring ,(\, docstring) :args ,',args
-                     :normalizers ,',normalizers :preambles ,',preambles))
+                     :normalizers ,',normalizers :preambles ,',preambles
+                     :coalesce ,,coalesce))
        (unless org-ql-defpred-defer
          ;; Reversing preserves the order in which predicates were defined.
          (org-ql--define-normalize-query-fn (reverse org-ql-predicates))
@@ -1220,7 +1318,7 @@ result form."
 ;; redefinitions until all of the predicates have been defined.
 (setf org-ql-defpred-defer t)
 
-(org-ql-defpred category (&rest categories)
+(org-ql-defpred (category c) (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
   :body (when-let ((category (org-get-category (point))))
           (cl-typecase categories
@@ -1312,6 +1410,7 @@ Org effort string, like \"5\" or \"0:05\"."
 (org-ql-defpred (heading h) (&rest strings)
   "Return non-nil if current entry's heading matches all STRINGS.
 Matching is done case-insensitively."
+  :coalesce t
   :normalizers ((`(,predicate-names . ,args)
                  ;; "h" alias.
                  `(heading ,@args)))
@@ -1338,6 +1437,7 @@ Matching is done case-insensitively."
 (org-ql-defpred (heading-regexp h*) (&rest regexps)
   "Return non-nil if current entry's heading matches all REGEXPS (regexp strings).
 Matching is done case-insensitively."
+  :coalesce t
   :normalizers ((`(,predicate-names . ,args)
                  ;; "h" alias.
                  `(heading-regexp ,@args)))
@@ -1461,7 +1561,8 @@ any link is found."
               (setf description (regexp-quote description)))
             (when target
               (setf target (regexp-quote target))))
-          (when (re-search-forward org-ql-link-regexp (org-entry-end-position) t)
+          (when (save-excursion
+                  (re-search-forward org-ql-link-regexp (org-entry-end-position) t))
             (pcase description-or-target
               ('nil (and (or (null target)
                              (string-match-p target (match-string 1)))
@@ -1473,6 +1574,27 @@ any link is found."
                    (or (string-match-p description-or-target (match-string 1))
                        (string-match-p description-or-target
                                        (match-string org-ql-link-description-group)))))))))
+
+(org-ql-defpred (rifle smart) (&rest strings)
+  "Return non-nil if each string argument is found in either the entry or its outline path.
+Works like `org-rifle'.  This is probably the most useful,
+intuitive, general-purpose predicate."
+  ;; NOTE: This predicate advertises that it takes strings, but they
+  ;; are normalized to regexps.  Because of that, we must use a
+  ;; coalescing function.
+  :coalesce (lambda (coalesced-args current-args)
+              (plist-put coalesced-args :regexps
+                         (list 'quote (append (cadr (plist-get coalesced-args :regexps))
+                                              (cadr (plist-get current-args :regexps))))))
+  :normalizers ((`(,predicate-names . ,(and rest (guard (cl-every #'stringp rest))))
+                 ;; If this doesn't match, it's already normalized.
+                 `(rifle :regexps ',(mapcar #'regexp-quote rest))))
+  :preambles ((`(,predicate-names :regexps ',regexps)
+               (list :regexp (rx-to-string `(seq bow (or ,@(mapcar (lambda (s) `(regexp ,s)) regexps))))
+                     :case-fold t :query query)))
+  :body (cl-loop for regexp in (plist-get strings :regexps)
+                 always (or (org-ql--predicate-regexp regexp)
+                            (org-ql--predicate-outline-path regexp))))
 
 ;; MAYBE: Preambles for outline-path predicates.  Not sure if possible without complicated logic.
 ;; FIXME: These preds say they accept regexps but the strings get regexp-quoted.  They should probably just take strings.
@@ -1489,6 +1611,7 @@ the following queries:
   (olp \"Food\" \"Fruits\")
   (olp \"Fruits\" \"Grapes\")
   (olp \"Food\" \"Grapes\")"
+  :coalesce t
   :normalizers ((`(,predicate-names . ,strings)
                  ;; Regexp quote headings.
                  `(org-ql--predicate-outline-path ,@(mapcar #'regexp-quote strings))))
@@ -1522,6 +1645,7 @@ contiguous segment of the outline path:
 (org-ql-defpred path (&rest regexps)
   "Return non-nil if current heading's buffer's filename path matches any of REGEXPS (regexp strings).
 Without arguments, return non-nil if buffer is file-backed."
+  ;; FIXME: This should AND the regexps together, not OR them.
   :body (when (buffer-file-name)
           (cl-typecase regexps
             (null t)
@@ -1643,6 +1767,7 @@ priority B)."
 
 (org-ql-defpred (regexp r) (&rest regexps)
   "Return non-nil if current entry matches all of REGEXPS (regexp strings)."
+  :coalesce t
   :normalizers ((`(,predicate-names . ,args)
                  `(regexp ,@args)))
   ;; MAYBE: Separate case-sensitive (Regexp) predicate.
@@ -1665,24 +1790,33 @@ priority B)."
   "Return non-nil if current entry contains an Org source block matching all of REGEXPS.
 If keyword argument LANG is non-nil, the block must be in that
 language."
+  :coalesce (lambda (coalesced-args current-args)
+              (when (or (not coalesced-args)
+                        (equal (plist-get current-args :lang)
+                               (plist-get coalesced-args :lang)))
+                (plist-put coalesced-args :regexps (append (plist-get coalesced-args :regexps)
+                                                           (plist-get current-args :regexps)))
+                (plist-put coalesced-args :lang (plist-get current-args :lang))))
   :normalizers ((`(,predicate-names . ,args)
                  ;; Rewrite to use keyword args.
-                 (-let (regexps lang keyword-index)
-                   (cond ((plist-get args :lang)
-                          ;; Lang given first, or only lang given.
-                          (setf lang (plist-get args :lang)
-                                regexps (seq-difference args (list :lang lang))))
-                         ((setf keyword-index (-find-index #'keywordp args))
-                          ;; Regexps and lang given.
-                          (setf lang (plist-get (cl-subseq args keyword-index) :lang)
-                                regexps (cl-subseq args 0 keyword-index)))
-                         (t ;; Only regexps given.
-                          (setf regexps args)))
-                   (when regexps
-                     ;; This feels awkward and wrong, but we have to quote lists
-                     ;; and avoid quoting nil.  There must be a better way.
-                     (setf regexps `(',regexps)))
-                   `(src :lang ,lang :regexps ,@regexps))))
+                 (cond ((cl-every #'stringp args)
+                        ;; No keywords, only regexps.
+                        `(src :regexps ,args))
+                       ((and (stringp (car args)) (cl-some #'keywordp args))
+                        ;; Regexp as first arg with keyword later.
+                        (let* ((keyword-pos (cl-position :lang args))
+                               (regexps (cl-subseq args 0 keyword-pos))
+                               ;; We assume that if :lang is given, the string argument follows.
+                               (lang (nth (1+ (cl-position :lang args)) args)))
+                          `(src :lang ,lang
+                                :regexps ,regexps)))
+                       ((keywordp (car args))
+                        ;; All plist args.
+                        `(src ,@(delq nil
+                                      (append (when (plist-get args :lang)
+                                                (list :lang (plist-get args :lang)))
+                                              (when (plist-get args :regexps)
+                                                (list :regexps (plist-get args :regexps))))))))))
   :preambles ((`(,predicate-names . ,args)
                (list :regexp (org-ql--format-src-block-regexp (plist-get args :lang))
                      ;; Always check contents with predicate.
@@ -1728,6 +1862,7 @@ Tests both inherited and local tags."
 (org-ql-defpred (tags-all tags&) (&rest tags)
   "Return non-nil if current heading has all of TAGS (a list of strings).
 Tests both inherited and local tags."
+  :coalesce t
   ;; MAYBE: -all versions for inherited and local.
   :normalizers ((`(,predicate-names . ,tags)
                  `(and ,@(--map `(tags ,it) tags))))
