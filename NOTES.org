@@ -189,6 +189,10 @@
 
 [2022-08-15 Mon 19:33]  Renamed org-notepad, after talking with benoitj in #systemcrafters.  Yeah, it's another package that ends in Y, but...
 
+** TODO Put default org-ql-views into separate variable
+
+Separating the default views from user-created ones will make updating the default ones much easier.  It also prevents suddenly writing all of the default views into the user's custom file when the user adds or changes one.
+
 ** DONE Refile command
 :PROPERTIES:
 :milestone: 0.7
