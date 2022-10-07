@@ -237,7 +237,7 @@ Arguments are listed next to predicate names, where applicable.
      -  Aliases: ~olps~.
 +  =path (&rest regexps)= :: Return non-nil if current heading's buffer's filename path matches any of ~REGEXPS~ (regexp strings).  Without arguments, return non-nil if buffer is file-backed.
 +  =priority (&rest args)= :: Return non-nil if current heading has a certain priority.  ~ARGS~ may be either a list of one or more priority letters as strings, or a comparator function symbol followed by a priority letter string.  For example:  ~(priority "A") (priority "A" "B") (priority '>= "B")~ Note that items without a priority cookie never match this predicate (while Org itself considers items without a cookie to have the default priority, which, by default, is equal to priority ~B~).
-+  =property (property &optional value)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  Note that property inheritance is currently /not/ enabled for this predicate.  If you need to test with inheritance, you could use a custom predicate form, like ~(org-entry-get (point) "PROPERTY" 'inherit)~.
++  =property (property &optional value &key inherit)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  If ~INHERIT~ is nil, only match entries with ~PROPERTY~ set on the entry; if t, also match entries with inheritance.  If ~INHERIT~ is not specified, use the Boolean value of ~org-use-property-inheritance~, which see (i.e. it is only interpreted as nil or non-nil).
 +  =regexp (&rest regexps)= :: Return non-nil if current entry matches all of ~REGEXPS~ (regexp strings).  Matches against entire entry, from beginning of its heading to the next heading.
      -  Aliases: =r=.
 +  =rifle (&rest strings)= :: Return non-nil if each string is found in either the entry or its outline path.  Works like =org-rifle=.  This is probably the most useful, intuitive, general-purpose predicate.
@@ -550,6 +550,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Predicate ~rifle~, which matches an entry if each of the given arguments is found in either the entry's contents or its outline path.  This provides very intuitive results, mimicing the behavior of [[https://github.com/alphapapa/org-rifle][=org-rifle=]].  In fact, the results are so useful that it's now the default predicate for plain-string query tokens.  (It is also aliased to ~smart~, since it's so "smart," and not all users have used =org-rifle=.)
 +  Option ~org-ql-default-predicate~, applied to plain-string query tokens (before, the ~regexp~ predicate was always used, but now it may be customized).
 +  Alias ~c~ for predicate ~category~.
++  Predicate ~property~ now accepts the argument ~:inherit~ to match entries with property inheritance, and when unspecified, the option ~org-use-property-inheritance~ controls whether inheritance is used.
 
 *Changed*
 +  Give more useful error message for invalid queries.

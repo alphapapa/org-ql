@@ -476,12 +476,13 @@ Arguments are listed next to predicate names, where applicable.
      predicate (while Org itself considers items without a cookie to
      have the default priority, which, by default, is equal to priority
      ‘B’).
-‘property (property &optional value)’
+‘property (property &optional value &key inherit)’
      Return non-nil if current entry has ‘PROPERTY’ (a string), and
-     optionally ‘VALUE’ (a string).  Note that property inheritance is
-     currently _not_ enabled for this predicate.  If you need to test
-     with inheritance, you could use a custom predicate form, like
-     ‘(org-entry-get (point) "PROPERTY" 'inherit)’.
+     optionally ‘VALUE’ (a string).  If ‘INHERIT’ is nil, only match
+     entries with ‘PROPERTY’ set on the entry; if t, also match entries
+     with inheritance.  If ‘INHERIT’ is not specified, use the Boolean
+     value of ‘org-use-property-inheritance’, which see (i.e.  it is
+     only interpreted as nil or non-nil).
 ‘regexp (&rest regexps)’
      Return non-nil if current entry matches all of ‘REGEXPS’ (regexp
      strings).  Matches against entire entry, from beginning of its
@@ -1034,6 +1035,10 @@ File: README.info,  Node: 07-pre,  Next: 062,  Up: Changelog
      tokens (before, the ‘regexp’ predicate was always used, but now it
      may be customized).
    • Alias ‘c’ for predicate ‘category’.
+   • Predicate ‘property’ now accepts the argument ‘:inherit’ to match
+     entries with property inheritance, and when unspecified, the option
+     ‘org-use-property-inheritance’ controls whether inheritance is
+     used.
 
    *Changed*
    • Give more useful error message for invalid queries.
@@ -1672,51 +1677,51 @@ Node: org-ql-sparse-tree8579
 Node: Queries9379
 Node: Non-sexp query syntax10496
 Node: General predicates12255
-Node: Ancestor/descendant predicates18997
-Node: Date/time predicates20125
-Node: Functions / Macros23249
-Node: Agenda-like views23547
-Ref: Function ‘org-ql-block’23709
-Node: Listing / acting-on results24970
-Ref: Caching25178
-Ref: Function ‘org-ql-select’26091
-Ref: Function ‘org-ql-query’28517
-Ref: Macro ‘org-ql’ (deprecated)30291
-Node: Custom predicates30606
-Ref: Macro ‘org-ql-defpred’30830
-Node: Dynamic block34271
-Node: Links36995
-Node: Tips37682
-Node: Changelog38006
-Node: 07-pre38774
-Node: 06240347
-Node: 06140655
-Node: 0641223
-Node: 05244277
-Node: 05144577
-Node: 0545000
-Node: 04946529
-Node: 04846809
-Node: 04747156
-Node: 04647565
-Node: 04547973
-Node: 04448334
-Node: 04348693
-Node: 04248896
-Node: 04149057
-Node: 0449304
-Node: 03253405
-Node: 03153808
-Node: 0354005
-Node: 02357305
-Node: 02257539
-Node: 02157819
-Node: 0258024
-Node: 0162102
-Node: Notes62203
-Node: Comparison with Org Agenda searches62365
-Node: org-sidebar63254
-Node: License63533
+Node: Ancestor/descendant predicates19085
+Node: Date/time predicates20213
+Node: Functions / Macros23337
+Node: Agenda-like views23635
+Ref: Function ‘org-ql-block’23797
+Node: Listing / acting-on results25058
+Ref: Caching25266
+Ref: Function ‘org-ql-select’26179
+Ref: Function ‘org-ql-query’28605
+Ref: Macro ‘org-ql’ (deprecated)30379
+Node: Custom predicates30694
+Ref: Macro ‘org-ql-defpred’30918
+Node: Dynamic block34359
+Node: Links37083
+Node: Tips37770
+Node: Changelog38094
+Node: 07-pre38862
+Node: 06240672
+Node: 06140980
+Node: 0641548
+Node: 05244602
+Node: 05144902
+Node: 0545325
+Node: 04946854
+Node: 04847134
+Node: 04747481
+Node: 04647890
+Node: 04548298
+Node: 04448659
+Node: 04349018
+Node: 04249221
+Node: 04149382
+Node: 0449629
+Node: 03253730
+Node: 03154133
+Node: 0354330
+Node: 02357630
+Node: 02257864
+Node: 02158144
+Node: 0258349
+Node: 0162427
+Node: Notes62528
+Node: Comparison with Org Agenda searches62690
+Node: org-sidebar63579
+Node: License63858
 
 End Tag Table
 
