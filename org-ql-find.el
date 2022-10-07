@@ -43,6 +43,11 @@
   "Functions called when selecting an entry."
   :type 'hook)
 
+(defcustom org-ql-find-display-buffer-action '(display-buffer-same-window)
+  "Display buffer action list for `org-ql-find'.
+See function `display-buffer'."
+  :type 'sexp)
+
 ;;;; Functions
 
 ;;;###autoload
@@ -80,7 +85,7 @@ single predicate)."
                   :prompt prompt)))
     (with-current-buffer (marker-buffer marker)
       (goto-char marker)
-      (display-buffer (current-buffer))
+      (display-buffer (current-buffer) org-ql-find-display-buffer-action)
       (select-window (get-buffer-window (current-buffer)))
       (run-hook-with-args 'org-ql-find-goto-hook))))
 
