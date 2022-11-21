@@ -1106,7 +1106,9 @@ representation `org-ql-view-buffers-files' is returned."
                                       ","))
                           (_ (format "%s" contracted-org-ql-view-buffers-files))))
          (completion-read-result (if (functionp contracted-org-ql-view-buffers-files)
-                                     contracted-org-ql-view-buffers-files
+                                     (progn
+                                       (message "`org-ql-view-buffers-files' is a function, cannot use completion with it.")
+                                       contracted-org-ql-view-buffers-files)
                                    (completing-read-multiple
                                     "Buffers/Files: "
                                     (list 'buffer 'org-agenda-files 'org-directory 'all)
