@@ -132,7 +132,7 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 + ~buffer~: search the current buffer 
 + ~all~: search all Org buffers 
 + ~agenda~: search buffers returned by the function ~org-agenda-files~ 
-+ A space-separated list of file or buffer names
++ A comma-separated list of file, buffer names, or the above keywords
 
 ~GROUPS~: An ~org-super-agenda~ group set.  See variable ~org-super-agenda-groups~.
 
