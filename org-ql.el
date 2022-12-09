@@ -35,6 +35,7 @@
 
 (require 'cl-lib)
 (require 'org)
+(require 'org-duration)
 (require 'org-element)
 (require 'org-habit)
 (require 'seq)

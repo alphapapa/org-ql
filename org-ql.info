@@ -990,6 +990,8 @@ File: README.info,  Node: 063-pre,  Next: 062,  Up: Changelog
      (https://github.com/alphapapa/org-ql/issues/316).  Thanks to Akira
      Komamura (https://github.com/akirak) and Joon Ro
      (https://github.com/joonro) for reporting.)
+   • Require library ‘org-duration’ (apparently necessary in newer Org
+     versions).
 
 
 File: README.info,  Node: 062,  Next: 061,  Prev: 063-pre,  Up: Changelog
@@ -1634,34 +1636,34 @@ Node: Links35679
 Node: Tips36366
 Node: Changelog36690
 Node: 063-pre37461
-Node: 06237900
-Node: 06138209
-Node: 0638777
-Node: 05241831
-Node: 05142131
-Node: 0542554
-Node: 04944083
-Node: 04844363
-Node: 04744710
-Node: 04645119
-Node: 04545527
-Node: 04445888
-Node: 04346247
-Node: 04246450
-Node: 04146611
-Node: 0446858
-Node: 03250959
-Node: 03151362
-Node: 0351559
-Node: 02354859
-Node: 02255093
-Node: 02155373
-Node: 0255578
-Node: 0159656
-Node: Notes59757
-Node: Comparison with Org Agenda searches59919
-Node: org-sidebar60808
-Node: License61087
+Node: 06237993
+Node: 06138302
+Node: 0638870
+Node: 05241924
+Node: 05142224
+Node: 0542647
+Node: 04944176
+Node: 04844456
+Node: 04744803
+Node: 04645212
+Node: 04545620
+Node: 04445981
+Node: 04346340
+Node: 04246543
+Node: 04146704
+Node: 0446951
+Node: 03251052
+Node: 03151455
+Node: 0351652
+Node: 02354952
+Node: 02255186
+Node: 02155466
+Node: 0255671
+Node: 0159749
+Node: Notes59850
+Node: Comparison with Org Agenda searches60012
+Node: org-sidebar60901
+Node: License61180
 
 End Tag Table
 
