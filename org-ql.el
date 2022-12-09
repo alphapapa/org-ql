@@ -1818,9 +1818,11 @@ language."
               (when (or (not coalesced-args)
                         (equal (plist-get current-args :lang)
                                (plist-get coalesced-args :lang)))
-                (plist-put coalesced-args :regexps (append (plist-get coalesced-args :regexps)
-                                                           (plist-get current-args :regexps)))
-                (plist-put coalesced-args :lang (plist-get current-args :lang))))
+                (setf coalesced-args
+                      (plist-put coalesced-args :lang (plist-get current-args :lang)))
+                (setf coalesced-args
+                      (plist-put coalesced-args :regexps (append (plist-get coalesced-args :regexps)
+                                                                 (plist-get current-args :regexps))))))
   :normalizers ((`(,predicate-names . ,args)
                  ;; Rewrite to use keyword args.
                  (cond ((cl-every #'stringp args)
