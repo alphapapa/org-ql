@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 ;; Version: 0.6.3-pre
-;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
+;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0.1") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -854,8 +854,7 @@ value of `org-ql-predicates')."
                             ;; obscure bug in `peg': when one keyword is a substring of another,
                             ;; and the shorter one is listed first, the shorter one fails to match.
                             (-sort (-on #'> #'length))))
-         (pexs `((query (+ term
-                           (opt (+ (syntax-class whitespace) (any)))))
+         (pexs `((query (+ (and term (* [blank]))))
                  (term (or (and negation (list positive-term)
                                 ;; This is a bit confusing, but it seems to work.  There's probably a better way.
                                 `(pred -- (list 'not (car pred))))

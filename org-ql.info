@@ -983,7 +983,13 @@ File: README.info,  Node: 063-pre,  Next: 062,  Up: Changelog
 5.1 0.6.3-pre
 =============
 
-Nothing yet.
+*Fixed*
+   • Non-sexp query parsing with updated version 1.0.1 of the ‘peg’
+     package.  (Fixes #314
+     (https://github.com/alphapapa/org-ql/issues/314), #316
+     (https://github.com/alphapapa/org-ql/issues/316).  Thanks to Akira
+     Komamura (https://github.com/akirak) and Joon Ro
+     (https://github.com/joonro) for reporting.)
 
 
 File: README.info,  Node: 062,  Next: 061,  Prev: 063-pre,  Up: Changelog
@@ -1628,34 +1634,34 @@ Node: Links35679
 Node: Tips36366
 Node: Changelog36690
 Node: 063-pre37461
-Node: 06237569
-Node: 06137878
-Node: 0638446
-Node: 05241500
-Node: 05141800
-Node: 0542223
-Node: 04943752
-Node: 04844032
-Node: 04744379
-Node: 04644788
-Node: 04545196
-Node: 04445557
-Node: 04345916
-Node: 04246119
-Node: 04146280
-Node: 0446527
-Node: 03250628
-Node: 03151031
-Node: 0351228
-Node: 02354528
-Node: 02254762
-Node: 02155042
-Node: 0255247
-Node: 0159325
-Node: Notes59426
-Node: Comparison with Org Agenda searches59588
-Node: org-sidebar60477
-Node: License60756
+Node: 06237900
+Node: 06138209
+Node: 0638777
+Node: 05241831
+Node: 05142131
+Node: 0542554
+Node: 04944083
+Node: 04844363
+Node: 04744710
+Node: 04645119
+Node: 04545527
+Node: 04445888
+Node: 04346247
+Node: 04246450
+Node: 04146611
+Node: 0446858
+Node: 03250959
+Node: 03151362
+Node: 0351559
+Node: 02354859
+Node: 02255093
+Node: 02155373
+Node: 0255578
+Node: 0159656
+Node: Notes59757
+Node: Comparison with Org Agenda searches59919
+Node: org-sidebar60808
+Node: License61087
 
 End Tag Table
 

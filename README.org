@@ -524,7 +524,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.6.3-pre
 
-Nothing yet.
+*Fixed*
++ Non-sexp query parsing with updated version 1.0.1 of the ~peg~ package.  (Fixes [[https://github.com/alphapapa/org-ql/issues/314][#314]], [[https://github.com/alphapapa/org-ql/issues/316][#316]].  Thanks to [[https://github.com/akirak][Akira Komamura]] and [[https://github.com/joonro][Joon Ro]] for reporting.)
 
 ** 0.6.2
 
