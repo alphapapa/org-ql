@@ -559,6 +559,12 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Certain query predicates, when called multiple times in an ~and~ sub-expression, are optimized to a single call.
 +  Use ~buffer-chars-modified-tick~ instead of ~buffer-modified-tick~.  (Thanks to [[https://github.com/yantar92][Ihor Radchenko]].)
 
+** 0.6.3
+
+*Fixed*
++ Non-sexp query parsing with updated version 1.0.1 of the ~peg~ package.  (Fixes [[https://github.com/alphapapa/org-ql/issues/314][#314]], [[https://github.com/alphapapa/org-ql/issues/316][#316]].  Thanks to [[https://github.com/akirak][Akira Komamura]] and [[https://github.com/joonro][Joon Ro]] for reporting.)
++ Require library ~org-duration~ (apparently necessary in newer Org versions).
+
 ** 0.6.2
 
 *Fixed*

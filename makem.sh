@@ -1009,7 +1009,8 @@ function test-buttercup {
 
     run_emacs \
         $(args-load-files "${files_project_test[@]}") \
-        -f buttercup-run \
+        --load "$buttercup_file" \
+        --eval "(progn (setq backtrace-on-error-noninteractive nil) (buttercup-run))" \
         && success "Buttercup tests finished without errors." \
             || error "Buttercup tests failed."
 }
