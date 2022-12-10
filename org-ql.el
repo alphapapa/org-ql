@@ -1415,7 +1415,15 @@ Matching is done case-insensitively."
                  ;; "h" alias.
                  `(heading ,@args)))
   ;; TODO: Adjust regexp to avoid matching in tag list.
-  :preambles ((`(,predicate-names ,string)
+  :preambles ((`(,predicate-names)
+               ;; This clause protects against the case in which the
+               ;; arguments are nil, which would cause an error in
+               ;; `rx-to-string' in other clauses.  This can happen
+               ;; with `org-ql-completing-read', e.g. when the input
+               ;; is "h:" while the user is typing.
+               (list :regexp (rx bol (1+ "*") (1+ blank) (0+ nonl))
+                     :case-fold t :query query))
+              (`(,predicate-names ,string)
                ;; Only one string: match with preamble, then let predicate confirm (because
                ;; the match could be in e.g. the tags rather than the heading text).
                (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
@@ -1442,7 +1450,15 @@ Matching is done case-insensitively."
                  ;; "h" alias.
                  `(heading-regexp ,@args)))
   ;; MAYBE: Adjust regexp to avoid matching in tag list.
-  :preambles ((`(,predicate-names ,regexp)
+  :preambles ((`(,predicate-names)
+               ;; This clause protects against the case in which the
+               ;; arguments are nil, which would cause an error in
+               ;; `rx-to-string' in other clauses.  This can happen
+               ;; with `org-ql-completing-read', e.g. when the input
+               ;; is "h:" while the user is typing.
+               (list :regexp (rx bol (1+ "*") (1+ blank) (0+ nonl))
+                     :case-fold t :query query))
+              (`(,predicate-names ,regexp)
                ;; Only one regexp: match with preamble, then let predicate confirm (because
                ;; the match could be in e.g. the tags rather than the heading text).
                (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
@@ -1478,7 +1494,15 @@ COMPARATOR may be `<', `<=', `>', or `>='."
                                     ((pred stringp) (string-to-number it))
                                     (_ it))
                                   args))))
-  :preambles ((`(,predicate-names ,comparator-or-num ,num)
+  :preambles ((`(,predicate-names)
+               ;; This clause protects against the case in which the
+               ;; arguments are nil, which would cause an error in
+               ;; `rx-to-string' in other clauses.  This can happen
+               ;; with `org-ql-completing-read', e.g. when the input
+               ;; is "h:" while the user is typing.
+               (list :regexp (rx bol (1+ "*") " ")
+                     :case-fold t))
+              (`(,predicate-names ,comparator-or-num ,num)
                (let ((repeat (pcase comparator-or-num
                                ('< `(repeat 1 ,(1- num) "*"))
                                ('<= `(repeat 1 ,num "*"))
@@ -1736,7 +1760,18 @@ entry; if t, also match entries with inheritance.  If INHERIT is
 not specified, use the Boolean value of
 `org-use-property-inheritance', which see (i.e. it is only
 interpreted as nil or non-nil)."
-  :normalizers ((`(,predicate-names ,property ,value . ,plist)
+  :normalizers ((`(,predicate-names)
+                 ;; HACK: This clause protects against the case in
+                 ;; which the arguments are nil, which would cause an
+                 ;; error in `rx-to-string' in other clauses.  This
+                 ;; can happen with `org-ql-completing-read',
+                 ;; e.g. when the input is "property:" while the user
+                 ;; is typing.
+                 ;; FIXME: Instead of this being moot, make this
+                 ;; predicate test for whether an entry has local
+                 ;; properties when no arguments are given.
+                 (list 'property ""))
+                (`(,predicate-names ,property ,value . ,plist)
                  ;; Convert keyword property arguments to strings.  Non-sexp
                  ;; queries result in keyword property arguments (because to do
                  ;; otherwise would require ugly special-casing in the parsing).
