@@ -243,7 +243,7 @@ Arguments are listed next to predicate names, where applicable.
 +  =rifle (&rest strings)= :: Return non-nil if each string is found in either the entry or its outline path.  Works like =org-rifle=.  This is probably the most useful, intuitive, general-purpose predicate.
      - Aliases: ~smart~.
      - *Note:* By default, this is the default predicate used for plain-string query tokens (i.e. given without a specified predicate).  This can be customized with the option ~org-ql-default-predicate~.
-+  ~src (&key lang regexps)~ :: Return non-nil if current entry contains an Org Babel source block.  If ~LANG~ is non-nil, match blocks of that language.  If ~REGEXPS~ is non-nil, require that block's contents match all regexps.
++  ~src (&key lang regexps)~ :: Return non-nil if current entry contains an Org Babel source block.  If ~LANG~ is non-nil, match blocks of that language.  If ~REGEXPS~ is non-nil, require that block's contents match all regexps.  Matching is done case-insensitively.
 +  =tags (&optional tags)= :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
 +  =tags-inherited (&optional tags)= :: Return non-nil if current heading's inherited tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any inherited tags.
      -  Aliases: ~inherited-tags~, ~tags-i~, ~itags~.
@@ -554,6 +554,10 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Changed*
 +  Give more useful error message for invalid queries.
++  Predicate ~src~ now matches case-insensitively.
+
+*Fixed*
++  Predicate ~src~'s matching of begin/end block lines, normalization of arguments, and handling in non-sexp queries.
 
 *Internal*
 +  Certain query predicates, when called multiple times in an ~and~ sub-expression, are optimized to a single call.

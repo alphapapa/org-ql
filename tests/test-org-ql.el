@@ -231,17 +231,17 @@ with keyword arg NOW in PLIST."
                 :to-equal '(or (and (rifle :regexps '("foo" "bar"))) (and (rifle :regexps '("baz" "buz"))))))
       (it "coalesces arguments to predicates which use coalescing functions and whose calls are eligible for coalescing"
         (expect (org-ql--normalize-query '(and (src "foo") (src "bar")))
-                :to-equal '(and (src :lang nil :regexps ("foo" "bar"))))
+                :to-equal '(and (src :lang nil :regexps '("foo" "bar"))))
         (expect (org-ql--normalize-query '(and (src "foo" :lang "elisp") (src "bar" :lang "elisp")))
-                :to-equal '(and (src :lang "elisp" :regexps ("foo" "bar")))))
+                :to-equal '(and (src :lang "elisp" :regexps '("foo" "bar")))))
       (it "does not coalesce arguments to predicates which use coalescing functions and whose calls are ineligible for coalescing"
         (expect (org-ql--normalize-query '(and (src "foo" :lang "elisp") (src "bar")))
                 ;; NOTE: The current implementation of `org-ql--normalize-query'
                 ;; reorders clauses in this case.  Fixing that would probably
                 ;; not be worth the effort in code or runtime.
-                :to-equal '(and (src :regexps ("bar")) (src :lang "elisp" :regexps ("foo"))))
+                :to-equal '(and (src :regexps '("bar")) (src :lang "elisp" :regexps '("foo"))))
         (expect (org-ql--normalize-query '(and (src "foo" :lang "elisp") (src "bar" :lang "python")))
-                :to-equal '(and (src :lang "python" :regexps ("bar")) (src :lang "elisp" :regexps ("foo"))))))
+                :to-equal '(and (src :lang "python" :regexps '("bar")) (src :lang "elisp" :regexps '("foo"))))))
 
     (describe "Normalization"
 
@@ -317,21 +317,21 @@ with keyword arg NOW in PLIST."
       (describe "(src)"
         (it "normalizes a non-keyword arg to keywords"
           (expect (org-ql--normalize-query '(src "foo"))
-                  :to-equal '(src :regexps ("foo"))))
+                  :to-equal '(src :regexps '("foo"))))
         (it "normalizes non-keyword args to keywords"
           (expect (org-ql--normalize-query '(src "foo" "bar"))
-                  :to-equal '(src :regexps ("foo" "bar"))))
+                  :to-equal '(src :regexps '("foo" "bar"))))
         (it "normalizes a non-keyword arg with a :lang keyword arg to keywords"
           (expect (org-ql--normalize-query '(src "foo" :lang "bar"))
-                  :to-equal '(src :lang "bar" :regexps ("foo"))))
+                  :to-equal '(src :lang "bar" :regexps '("foo"))))
         (it "normalizes non-keyword args with a :lang keyword arg to keywords"
           (expect (org-ql--normalize-query '(src "foo" "bar" :lang "baz"))
-                  :to-equal '(src :lang "baz" :regexps ("foo" "bar"))))
+                  :to-equal '(src :lang "baz" :regexps '("foo" "bar"))))
         (it "normalizes all-keyword args without looping"
           (expect (org-ql--normalize-query '(src :regexps ("foo") :lang "bar"))
-                  :to-equal '(src :lang "bar" :regexps ("foo")))
+                  :to-equal '(src :lang "bar" :regexps '("foo")))
           (expect (org-ql--normalize-query '(src :regexps ("foo") :lang))
-                  :to-equal '(src :regexps ("foo")))))
+                  :to-equal '(src :regexps '("foo")))))
 
       (describe "(tags-inherited)"
         (it "handles 0 arguments"

@@ -502,6 +502,7 @@ Arguments are listed next to predicate names, where applicable.
      Return non-nil if current entry contains an Org Babel source block.
      If ‘LANG’ is non-nil, match blocks of that language.  If ‘REGEXPS’
      is non-nil, require that block’s contents match all regexps.
+     Matching is done case-insensitively.
 ‘tags (&optional tags)’
      Return non-nil if current heading has one or more of ‘TAGS’ (a list
      of strings).  Tests both inherited and local tags.
@@ -1044,6 +1045,11 @@ File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
 
    *Changed*
    • Give more useful error message for invalid queries.
+   • Predicate ‘src’ now matches case-insensitively.
+
+   *Fixed*
+   • Predicate ‘src’’s matching of begin/end block lines, normalization
+     of arguments, and handling in non-sexp queries.
 
    *Internal*
    • Certain query predicates, when called multiple times in an ‘and’
@@ -1695,52 +1701,52 @@ Node: org-ql-sparse-tree8594
 Node: Queries9394
 Node: Non-sexp query syntax10511
 Node: General predicates12270
-Node: Ancestor/descendant predicates19100
-Node: Date/time predicates20228
-Node: Functions / Macros23352
-Node: Agenda-like views23650
-Ref: Function ‘org-ql-block’23812
-Node: Listing / acting-on results25073
-Ref: Caching25281
-Ref: Function ‘org-ql-select’26194
-Ref: Function ‘org-ql-query’28620
-Ref: Macro ‘org-ql’ (deprecated)30394
-Node: Custom predicates30709
-Ref: Macro ‘org-ql-defpred’30933
-Node: Dynamic block34374
-Node: Links37098
-Node: Tips37785
-Node: Changelog38109
-Node: 07-pre38892
-Node: 06340702
-Node: 06241237
-Node: 06141542
-Node: 0642110
-Node: 05245164
-Node: 05145464
-Node: 0545887
-Node: 04947416
-Node: 04847696
-Node: 04748045
-Node: 04648454
-Node: 04548862
-Node: 04449223
-Node: 04349582
-Node: 04249785
-Node: 04149946
-Node: 0450193
-Node: 03254294
-Node: 03154697
-Node: 0354894
-Node: 02358194
-Node: 02258428
-Node: 02158708
-Node: 0258913
-Node: 0162991
-Node: Notes63092
-Node: Comparison with Org Agenda searches63254
-Node: org-sidebar64143
-Node: License64422
+Node: Ancestor/descendant predicates19142
+Node: Date/time predicates20270
+Node: Functions / Macros23394
+Node: Agenda-like views23692
+Ref: Function ‘org-ql-block’23854
+Node: Listing / acting-on results25115
+Ref: Caching25323
+Ref: Function ‘org-ql-select’26236
+Ref: Function ‘org-ql-query’28662
+Ref: Macro ‘org-ql’ (deprecated)30436
+Node: Custom predicates30751
+Ref: Macro ‘org-ql-defpred’30975
+Node: Dynamic block34416
+Node: Links37140
+Node: Tips37827
+Node: Changelog38151
+Node: 07-pre38934
+Node: 06340948
+Node: 06241483
+Node: 06141788
+Node: 0642356
+Node: 05245410
+Node: 05145710
+Node: 0546133
+Node: 04947662
+Node: 04847942
+Node: 04748291
+Node: 04648700
+Node: 04549108
+Node: 04449469
+Node: 04349828
+Node: 04250031
+Node: 04150192
+Node: 0450439
+Node: 03254540
+Node: 03154943
+Node: 0355140
+Node: 02358440
+Node: 02258674
+Node: 02158954
+Node: 0259159
+Node: 0163237
+Node: Notes63338
+Node: Comparison with Org Agenda searches63500
+Node: org-sidebar64389
+Node: License64668
 
 End Tag Table
 
