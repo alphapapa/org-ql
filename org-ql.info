@@ -1057,6 +1057,12 @@ File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
    • Use ‘buffer-chars-modified-tick’ instead of ‘buffer-modified-tick’.
      (Thanks to Ihor Radchenko (https://github.com/yantar92).)
 
+   *Credits*
+   • Thanks to Caleb Chase (https://github.com/chasecaleb) for help with
+     #285 (https://github.com/alphapapa/org-ql/pull/285), fixed in
+     9190818
+     (https://github.com/alphapapa/org-ql/commit/91908186fcca4b5fd2e9d26da5bc0375c2b41acf).
+
 
 File: README.info,  Node: 063,  Next: 062,  Prev: 07-pre,  Up: Changelog
 
@@ -1718,35 +1724,35 @@ Node: Links37140
 Node: Tips37827
 Node: Changelog38151
 Node: 07-pre38934
-Node: 06340948
-Node: 06241483
-Node: 06141788
-Node: 0642356
-Node: 05245410
-Node: 05145710
-Node: 0546133
-Node: 04947662
-Node: 04847942
-Node: 04748291
-Node: 04648700
-Node: 04549108
-Node: 04449469
-Node: 04349828
-Node: 04250031
-Node: 04150192
-Node: 0450439
-Node: 03254540
-Node: 03154943
-Node: 0355140
-Node: 02358440
-Node: 02258674
-Node: 02158954
-Node: 0259159
-Node: 0163237
-Node: Notes63338
-Node: Comparison with Org Agenda searches63500
-Node: org-sidebar64389
-Node: License64668
+Node: 06341209
+Node: 06241744
+Node: 06142049
+Node: 0642617
+Node: 05245671
+Node: 05145971
+Node: 0546394
+Node: 04947923
+Node: 04848203
+Node: 04748552
+Node: 04648961
+Node: 04549369
+Node: 04449730
+Node: 04350089
+Node: 04250292
+Node: 04150453
+Node: 0450700
+Node: 03254801
+Node: 03155204
+Node: 0355401
+Node: 02358701
+Node: 02258935
+Node: 02159215
+Node: 0259420
+Node: 0163498
+Node: Notes63599
+Node: Comparison with Org Agenda searches63761
+Node: org-sidebar64650
+Node: License64929
 
 End Tag Table
 
