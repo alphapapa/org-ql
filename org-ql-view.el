@@ -883,6 +883,12 @@ return an empty string."
            (habit-property (org-with-point-at (org-element-property :begin element)
                              (when (org-is-habit-p)
                                (org-habit-parse-todo))))
+           (blocked (when-let (marker (or (org-element-property :org-hd-marker element)
+                                          (org-element-property :org-marker element)))
+                      (when org-agenda-dim-blocked-tasks
+                        (org-with-point-at marker
+                          (when (org-entry-blocked-p)
+                            org-agenda-dim-blocked-tasks)))))
            (due-string (pcase (org-element-property :relative-due-date element)
                          ('nil "")
                          (string (format " %s " (org-add-props string nil 'face 'org-ql-view-due-date)))))
@@ -892,6 +898,11 @@ return an empty string."
       (--> string
         ;; FIXME: Use proper prefix
         (concat "  " it)
+        (if blocked
+            (org-add-props it nil
+              'org-filter-type 'todo-blocked
+              'org-todo-blocked blocked)
+          it)
         (org-add-props it properties
           'org-agenda-type 'search
           'todo-state todo-keyword
