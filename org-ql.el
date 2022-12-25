@@ -699,7 +699,8 @@ returns nil."
         (user-error "Query aborted by user")))))
 
 (defun org-ql--plist-get* (plist property)
-  "Return the value of PROPERTY in PLIST, or `not-found' if the property is missing."
+  "Return the value of PROPERTY in PLIST, or `not-found'.
+Returns `not-found' if the property is missing."
   (if-let ((pair (plist-member plist property)))
       (cadr pair)
     'not-found))
