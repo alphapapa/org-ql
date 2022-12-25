@@ -1327,6 +1327,8 @@ result form."
 
 (org-ql-defpred (category c) (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
+  :normalizers ((`(,predicate-names . ,rest)
+                 `(category ,@rest)))
   :body (when-let ((category (org-get-category (point))))
           (cl-typecase categories
             (null t)
