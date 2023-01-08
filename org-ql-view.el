@@ -877,8 +877,10 @@ return an empty string."
                            (org-add-props it nil 'face 'org-tag))))
            (category (if-let ((marker (or (org-element-property :org-hd-marker element)
                                           (org-element-property :org-marker element))))
-                             (with-current-buffer (marker-buffer marker)
-                                (org-get-category marker))
+                        (with-current-buffer (marker-buffer marker)
+                               (org-with-wide-buffer
+                                (goto-char marker)
+                                (org-get-category marker)))
                            (warn "No marker found for item: %s" title)))
            (priority-string (-some->> (org-element-property :priority element)
                               (char-to-string)
