@@ -842,7 +842,7 @@ return an empty string."
            ;; function to convert plists to alists, if possible.
            (properties (cl-loop for (key val) on properties by #'cddr
                                 for symbol = (intern (cl-subseq (symbol-name key) 1))
-                                unless (member symbol '(parent))
+                                unless (member symbol '(parent priority))
                                 append (list symbol val)))
            ;; TODO: --add-faces is used to add the :relative-due-date property, but that fact is
            ;; hidden by doing it through --add-faces (which calls --add-scheduled-face and
@@ -876,6 +876,16 @@ return an empty string."
                            (s-wrap it ":")
                            (org-add-props it nil 'face 'org-tag))))
            ;;  (category (org-element-property :category element))
+           ;; Org Agenda priorities are subtracted from `org-priority-lowest'
+           ;; and multiplied by 1000, so do the same here. Also assume that <65
+           ;; means the priority is a number and covert to its ASCII equivalent,
+           ;; which is what `org-priority-to-value' implicitly does. See also
+           ;; `org-get-priority' and `org-priority-lowest'.
+           (priority (cl-flet ((adjust (p) (if (>= p 65) p (+ p 48))))
+                       (-if-let (pri (org-element-property :priority element))
+                           (* 1000 (- (adjust org-priority-lowest) pri))
+                         (* 1000 (- (adjust org-priority-lowest)
+                                    (adjust org-priority-default))))))
            (priority-string (-some->> (org-element-property :priority element)
                               (char-to-string)
                               (format "[#%s]")
@@ -894,6 +904,7 @@ return an empty string."
         (concat "  " it)
         (org-add-props it properties
           'org-agenda-type 'search
+          'priority priority
           'todo-state todo-keyword
           'tags tag-list
           'org-habit-p habit-property)))))
