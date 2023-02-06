@@ -141,6 +141,50 @@ which see (but only the files are used)."
   (let ((org-ql-default-predicate 'outline-path))
     (org-ql-find (current-buffer))))
 
+;;;###autoload
+(cl-defun org-ql-open-link (buffers-files &key query-prefix query-filter
+                                          (prompt "Open link: "))
+  "FIXME: Docstring."
+  (interactive
+   ;; FIXME: Factor this out.
+   (list (if current-prefix-arg
+             (mapcar #'get-buffer
+                     (completing-read-multiple
+                      "Buffers: "
+                      (cl-loop for buffer in (buffer-list)
+                               when (eq 'org-mode (buffer-local-value 'major-mode buffer))
+                               collect (buffer-name buffer))
+                      nil t))
+           (progn
+             (unless (eq major-mode 'org-mode)
+               (user-error "This is not an Org buffer: %S" (current-buffer)))
+             (current-buffer)))))
+  (let* ((org-ql-completing-read-snippet-function nil)
+         (marker (org-ql-completing-read buffers-files
+                   :query-prefix "rifle:"
+                   :query-filter (lambda (input)
+                                   (replace-regexp-in-string (rx (1+ space)) "," input t t))
+                   :prompt prompt
+                   :collection-filter #'flatten-list
+                   :action (lambda (table)
+                             (save-excursion
+                               (cl-loop while (re-search-forward org-link-any-re (org-entry-end-position) t)
+                                        for link = (string-trim (match-string 0))
+                                        do (progn
+                                             (set-text-properties 0 (length link) '(face org-link) link)
+                                             (setf link (org-link-display-format link))
+                                             (puthash link (copy-marker (match-beginning 0)) table))
+                                        collect link)))
+                   :annotate (lambda (candidate table)
+                               (org-with-point-at (gethash candidate table)
+                                 (concat "  "
+                                         (org-format-outline-path (reverse (org-get-outline-path 'with-self))
+                                                                  nil nil "\\")
+                                         "::"
+                                         (abbreviate-file-name (buffer-file-name))))))))
+    (org-with-point-at marker
+      (org-open-at-point marker))))
+
 (provide 'org-ql-find)
 
 ;;; org-ql-find.el ends here

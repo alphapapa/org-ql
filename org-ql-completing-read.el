@@ -75,10 +75,38 @@ For an experience like `org-rifle', use a newline."
 
 ;;;; Functions
 
+(defun org-ql-completing-read-action (table)
+  "Default action for `org-ql-completing-read'."
+  (font-lock-ensure (point-at-bol) (point-at-eol))
+  (let* ((path (thread-first (org-get-outline-path t t)
+                             (org-format-outline-path window-width nil "")
+                             (org-split-string "")))
+         (path (if org-ql-completing-read-reverse-paths
+                   (string-join (nreverse path) "\\")
+                 (string-join path "/"))))
+    (puthash path (point-marker) table)
+    path))
+
+(defun org-ql-completing-read-annotate (candidate table)
+  "FIXME: Docstring."
+  (while-no-input
+    ;; Using `while-no-input' here doesn't make it as
+    ;; responsive as, e.g. Helm while typing, but it seems to
+    ;; help a little when using the org-rifle-style snippets.
+    (or (org-ql-completing-read-snippet (gethash candidate table)) "")))
+
+(defun org-ql-completing-read-snippet (marker)
+  (org-with-point-at marker
+    (or (funcall org-ql-completing-read-snippet-function snippet-regexp)
+        (org-ql-completing-read--snippet-simple))))
+
 ;;;;; Completing read
 
 ;;;###autoload
 (cl-defun org-ql-completing-read (buffers-files &key query-prefix query-filter
+                                                (action #'org-ql-completing-read-action)
+                                                (annotate #'org-ql-completing-read-annotate)
+                                                (collection-filter #'identity)
                                                 (prompt "Find entry: "))
   "Return marker at Org entry in BUFFERS-FILES selected with `org-ql'.
 PROMPT is shown to the user.
@@ -266,6 +294,9 @@ single predicate)."
       ;; `completing-read' machinery, which interrupts it, so we must work around this problem by
       ;; ensuring all of the BUFFERS-FILES are loaded and initialized before calling
       ;; `completing-read'.
+      (funcall collection-filter
+               (org-ql-select buffers-files (org-ql--query-string-to-sexp str)
+                 :action #'action)))))))
       (unless (listp buffers-files)
         ;; Since we map across this argument, we ensure it's a list.
         (setf buffers-files (list buffers-files)))
