@@ -426,6 +426,12 @@ that order."
 
 ;;;; Functions
 
+;; FIXME: Each taxy's items are formatted relative to its own items,
+;; so column widths don't account for the width of items in other
+;; taxys.  This should be fixable, but it will require some thoughtful
+;; refactoring, which will probably require a new version of
+;; taxy-magit-section.
+
 (cl-defun taxy-org-ql-view
     (&rest rest &key name buffer queries from group sort append)
   "Show Org QL QUERIES in BUFFER with `taxy-org-ql-view'.
