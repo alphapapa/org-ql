@@ -37,6 +37,16 @@
 
 ;;;; Structs
 
+;;;; Variables
+
+(defvar-local taxy-org-ql-view-args nil
+  "Arguments passed to `taxy-org-ql-search'.
+Used when updating the view.")
+
+(defvar-local taxy-org-ql-view-queries nil
+  "Queries shown in the current buffer.
+Used when updating the view.")
+
 ;;;; Customization
 
 (defgroup org-ql-view-taxy nil
@@ -67,6 +77,10 @@ second levels."
 (defface org-ql-view-query-heading
   '((t (:inherit header-line :height 1.3)))
   "Query headings.")
+
+(defface taxy-org-ql-view-header
+  '((t (:inherit header-line :height 1.5 :weight bold :overline t :extend t)))
+  "View top-level section names.")
 
 (defface org-ql-view-heading
   `((t (:inherit magit-section-heading :weight bold)))
@@ -325,16 +339,75 @@ Searches in ELEMENT's buffer."
                                (ts>= (ts-parse to-ts) element-ts))))
               (format "Due from: %s to %s" from-ts to-ts))))))))
 
+(taxy-org-ql-view-define-key planned (&rest args)
+  "Return whether ITEM is planned according to ARGS.
+DEADLINE, SCHEDULED, and CLOSED timestamps are considered, in
+that order."
+  (when-let ((planned-element (or (org-element-property :deadline item)
+                                  (org-element-property :scheduled item)
+                                  (org-element-property :closed item))))
+    ;; TODO: Every key should support a :name like this.
+    (let ((name (cadr (member :name args))))
+      (when name
+        (let ((pos (cl-position :name args)))
+          (setf args (append (cl-subseq args 0 pos)
+                             (cl-subseq args (+ 2 pos))))))
+      (pcase args
+        (`(,(or 'nil 't)) (or name "Planned"))
+        (_ (let ((element-ts (ts-parse-org-element planned-element)))
+             (pcase args
+               ((and `(:past)
+                     (guard (ts> (ts-now) element-ts)))
+                (or name "Planned: past"))
+               ((and `(:today)
+                     (guard (equal (ts-day (ts-now)) (ts-day element-ts))))
+                (or name "Planned: today"))
+               ((and `(:future)
+                     (guard (ts< (ts-now) element-ts)))
+                ;; FIXME: Not necessarily soon.
+                (or name "Planned: future"))
+               ((and `(:before ,target-date)
+                     (guard (ts< element-ts (ts-parse target-date))))
+                (or name (concat "Planned before: " target-date)))
+               ((and `(:after ,target-date)
+                     (guard (ts> element-ts (ts-parse target-date))))
+                (or name (concat "Planned after: " target-date)))
+               ((and `(:on ,target-date)
+                     (guard (let ((now (ts-now)))
+                              (and (equal (ts-doy element-ts)
+                                          (ts-doy now))
+                                   (equal (ts-year element-ts)
+                                          (ts-year now))))))
+                (or name (concat "Planned on: " target-date)))
+               ((and `(:from ,target-ts)
+                     (guard (ts<= (ts-parse target-ts) element-ts)))
+                (or name (concat "Planned from: " target-ts)))
+               ((and `(:to ,target-ts)
+                     (guard (ts>= (ts-parse target-ts) element-ts)))
+                (or name (concat "Planned to: " target-ts)))
+               ((and `(:from ,from-ts :to ,to-ts)
+                     (guard (and (ts<= (ts-parse from-ts) element-ts)
+                                 (ts>= (ts-parse to-ts) element-ts))))
+                (or name (format "Planned from: %s to %s" from-ts to-ts))))))))))
+
+(taxy-org-ql-view-define-key file (&key full-path)
+  "Return the name of ITEM's containing file."
+  (let ((filename (org-with-point-at (org-element-property :org-hd-marker item)
+                    (if full-path
+                        (buffer-file-name)
+                      (file-name-nondirectory (buffer-file-name))))))
+    (concat "File: " filename)))
+
 ;;;; Mode
 
-(defvar org-ql-view-mode-map
+(defvar taxy-org-ql-view-mode-map
   (let* ((org-agenda-mode-map-copy (copy-keymap org-agenda-mode-map))
 	 map)
     (cl-loop for key in (where-is-internal #'org-agenda-goto org-agenda-mode-map-copy)
 	     do (define-key org-agenda-mode-map-copy key nil))
     (setf map (make-composed-keymap magit-section-mode-map org-agenda-mode-map-copy))
-    (define-key map "g" #'org-ql-view-refresh)
-    (define-key map "r" #'org-ql-view-refresh)
+    (define-key map "g" #'taxy-org-ql-view-refresh)
+    (define-key map "r" #'taxy-org-ql-view-refresh)
     (define-key map "q" #'bury-buffer)
     (define-key map "v" #'org-ql-view-dispatch)
     (define-key map (kbd "C-x C-s") #'org-ql-view-save)
@@ -346,35 +419,75 @@ Searches in ELEMENT's buffer."
     (define-key map (kbd "<tab>") nil)
     map))
 
-(define-derived-mode org-ql-view-mode magit-section-mode "Org QL View"
+(define-derived-mode taxy-org-ql-view-mode magit-section-mode "Org QL View"
   "TODO: Docstring."
   ;; For compatibility with Org Agenda commands.
   (setq-local org-agenda-type 'search))
 
 ;;;; Functions
 
-(cl-defun taxy-org-ql-search
-    (buffers-or-files query &key taxy-keys sort)
-  "Show Org QL QUERY on BUFFERS-OR-FILES with `taxy-org-ql-view'."
-  (declare (indent 1))
-  (let* ((title (format "Query:%S  In:%S"
-                        (org-ql--query-sexp-to-string query)
-                        buffers-or-files))
-         (buffer-name (format "*Taxy Org QL View: %s*" title)))
-    (when (get-buffer buffer-name)
-      ;; Reusing an existing magit-section buffer seems to cause a lot
-      ;; of GC, so just kill it if it already exists.  However, this
-      ;; makes window management more difficult, so it'd be preferable
-      ;; to avoid this.
-      (kill-buffer buffer-name))
-    (with-current-buffer (get-buffer-create buffer-name)
-      (org-ql-view-mode)
-      (taxy-org-ql-view--add-search buffers-or-files
-	query :sort sort :taxy-keys taxy-keys)
-      (pop-to-buffer (current-buffer)))))
+(cl-defun taxy-org-ql-view
+    (&rest rest &key name buffer queries from group sort append)
+  "Show Org QL QUERIES in BUFFER with `taxy-org-ql-view'.
+BUFFER may be a buffer, a name of a buffer, or a name of a buffer
+to make.
+
+QUERIES is a list of plists with the following keys:
+
+  :name  An optional name for the query.
+  :from   One or a list of buffers/files to search.
+  :query  The `org-ql' query expression.
+  :sort   One or a list of sorting predicates.
+  :group  A group definition.
+
+GROUP and SORT, if specified, apply to all QUERIES unless a
+query specifies its own.
+
+If APPEND, add QUERIES to BUFFER; otherwise, replace BUFFER's
+contents."
+  (declare (indent defun))
+  ;; Silence byte-compiler since we use `symbol-value' for these.
+  (ignore from group sort append)
+  (cl-labels ((add-props
+               ;; NOTE: This mutates.  Maybe good, maybe not.
+               (plist) (dolist (prop '(:name :from :sort :group) plist)
+                         (unless (plist-member plist prop)
+                           (setf plist (plist-put plist prop (plist-get rest prop)))))))
+    (let* ((buffer
+            (cl-typecase buffer
+              (buffer buffer)
+              (string (or (get-buffer buffer)
+                          (get-buffer-create (format "*Taxy Org QL View: %s*" buffer)))))))
+      (with-current-buffer buffer
+        (unless append
+          (kill-all-local-variables)
+          (let ((inhibit-read-only t))
+            (erase-buffer)))
+        (unless (eq 'taxy-org-ql-view-mode major-mode)
+          (taxy-org-ql-view-mode))
+        (cl-pushnew rest taxy-org-ql-view-args :test #'equal)
+        (let ((inhibit-read-only t))
+          (when name
+            (save-excursion
+              (goto-char (point-max))
+              (insert (propertize (concat name "\n") 'face 'taxy-org-ql-view-header) "\n")))
+          (dolist (query queries)
+            (setf query (add-props query))
+            (apply #'taxy-org-ql-view--add-search query)))
+        (pop-to-buffer (current-buffer))))))
+
+(defun taxy-org-ql-view-refresh ()
+  "Refresh buffer."
+  (interactive)
+  (cl-assert (eq 'taxy-org-ql-view-mode major-mode))
+  (let ((inhibit-read-only t))
+    (erase-buffer))
+  (dolist (args (reverse taxy-org-ql-view-args))
+    (apply #'taxy-org-ql-view :buffer (current-buffer) :append t
+           args)))
 
 (cl-defun taxy-org-ql-view--add-search
-    (buffers-or-files query &key taxy-keys sort)
+    (&key name from query group sort)
   "Show Org QL QUERY on BUFFERS-OR-FILES with `taxy-org-ql-view'."
   (declare (indent 1))
   (let (format-table column-sizes)
@@ -405,23 +518,24 @@ Searches in ELEMENT's buffer."
                 (make-fn (&rest args)
                          (apply #'make-taxy-magit-section
                                 :make #'make-fn
-                                :take (taxy-make-take-function taxy-keys taxy-org-ql-view-keys)
+                                :take (taxy-make-take-function group taxy-org-ql-view-keys)
                                 :format-fn #'format-item
                                 :heading-face-fn #'heading-face
                                 :level-indent org-ql-view-level-indent
                                 :item-indent org-ql-view-item-indent
                                 args)))
-      (let* ((title (org-ql-view--header-line-format
-		     :buffers-files buffers-or-files
-		     :query query
-		     ;; FIXME: View titles.
-		     ))
-             (items (org-ql-select buffers-or-files query
+      (let* ((title (or name
+                        (org-ql-view--header-line-format
+		         :buffers-files from
+		         :query query
+		         ;; FIXME: View titles.
+		         )))
+             (items (org-ql-select from query
                       :action 'element-with-markers
                       :sort sort))
              (taxy (thread-last (make-fn
                                  :name title)
-                     (taxy-fill items)))
+                                (taxy-fill items)))
              (taxy-magit-section-insert-indent-items nil)
              format-cons)
         ;; FIXME: Adding a search overwrites the `header-line-format'.
