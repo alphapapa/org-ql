@@ -99,6 +99,10 @@ Inherited by level-specific faces.")
 		 :background ,(face-background 'header-line))))
   "Level-2 group headings.")
 
+(defface org-ql-view-parent-heading
+  `((t (:inherit font-lock-comment-face)))
+  "Parent headings (shown in \"Heading\\Parent\" column).")
+
 ;;;;; Columns
 
 (eval-and-compile
@@ -123,6 +127,20 @@ Inherited by level-specific faces.")
 	       (org-element-property
 		:raw-value (org-ql-view--add-faces item)))
 	      :org-hd-marker (org-element-property :org-hd-marker item)))
+
+(org-ql-view-define-column "Heading\\Parent" (:max-width 60)
+  (let* ((marker (org-element-property :org-hd-marker item))
+         (parent-heading (org-with-point-at marker
+                           (if (org-up-heading-safe)
+                               (propertize (concat "\\" (org-link-display-format
+                                                         (nth 4 (org-heading-components))))
+                                           'face 'org-ql-view-parent-heading)
+                             "")))
+         (this-heading (org-link-display-format
+	                (org-element-property
+		         :raw-value (org-ql-view--add-faces item))))
+         (string (concat this-heading parent-heading)))
+    (propertize string :org-hd-marker marker)))
 
 (org-ql-view-define-column "Pri" (:max-width nil)
   (or (-some->> (org-element-property :priority item)
@@ -162,7 +180,8 @@ Inherited by level-specific faces.")
 
 (unless org-ql-view-columns
   (setq-default org-ql-view-columns
-                (get 'org-ql-view-columns 'standard-value)))
+                ;; HACK:
+                (remove "Heading\\Parent" (get 'org-ql-view-columns 'standard-value))))
 
 ;;;; Taxy keys
 
@@ -442,7 +461,7 @@ that order."
   "Format table for all items in view.")
 
 (cl-defun taxy-org-ql-view
-    (&rest rest &key name buffer queries from group sort append)
+    (&rest rest &key name buffer queries from group sort append columns)
   "Show Org QL QUERIES in BUFFER with `taxy-org-ql-view'.
 BUFFER may be a buffer, a name of a buffer, or a name of a buffer
 to make.
@@ -516,6 +535,8 @@ contents."
                                                          'face 'taxy-org-ql-view-header)
                                        :format-fn #'format-item)))
         (cl-pushnew rest taxy-org-ql-view-args :test #'equal)
+        (when columns
+          (setq-local org-ql-view-columns columns))
         (pcase-dolist ((map (:name this-name) (:from this-from)
                             (:group this-group) (:sort this-sort)
                             :query)
