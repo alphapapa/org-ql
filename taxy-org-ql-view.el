@@ -373,7 +373,7 @@ that order."
           (setf args (append (cl-subseq args 0 pos)
                              (cl-subseq args (+ 2 pos))))))
       (pcase args
-        (`(,(or 'nil 't)) (or name "Planned"))
+        ((or 'nil 't) (or name "Planned"))
         (_ (let ((element-ts (ts-parse-org-element planned-element)))
              (pcase args
                ((and `(:past)
@@ -489,7 +489,8 @@ contents."
            (string (or (get-buffer buffer)
                        (get-buffer-create (format "*Taxy Org QL View: %s*" buffer))))))
         (instance-taxy (make-taxy-magit-section :name name))
-        format-cons column-sizes)
+        format-cons column-sizes
+        make-fn-group)
     (cl-labels ((add-props
                  ;; NOTE: This mutates.  Maybe good, maybe not.
                  (plist) (dolist (prop '(:name :from :sort :group) plist)
@@ -522,7 +523,8 @@ contents."
                 (make-fn (&rest args)
                          (apply #'make-taxy-magit-section
                                 :make #'make-fn
-                                :take (taxy-make-take-function group taxy-org-ql-view-keys)
+                                ;; FIXME: The binding of `make-fn-group' here is very awkward.  See below.
+                                :take (taxy-make-take-function make-fn-group taxy-org-ql-view-keys)
                                 :format-fn #'format-item
                                 :heading-face-fn #'heading-face
                                 :level-indent org-ql-view-level-indent
@@ -545,8 +547,12 @@ contents."
           (setf this-name (or this-name name)
                 this-from (or this-from from)
                 this-group (or this-group group)
-                ;; HACK: This binding is ugly.
-                group this-group
+                ;; FIXME: This binding is ugly, but it seems necessary
+                ;; due to the way the `make-fn' closes over the
+                ;; argument passed to `taxy-make-take-function'
+                ;; (passing it as an argument to `make-fn' does not
+                ;; work).
+                make-fn-group (or this-group group)
                 this-sort (or this-sort sort))
           (let* ((title (or this-name
                             (org-ql-view--header-line-format
@@ -557,8 +563,7 @@ contents."
                  (items (org-ql-select from query
                           :action 'element-with-markers
                           :sort sort))
-                 (taxy (thread-last (make-fn
-                                     :name title)
+                 (taxy (thread-last (make-fn :name title)
                                     (taxy-fill items))))
             (push taxy (taxy-taxys instance-taxy))))
         (setf (taxy-taxys instance-taxy) (nreverse (taxy-taxys instance-taxy))
@@ -579,6 +584,20 @@ contents."
             :initial-depth -1)
           (goto-char (point-min)))
         (pop-to-buffer (current-buffer))))))
+
+(cl-defun taxy-org-ql-view-multi
+    (&key buffer from sort group columns sections
+          &aux append)
+  (declare (indent defun))
+  (pcase-dolist ((map (:name section-name) (:from section-from)
+                      (:sort section-sort) (:group section-group)
+                      :queries)
+                 sections)
+    (taxy-org-ql-view :buffer buffer :columns columns
+      :name (or section-name name) :from (or section-from from)
+      :sort (or section-sort sort) :group (or section-group group)
+      :queries queries :append append)
+    (setf append t)))
 
 (defun taxy-org-ql-view-refresh ()
   "Refresh buffer."
