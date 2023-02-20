@@ -422,7 +422,8 @@ that order."
 (define-derived-mode taxy-org-ql-view-mode magit-section-mode "Org QL View"
   "TODO: Docstring."
   ;; For compatibility with Org Agenda commands.
-  (setq-local org-agenda-type 'search))
+  (setq-local org-agenda-type 'search
+              taxy-org-ql-view-format-table (make-hash-table)))
 
 ;;;; Functions
 
@@ -431,6 +432,14 @@ that order."
 ;; taxys.  This should be fixable, but it will require some thoughtful
 ;; refactoring, which will probably require a new version of
 ;; taxy-magit-section.
+
+(defvar-local taxy-org-ql-view-taxy nil
+  "Root taxy.")
+
+(defvar-local taxy-org-ql-view-format-table nil
+  ;; Setting the default value to a hash table here doesn't work; it
+  ;; must be initialized in each buffer manually.
+  "Format table for all items in view.")
 
 (cl-defun taxy-org-ql-view
     (&rest rest &key name buffer queries from group sort append)
@@ -454,55 +463,24 @@ contents."
   (declare (indent defun))
   ;; Silence byte-compiler since we use `symbol-value' for these.
   (ignore from group sort append)
-  (cl-labels ((add-props
-               ;; NOTE: This mutates.  Maybe good, maybe not.
-               (plist) (dolist (prop '(:name :from :sort :group) plist)
-                         (unless (plist-member plist prop)
-                           (setf plist (plist-put plist prop (plist-get rest prop)))))))
-    (let* ((buffer
-            (cl-typecase buffer
-              (buffer buffer)
-              (string (or (get-buffer buffer)
-                          (get-buffer-create (format "*Taxy Org QL View: %s*" buffer)))))))
-      (with-current-buffer buffer
-        (unless append
-          (kill-all-local-variables)
-          (let ((inhibit-read-only t))
-            (erase-buffer)))
-        (unless (eq 'taxy-org-ql-view-mode major-mode)
-          (taxy-org-ql-view-mode))
-        (cl-pushnew rest taxy-org-ql-view-args :test #'equal)
-        (let ((inhibit-read-only t))
-          (when name
-            (save-excursion
-              (goto-char (point-max))
-              (insert (propertize (concat name "\n") 'face 'taxy-org-ql-view-header) "\n")))
-          (dolist (query queries)
-            (setf query (add-props query))
-            (apply #'taxy-org-ql-view--add-search query)))
-        (pop-to-buffer (current-buffer))))))
-
-(defun taxy-org-ql-view-refresh ()
-  "Refresh buffer."
-  (interactive)
-  (cl-assert (eq 'taxy-org-ql-view-mode major-mode))
-  (let ((inhibit-read-only t))
-    (erase-buffer))
-  (dolist (args (reverse taxy-org-ql-view-args))
-    (apply #'taxy-org-ql-view :buffer (current-buffer) :append t
-           args)))
-
-(cl-defun taxy-org-ql-view--add-search
-    (&key name from query group sort)
-  "Show Org QL QUERY on BUFFERS-OR-FILES with `taxy-org-ql-view'."
-  (declare (indent 1))
-  (let (format-table column-sizes)
-    (cl-labels ((format-item (item)
+  (let ((buffer
+         (cl-typecase buffer
+           (buffer buffer)
+           (string (or (get-buffer buffer)
+                       (get-buffer-create (format "*Taxy Org QL View: %s*" buffer))))))
+        (instance-taxy (make-taxy-magit-section :name name))
+        format-cons column-sizes)
+    (cl-labels ((add-props
+                 ;; NOTE: This mutates.  Maybe good, maybe not.
+                 (plist) (dolist (prop '(:name :from :sort :group) plist)
+                           (unless (plist-member plist prop)
+                             (setf plist (plist-put plist prop (plist-get rest prop))))))
+                (format-item (item)
 			     ;; For compatibility with Org Agenda, we
 			     ;; add the marker property to the whole
 			     ;; string (though it only seems to check
 			     ;; at BOL).
-			     (let* ((string (gethash item format-table))
+			     (let* ((string (gethash item taxy-org-ql-view-format-table))
 				    (marker (or (get-text-property 0 :org-hd-marker string)
 						(when-let ((pos (next-single-property-change 0 :org-hd-marker string)))
 						  (get-text-property pos :org-hd-marker string)))))
@@ -530,34 +508,163 @@ contents."
                                 :level-indent org-ql-view-level-indent
                                 :item-indent org-ql-view-item-indent
                                 args)))
-      (let* ((title (or name
-                        (org-ql-view--header-line-format
-		         :buffers-files from
-		         :query query
-		         ;; FIXME: View titles.
-		         )))
-             (items (org-ql-select from query
-                      :action 'element-with-markers
-                      :sort sort))
-             (taxy (thread-last (make-fn
-                                 :name title)
-                                (taxy-fill items)))
-             (taxy-magit-section-insert-indent-items nil)
-             format-cons)
-        ;; FIXME: Adding a search overwrites the `header-line-format'.
-        (setf format-cons (taxy-magit-section-format-items
-                           org-ql-view-columns org-ql-view-column-formatters taxy)
-              format-table (car format-cons)
-              column-sizes (cdr format-cons)
-              header-line-format (taxy-magit-section-format-header
-				  column-sizes org-ql-view-column-formatters))
-	(add-face-text-property 0 (length header-line-format) 'org-ql-view-header-line
-				nil header-line-format)
-        (let ((inhibit-read-only t))
-          (save-excursion
-            (goto-char (point-max))
-            (taxy-magit-section-insert taxy :items 'first
-              :initial-depth -1)))))))
+      (with-current-buffer buffer
+        (unless append
+          (taxy-org-ql-view-mode)
+          (setf taxy-org-ql-view-taxy (make-taxy-magit-section
+                                       :name (propertize (buffer-name buffer)
+                                                         'face 'taxy-org-ql-view-header)
+                                       :format-fn #'format-item)))
+        (cl-pushnew rest taxy-org-ql-view-args :test #'equal)
+        (pcase-dolist ((map (:name this-name) (:from this-from)
+                            (:group this-group) (:sort this-sort)
+                            :query)
+                       queries)
+          (setf this-name (or this-name name)
+                this-from (or this-from from)
+                this-group (or this-group group)
+                ;; HACK: This binding is ugly.
+                group this-group
+                this-sort (or this-sort sort))
+          (let* ((title (or this-name
+                            (org-ql-view--header-line-format
+		             :buffers-files from
+		             :query query
+		             ;; FIXME: View titles.
+		             )))
+                 (items (org-ql-select from query
+                          :action 'element-with-markers
+                          :sort sort))
+                 (taxy (thread-last (make-fn
+                                     :name title)
+                                    (taxy-fill items))))
+            (push taxy (taxy-taxys instance-taxy))))
+        (setf (taxy-taxys instance-taxy) (nreverse (taxy-taxys instance-taxy))
+              (taxy-taxys taxy-org-ql-view-taxy) (append (taxy-taxys taxy-org-ql-view-taxy) (list instance-taxy)))
+        (let ((inhibit-read-only t)
+              (taxy-magit-section-insert-indent-items nil))
+          (erase-buffer)
+          (setf format-cons (taxy-org-ql-view-magit-section-format-items
+                             org-ql-view-columns org-ql-view-column-formatters taxy-org-ql-view-taxy
+                             :table taxy-org-ql-view-format-table)
+                ;; taxy-org-ql-view-format-table (car format-cons)
+                column-sizes (cdr format-cons)
+                header-line-format (taxy-magit-section-format-header
+				    column-sizes org-ql-view-column-formatters))
+	  (add-face-text-property 0 (length header-line-format) 'org-ql-view-header-line
+				  nil header-line-format)
+          (taxy-magit-section-insert taxy-org-ql-view-taxy :items 'first
+            :initial-depth -1)
+          (goto-char (point-min)))
+        (pop-to-buffer (current-buffer))))))
+
+(defun taxy-org-ql-view-refresh ()
+  "Refresh buffer."
+  (interactive)
+  (cl-assert (eq 'taxy-org-ql-view-mode major-mode))
+  (let ((args taxy-org-ql-view-args)
+        (pos (point))
+        (append))
+    (dolist (args (reverse args))
+      (apply #'taxy-org-ql-view :buffer (current-buffer) :append append
+             args)
+      (setf append t))
+    (goto-char pos)))
+
+(cl-defun taxy-org-ql-view-magit-section-format-items
+    (columns formatters taxy
+             &key (table (make-hash-table)))
+  ;; TODO: Add :table argument to `taxy-magit-section-format-items' and release new version.
+  "Return a cons (table . column-sizes) for COLUMNS, FORMATTERS, and TAXY.
+COLUMNS is a list of column names, each of which should have an
+associated formatting function in FORMATTERS.
+
+Table is a hash table keyed by item whose values are display
+strings.  Column-sizes is an alist whose keys are column names
+and values are the column width.  Each string is formatted
+according to `columns' and takes into account the width of all
+the items' values for each column."
+  (let (column-aligns column-sizes image-p)
+    (cl-labels ((string-width*
+                 (string) (if-let (pos (text-property-not-all 0 (length string)
+                                                              'display nil string))
+                              ;; Text has a display property: check for an image.
+                              (pcase (get-text-property pos 'display string)
+                                ((and `(image . ,_rest) spec)
+                                 ;; An image: try to calcuate the display width.  (See also:
+                                 ;; `org-string-width'.)
+
+                                 ;; FIXME: The entire string may not be an image, so the
+                                 ;; image part needs to be handled separately from any
+                                 ;; non-image part.
+
+                                 ;; TODO: Do we need to specify the frame?  What if the
+                                 ;; buffer isn't currently displayed?
+                                 (setf image-p t)
+                                 (floor (car (image-size spec))))
+                                (_
+                                 ;; No image: just use `string-width'.
+                                 (setf image-p nil)
+                                 (string-width string)))
+                            ;; No display property.
+                            (setf image-p nil)
+                            (string-width string)))
+                (resize-image-string
+                 (string width) (let ((image
+                                       (get-text-property
+                                        (text-property-not-all 0 (length string)
+                                                               'display nil string)
+                                        'display string)))
+                                  (propertize (make-string width ? ) 'display image)))
+
+                (format-column
+                 (item depth column-name)
+                 (let* ((column-alist (alist-get column-name formatters nil nil #'equal))
+                        (fn (alist-get 'formatter column-alist))
+                        (value (funcall fn item depth))
+                        (current-column-size (or (map-elt column-sizes column-name) (string-width column-name))))
+                   (setf (map-elt column-sizes column-name)
+                         (max current-column-size (string-width* value)))
+                   (setf (map-elt column-aligns column-name)
+                         (or (alist-get 'align column-alist)
+                             'left))
+                   (when image-p
+                     ;; String probably is an image: set its non-image string value to a
+                     ;; number of matching spaces.  It's not always pixel-perfect, but
+                     ;; this is probably as good as we can do without using pixel-based
+                     ;; :align-to's for everything (which might be worth doing in the
+                     ;; future).
+
+                     ;; FIXME: This only works properly if the entire string has an image
+                     ;; display property (but this is good enough for now).
+                     (setf value (resize-image-string value (string-width* value))))
+                   value))
+                (format-item
+                 (depth item) (puthash item
+                                       (cl-loop for column in columns
+                                                collect (format-column item depth column))
+                                       table))
+                (format-taxy (depth taxy)
+                             (dolist (item (taxy-items taxy))
+                               (format-item depth item))
+                             (dolist (taxy (taxy-taxys taxy))
+                               (format-taxy (1+ depth) taxy))))
+      (format-taxy 0 taxy)
+      ;; Now format each item's string using the column sizes.
+      (let* ((column-sizes (nreverse column-sizes))
+             (format-string
+              (string-join
+               (cl-loop for (name . size) in column-sizes
+                        for align = (pcase-exhaustive (alist-get name column-aligns nil nil #'equal)
+                                      ((or `nil 'left) "-")
+                                      ('right ""))
+                        collect (format "%%%s%ss" align size))
+               " ")))
+        (maphash (lambda (item column-values)
+                   (puthash item (apply #'format format-string column-values)
+                            table))
+                 table)
+        (cons table column-sizes)))))
 
 ;;;; Footer
 
