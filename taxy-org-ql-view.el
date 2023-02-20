@@ -166,10 +166,11 @@ Inherited by level-specific faces.")
                            (with-current-buffer (marker-buffer marker)
                              (org-with-wide-buffer
                               (goto-char marker)
-                              (cl-loop for type in (org-ql--tags-at marker)
-                                       unless (or (eq 'org-ql-nil type)
-                                                  (not type))
-                                       append type)))
+                              (delete-dups
+                               (cl-loop for type in (org-ql--tags-at marker)
+                                        unless (or (eq 'org-ql-nil type)
+                                                   (not type))
+                                        append type))))
                          ;; No marker found
                          ;; TODO: Use `display-warning' with `org-ql' as the type.
                          (warn "No marker found for item: %s" item)
