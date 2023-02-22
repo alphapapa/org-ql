@@ -462,7 +462,7 @@ that order."
   "Format table for all items in view.")
 
 (cl-defun taxy-org-ql-view
-    (&rest rest &key name buffer queries from group sort append columns)
+    (&rest rest &key name buffer queries from where group sort append columns)
   "Show Org QL QUERIES in BUFFER with `taxy-org-ql-view'.
 BUFFER may be a buffer, a name of a buffer, or a name of a buffer
 to make.
@@ -540,41 +540,40 @@ contents."
         (cl-pushnew rest taxy-org-ql-view-args :test #'equal)
         (when columns
           (setq-local org-ql-view-columns columns))
-        (pcase-dolist ((map (:name this-name) (:from this-from)
-                            (:group this-group) (:sort this-sort)
+        (pcase-dolist ((map (:name query-name) (:from query-from)
+                            (:where query-where)
+                            (:group query-group) (:sort query-sort)
                             :query)
                        queries)
-          (setf this-name (or this-name name)
-                this-from (or this-from from)
-                this-group (or this-group group)
-                ;; FIXME: This binding is ugly, but it seems necessary
+          (setf query-name (or query-name name)
+                query-from (or query-from from)
+                query-where (or query-where where)
+                query-group (or query-group group)
+                ;; FIXME: Query binding is ugly, but it seems necessary
                 ;; due to the way the `make-fn' closes over the
                 ;; argument passed to `taxy-make-take-function'
                 ;; (passing it as an argument to `make-fn' does not
                 ;; work).
-                make-fn-group (or this-group group)
-                this-sort (or this-sort sort))
-          (let* ((title (or this-name
+                make-fn-group (or query-group group)
+                query-sort (or query-sort sort))
+          (let* ((title (or query-name
                             (org-ql-view--header-line-format
 		             :buffers-files from
-		             :query query
-		             ;; FIXME: View titles.
-		             )))
-                 (items (org-ql-select from query
-                          :action 'element-with-markers
-                          :sort sort))
+		             :query query)))
+                 (items (org-ql-query :from query-from :where query-where
+                                      :order-by query-sort))
                  (taxy (thread-last (make-fn :name title)
                                     (taxy-fill items))))
             (push taxy (taxy-taxys instance-taxy))))
         (setf (taxy-taxys instance-taxy) (nreverse (taxy-taxys instance-taxy))
-              (taxy-taxys taxy-org-ql-view-taxy) (append (taxy-taxys taxy-org-ql-view-taxy) (list instance-taxy)))
+              (taxy-taxys taxy-org-ql-view-taxy) (append (taxy-taxys taxy-org-ql-view-taxy)
+                                                         (list instance-taxy)))
         (let ((inhibit-read-only t)
               (taxy-magit-section-insert-indent-items nil))
           (erase-buffer)
           (setf format-cons (taxy-org-ql-view-magit-section-format-items
                              org-ql-view-columns org-ql-view-column-formatters taxy-org-ql-view-taxy
                              :table taxy-org-ql-view-format-table)
-                ;; taxy-org-ql-view-format-table (car format-cons)
                 column-sizes (cdr format-cons)
                 header-line-format (taxy-magit-section-format-header
 				    column-sizes org-ql-view-column-formatters))
@@ -585,18 +584,20 @@ contents."
           (goto-char (point-min)))
         (pop-to-buffer (current-buffer))))))
 
-(cl-defun taxy-org-ql-view-multi
-    (&key buffer from sort group columns sections
+(cl-defun taxy-org-ql-report
+    (&key buffer queries from where sort group columns sections
           &aux append)
   (declare (indent defun))
   (pcase-dolist ((map (:name section-name) (:from section-from)
+                      (:where section-where)
                       (:sort section-sort) (:group section-group)
-                      :queries)
+                      (:queries section-queries))
                  sections)
     (taxy-org-ql-view :buffer buffer :columns columns
       :name (or section-name name) :from (or section-from from)
+      :where (or section-where where)
       :sort (or section-sort sort) :group (or section-group group)
-      :queries queries :append append)
+      :queries (or section-queries queries) :append append)
     (setf append t)))
 
 (defun taxy-org-ql-view-refresh ()
