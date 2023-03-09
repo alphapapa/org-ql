@@ -229,7 +229,8 @@ regexps.")
                                    (group-n 1 (regexp ,org-ql-regexp-ts-inactive)))
                               (seq (or "DEADLINE" "SCHEDULED") ":" (0+ " ")
                                    (group-n 1 (regexp ,org-ql-regexp-ts-active))))))
-  "Matches CLOSED, DEADLINE or SCHEDULED keyword with timestamp, with or without time.")
+  "Matches CLOSED, DEADLINE or SCHEDULED keyword with timestamp.
+Matches with or without time.")
 
 (defvar org-ql-regexp-planning-with-time
   (rx-to-string `(seq bow (or (seq "CLOSED" ":" (0+ " ")
@@ -503,8 +504,14 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
 
 (cl-defun org-ql--select (&key preamble preamble-case-fold predicate action narrow
                                &allow-other-keys)
-  "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
-If NARROW is non-nil, buffer will not be widened."
+  "Return results for given arguments.
+Return results of mapping function ACTION across entries in
+current buffer matching function PREDICATE.  If NARROW is
+non-nil, buffer will not be widened.
+
+PREAMBLE may be a regexp to search for before calling PREDICATE.
+When doing so, `case-fold-search' is bound to
+PREAMBLE-CASE-FOLD."
   ;; Since the mappings are stored in the variable `org-ql-predicates', macros like `flet'
   ;; can't be used, so we do it manually (this is same as the equivalent `flet' expansion).
   ;; Mappings are stored in the variable because it allows predicates to be defined with a
@@ -1327,7 +1334,7 @@ result form."
 (setf org-ql-defpred-defer t)
 
 (org-ql-defpred (category c) (&rest categories)
-  "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
+  "Return non-nil if current heading is in one or more of CATEGORIES."
   :normalizers ((`(,predicate-names . ,rest)
                  `(category ,@rest)))
   :body (when-let ((category (org-get-category (point))))
@@ -1359,7 +1366,8 @@ The following forms are accepted:
 
   (effort DURATION): Matches if effort is DURATION.
   (effort DURATION DURATION): Matches if effort is between DURATIONs, inclusive.
-  (effort COMPARATOR DURATION): Matches if effort compares to DURATION with COMPARATOR.
+  (effort COMPARATOR DURATION): Matches if effort compares to DURATION with
+                                COMPARATOR.
 
 COMPARATOR may be `<', `<=', `>', or `>='.  DURATION should be an
 Org effort string, like \"5\" or \"0:05\"."
@@ -1492,8 +1500,10 @@ Matching is done case-insensitively."
 The following forms are accepted:
 
   (level NUMBER): Matches if heading level is NUMBER.
-  (level NUMBER NUMBER): Matches if heading level is equal to or between NUMBERs.
-  (level COMPARATOR NUMBER): Matches if heading level compares to NUMBER with COMPARATOR.
+  (level NUMBER NUMBER): Matches if heading level is equal to or between
+                         NUMBERs.
+  (level COMPARATOR NUMBER): Matches if heading level compares to NUMBER with
+                             COMPARATOR.
 
 COMPARATOR may be `<', `<=', `>', or `>='."
   :normalizers ((`(,predicate-names . ,args)
@@ -1610,7 +1620,7 @@ any link is found."
                                        (match-string org-ql-link-description-group)))))))))
 
 (org-ql-defpred (rifle smart) (&rest strings)
-  "Return non-nil if each string argument is found in either the entry or its outline path.
+  "Return non-nil if each of strings is found in the entry or its outline path.
 Works like `org-rifle'.  This is probably the most useful,
 intuitive, general-purpose predicate."
   ;; NOTE: This predicate advertises that it takes strings, but they
@@ -1677,7 +1687,7 @@ contiguous segment of the outline path:
   :body (org-ql--infix-p regexps (org-ql--value-at (point) #'org-ql--outline-path)))
 
 (org-ql-defpred path (&rest regexps)
-  "Return non-nil if current heading's buffer's filename path matches any of REGEXPS (regexp strings).
+  "Return non-nil if current heading's buffer's file path matches any of REGEXPS.
 Without arguments, return non-nil if buffer is file-backed."
   ;; FIXME: This should AND the regexps together, not OR them.
   :body (when (buffer-file-name)
@@ -1764,7 +1774,7 @@ priority B)."
                 thereis (= item-priority (* 1000 (- org-lowest-priority (string-to-char priority-arg)))))))))
 
 (org-ql-defpred property (property &optional value &key inherit)
-  "Return non-nil if current entry has PROPERTY (a string), and optionally VALUE (a string).
+  "Return non-nil if current entry has PROPERTY, and optionally VALUE.
 If INHERIT is nil, only match entries with PROPERTY set on the
 entry; if t, also match entries with inheritance.  If INHERIT is
 not specified, use the Boolean value of
@@ -1856,7 +1866,7 @@ interpreted as nil or non-nil)."
                         (re-search-forward regexp end t))))))
 
 (org-ql-defpred src (&key regexps lang)
-  "Return non-nil if current entry contains an Org source block matching all of REGEXPS.
+  "Return non-nil if current entry has an Org source block matching all REGEXPS.
 If keyword argument LANG is non-nil, the block must be in that
 language.  Matching is done case-insensitively."
   :coalesce (lambda (coalesced-args current-args)
@@ -1968,7 +1978,7 @@ Tests both inherited and local tags."
   :body (apply #'org-ql--predicate-tags tags))
 
 (org-ql-defpred (tags-inherited inherited-tags tags-i itags) (&rest tags)
-  "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
+  "Return non-nil if current heading's inherited tags include any of TAGS.
 If TAGS is nil, return non-nil if heading has any inherited tags."
   :normalizers ((`(,predicate-names . ,tags)
                  `(tags-inherited ,@tags)))
@@ -1982,7 +1992,7 @@ If TAGS is nil, return non-nil if heading has any inherited tags."
                            (seq-intersection tags inherited)))))))
 
 (org-ql-defpred (tags-local local-tags tags-l ltags) (&rest tags)
-  "Return non-nil if current heading's local tags include one or more of TAGS (a list of strings).
+  "Return non-nil if current heading's local tags include any of TAGS.
 If TAGS is nil, return non-nil if heading has any local tags."
   :normalizers ((`(,predicate-names . ,tags)
                  `(tags-local ,@tags)))
@@ -2025,7 +2035,7 @@ Tests both inherited and local tags."
 
 (org-ql-defpred todo (&rest keywords)
   "Return non-nil if current heading is a TODO item.
-With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strings)."
+With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   ;; TODO: Can we make a preamble for plain (todo) queries?
   :preambles ((`(,predicate-names . ,(and todo-keywords (guard todo-keywords)))
                (list :case-fold nil :regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol)) t))))
@@ -2239,7 +2249,8 @@ non-nil if entry has a deadline."
 (org-ql-defpred deadline-warning (&key from to)
   ;; TODO: Should this also accept a WITH-TIME argument?
   ;; MAYBE: Use the new org-ql-regexps?
-  "Internal predicate used to handle `org-deadline-warning-days' and deadlines with warning periods."
+  "Internal predicate.
+Used to handle `org-deadline-warning-days' and deadlines with warning periods."
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-deadline-time-regexp :query query)))
   :body

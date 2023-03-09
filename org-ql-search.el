@@ -50,7 +50,7 @@
 ;;;; Variables
 
 (defvar org-ql-block-header nil
-  "An optional string to override the default header in `org-ql-block' agenda blocks.")
+  "Optional string overriding default header in `org-ql-block' agenda blocks.")
 
 ;;;; Customization
 
@@ -277,13 +277,16 @@ Valid parameters include:
   :ts-format  Optional format string used to format
               timestamp-based columns.
 
-For example, an org-ql dynamic block header could look like:
+For example, an org-ql dynamic block header could look like
+this (must be a single line in the Org buffer):
 
-  #+BEGIN: org-ql :query (todo \"UNDERWAY\") :columns (priority todo heading) :sort (priority date) :ts-format \"%Y-%m-%d %H:%M\""
+  #+BEGIN: org-ql :query (todo \"UNDERWAY\")
+:columns (priority todo heading) :sort (priority date)
+:ts-format \"%Y-%m-%d %H:%M\""
   (-let* (((&plist :query :columns :sort :ts-format :take) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
-                   (list  ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
+                   (list ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
                     (org-ql--ask-unsafe-query query)
                     query)))
           (columns (or columns '(heading todo (priority "P"))))
@@ -337,7 +340,7 @@ For example, an org-ql dynamic block header could look like:
                                        columns)
                                 " | ")
               " |" "\n")
-      (insert "|- \n")  ; Separator hline
+      (insert "|- \n")                  ; Separator hline
       (dolist (element elements)
         (insert "| " (format-element element) " |" "\n"))
       (delete-char -1)
@@ -345,13 +348,19 @@ For example, an org-ql dynamic block header could look like:
 
 ;;;; Functions
 
+(defvar org-ql-search-directories-files-error
+  ;; Workaround to silence byte-compiler which thinks having this string in an
+  ;; argument's default value form is a too-long docstring.
+  "No DIRECTORIES given, and `org-directory' doesn't exist")
+
 (cl-defun org-ql-search-directories-files
-    (&key (directories (if (file-exists-p org-directory)
-                           (list org-directory)
-                         (user-error "Org-ql-search-directories-files: No DIRECTORIES given, and `org-directory' doesn't exist")))
+    (&key (directories
+           (if (file-exists-p org-directory)
+               (list org-directory)
+             (user-error org-ql-search-directories-files-error)))
           (recurse org-ql-search-directories-files-recursive)
           (regexp org-ql-search-directories-files-regexp))
-  "Return list of matching files in DIRECTORIES, a list of directory paths.
+  "Return list of matching files in DIRECTORIES.
 When RECURSE is non-nil, recurse into subdirectories.  When
 REGEXP is non-nil, only return files that match REGEXP."
   (let ((files (->> directories
