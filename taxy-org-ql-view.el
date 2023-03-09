@@ -83,19 +83,20 @@ second levels."
   "View top-level section names.")
 
 (defface org-ql-view-heading
-  `((t (:inherit magit-section-heading :weight bold)))
+  `((t (:inherit org-agenda-structure ;; magit-section-heading
+                 :weight bold)))
   "Group headings.
 Inherited by level-specific faces.")
 
 (defface org-ql-view-heading-1
   `((t (:inherit org-ql-view-heading
-		 :height 1.1 :overline t
+		 :height 1.2 :overline t
 		 :background ,(face-background 'header-line))))
   "Level-1 group headings.")
 
 (defface org-ql-view-heading-2
-  `((t (:inherit org-ql-view-heading
-		 :height 1.0 :overline nil
+  `((t (:inherit org-ql-view-heading ;; :inverse-video t
+		 :height 1.1 :overline nil
 		 :background ,(face-background 'header-line))))
   "Level-2 group headings.")
 
@@ -556,6 +557,8 @@ contents."
                 ;; work).
                 make-fn-group (or query-group group)
                 query-sort (or query-sort sort))
+          ;; HACK: Probably not where we really want to add this face.
+          (add-face-text-property 0 (length query-name) 'org-ql-view-heading-2 nil query-name)
           (let* ((title (or query-name
                             (org-ql-view--header-line-format
 		             :buffers-files from
@@ -593,8 +596,11 @@ contents."
                       (:sort section-sort) (:group section-group)
                       (:queries section-queries))
                  sections)
+    (setf section-name (or section-name name))
+    ;; HACK: Probably not where we really want to add this face.
+    (add-face-text-property 0 (length section-name) 'org-ql-view-heading-1 nil section-name)
     (taxy-org-ql-view :buffer buffer :columns columns
-      :name (or section-name name) :from (or section-from from)
+      :name section-name :from (or section-from from)
       :where (or section-where where)
       :sort (or section-sort sort) :group (or section-group group)
       :queries (or section-queries queries) :append append)
