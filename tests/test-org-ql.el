@@ -1367,9 +1367,45 @@ with keyword arg NOW in PLIST."
           (org-ql-expect ('(scheduled :on 0))
             '("Practice leaping tall buildings in a single bound" "Order a pizza" "Get haircut" "Fix flux capacitor" "Shop for groceries" "Rewrite Emacs in Common Lisp")))))
 
-    ;; ;; TODO: Test (src) predicate.  That will require modifying test data, which will be a
-    ;; ;; significant hassle.  Manual testing shows that the predicate appears to work properly.
-    ;;
+    (describe "(src)"
+      (before-each
+        ;; It would seem preferable to use :var for this, but this seems more reliable.
+        (setq org-ql-test-buffer (org-ql-test-data-buffer "data-src.org")))
+
+      (org-ql-it "without arguments"
+        (org-ql-expect ('(src))
+          '("Alpha" "Bravo")))
+
+      (org-ql-it "with plain argument"
+        ;; Finds in first source block in entry.
+        (org-ql-expect ('(src "foo"))
+          '("Alpha"))
+        (org-ql-expect ('(src "bar"))
+          '("Bravo"))
+        (org-ql-expect ('(src "print"))
+          ;; Finds in subsequent source block in entry.
+          '("Alpha" "Bravo")))
+
+      (org-ql-it "with :regexps argument"
+        (org-ql-expect ('(src :regexps ("foo")))
+          '("Alpha"))
+        (org-ql-expect ('(src :regexps ("bar")))
+          '("Bravo"))
+        (org-ql-expect ('(src :regexps ("print" "foo")))
+          '("Alpha"))
+        (org-ql-expect ('(src :regexps ("foo" "bar")))
+          nil))
+
+      (org-ql-it "with :lang argument"
+        ;; Finds in first source block in entry.
+        (org-ql-expect ('(src :lang "elisp"))
+          '("Alpha" "Bravo"))
+        ;; Finds in subsequent source block in entry.
+        (org-ql-expect ('(src :lang "python"))
+          '("Alpha" "Bravo"))
+        (org-ql-expect ('(src :lang "js"))
+          '("Alpha"))))
+
     (describe "(todo)"
 
       (org-ql-it "without arguments"

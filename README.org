@@ -563,6 +563,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Internal*
 +  Certain query predicates, when called multiple times in an ~and~ sub-expression, are optimized to a single call.
 +  Use ~buffer-chars-modified-tick~ instead of ~buffer-modified-tick~.  (Thanks to [[https://github.com/yantar92][Ihor Radchenko]].)
++  Implemented tests for ~src~ predicate.
 
 *Credits*
 +  Thanks to [[https://github.com/chasecaleb][Caleb Chase]] for help with [[https://github.com/alphapapa/org-ql/pull/285][#285]], fixed in [[https://github.com/alphapapa/org-ql/commit/91908186fcca4b5fd2e9d26da5bc0375c2b41acf][9190818]].

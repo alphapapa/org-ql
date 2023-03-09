@@ -1,0 +1,29 @@
+#+title: org-ql test data for ~src~ predicate
+
+* Alpha
+
+#+begin_src elisp
+  (message "foo")
+#+end_src
+
+#+begin_src python
+  print("foo")
+#+end_src
+
+#+begin_src js
+  console.log("foo")
+#+end_src
+
+* Bravo
+
+#+begin_src elisp
+  (message "bar")
+#+end_src
+
+#+begin_src python
+  print("bar")
+#+end_src
+
+* Charlie
+
+This entry has no source block.
