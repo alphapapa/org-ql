@@ -328,7 +328,10 @@ with keyword arg NOW in PLIST."
           (expect (org-ql--normalize-query '(src :regexps ("foo") :lang "bar"))
                   :to-equal '(src :lang "bar" :regexps '("foo")))
           (expect (org-ql--normalize-query '(src :regexps ("foo") :lang))
-                  :to-equal '(src :regexps '("foo")))))
+                  :to-equal '(src :regexps '("foo"))))
+        (it "normalizes just the :lang keyword arg"
+          (expect (org-ql--normalize-query '(src :lang "bar"))
+                  :to-equal '(src :lang "bar" :regexps 'nil))))
 
       (describe "(tags-inherited)"
         (it "handles 0 arguments"
