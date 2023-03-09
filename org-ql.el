@@ -1925,26 +1925,22 @@ language.  Matching is done case-insensitively."
                      ;; Always check contents with predicate.
                      :query query)))
   :body
-  (catch 'return
-    (save-excursion
-      (save-match-data
-        (when (re-search-forward org-babel-src-block-regexp (org-entry-end-position) t)
-          (when lang
-            (unless (string= lang (match-string 2))
-              (throw 'return nil)))
-          (if regexps
-              (let ((contents-beg (progn
-                                    (goto-char (match-beginning 0))
-                                    (forward-line 1)
-                                    (point)))
-                    (contents-end (progn
-                                    (goto-char (match-end 0))
-                                    (point-at-bol))))
-                (cl-loop for re in regexps
-                         do (goto-char contents-beg)
-                         always (re-search-forward re contents-end t)))
-            ;; No regexps to check: return non-nil.
-            t))))))
+  (save-excursion
+    (save-match-data
+      (cl-loop while (re-search-forward org-babel-src-block-regexp (org-entry-end-position) t)
+               thereis (when (or (not lang) (equal lang (match-string 2)))
+                         (or (not regexps)
+                             (save-excursion
+                               (let ((contents-beg (progn
+                                                     (goto-char (match-beginning 0))
+                                                     (forward-line 1)
+                                                     (point)))
+                                     (contents-end (progn
+                                                     (goto-char (match-end 0))
+                                                     (point-at-bol))))
+                                 (cl-loop for re in regexps
+                                          do (goto-char contents-beg)
+                                          always (re-search-forward re contents-end t))))))))))
 
 (org-ql-defpred (tags) (&rest tags)
   "Return non-nil if current heading has one or more of TAGS (a list of strings).

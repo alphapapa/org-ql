@@ -558,6 +558,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Fixed*
 +  Predicate ~src~'s matching of begin/end block lines, normalization of arguments, and handling in non-sexp queries.
++  Predicate ~src~'s behavior with various arguments.
 
 *Internal*
 +  Certain query predicates, when called multiple times in an ~and~ sub-expression, are optimized to a single call.
