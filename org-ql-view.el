@@ -153,11 +153,11 @@ See info node `(elisp)Cyclic Window Ordering'."
                 (interactive)
                 (let* ((ts (ts-now))
                        (beg-of-week (->> ts
-                                      (ts-adjust 'day (- (ts-dow (ts-now))))
-                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                                         (ts-adjust 'day (- (ts-dow (ts-now))))
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
                        (end-of-week (->> ts
-                                      (ts-adjust 'day (- 6 (ts-dow (ts-now))))
-                                      (ts-apply :hour 23 :minute 59 :second 59))))
+                                         (ts-adjust 'day (- 6 (ts-dow (ts-now))))
+                                         (ts-apply :hour 23 :minute 59 :second 59))))
                   (org-ql-search (org-agenda-files)
                     `(ts-active :from ,beg-of-week
                                 :to ,end-of-week)
@@ -170,11 +170,11 @@ See info node `(elisp)Cyclic Window Ordering'."
                 (interactive)
                 (let* ((ts (ts-adjust 'day 7 (ts-now)))
                        (beg-of-week (->> ts
-                                      (ts-adjust 'day (- (ts-dow (ts-now))))
-                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                                         (ts-adjust 'day (- (ts-dow (ts-now))))
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
                        (end-of-week (->> ts
-                                      (ts-adjust 'day (- 6 (ts-dow (ts-now))))
-                                      (ts-apply :hour 23 :minute 59 :second 59))))
+                                         (ts-adjust 'day (- 6 (ts-dow (ts-now))))
+                                         (ts-apply :hour 23 :minute 59 :second 59))))
                   (org-ql-search (org-agenda-files)
                     `(ts-active :from ,beg-of-week
                                 :to ,end-of-week)
@@ -272,8 +272,8 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
 `closed'."
   (interactive (list :num-days (read-number "Days: ")
                      :type (->> '(ts ts-active ts-inactive clocked closed)
-                             (completing-read "Timestamp type: ")
-                             intern)))
+                                (completing-read "Timestamp type: ")
+                                intern)))
   ;; It doesn't make much sense to use other date-based selectors to
   ;; look into the past, so to prevent confusion, we won't allow them.
   (-let* ((query (pcase-exhaustive type
@@ -395,12 +395,12 @@ update search arguments."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (->> org-ql-views
-        (-map #'car)
-        (-sort (if org-ql-view-sidebar-sort-views
-                   #'string<
-                 #'ignore))
-        (s-join "\n")
-        insert))
+           (-map #'car)
+           (-sort (if org-ql-view-sidebar-sort-views
+                      #'string<
+                    #'ignore))
+           (s-join "\n")
+           insert))
     (current-buffer)))
 
 (defvar bookmark-make-record-function)
@@ -469,8 +469,8 @@ If TITLE, prepend it to the header."
                                     (format "%s" (org-ql-view--contract-buffers-files buffers-files))))
          (buffers-files-formatted (when buffers-files-formatted
                                     (propertize (->> buffers-files-formatted
-                                                  (org-ql-view--font-lock-string 'emacs-lisp-mode)
-                                                  (s-truncate available-width))
+                                                     (org-ql-view--font-lock-string 'emacs-lisp-mode)
+                                                     (s-truncate available-width))
                                                 'help-echo buffers-files-formatted))))
     (concat title
             (when query (propertize "Query:" 'face 'transient-argument))
@@ -750,8 +750,8 @@ When opened, the link searches the buffer it's opened from."
   (s-truncate (- (window-width) 15)
               (concat (propertize key 'face 'transient-argument) ": "
                       (->> value
-                        org-ql-view--format-query
-                        (org-ql-view--font-lock-string 'emacs-lisp-mode)))))
+                           org-ql-view--format-query
+                           (org-ql-view--font-lock-string 'emacs-lisp-mode)))))
 
 (transient-define-infix org-ql-view--transient-title ()
   ;; TODO: Add an asterisk or something when the view has been modified but not saved.
@@ -850,8 +850,8 @@ return an empty string."
            ;; Adding the relative due date property should probably be done explicitly and separately
            ;; (which would also make it easier to do it independently of faces, etc).
            (title (--> (org-ql-view--add-faces element)
-                    (org-element-property :raw-value it)
-                    (org-link-display-format it)))
+                       (org-element-property :raw-value it)
+                       (org-link-display-format it)))
            (todo-keyword (-some--> (org-element-property :todo-keyword element)
                            (org-ql-view--add-todo-face it)))
            (tag-list (if org-use-tag-inheritance
@@ -872,9 +872,9 @@ return an empty string."
                        (org-element-property :tags element)))
            (tag-string (when tag-list
                          (--> tag-list
-                           (s-join ":" it)
-                           (s-wrap it ":")
-                           (org-add-props it nil 'face 'org-tag))))
+                              (s-join ":" it)
+                              (s-wrap it ":")
+                              (org-add-props it nil 'face 'org-tag))))
            ;;  (category (org-element-property :category element))
            (priority-string (-some->> (org-element-property :priority element)
                               (char-to-string)
@@ -890,19 +890,19 @@ return an empty string."
       (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
       ;; Add all the necessary properties and faces to the whole string
       (--> string
-        ;; FIXME: Use proper prefix
-        (concat "  " it)
-        (org-add-props it properties
-          'org-agenda-type 'search
-          'todo-state todo-keyword
-          'tags tag-list
-          'org-habit-p habit-property)))))
+           ;; FIXME: Use proper prefix
+           (concat "  " it)
+           (org-add-props it properties
+             'org-agenda-type 'search
+             'todo-state todo-keyword
+             'tags tag-list
+             'org-habit-p habit-property)))))
 
 (defun org-ql-view--add-faces (element)
   "Return ELEMENT with deadline and scheduled faces added."
   (->> element
-    (org-ql-view--add-scheduled-face)
-    (org-ql-view--add-deadline-face)))
+       (org-ql-view--add-scheduled-face)
+       (org-ql-view--add-deadline-face)))
 
 (defun org-ql-view--add-priority-face (string)
   "Return STRING with priority face added."
@@ -959,11 +959,11 @@ return an empty string."
                          ((> today-day-number scheduled-day-number) 'org-scheduled-previously)
                          (t 'org-scheduled)))
              (title (--> (org-element-property :raw-value element)
-                      (org-add-props it nil
-                        'face face)))
+                         (org-add-props it nil
+                           'face face)))
              (properties (--> (cadr element)
-                           (plist-put it :title title)
-                           (plist-put it :relative-due-date relative-due-date))))
+                              (plist-put it :title title)
+                              (plist-put it :relative-due-date relative-due-date))))
         (list (car element)
               properties))
     ;; Not scheduled
@@ -985,16 +985,16 @@ property."
              ;; FIXME: Unused for now: (done-p (member todo-keyword org-done-keywords))
              ;; FIXME: Unused for now: (today-p (= today-day-number deadline-day-number))
              (deadline-passed-fraction (--> (- deadline-day-number today-day-number)
-                                         (float it)
-                                         (/ it (max org-deadline-warning-days 1))
-                                         (- 1 it)))
+                                            (float it)
+                                            (/ it (max org-deadline-warning-days 1))
+                                            (- 1 it)))
              (face (org-agenda-deadline-face deadline-passed-fraction))
              (title (--> (org-element-property :raw-value element)
-                      (org-add-props it nil
-                        'face face)))
+                         (org-add-props it nil
+                           'face face)))
              (properties (--> (cadr element)
-                           (plist-put it :title title)
-                           (plist-put it :relative-due-date relative-due-date))))
+                              (plist-put it :title title)
+                              (plist-put it :relative-due-date relative-due-date))))
         (list (car element)
               properties))
     ;; No deadline
@@ -1117,7 +1117,7 @@ The counterpart to `org-ql-view--contract-buffers-files'."
                                                      "todo")
                                                nil nil (when org-ql-view-sort
                                                          (prin1-to-string org-ql-view-sort)))
-                  (--remove (equal "buffer-order" it)))))
+                     (--remove (equal "buffer-order" it)))))
     (pcase input
       ('nil nil)
       ((and (pred listp) sort)

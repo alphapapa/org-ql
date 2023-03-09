@@ -584,7 +584,7 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
                                                        (cond ((and (listp inherited)
                                                                    (listp local))
                                                               (->> (append inherited local)
-                                                                -non-nil -uniq))
+                                                                   -non-nil -uniq))
                                                              ((listp inherited) inherited)
                                                              ((listp local) local)))))
                                          (cl-typecase org-use-tag-inheritance
@@ -680,8 +680,8 @@ from within ELEMENT's buffer."
   ;; time?  I don't know, but for now, it seems that we have to use `copy-marker'.
   (let* ((marker (copy-marker (org-element-property :begin element)))
          (properties (--> (cadr element)
-                       (plist-put it :org-marker marker)
-                       (plist-put it :org-hd-marker marker))))
+                          (plist-put it :org-marker marker)
+                          (plist-put it :org-hd-marker marker))))
     (setf (cadr element) properties)
     element))
 
@@ -922,16 +922,16 @@ value of `org-ql-predicates')."
   (let* ((names (--map (symbol-name (plist-get (cdr it) :name))
                        predicates))
          (aliases (->> predicates
-                    (--map (plist-get (cdr it) :aliases))
-                    -non-nil
-                    -flatten
-                    (-map #'symbol-name)))
+                       (--map (plist-get (cdr it) :aliases))
+                       -non-nil
+                       -flatten
+                       (-map #'symbol-name)))
          (predicate-names (->> (append names aliases)
-                            -uniq
-                            ;; Sort the keywords longest-first to work around what seems to be an
-                            ;; obscure bug in `peg': when one keyword is a substring of another,
-                            ;; and the shorter one is listed first, the shorter one fails to match.
-                            (-sort (-on #'> #'length))))
+                               -uniq
+                               ;; Sort the keywords longest-first to work around what seems to be an
+                               ;; obscure bug in `peg': when one keyword is a substring of another,
+                               ;; and the shorter one is listed first, the shorter one fails to match.
+                               (-sort (-on #'> #'length))))
          (pexs `((query (+ (and term (* [blank]))))
                  (term (or (and negation (list positive-term)
                                 ;; This is a bit confusing, but it seems to work.  There's probably a better way.
@@ -1003,8 +1003,8 @@ manually; see the definition of `org-ql-defpred').")
   "Define function `org-ql--normalize-query' for PREDICATES.
 PREDICATES should be the value of `org-ql-predicates'."
   (let ((normalizer-patterns (->> predicates
-                               (--map (plist-get (cdr it) :normalizers))
-                               (-flatten-n 1))))
+                                  (--map (plist-get (cdr it) :normalizers))
+                                  (-flatten-n 1))))
     (fset 'org-ql--normalize-query
           (byte-compile
            `(lambda (query)
@@ -1274,33 +1274,33 @@ result form."
      (when from
        (setq from (pcase from
                     ((or 'today "today") (->> (ts-now)
-                                           (ts-apply :hour 0 :minute 0 :second 0)))
+                                              (ts-apply :hour 0 :minute 0 :second 0)))
                     ((pred numberp) (->> (ts-now)
-                                      (ts-adjust 'day from)
-                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                                         (ts-adjust 'day from)
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
                     ((and (pred stringp)
                           (guard (ignore-errors (cl-parse-integer from))))
                      ;; The `pcase' `let' pattern doesn't bind values in the
                      ;; body forms, so we have to parse the integer again.
                      (->> (ts-now)
-                       (ts-adjust 'day (cl-parse-integer from))
-                       (ts-apply :hour 0 :minute 0 :second 0)))
+                          (ts-adjust 'day (cl-parse-integer from))
+                          (ts-apply :hour 0 :minute 0 :second 0)))
                     ((pred stringp) (ts-parse-fill 'begin from))
                     ((pred ts-p) from))))
      (when to
        (setq to (pcase to
                   ((or 'today "today") (->> (ts-now)
-                                         (ts-apply :hour 23 :minute 59 :second 59)))
+                                            (ts-apply :hour 23 :minute 59 :second 59)))
                   ((pred numberp) (->> (ts-now)
-                                    (ts-adjust 'day to)
-                                    (ts-apply :hour 23 :minute 59 :second 59)))
+                                       (ts-adjust 'day to)
+                                       (ts-apply :hour 23 :minute 59 :second 59)))
                   ((and (pred stringp)
                         (guard (ignore-errors (cl-parse-integer to))))
                    ;; The `pcase' `let' pattern doesn't bind values in the
                    ;; body forms, so we have to parse the integer again.
                    (->> (ts-now)
-                     (ts-adjust 'day (cl-parse-integer to))
-                     (ts-apply :hour 23 :minute 59 :second 59)))
+                        (ts-adjust 'day (cl-parse-integer to))
+                        (ts-apply :hour 23 :minute 59 :second 59)))
                   ((pred stringp) (ts-parse-fill 'end to))
                   ((pred ts-p) to))))
      (setf result (progn ,@body))
@@ -2219,8 +2219,8 @@ non-nil if entry has a deadline."
   :normalizers ((`(,predicate-names auto . ,rest)
                  ;; Use `org-deadline-warning-days' as the :to arg.
                  (let ((ts (->> (ts-now)
-                             (ts-adjust 'day org-deadline-warning-days)
-                             (ts-apply :hour 23 :minute 59 :second 59))))
+                                (ts-adjust 'day org-deadline-warning-days)
+                                (ts-apply :hour 23 :minute 59 :second 59))))
                    `(deadline-warning :to ,ts ,@rest)))
                 (`(,predicate-names . ,(and rest (guard (numberp (car rest)))))
                  (org-ql--normalize-from-to-on
