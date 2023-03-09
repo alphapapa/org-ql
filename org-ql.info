@@ -1050,12 +1050,14 @@ File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
    *Fixed*
    • Predicate ‘src’’s matching of begin/end block lines, normalization
      of arguments, and handling in non-sexp queries.
+   • Predicate ‘src’’s behavior with various arguments.
 
    *Internal*
    • Certain query predicates, when called multiple times in an ‘and’
      sub-expression, are optimized to a single call.
    • Use ‘buffer-chars-modified-tick’ instead of ‘buffer-modified-tick’.
      (Thanks to Ihor Radchenko (https://github.com/yantar92).)
+   • Implemented tests for ‘src’ predicate.
 
    *Credits*
    • Thanks to Caleb Chase (https://github.com/chasecaleb) for help with
@@ -1724,35 +1726,35 @@ Node: Links37140
 Node: Tips37827
 Node: Changelog38151
 Node: 07-pre38934
-Node: 06341209
-Node: 06241744
-Node: 06142049
-Node: 0642617
-Node: 05245671
-Node: 05145971
-Node: 0546394
-Node: 04947923
-Node: 04848203
-Node: 04748552
-Node: 04648961
-Node: 04549369
-Node: 04449730
-Node: 04350089
-Node: 04250292
-Node: 04150453
-Node: 0450700
-Node: 03254801
-Node: 03155204
-Node: 0355401
-Node: 02358701
-Node: 02258935
-Node: 02159215
-Node: 0259420
-Node: 0163498
-Node: Notes63599
-Node: Comparison with Org Agenda searches63761
-Node: org-sidebar64650
-Node: License64929
+Node: 06341323
+Node: 06241858
+Node: 06142163
+Node: 0642731
+Node: 05245785
+Node: 05146085
+Node: 0546508
+Node: 04948037
+Node: 04848317
+Node: 04748666
+Node: 04649075
+Node: 04549483
+Node: 04449844
+Node: 04350203
+Node: 04250406
+Node: 04150567
+Node: 0450814
+Node: 03254915
+Node: 03155318
+Node: 0355515
+Node: 02358815
+Node: 02259049
+Node: 02159329
+Node: 0259534
+Node: 0163612
+Node: Notes63713
+Node: Comparison with Org Agenda searches63875
+Node: org-sidebar64764
+Node: License65043
 
 End Tag Table
 
