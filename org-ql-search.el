@@ -44,20 +44,17 @@
   (cond ((fboundp 'org-link--normalize-string) #'org-link--normalize-string)
         ((fboundp 'org-link-heading-search-string) #'org-link-heading-search-string)
         ((fboundp 'org-make-org-heading-search-string) #'org-make-org-heading-search-string)
-        (t (warn "org-ql: Unable to define alias `org-ql-search--link-heading-search-string'.  This may affect links in dynamic blocks.  Please report this as a bug.")
-           #'identity)))
+        (t (error "org-ql: Unable to define alias `org-ql-search--link-heading-search-string'.  This may affect links in dynamic blocks.  Please report this as a bug"))))
 
 (defalias 'org-ql-search--org-make-link-string
   (cond ((fboundp 'org-link-make-string) #'org-link-make-string)
         ((fboundp 'org-make-link-string) #'org-make-link-string)
-        (t (warn "org-ql: Unable to define alias `org-ql-search--org-make-link-string'.  Please report this as a bug.")
-           #'identity)))
+        (t (error "org-ql: Unable to define alias `org-ql-search--org-make-link-string'.  Please report this as a bug"))))
 
 (defalias 'org-ql-search--org-link-store-props
   (cond ((fboundp 'org-link-store-props) #'org-link-store-props)
         ((fboundp 'org-store-link-props) #'org-store-link-props)
-        (t (warn "org-ql: Unable to define alias `org-ql-search--org-link-store-props'.  Please report this as a bug.")
-           #'identity)))
+        (t (error "org-ql: Unable to define alias `org-ql-search--org-link-store-props'.  Please report this as a bug"))))
 
 ;;;; Variables
 

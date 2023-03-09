@@ -201,10 +201,7 @@ with keyword arg NOW in PLIST."
         (insert "* Heading 1")
         ;; FIXME: `--value-at' does not actually move point, so we do it here.
         (goto-char (point-min))
-        (expect (org-ql--value-at (point-min)
-                                  ;; TODO: Just use org-get-tags when requiring Org 9.2+.
-                                  (cond ((fboundp 'org-get-tags) #'org-get-tags)
-                                        ((fboundp 'org-get-local-tags) #'org-get-local-tags)))
+        (expect (org-ql--value-at (point-min) #'ignore)
                 :to-be nil))))
 
   (describe "Query pre-processing"

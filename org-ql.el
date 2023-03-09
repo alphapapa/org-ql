@@ -1351,8 +1351,7 @@ result form."
   ;; TODO: Remove when compatibility with Org 9.0 is dropped.
   (cond ((fboundp 'org-duration-to-minutes) #'org-duration-to-minutes)
         ((fboundp 'org-duration-string-to-minutes) #'org-duration-string-to-minutes)
-        (t (warn "org-ql: Unable to define alias `org-ql-search--link-heading-search-string'.  Please report this as a bug.")
-           #'identity))
+        (t (error "org-ql: Unable to define alias `org-ql-search--link-heading-search-string'.  Please report this as a bug")))
   "Return DURATION string as a number of minutes.
 For compatibility, since Org 9.1 deprecated
 `org-duration-string-to-minutes', replacing it with
