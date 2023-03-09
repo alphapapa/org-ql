@@ -163,6 +163,7 @@ with keyword arg NOW in PLIST."
         ;; For Org 9.1.9.
         (substring-no-properties (org-get-heading t t t t)))) )
 
+  (before-each
     (setq org-ql-test-buffer (org-ql-test-data-buffer "data.org")
           ;; For manual testing:
           ;; org-ql-test-buffer (find-file-noselect "data.org")
