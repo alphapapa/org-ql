@@ -325,6 +325,9 @@ with keyword arg NOW in PLIST."
         (it "normalizes non-keyword args with a :lang keyword arg to keywords"
           (expect (org-ql--normalize-query '(src "foo" "bar" :lang "baz"))
                   :to-equal '(src :lang "baz" :regexps '("foo" "bar"))))
+        (it "normalizes zero args without looping"
+          (expect (org-ql--normalize-query '(src))
+                  :to-equal '(src)))
         (it "normalizes all-keyword args without looping"
           (expect (org-ql--normalize-query '(src :regexps ("foo") :lang "bar"))
                   :to-equal '(src :lang "bar" :regexps '("foo")))
