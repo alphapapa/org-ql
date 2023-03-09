@@ -768,7 +768,7 @@ be coalesced."
   "Signal error if any forms in FORM do not have preconditions met.
 Or, when possible, fix the problem."
   (cl-flet ((check (symbol)
-                   (cl-case symbol
+                   (pcase symbol
                      ('done (unless org-done-keywords
                               ;; NOTE: This check needs to be done from within the Org buffer being checked.
                               (error "Variable `org-done-keywords' is nil.  Are you running this from an Org buffer?"))))))
