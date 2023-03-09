@@ -112,20 +112,17 @@ FILENAME should be a file in the \"tests\" directory."
 ;;;; Macros
 
 (defmacro org-ql-it (description &rest body)
-  "Expand to two specs, one of which tests with preambles and the other without.
-Based on Buttercup macro `it'."
+  "Expand to two specs, one of which tests with preambles and the other without."
   (declare (indent 1) (debug (&define sexp def-body)))
-  (if body
-      `(progn
-         (buttercup-it ,(concat description " (preamble)   ")
-           (lambda ()
-             (let ((org-ql-use-preamble t))
-               ,@body)))
-         (buttercup-it ,(concat description " (no preamble)")
-           (lambda ()
-             (let ((org-ql-use-preamble nil))
-               ,@body))))
-    `(buttercup-xit ,description)))
+  `(progn
+     (it ,(concat description " (preamble)   ")
+       ,(when body
+          `(let ((org-ql-use-preamble t))
+             ,@body)))
+     (it ,(concat description " (no preamble)   ")
+       ,(when body
+          `(let ((org-ql-use-preamble nil))
+             ,@body)))) )
 
 (cl-defmacro org-ql-expect (ql-args results &key (buffer 'org-ql-test-buffer))
   "Expand to `expect' test form that expects QL-ARGS to equal RESULTS.
