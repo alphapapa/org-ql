@@ -161,7 +161,7 @@ with keyword arg NOW in PLIST."
           (substring-no-properties (org-get-heading t t)))
       (defun org-ql-test-org-get-heading ()
         ;; For Org 9.1.9.
-        (substring-no-properties (org-get-heading t t t t))))
+        (substring-no-properties (org-get-heading t t t t)))) )
 
     (setq org-ql-test-buffer (org-ql-test-data-buffer "data.org")
           ;; For manual testing:
