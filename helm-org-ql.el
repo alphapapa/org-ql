@@ -98,6 +98,8 @@ Based on `helm-map'.")
 Interactively, search the current buffer.  Note that this command
 only accepts non-sexp, \"plain\" queries.
 
+NAME is passed to `helm-org-ql-source', which see.
+
 NOTE: Atoms in the query are turned into strings where
 appropriate, which makes it unnecessary to type quotation marks
 around words that are intended to be searched for as indepenent

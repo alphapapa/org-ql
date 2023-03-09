@@ -81,6 +81,7 @@ For an experience like `org-rifle', use a newline."
 (cl-defun org-ql-completing-read (buffers-files &key query-prefix query-filter
                                                 (prompt "Find entry: "))
   "Return marker at Org entry in BUFFERS-FILES selected with `org-ql'.
+PROMPT is shown to the user.
 
 QUERY-PREFIX may be a string to prepend to the query entered by
 the user (e.g. use \"heading:\" to only search headings, easily

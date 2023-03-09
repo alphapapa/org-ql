@@ -1052,6 +1052,7 @@ File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
      of arguments, and handling in non-sexp queries.  (Thanks to Akira
      Komamura (https://github.com/akirak) for reporting.)
    • Predicate ‘src’’s behavior with various arguments.
+   • Various compilation warnings.
 
    *Internal*
    • Certain query predicates, when called multiple times in an ‘and’
@@ -1727,35 +1728,35 @@ Node: Links37140
 Node: Tips37827
 Node: Changelog38151
 Node: 07-pre38934
-Node: 06341399
-Node: 06241934
-Node: 06142239
-Node: 0642807
-Node: 05245861
-Node: 05146161
-Node: 0546584
-Node: 04948113
-Node: 04848393
-Node: 04748742
-Node: 04649151
-Node: 04549559
-Node: 04449920
-Node: 04350279
-Node: 04250482
-Node: 04150643
-Node: 0450890
-Node: 03254991
-Node: 03155394
-Node: 0355591
-Node: 02358891
-Node: 02259125
-Node: 02159405
-Node: 0259610
-Node: 0163688
-Node: Notes63789
-Node: Comparison with Org Agenda searches63951
-Node: org-sidebar64840
-Node: License65119
+Node: 06341436
+Node: 06241971
+Node: 06142276
+Node: 0642844
+Node: 05245898
+Node: 05146198
+Node: 0546621
+Node: 04948150
+Node: 04848430
+Node: 04748779
+Node: 04649188
+Node: 04549596
+Node: 04449957
+Node: 04350316
+Node: 04250519
+Node: 04150680
+Node: 0450927
+Node: 03255028
+Node: 03155431
+Node: 0355628
+Node: 02358928
+Node: 02259162
+Node: 02159442
+Node: 0259647
+Node: 0163725
+Node: Notes63826
+Node: Comparison with Org Agenda searches63988
+Node: org-sidebar64877
+Node: License65156
 
 End Tag Table
 

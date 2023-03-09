@@ -47,6 +47,18 @@
         (t (warn "org-ql: Unable to define alias `org-ql-search--link-heading-search-string'.  This may affect links in dynamic blocks.  Please report this as a bug.")
            #'identity)))
 
+(defalias 'org-ql-search--org-make-link-string
+  (cond ((fboundp 'org-link-make-string) #'org-link-make-string)
+        ((fboundp 'org-make-link-string) #'org-make-link-string)
+        (t (warn "org-ql: Unable to define alias `org-ql-search--org-make-link-string'.  Please report this as a bug.")
+           #'identity)))
+
+(defalias 'org-ql-search--org-link-store-props
+  (cond ((fboundp 'org-link-store-props) #'org-link-store-props)
+        ((fboundp 'org-store-link-props) #'org-store-link-props)
+        (t (warn "org-ql: Unable to define alias `org-ql-search--org-link-store-props'.  Please report this as a bug.")
+           #'identity)))
+
 ;;;; Variables
 
 (defvar org-ql-block-header nil
@@ -138,7 +150,7 @@ SUPER-GROUPS: An `org-super-agenda' group set.  See variable
 selectors'.
 
 NARROW: When non-nil, don't widen buffers before
-searching. Interactively, with prefix, leave narrowed.
+searching.  Interactively, with prefix, leave narrowed.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority' (see Info node `(org-ql)Listing / acting-on results').
@@ -299,7 +311,7 @@ this (must be a single line in the Org buffer):
                  (cons 'heading (lambda (element)
                                   (let ((normalized-heading
                                          (org-ql-search--link-heading-search-string (org-element-property :raw-value element))))
-                                    (org-make-link-string normalized-heading (org-link-display-format normalized-heading)))))
+                                    (org-ql-search--org-make-link-string normalized-heading (org-link-display-format normalized-heading)))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))

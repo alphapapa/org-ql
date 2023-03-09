@@ -75,10 +75,10 @@ That is, \"CLOSED:\", \"DEADLINE:\", or \"SCHEDULED:\".")
 Tags are stored in match group 1.  Match group 2 stores the tags
 without the enclosing colons.")
 
-(defconst org-ql-link-regexp
+(defvaralias 'org-ql-link-regexp
   (if (bound-and-true-p org-link-bracket-re)
-      org-link-bracket-re
-    org-bracket-link-regexp)
+      'org-link-bracket-re
+    'org-bracket-link-regexp)
   "Regexp used to match Org bracket links.
 Necessary because of changes in Org 9.something.")
 
@@ -1347,18 +1347,17 @@ result form."
   ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   :body (or (apply #'org-ql--predicate-todo org-done-keywords)))
 
-(defun org-ql--duration-to-minutes (duration)
+(defalias 'org-ql--duration-to-minutes
+  ;; TODO: Remove when compatibility with Org 9.0 is dropped.
+  (cond ((fboundp 'org-duration-to-minutes) #'org-duration-to-minutes)
+        ((fboundp 'org-duration-string-to-minutes) #'org-duration-string-to-minutes)
+        (t (warn "org-ql: Unable to define alias `org-ql-search--link-heading-search-string'.  Please report this as a bug.")
+           #'identity))
   "Return DURATION string as a number of minutes.
 For compatibility, since Org 9.1 deprecated
 `org-duration-string-to-minutes', replacing it with
 `org-duration-to-minutes', which seems to return floats instead
-of integers."
-  ;; FIXME: Define this as an alias instead.
-  ;; MAYBE: Remove if compatibility with Org 9.0 is dropped.
-  (funcall (if (fboundp 'org-duration-to-minutes)
-               #'org-duration-to-minutes
-             #'org-duration-string-to-minutes)
-           duration))
+of integers.")
 
 (org-ql-defpred effort (&optional effort-or-comparator effort)
   "Return non-nil if current heading's effort property matches arguments.

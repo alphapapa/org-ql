@@ -44,6 +44,7 @@
 ;; clearly is.  It seems to not handle cl-defun, even though its code
 ;; appears to account for it.
 (declare-function org-ql-search "org-ql-search" t)
+(declare-function org-ql-search--org-link-store-props "org-ql-search" t)
 
 (require 'dash)
 (require 's)
@@ -288,7 +289,8 @@ TYPE may be `ts', `ts-active', `ts-inactive', `clocked', or
 
 ;;;###autoload
 (cl-defun org-ql-view-sidebar (&key (slot org-ql-view-list-slot))
-  "Show `org-ql-view' view list sidebar."
+  "Show `org-ql-view' view list sidebar.
+SLOT is passed to `display-buffer-in-side-window', which see."
   ;; TODO: Update sidebar when `org-ql-views' changes.
   (interactive)
   (select-window
@@ -688,8 +690,7 @@ When opened, the link searches the buffer it's opened from."
                                "?" (url-build-query-string (delete nil params))))
              (url (url-recreate-url (url-parse-make-urlobj "org-ql-search" nil nil nil nil
                                                            filename))))
-	;; FIXME: "Warning: ‘org-store-link-props’ is an obsolete function (as of Org 9.3); use ‘org-link-store-props’ instead"
-        (org-store-link-props
+        (org-ql-search--org-link-store-props
          :type "org-ql-search"
          :link url
          :description (concat "org-ql-search: " org-ql-view-title))))
