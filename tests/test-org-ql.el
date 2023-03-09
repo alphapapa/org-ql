@@ -1409,10 +1409,10 @@ with keyword arg NOW in PLIST."
       (org-ql-it "with file tags"
         (org-ql-expect ('(tags "food"))
           '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
-          :buffer (org-ql-test-data-buffer "data2.org"))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))
         (org-ql-expect ('(tags "fruit"))
           '("Fruit" "Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
 
     (describe "(tags-inherited)"
 
@@ -1440,10 +1440,10 @@ with keyword arg NOW in PLIST."
       (org-ql-it "with file tags"
         (org-ql-expect ('(tags-inherited "food"))
           '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
-          :buffer (org-ql-test-data-buffer "data2.org"))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))
         (org-ql-expect ('(tags-inherited "fruit"))
           '("Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
 
     (describe "(tags-local)"
 
@@ -1470,10 +1470,10 @@ with keyword arg NOW in PLIST."
       (org-ql-it "with file tags"
         (org-ql-expect ('(tags-local "food"))
           nil
-          :buffer (org-ql-test-data-buffer "data2.org"))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))
         (org-ql-expect ('(tags-local "fruit"))
           '("Fruit")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
 
     (describe "(tags-all), (tags&)"
 
@@ -1486,7 +1486,7 @@ with keyword arg NOW in PLIST."
       (org-ql-it "with file tags"
         (org-ql-expect ('(tags-all "food" "fruit"))
           '("Fruit" "Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
 
     (describe "(tags-regexp), (tags*)"
 
@@ -1511,10 +1511,10 @@ with keyword arg NOW in PLIST."
       (org-ql-it "with regexp matching file tags"
         (org-ql-expect ('(tags-regexp "foo"))
           '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
-          :buffer (org-ql-test-data-buffer "data2.org"))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))
         (org-ql-expect ('(tags* "frui"))
           '("Fruit" "Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data2.org"))))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
 
     (describe "(ts)"
 
