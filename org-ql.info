@@ -415,6 +415,9 @@ File: README.info,  Node: General predicates,  Next: Ancestor/descendant predica
 
 Arguments are listed next to predicate names, where applicable.
 
+‘blocked’
+     Return non-nil if current heading is blocked.  Calls
+     ‘org-entry-blocked-p’, which see.
 ‘category (&optional categories)’
      Return non-nil if current heading is in one or more of ‘CATEGORIES’
      (a list of strings).
@@ -1042,6 +1045,8 @@ File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
      entries with property inheritance, and when unspecified, the option
      ‘org-use-property-inheritance’ controls whether inheritance is
      used.
+   • Predicate ‘blocked’.  (Thanks to Akira Komamura
+     (https://github.com/akirak).)
 
    *Changed*
    • Give more useful error message for invalid queries.
@@ -1711,52 +1716,52 @@ Node: org-ql-sparse-tree8594
 Node: Queries9394
 Node: Non-sexp query syntax10511
 Node: General predicates12270
-Node: Ancestor/descendant predicates19142
-Node: Date/time predicates20270
-Node: Functions / Macros23394
-Node: Agenda-like views23692
-Ref: Function ‘org-ql-block’23854
-Node: Listing / acting-on results25115
-Ref: Caching25323
-Ref: Function ‘org-ql-select’26236
-Ref: Function ‘org-ql-query’28662
-Ref: Macro ‘org-ql’ (deprecated)30436
-Node: Custom predicates30751
-Ref: Macro ‘org-ql-defpred’30975
-Node: Dynamic block34416
-Node: Links37140
-Node: Tips37827
-Node: Changelog38151
-Node: 07-pre38934
-Node: 06341436
-Node: 06241971
-Node: 06142276
-Node: 0642844
-Node: 05245898
-Node: 05146198
-Node: 0546621
-Node: 04948150
-Node: 04848430
-Node: 04748779
-Node: 04649188
-Node: 04549596
-Node: 04449957
-Node: 04350316
-Node: 04250519
-Node: 04150680
-Node: 0450927
-Node: 03255028
-Node: 03155431
-Node: 0355628
-Node: 02358928
-Node: 02259162
-Node: 02159442
-Node: 0259647
-Node: 0163725
-Node: Notes63826
-Node: Comparison with Org Agenda searches63988
-Node: org-sidebar64877
-Node: License65156
+Node: Ancestor/descendant predicates19257
+Node: Date/time predicates20385
+Node: Functions / Macros23509
+Node: Agenda-like views23807
+Ref: Function ‘org-ql-block’23969
+Node: Listing / acting-on results25230
+Ref: Caching25438
+Ref: Function ‘org-ql-select’26351
+Ref: Function ‘org-ql-query’28777
+Ref: Macro ‘org-ql’ (deprecated)30551
+Node: Custom predicates30866
+Ref: Macro ‘org-ql-defpred’31090
+Node: Dynamic block34531
+Node: Links37255
+Node: Tips37942
+Node: Changelog38266
+Node: 07-pre39049
+Node: 06341645
+Node: 06242180
+Node: 06142485
+Node: 0643053
+Node: 05246107
+Node: 05146407
+Node: 0546830
+Node: 04948359
+Node: 04848639
+Node: 04748988
+Node: 04649397
+Node: 04549805
+Node: 04450166
+Node: 04350525
+Node: 04250728
+Node: 04150889
+Node: 0451136
+Node: 03255237
+Node: 03155640
+Node: 0355837
+Node: 02359137
+Node: 02259371
+Node: 02159651
+Node: 0259856
+Node: 0163934
+Node: Notes64035
+Node: Comparison with Org Agenda searches64197
+Node: org-sidebar65086
+Node: License65365
 
 End Tag Table
 

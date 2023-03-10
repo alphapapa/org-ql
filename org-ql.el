@@ -1333,6 +1333,11 @@ result form."
 ;; redefinitions until all of the predicates have been defined.
 (setf org-ql-defpred-defer t)
 
+(org-ql-defpred blocked ()
+  "Return non-nil if entry is blocked.
+Calls `org-entry-blocked-p', which see."
+  :body (org-entry-blocked-p))
+
 (org-ql-defpred (category c) (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES."
   :normalizers ((`(,predicate-names . ,rest)
@@ -2376,11 +2381,6 @@ any planning prefix); it defaults to 0 (i.e. the whole regexp)."
             ((and from to) (test-timestamps (ts-in from to next-ts)))
             (from (test-timestamps (ts<= from next-ts)))
             (to (test-timestamps (ts<= next-ts to)))))))
-
-(org-ql-defpred blocked ()
-  "Return non-nil if the entry is blocked."
-  :body
-  (org-entry-blocked-p))
 
 ;; NOTE: Predicates defined: stop deferring and define normalizer and
 ;; preamble functions now.  Reversing preserves the order in which
