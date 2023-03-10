@@ -93,8 +93,8 @@ directories, etc, which would make it slow to list the
 The tree will show the lines where the query matches, and any
 other context defined in `org-show-context-detail', which see.
 
-QUERY is an `org-ql' query sexp (quoted, since this is a
-function).  BUFFER defaults to the current buffer.
+QUERY is an `org-ql' query in either sexp or string form (see
+Info node `(org-ql)Queries').
 
 When KEEP-PREVIOUS is non-nil (interactively, with prefix), the
 outline is not reset to the overview state before finding
@@ -102,7 +102,7 @@ matches, which allows stacking calls to this command.
 
 Runs `org-occur-hook' after making the sparse tree."
   ;; Code based on `org-occur'.
-  (interactive (list (read-minibuffer "Query: ")
+  (interactive (list (read-string "Query: ")
                      :keep-previous current-prefix-arg))
   (with-current-buffer buffer
     (unless keep-previous
@@ -110,7 +110,18 @@ Runs `org-occur-hook' after making the sparse tree."
       ;; we remove existing `org-occur' highlights, just in case.
       (org-remove-occur-highlights nil nil t)
       (org-overview))
-    (let ((num-results 0))
+    (let ((num-results 0)
+          (query (pcase-exhaustive query
+                   ((and (pred stringp)
+                         (rx bos (0+ blank) (or "(" "\"")))
+                    ;; Read sexp query from string.
+                    (read query))
+                   ((pred stringp)
+                    ;; Parse string query into sexp query.
+                    (org-ql--query-string-to-sexp query))
+                   ((pred listp)
+                    ;; Sexp query.
+                    query))))
       ;; FIXME: Accept plain queries as well.
       (org-ql-select buffer query
         :action (lambda ()
