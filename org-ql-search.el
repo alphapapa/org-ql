@@ -93,7 +93,7 @@ directories, etc, which would make it slow to list the
 The tree will show the lines where the query matches, and any
 other context defined in `org-show-context-detail', which see.
 
-QUERY: An `org-ql' query in either sexp or non-sexp form (see
+QUERY is an `org-ql' query in either sexp or string form (see
 Info node `(org-ql)Queries').
 
 When KEEP-PREVIOUS is non-nil (interactively, with prefix), the
@@ -111,14 +111,17 @@ Runs `org-occur-hook' after making the sparse tree."
       (org-remove-occur-highlights nil nil t)
       (org-overview))
     (let ((num-results 0)
-          (query (cl-etypecase query
-                   (string (if (or (string-prefix-p "(" query)
-                                   (string-prefix-p "\"" query))
-                               ;; Read sexp query.
-                               (read query)
-                             ;; Parse non-sexp query into sexp query.
-                             (org-ql--query-string-to-sexp query)))
-                   (list query))))
+          (query (pcase-exhaustive query
+                   ((and (pred stringp)
+                         (rx bos (0+ blank) (or "(" "\"")))
+                    ;; Read sexp query from string.
+                    (read query))
+                   ((pred stringp)
+                    ;; Parse string query into sexp query.
+                    (org-ql--query-string-to-sexp query))
+                   ((pred listp)
+                    ;; Sexp query.
+                    query))))
       ;; FIXME: Accept plain queries as well.
       (org-ql-select buffer query
         :action (lambda ()
