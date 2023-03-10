@@ -122,7 +122,6 @@ Runs `org-occur-hook' after making the sparse tree."
                    ((pred listp)
                     ;; Sexp query.
                     query))))
-      ;; FIXME: Accept plain queries as well.
       (org-ql-select buffer query
         :action (lambda ()
                   (org-show-context 'occur-tree)
