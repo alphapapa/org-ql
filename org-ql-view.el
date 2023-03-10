@@ -864,8 +864,7 @@ return an empty string."
                                                     (not type))
                                          append type)))
                            ;; No marker found
-                           ;; TODO: Use `display-warning' with `org-ql' as the type.
-                           (warn "No marker found for item: %s" title)
+                           (display-warning 'org-ql (format "No marker found for item: %s" title))
                            (org-element-property :tags element))
                        (org-element-property :tags element)))
            (tag-string (when tag-list
