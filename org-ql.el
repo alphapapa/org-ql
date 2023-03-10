@@ -1333,6 +1333,11 @@ result form."
 ;; redefinitions until all of the predicates have been defined.
 (setf org-ql-defpred-defer t)
 
+(org-ql-defpred blocked ()
+  "Return non-nil if entry is blocked.
+Calls `org-entry-blocked-p', which see."
+  :body (org-entry-blocked-p))
+
 (org-ql-defpred (category c) (&rest categories)
   "Return non-nil if current heading is in one or more of CATEGORIES."
   :normalizers ((`(,predicate-names . ,rest)

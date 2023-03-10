@@ -221,6 +221,7 @@ Note that the =effort=, =level=, and =priority= predicates do not support compar
 
 Arguments are listed next to predicate names, where applicable.
 
++  =blocked= :: Return non-nil if current heading is blocked.  Calls ~org-entry-blocked-p~, which see.
 +  =category (&optional categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
 +  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
 +  =effort (&optional effort-or-comparator effort)= :: Return non-nil if current heading's effort property matches arguments.  The following forms are accepted: ~(effort DURATION)~: Matches if effort is ~DURATION~.  ~(effort DURATION DURATION)~: Matches if effort is between DURATIONs, inclusive.  ~(effort COMPARATOR DURATION)~: Matches if effort compares to ~DURATION~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.  ~DURATION~ should be an Org effort string, like =5= or =0:05=.
@@ -551,6 +552,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Option ~org-ql-default-predicate~, applied to plain-string query tokens (before, the ~regexp~ predicate was always used, but now it may be customized).
 +  Alias ~c~ for predicate ~category~.
 +  Predicate ~property~ now accepts the argument ~:inherit~ to match entries with property inheritance, and when unspecified, the option ~org-use-property-inheritance~ controls whether inheritance is used.
++  Predicate ~blocked~.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
 
 *Changed*
 +  Give more useful error message for invalid queries.
