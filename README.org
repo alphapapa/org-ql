@@ -560,6 +560,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Command ~org-ql-sparse-tree~ accepts both string and sexp queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
 
 *Fixed*
++  Predicate ~link~ matches links whose descriptions contain escaped brackets (changed in Org 9.3).  (Thanks to [[https://github.com/exot][Daniel Borchmann]] for reporting.)
 +  Predicate ~src~'s matching of begin/end block lines, normalization of arguments, and handling in non-sexp queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]] for reporting.)
 +  Predicate ~src~'s behavior with various arguments.
 +  Various compilation warnings.

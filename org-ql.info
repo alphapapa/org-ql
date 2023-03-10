@@ -1055,6 +1055,9 @@ File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
      (Thanks to Akira Komamura (https://github.com/akirak).)
 
    *Fixed*
+   • Predicate ‘link’ matches links whose descriptions contain escaped
+     brackets (changed in Org 9.3).  (Thanks to Daniel Borchmann
+     (https://github.com/exot) for reporting.)
    • Predicate ‘src’’s matching of begin/end block lines, normalization
      of arguments, and handling in non-sexp queries.  (Thanks to Akira
      Komamura (https://github.com/akirak) for reporting.)
@@ -1735,35 +1738,35 @@ Node: Links37255
 Node: Tips37942
 Node: Changelog38266
 Node: 07-pre39049
-Node: 06341784
-Node: 06242319
-Node: 06142624
-Node: 0643192
-Node: 05246246
-Node: 05146546
-Node: 0546969
-Node: 04948498
-Node: 04848778
-Node: 04749127
-Node: 04649536
-Node: 04549944
-Node: 04450305
-Node: 04350664
-Node: 04250867
-Node: 04151028
-Node: 0451275
-Node: 03255376
-Node: 03155779
-Node: 0355976
-Node: 02359276
-Node: 02259510
-Node: 02159790
-Node: 0259995
-Node: 0164073
-Node: Notes64174
-Node: Comparison with Org Agenda searches64336
-Node: org-sidebar65225
-Node: License65504
+Node: 06341973
+Node: 06242508
+Node: 06142813
+Node: 0643381
+Node: 05246435
+Node: 05146735
+Node: 0547158
+Node: 04948687
+Node: 04848967
+Node: 04749316
+Node: 04649725
+Node: 04550133
+Node: 04450494
+Node: 04350853
+Node: 04251056
+Node: 04151217
+Node: 0451464
+Node: 03255565
+Node: 03155968
+Node: 0356165
+Node: 02359465
+Node: 02259699
+Node: 02159979
+Node: 0260184
+Node: 0164262
+Node: Notes64363
+Node: Comparison with Org Agenda searches64525
+Node: org-sidebar65414
+Node: License65693
 
 End Tag Table
 

@@ -794,38 +794,43 @@ DESCRIPTION-OR-TARGET, match it in either description or target.
 If DESCRIPTION, match it in the description.  If TARGET, match it
 in the target.  If both DESCRIPTION and TARGET, match both,
 respectively."
-  (cl-labels
-      ((no-desc
-        (match) (rx-to-string `(seq (or bol (1+ blank))
-                                    "[[" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
-                                    "]]")))
-       (match-both
-        (description target)
-        (rx-to-string `(seq (or bol (1+ blank))
-                            "[[" (0+ (not (any "]"))) (regexp ,target) (0+ (not (any "]")))
-                            "][" (0+ (not (any "]"))) (regexp ,description) (0+ (not (any "]")))
-                            "]]")))
-       ;; Note that these actually allow empty descriptions
-       ;; or targets, depending on what they are matching.
-       (match-desc
-        (match) (rx-to-string `(seq (or bol (1+ blank))
-                                    "[[" (0+ (not (any "]")))
-                                    "][" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
-                                    "]]")))
-       (match-target
-        (match) (rx-to-string `(seq (or bol (1+ blank))
-                                    "[[" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
-                                    "][" (0+ (not (any "]")))
-                                    "]]"))))
-    (cond (description-or-target
-           (rx-to-string `(or (regexp ,(no-desc description-or-target))
-                              (regexp ,(match-desc description-or-target))
-                              (regexp ,(match-target description-or-target)))))
-          ((and description target)
-           (match-both description target))
-          (description (match-desc description))
-          (target (rx-to-string `(or (regexp ,(no-desc target))
-                                     (regexp ,(match-target target))))))))
+  ;; This `rx' part is borrowed from `org-make-link-regexps'.  It matches the interior of an
+  ;; Org link target (i.e. the parts between the brackets, including any escaped brackets).
+  (let ((link-target-part '(0+ (or (not (any "[]\\"))
+			           (and "\\" (0+ "\\\\") (any "[]"))
+			           (and (1+ "\\") (not (any "[]")))))))
+    (cl-labels
+        ((no-desc
+          (match) (rx-to-string `(seq (or bol (1+ blank))
+                                      "[[" ,link-target-part (regexp ,match) ,link-target-part
+                                      "]]")))
+         (match-both
+          (description target)
+          (rx-to-string `(seq (or bol (1+ blank))
+                              "[[" ,link-target-part (regexp ,target) ,link-target-part
+                              "][" (*? anything) (regexp ,description) (*? anything)
+                              "]]")))
+         ;; Note that these actually allow empty descriptions
+         ;; or targets, depending on what they are matching.
+         (match-desc
+          (match) (rx-to-string `(seq (or bol (1+ blank))
+                                      "[[" ,link-target-part
+                                      "][" (*? anything) (regexp ,match) (*? anything)
+                                      "]]")))
+         (match-target
+          (match) (rx-to-string `(seq (or bol (1+ blank))
+                                      "[[" ,link-target-part (regexp ,match) ,link-target-part
+                                      "][" (*? anything)
+                                      "]]"))))
+      (cond (description-or-target
+             (rx-to-string `(or (regexp ,(no-desc description-or-target))
+                                (regexp ,(match-desc description-or-target))
+                                (regexp ,(match-target description-or-target)))))
+            ((and description target)
+             (match-both description target))
+            (description (match-desc description))
+            (target (rx-to-string `(or (regexp ,(no-desc target))
+                                       (regexp ,(match-target target)))))))))
 
 (defun org-ql--format-src-block-regexp (&optional lang)
   "Return regexp equivalent to `org-babel-src-block-regexp' with LANG filled in."
@@ -1563,12 +1568,8 @@ any link is found."
   ;; enabled nearly all of the time, in which case this function won't be called anyway, it's
   ;; probably not worth rewriting code all over the place to fix this.
   :preambles ((`(,predicate-names)
-               (list :regexp ;; Match a link with a target and optionally a description.
-                     (rx (or bol (1+ blank))
-                         "[[" (1+ (not (any "]"))) "]"
-                         (optional (seq "[" (0+ (not (any "]"))) "]"))
-                         "]"
-                         (or eol blank))))
+               ;; Match a link with a target and optionally a description.
+               (list :regexp (org-ql--link-regexp :target ".*")))
               (`(,predicate-names ,(and description-or-target
                                         (guard (not (keywordp description-or-target))))
                                   . ,plist)

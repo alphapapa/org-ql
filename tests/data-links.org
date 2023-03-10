@@ -1,0 +1,10 @@
+* Alpha
+
+Let us link to: [[id:74d357ac-fb9c-40d1-a63f-eca8a227321d][Bravo [a phrase in brackets]​]].
+
+* Bravo [a phrase in brackets]
+:PROPERTIES:
+:ID:       74d357ac-fb9c-40d1-a63f-eca8a227321d
+:END:
+
+* Charlie

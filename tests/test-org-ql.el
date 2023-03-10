@@ -1141,7 +1141,39 @@ with keyword arg NOW in PLIST."
           '("/r/emacs")))
       (org-ql-it "with :description and :target regexp"
         (org-ql-expect ('(link :description "em.cs" :target "em.cs" :regexp-p t))
-          '("/r/emacs"))))
+          '("/r/emacs")))
+
+      (describe "matches links whose descriptions contain brackets"
+        (before-each
+          (setq org-ql-test-buffer (org-ql-test-data-buffer "data-links.org")))
+
+        (org-ql-it "without arguments"
+          (org-ql-expect ('(link))
+            '("Alpha")))
+        (org-ql-it "with description-or-target"
+          (org-ql-expect ('(link "phrase"))
+            '("Alpha")))
+        (org-ql-it "with :description"
+          (org-ql-expect ('(link :description "phrase"))
+            '("Alpha")))
+        (org-ql-it "with :target"
+          (org-ql-expect ('(link :target "id:"))
+            '("Alpha")))
+        (org-ql-it "with :description and :target"
+          (org-ql-expect ('(link :description "phrase" :target "id"))
+            '("Alpha")))
+        (org-ql-it "with description-or-target regexp"
+          (org-ql-expect ('(link "id:.*" :regexp-p t))
+            '("Alpha")))
+        (org-ql-it "with :description regexp"
+          (org-ql-expect ('(link :description "phr.se" :regexp-p t))
+            '("Alpha")))
+        (org-ql-it "with :target regexp"
+          (org-ql-expect ('(link :target "id:.*" :regexp-p t))
+            '("Alpha")))
+        (org-ql-it "with :description and :target regexp"
+          (org-ql-expect ('(link :description "phr.se" :target "id:.*" :regexp-p t))
+            '("Alpha")))))
 
     (describe "(outline-path)"
       (org-ql-it "with one argument"
