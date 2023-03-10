@@ -302,40 +302,56 @@ this (must be a single line in the Org buffer):
   #+BEGIN: org-ql :query (todo \"UNDERWAY\")
 :columns (priority todo heading) :sort (priority date)
 :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take) params)
+  (-let* (((&plist :query :columns :sort :ts-format :take :from) params)
+          (from (pcase-exhaustive from
+                  (`nil (current-buffer))
+                  ((pred listp) from)
+                  ((pred stringp) from)
+                  ('org-directory (org-ql-search-directories-files))))
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
                     (org-ql--ask-unsafe-query query)
                     query)))
-          (columns (or columns '(heading todo (priority "P"))))
+          (columns (or columns '(heading todo (priority "P") planning)))
           ;; MAYBE: Custom column functions.
           (format-fns
            ;; NOTE: Backquoting this alist prevents the lambdas from seeing
            ;; the variable `ts-format', so we use `list' and `cons'.
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
-                 (cons 'heading (lambda (element)
-                                  (let ((normalized-heading
-                                         (org-ql-search--link-heading-search-string (org-element-property :raw-value element))))
-                                    (org-ql-search--org-make-link-string normalized-heading (org-link-display-format normalized-heading)))))
+                 (cons 'heading (cl-function
+                                 (lambda (element &key (width 100))
+                                   (let ((normalized-heading
+                                          (org-ql-search--link-heading-search-string (org-element-property :raw-value element))))
+                                     (org-ql-search--org-make-link-string normalized-heading (s-truncate width (org-link-display-format normalized-heading)))))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
                  (cons 'deadline (lambda (element)
                                    (--when-let (org-element-property :deadline element)
-                                     (ts-format ts-format (ts-parse-org-element it)))))
+                                     (org-ql-view--format-relative-date (floor (/ (ts-difference (ts-now) (ts-parse-org-element it)) 86400)))
+                                     ;; (ts-format ts-format (ts-parse-org-element it))
+                                     )))
                  (cons 'scheduled (lambda (element)
                                     (--when-let (org-element-property :scheduled element)
-                                      (ts-format ts-format (ts-parse-org-element it)))))
+                                      (org-ql-view--format-relative-date (floor (/ (ts-difference (ts-now) (ts-parse-org-element it)) 86400)))
+                                      ;; (ts-format ts-format (ts-parse-org-element it))
+                                      )))
+                 (cons 'planning (lambda (element)
+                                   (--when-let (or (org-element-property :deadline element)
+                                                   (org-element-property :scheduled element))
+                                     (org-ql-view--format-relative-date (floor (/ (ts-difference (ts-now) (ts-parse-org-element it)) 86400)))
+                                     ;; (ts-format ts-format (ts-parse-org-element it))
+                                     )))
                  (cons 'closed (lambda (element)
                                  (--when-let (org-element-property :closed element)
                                    (ts-format ts-format (ts-parse-org-element it)))))
                  (cons 'property (lambda (element property)
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
-          (elements (org-ql-query :from (current-buffer)
+          (elements (org-ql-query :select 'element-with-markers
+                                  :from from
                                   :where query
-                                  :select '(org-element-headline-parser (line-end-position))
                                   :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
@@ -348,6 +364,8 @@ this (must be a single line in the Org buffer):
                                                                 (funcall (alist-get column format-fns) element))
                                                                (`((,column . ,args) ,_header)
                                                                 (apply (alist-get column format-fns) element args))
+                                                               (`(,column . ,(and args (guard (keywordp (car args)))))
+                                                                (apply (alist-get column format-fns) element args))
                                                                (`(,column ,_header)
                                                                 (funcall (alist-get column format-fns) element)))
                                                              ""))
@@ -355,13 +373,18 @@ this (must be a single line in the Org buffer):
       ;; Table header
       (insert "| " (string-join (--map (pcase it
                                          ((pred symbolp) (capitalize (symbol-name it)))
-                                         (`(,_ ,name) name))
+                                         (`(,_ ,name) name)
+                                         (`(,name . ,_) (capitalize (symbol-name name))))
                                        columns)
                                 " | ")
               " |" "\n")
       (insert "|- \n")                  ; Separator hline
-      (dolist (element elements)
-        (insert "| " (format-element element) " |" "\n"))
+      (let ((org-id-link-to-org-use-id 'use-existing))
+        (dolist (element elements)
+          (let ((link (org-with-point-at (or (org-element-property :org-hd-marker element)
+                                             (org-element-property :org-marker element))
+                        (org-store-link t))))
+            (insert "| " (format-element element) " |" "\n"))))
       (delete-char -1)
       (org-table-align))))
 
