@@ -40,9 +40,6 @@
 
 (require 'org-ql)
 
-;; FIXME: check-declare declares "function not found", even though it
-;; clearly is.  It seems to not handle cl-defun, even though its code
-;; appears to account for it.
 (declare-function org-ql-search "org-ql-search" t)
 (declare-function org-ql-search--org-link-store-props "org-ql-search" t)
 
@@ -1014,10 +1011,6 @@ property."
 ;; These functions are somewhat regrettable because of the need to keep them
 ;; in sync, but it seems worth it to provide users with the flexibility.
 
-;; FIXME: `check-declare' declares that this function is not in org-ql-search, even though
-;; it is.  It appears to happen because `org-ql-search-directories-files' is declared with
-;; `cl-defun', because when I remove "cl-", it finds it.  This makes no sense, because the
-;; source code of `check-declare' shows that it searches for "cl-defun" declarations.
 (declare-function org-ql-search-directories-files "org-ql-search" t)
 
 (defun org-ql-view--contract-buffers-files (buffers-files)
