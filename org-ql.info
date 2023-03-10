@@ -1051,6 +1051,8 @@ File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
    *Changed*
    • Give more useful error message for invalid queries.
    • Predicate ‘src’ now matches case-insensitively.
+   • Command ‘org-ql-sparse-tree’ accepts both string and sexp queries.
+     (Thanks to Akira Komamura (https://github.com/akirak).)
 
    *Fixed*
    • Predicate ‘src’’s matching of begin/end block lines, normalization
@@ -1733,35 +1735,35 @@ Node: Links37255
 Node: Tips37942
 Node: Changelog38266
 Node: 07-pre39049
-Node: 06341645
-Node: 06242180
-Node: 06142485
-Node: 0643053
-Node: 05246107
-Node: 05146407
-Node: 0546830
-Node: 04948359
-Node: 04848639
-Node: 04748988
-Node: 04649397
-Node: 04549805
-Node: 04450166
-Node: 04350525
-Node: 04250728
-Node: 04150889
-Node: 0451136
-Node: 03255237
-Node: 03155640
-Node: 0355837
-Node: 02359137
-Node: 02259371
-Node: 02159651
-Node: 0259856
-Node: 0163934
-Node: Notes64035
-Node: Comparison with Org Agenda searches64197
-Node: org-sidebar65086
-Node: License65365
+Node: 06341784
+Node: 06242319
+Node: 06142624
+Node: 0643192
+Node: 05246246
+Node: 05146546
+Node: 0546969
+Node: 04948498
+Node: 04848778
+Node: 04749127
+Node: 04649536
+Node: 04549944
+Node: 04450305
+Node: 04350664
+Node: 04250867
+Node: 04151028
+Node: 0451275
+Node: 03255376
+Node: 03155779
+Node: 0355976
+Node: 02359276
+Node: 02259510
+Node: 02159790
+Node: 0259995
+Node: 0164073
+Node: Notes64174
+Node: Comparison with Org Agenda searches64336
+Node: org-sidebar65225
+Node: License65504
 
 End Tag Table
 
