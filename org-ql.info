@@ -71,7 +71,7 @@ Functions / Macros
 
 Changelog
 
-* 0.7-pre: 07-pre. 
+* 0.7: 07. 
 * 0.6.3: 063. 
 * 0.6.2: 062. 
 * 0.6.1: 061. 
@@ -990,7 +990,7 @@ releases.
 
 * Menu:
 
-* 0.7-pre: 07-pre. 
+* 0.7: 07. 
 * 0.6.3: 063. 
 * 0.6.2: 062. 
 * 0.6.1: 061. 
@@ -1018,10 +1018,10 @@ releases.
 * 0.1: 01. 
 
 
-File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
+File: README.info,  Node: 07,  Next: 063,  Up: Changelog
 
-5.1 0.7-pre
-===========
+5.1 0.7
+=======
 
 *Added*
    • Commands ‘org-ql-find’, ‘org-ql-find-heading’, and
@@ -1078,7 +1078,7 @@ File: README.info,  Node: 07-pre,  Next: 063,  Up: Changelog
      (https://github.com/alphapapa/org-ql/commit/91908186fcca4b5fd2e9d26da5bc0375c2b41acf).
 
 
-File: README.info,  Node: 063,  Next: 062,  Prev: 07-pre,  Up: Changelog
+File: README.info,  Node: 063,  Next: 062,  Prev: 07,  Up: Changelog
 
 5.2 0.6.3
 =========
@@ -1703,70 +1703,70 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1797
-Node: Screenshots1920
-Node: Installation2038
-Node: Quelpa2552
-Node: Helm support3080
-Node: Usage3483
-Node: Commands3881
-Node: org-ql-find4325
-Node: org-ql-refile4791
-Node: org-ql-search5114
-Node: helm-org-ql6810
-Node: org-ql-view7188
-Node: org-ql-view-sidebar7718
-Node: org-ql-view-recent-items8098
-Node: org-ql-sparse-tree8594
-Node: Queries9394
-Node: Non-sexp query syntax10511
-Node: General predicates12270
-Node: Ancestor/descendant predicates19257
-Node: Date/time predicates20385
-Node: Functions / Macros23509
-Node: Agenda-like views23807
-Ref: Function ‘org-ql-block’23969
-Node: Listing / acting-on results25230
-Ref: Caching25438
-Ref: Function ‘org-ql-select’26351
-Ref: Function ‘org-ql-query’28777
-Ref: Macro ‘org-ql’ (deprecated)30551
-Node: Custom predicates30866
-Ref: Macro ‘org-ql-defpred’31090
-Node: Dynamic block34531
-Node: Links37255
-Node: Tips37942
-Node: Changelog38266
-Node: 07-pre39049
-Node: 06341973
-Node: 06242508
-Node: 06142813
-Node: 0643381
-Node: 05246435
-Node: 05146735
-Node: 0547158
-Node: 04948687
-Node: 04848967
-Node: 04749316
-Node: 04649725
-Node: 04550133
-Node: 04450494
-Node: 04350853
-Node: 04251056
-Node: 04151217
-Node: 0451464
-Node: 03255565
-Node: 03155968
-Node: 0356165
-Node: 02359465
-Node: 02259699
-Node: 02159979
-Node: 0260184
-Node: 0164262
-Node: Notes64363
-Node: Comparison with Org Agenda searches64525
-Node: org-sidebar65414
-Node: License65693
+Node: Contents1789
+Node: Screenshots1912
+Node: Installation2030
+Node: Quelpa2544
+Node: Helm support3072
+Node: Usage3475
+Node: Commands3873
+Node: org-ql-find4317
+Node: org-ql-refile4783
+Node: org-ql-search5106
+Node: helm-org-ql6802
+Node: org-ql-view7180
+Node: org-ql-view-sidebar7710
+Node: org-ql-view-recent-items8090
+Node: org-ql-sparse-tree8586
+Node: Queries9386
+Node: Non-sexp query syntax10503
+Node: General predicates12262
+Node: Ancestor/descendant predicates19249
+Node: Date/time predicates20377
+Node: Functions / Macros23501
+Node: Agenda-like views23799
+Ref: Function ‘org-ql-block’23961
+Node: Listing / acting-on results25222
+Ref: Caching25430
+Ref: Function ‘org-ql-select’26343
+Ref: Function ‘org-ql-query’28769
+Ref: Macro ‘org-ql’ (deprecated)30543
+Node: Custom predicates30858
+Ref: Macro ‘org-ql-defpred’31082
+Node: Dynamic block34523
+Node: Links37247
+Node: Tips37934
+Node: Changelog38258
+Node: 0739033
+Node: 06341945
+Node: 06242476
+Node: 06142781
+Node: 0643349
+Node: 05246403
+Node: 05146703
+Node: 0547126
+Node: 04948655
+Node: 04848935
+Node: 04749284
+Node: 04649693
+Node: 04550101
+Node: 04450462
+Node: 04350821
+Node: 04251024
+Node: 04151185
+Node: 0451432
+Node: 03255533
+Node: 03155936
+Node: 0356133
+Node: 02359433
+Node: 02259667
+Node: 02159947
+Node: 0260152
+Node: 0164230
+Node: Notes64331
+Node: Comparison with Org Agenda searches64493
+Node: org-sidebar65382
+Node: License65661
 
 End Tag Table
 
