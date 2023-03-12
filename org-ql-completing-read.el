@@ -103,7 +103,8 @@ single predicate)."
         query-tokens snippet-regexp)
     (cl-labels ((action
                  () (font-lock-ensure (point-at-bol) (point-at-eol))
-                 (let* ((path (thread-first (org-get-outline-path t t)
+                 (let* ((org-outline-path-cache) ; See `org-get-outline-path' docstring.
+                        (path (thread-first (org-get-outline-path t t)
                                             (org-format-outline-path window-width nil "")
                                             (org-split-string "")))
                         (path (if org-ql-completing-read-reverse-paths
