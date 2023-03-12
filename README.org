@@ -545,7 +545,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.7.1-pre
 
-Nothing new yet.
+*Fixes*
++ Function ~org-ql-completing-read~ is more compatible with default Emacs completion.  (See [[https://github.com/alphapapa/org-ql/issues/338][#338]].  Thanks to [[https://github.com/arozbiz][arozbiz]] for reporting.)
 
 ** 0.7
 

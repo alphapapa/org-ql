@@ -1025,7 +1025,11 @@ File: README.info,  Node: 071-pre,  Next: 07,  Up: Changelog
 5.1 0.7.1-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Function ‘org-ql-completing-read’ is more compatible with default
+     Emacs completion.  (See #338
+     (https://github.com/alphapapa/org-ql/issues/338).  Thanks to
+     arozbiz (https://github.com/arozbiz) for reporting.)
 
 
 File: README.info,  Node: 07,  Next: 063,  Prev: 071-pre,  Up: Changelog
@@ -1748,36 +1752,36 @@ Node: Links37270
 Node: Tips37957
 Node: Changelog38281
 Node: 071-pre39079
-Node: 0739190
-Node: 06342118
-Node: 06242649
-Node: 06142954
-Node: 0643522
-Node: 05246576
-Node: 05146876
-Node: 0547299
-Node: 04948828
-Node: 04849110
-Node: 04749459
-Node: 04649868
-Node: 04550276
-Node: 04450637
-Node: 04350996
-Node: 04251199
-Node: 04151360
-Node: 0451607
-Node: 03255708
-Node: 03156111
-Node: 0356308
-Node: 02359608
-Node: 02259842
-Node: 02160122
-Node: 0260327
-Node: 0164405
-Node: Notes64506
-Node: Comparison with Org Agenda searches64668
-Node: org-sidebar65557
-Node: License65836
+Node: 0739416
+Node: 06342344
+Node: 06242875
+Node: 06143180
+Node: 0643748
+Node: 05246802
+Node: 05147102
+Node: 0547525
+Node: 04949054
+Node: 04849336
+Node: 04749685
+Node: 04650094
+Node: 04550502
+Node: 04450863
+Node: 04351222
+Node: 04251425
+Node: 04151586
+Node: 0451833
+Node: 03255934
+Node: 03156337
+Node: 0356534
+Node: 02359834
+Node: 02260068
+Node: 02160348
+Node: 0260553
+Node: 0164631
+Node: Notes64732
+Node: Comparison with Org Agenda searches64894
+Node: org-sidebar65783
+Node: License66062
 
 End Tag Table
 
