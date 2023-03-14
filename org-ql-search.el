@@ -302,7 +302,7 @@ this (must be a single line in the Org buffer):
   #+BEGIN: org-ql :query (todo \"UNDERWAY\")
 :columns (priority todo heading) :sort (priority date)
 :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take :from) params)
+  (-let* (((&plist :query :columns :sort :ts-format :take :from :groups) params)
           (from (pcase-exhaustive from
                   (`nil (current-buffer))
                   ((pred listp) from)
@@ -369,7 +369,20 @@ this (must be a single line in the Org buffer):
                                                                (`(,column ,_header)
                                                                 (funcall (alist-get column format-fns) element)))
                                                              ""))
-                                        " | ")))
+                                        " | "))
+                (format-element-list
+                 (element) (string-join (cl-loop for column in columns
+                                                 collect (or (pcase-exhaustive column
+                                                               ((pred symbolp)
+                                                                (funcall (alist-get column format-fns) element))
+                                                               (`((,column . ,args) ,_header)
+                                                                (apply (alist-get column format-fns) element args))
+                                                               (`(,column . ,(and args (guard (keywordp (car args)))))
+                                                                (apply (alist-get column format-fns) element args))
+                                                               (`(,column ,_header)
+                                                                (funcall (alist-get column format-fns) element)))
+                                                             ""))
+                                        " ")))
       ;; Table header
       (insert "| " (string-join (--map (pcase it
                                          ((pred symbolp) (capitalize (symbol-name it)))
@@ -378,15 +391,55 @@ this (must be a single line in the Org buffer):
                                        columns)
                                 " | ")
               " |" "\n")
-      (insert "|- \n")                  ; Separator hline
-      (let ((org-id-link-to-org-use-id 'use-existing))
-        (dolist (element elements)
-          (let ((link (org-with-point-at (or (org-element-property :org-hd-marker element)
-                                             (org-element-property :org-marker element))
-                        (org-store-link t))))
-            (insert "| " (format-element element) " |" "\n"))))
-      (delete-char -1)
-      (org-table-align))))
+      ;; (insert "|- \n")        
+                                        ; Separator hline
+      (let* ((org-id-link-to-org-use-id 'use-existing))
+        ;; (dolist (element elements)
+        ;;   (let ((link (org-with-point-at (or (org-element-property :org-hd-marker element)
+        ;;                                      (org-element-property :org-marker element))
+        ;;                 (org-store-link t))))
+        ;;     (insert "| " (format-element element) " |" "\n")))
+        (org-ql-dblock-taxy-insert elements :format-fn #'format-element-list :groups groups)
+        )
+      ;; (delete-char -1)
+      ;; (org-table-align)
+      )))
+
+(cl-defun org-ql-dblock-taxy-insert
+    (items &key groups (initial-depth 0)
+           (format-fn (lambda (item)
+		        ;; For compatibility with Org Agenda, we
+		        ;; add the marker property to the whole
+		        ;; string (though it only seems to check
+		        ;; at BOL).
+		        (let* ((string (gethash item taxy-org-ql-view-format-table))
+			       (marker (or (get-text-property 0 :org-hd-marker string)
+				           (when-let ((pos (next-single-property-change 0 :org-hd-marker string)))
+					     (get-text-property pos :org-hd-marker string)))))
+		          ;; I don't understand why Org sometimes
+		          ;; uses one property and sometimes the
+		          ;; other.
+		          (propertize string
+				      'org-hd-marker marker
+				      'org-marker marker)))))
+  (cl-labels ((make-fn (&rest args)
+                       (apply #'make-taxy
+                              :make #'make-fn
+                              ;; FIXME: The binding of `make-fn-group' here is very awkward.  See below.
+                              :take (taxy-make-take-function groups taxy-org-ql-view-keys)
+                              args))
+              (insert-taxy (taxy depth)
+                           (insert (make-string (* 2 depth) ? ) "+ " (or (taxy-name taxy) "GROUP") "\n")
+                           (dolist (item (taxy-items taxy))
+                             (insert-item item (1+ depth)))
+                           (dolist (taxy (taxy-taxys taxy))
+                             (insert-taxy taxy (1+ depth))))
+              (insert-item (item depth)
+                           (insert (make-string (* 2 depth) ? ) "- " (funcall format-fn item) "\n")))
+    (let* ((taxy (thread-last (make-fn)
+                              (taxy-fill items))))
+      (dolist (taxy (taxy-taxys taxy))
+        (insert-taxy taxy initial-depth)))))
 
 ;;;; Functions
 
