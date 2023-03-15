@@ -296,7 +296,12 @@ Returns in format \"%Y-%m-%d\"."
   (org-with-point-at (org-element-property :org-hd-marker item)
     (concat "Category: " (org-get-category))))
 
-(defun taxy-org-ql--latest-timestamp-in (regexp element)
+(taxy-org-ql-view-define-key timestamp (&key (age 'latest) (format "%Y-%m"))
+  "FIXME: Docstring"
+  (when-let (ts (taxy-org-ql--latest-timestamp-in item))
+    (ts-format format ts)))
+
+(cl-defun taxy-org-ql--latest-timestamp-in (element &optional (regexp org-element--timestamp-regexp))
   "Return the latest timestamp matching REGEXP in ELEMENT.
 Searches in ELEMENT's buffer."
   (org-with-point-at (org-element-property :org-hd-marker element)
@@ -311,12 +316,12 @@ Searches in ELEMENT's buffer."
 
 (taxy-org-ql-view-define-key ts-year ()
   "Return the year of ITEM's latest timestamp."
-  (when-let ((latest-ts (taxy-org-ql--latest-timestamp-in org-element--timestamp-regexp item)))
+  (when-let ((latest-ts (taxy-org-ql--latest-timestamp-in item)))
     (ts-format "%Y" latest-ts)))
 
 (taxy-org-ql-view-define-key ts-month ()
   "Return the month of ITEM's latest timestamp."
-  (when-let ((latest-ts (taxy-org-ql--latest-timestamp-in org-element--timestamp-regexp item)))
+  (when-let ((latest-ts (taxy-org-ql--latest-timestamp-in item)))
     (ts-format "%Y-%m (%B)" latest-ts)))
 
 (taxy-org-ql-view-define-key deadline (&rest args)
