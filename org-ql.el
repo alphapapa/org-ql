@@ -426,7 +426,7 @@ each priority the newest items would appear first."
     ;; Sort items
     (pcase sort
       (`nil items)
-      ((guard (cl-subsetp (-list sort) '(date deadline scheduled closed todo priority random reverse)))
+      ((guard (cl-subsetp (-list sort) '(date deadline scheduled closed todo priority random reverse ts)))
        ;; Default sorting functions
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
@@ -2407,6 +2407,10 @@ PREDICATES is a list of one or more sorting methods, including:
                         (apply-partially #'org-ql--date-type< (intern (concat ":" (symbol-name symbol)))))
                        ;; TODO: Rename `date' to `planning'.  `date' should be something else.
                        ('date #'org-ql--date<)
+                       (`ts (lambda (a b)
+                              (when-let ((a-ts (taxy-org-ql--latest-timestamp-in a))
+                                         (b-ts (taxy-org-ql--latest-timestamp-in b)))
+                                (ts< a-ts b-ts))))
                        ('priority #'org-ql--priority<)
                        ('random (lambda (&rest _ignore)
                                   (= 0 (random 2))))
