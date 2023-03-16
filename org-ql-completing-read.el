@@ -216,7 +216,16 @@ single predicate)."
                                      (cons 'category 'org-heading)
                                      (cons 'group-function #'group)
                                      (cons 'affixation-function #'affix)
-                                     (cons 'annotation-function #'annotate)))
+                                     (cons 'annotation-function #'annotate)
+                                     (cons 'display-sort-function
+                                           (lambda (strings)
+                                             (let ((quoted-tokens (mapcar #'regexp-quote query-tokens)))
+                                               (sort strings
+                                                     (lambda (a b)
+                                                       (cl-labels ((matches
+                                                                     (s) (cl-loop for token in quoted-tokens
+                                                                                  count (string-match-p token s))))
+                                                         (> (matches a) (matches b))))))))))
                     (`t
                      ;; (debug-message "COLLECTION:t INPUT:%S KEYS:%S"
                      ;;                input (hash-table-keys table))
