@@ -159,31 +159,33 @@ which see (but only the files are used)."
              (unless (eq major-mode 'org-mode)
                (user-error "This is not an Org buffer: %S" (current-buffer)))
              (current-buffer)))))
-  (let* ((org-ql-completing-read-snippet-function nil)
-         (marker (org-ql-completing-read buffers-files
-                   :query-prefix "rifle:"
-                   :query-filter (lambda (input)
-                                   (replace-regexp-in-string (rx (1+ space)) "," input t t))
+  (let* ((marker (org-ql-completing-read buffers-files
+                   :query-prefix query-prefix
+                   :query-filter query-filter
                    :prompt prompt
-                   :collection-filter #'flatten-list
-                   :action (lambda (table)
+                   :action-filter #'identity
+                   :action (lambda ()
                              (save-excursion
-                               (cl-loop while (re-search-forward org-link-any-re (org-entry-end-position) t)
+                               (cl-loop with limit = (org-entry-end-position)
+                                        while (re-search-forward org-link-any-re limit t)
                                         for link = (string-trim (match-string 0))
                                         do (progn
                                              (set-text-properties 0 (length link) '(face org-link) link)
-                                             (setf link (org-link-display-format link))
-                                             (puthash link (copy-marker (match-beginning 0)) table))
-                                        collect link)))
-                   :annotate (lambda (candidate table)
-                               (org-with-point-at (gethash candidate table)
-                                 (concat "  "
-                                         (org-format-outline-path (reverse (org-get-outline-path 'with-self))
-                                                                  nil nil "\\")
-                                         "::"
-                                         (abbreviate-file-name (buffer-file-name))))))))
+                                             (setf link (org-link-display-format link)))
+                                        collect (cons link (copy-marker (match-beginning 0))))))
+                   :snippet (lambda (&rest _)
+                              "")
+                   :path (lambda (marker)
+                           (org-with-point-at marker
+                             (let* ((path (thread-first (org-get-outline-path t t)
+                                                        (org-format-outline-path (window-width) nil "")
+                                                        (org-split-string "")))
+                                    (formatted-path (if org-ql-completing-read-reverse-paths
+                                                        (concat "\\" (string-join (reverse path) "\\"))
+                                                      (concat "/" (string-join path "/")))))
+                               formatted-path))))))
     (org-with-point-at marker
-      (org-open-at-point marker))))
+      (org-open-at-point))))
 
 (provide 'org-ql-find)
 
