@@ -86,6 +86,11 @@ Returns (STRING . MARKER) cons."
   (cons (org-entry-get nil "ITEM") (point-marker)))
 
 (defun org-ql-completing-read-snippet (marker)
+  "Return snippet for entry at MARKER.
+Returns value returned by function
+`org-ql-completing-read-snippet-function' or
+`org-ql-completing-read--snippet-simple', whichever returns a
+value, or nil."
   (while-no-input
     ;; Using `while-no-input' here doesn't make it as
     ;; responsive as, e.g. Helm while typing, but it seems to
@@ -93,6 +98,17 @@ Returns (STRING . MARKER) cons."
     (org-with-point-at marker
       (or (funcall org-ql-completing-read-snippet-function)
           (org-ql-completing-read--snippet-simple)))))
+
+(defun org-ql-completing-read-path (marker)
+  "Return formatted outline path for entry at MARKER."
+  (org-with-point-at marker
+    (let* ((path (thread-first (org-get-outline-path nil t)
+                               (org-format-outline-path (window-width) nil "")
+                               (org-split-string "")))
+           (formatted-path (if org-ql-completing-read-reverse-paths
+                               (concat "\\" (string-join (reverse path) "\\"))
+                             (concat "/" (string-join path "/")))))
+      formatted-path)))
 
 ;;;;; Completing read
 
@@ -102,18 +118,10 @@ Returns (STRING . MARKER) cons."
                    (action #'org-ql-completing-read-action)
                    (annotate #'org-ql-completing-read-snippet)
                    (snippet #'org-ql-completing-read-snippet)
-                   (path (lambda (marker)
-                           (org-with-point-at marker
-                             (let* ((path (thread-first (org-get-outline-path nil t)
-                                                        (org-format-outline-path (window-width) nil "")
-                                                        (org-split-string "")))
-                                    (formatted-path (if org-ql-completing-read-reverse-paths
-                                                        (concat "\\" (string-join (reverse path) "\\"))
-                                                      (concat "/" (string-join path "/")))))
-                               formatted-path))))
+                   (path #'org-ql-completing-read-path)
                    (action-filter #'list)
                    (prompt "Find entry: "))
-  "Return marker at Org entry in BUFFERS-FILES selected with `org-ql'.
+  "Return marker at entry in BUFFERS-FILES selected with `org-ql'.
 PROMPT is shown to the user.
 
 QUERY-PREFIX may be a string to prepend to the query entered by
@@ -139,31 +147,34 @@ single predicate)."
   ;;  (message "ORG-QL-COMPLETING-READ: Starts.")
   (let ((table (make-hash-table :test #'equal))
         (disambiguations (make-hash-table :test #'equal))
-        (window-width (window-width))
         last-input org-outline-path-cache query-tokens)
     (cl-labels (;; (debug-message
                 ;;  (f &rest args) (apply #'message (concat "ORG-QL-COMPLETING-READ: " f) args))
-                (action
-                  () (font-lock-ensure (point-at-bol) (point-at-eol))
-                  ;; FIXME: We want the fontified heading, and `org-heading-components' returns it
+                (action ()
+                  (font-lock-ensure (point-at-bol) (point-at-eol))
+                  ;; FIXME: We want the fontified string, and `org-heading-components' returns it
                   ;; without properties, so we have to use `org-get-heading', which added additional
                   ;; optional arguments in a certain Org version, so in those versions, it will
                   ;; return priority cookies and comment strings.
-                  (let ((heading (org-link-display-format (org-entry-get (point) "ITEM"))))
-                    (if (string-empty-p heading)
-                        ;; A heading's string can be empty, but we can't use one because it
-                        ;; wouldn't be useful to the user; and if one is found, it's very
-                        ;; likely to indicate an unnoticed mistake or corruption in the
-                        ;; file: so display a warning and don't record it as a candidate.
-                        (warn "Empty heading at %S in %S" (point) (buffer-name))
-                      (when (gethash heading table)
-                        ;; Disambiguate heading (even adding the path isn't enough, because that could
-                        ;; also be duplicated).
-                        (if-let ((suffix (gethash heading disambiguations)))
-                            (setf heading (format "%s <%s>" heading (cl-incf suffix)))
-                          (setf heading (format "%s <%s>" heading (puthash heading 2 disambiguations)))))
-                      (let ((marker (point-marker)))
-                        (puthash (propertize heading 'org-marker marker) marker table)))))
+
+                  ;; This function needs to handle multiple candidates per
+                  ;; call, so we loop over a list of values by default.
+                  (pcase-dolist (`(,string . ,marker) (funcall action-filter (funcall action)))
+                    (when string
+                      (if (string-empty-p string)
+                          ;; A heading's string can be empty, but we can't use one because it
+                          ;; wouldn't be useful to the user; and if one is found, it's very
+                          ;; likely to indicate an unnoticed mistake or corruption in the
+                          ;; file: so display a warning and don't record it as a candidate.
+                          (warn "Empty heading at %S" marker)
+                        (when (gethash string table)
+                          ;; Disambiguate string (even adding the path isn't enough, because that could
+                          ;; also be duplicated).
+                          (if-let ((suffix (gethash string disambiguations)))
+                              (setf string (format "%s <%s>" string (cl-incf suffix)))
+                            (setf string (format "%s <%s>" string (puthash string 2 disambiguations)))))
+                        (puthash (propertize string 'org-marker marker) marker table)))))
+
                 (path (marker)
                   (org-with-point-at marker
                     (let* ((path (thread-first (org-get-outline-path nil t)
