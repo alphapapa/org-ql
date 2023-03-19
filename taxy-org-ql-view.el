@@ -463,7 +463,7 @@ that order."
   "Format table for all items in view.")
 
 (cl-defun taxy-org-ql-view
-    (&rest rest &key name buffer queries from where group sort append columns)
+    (&rest rest &key name buffer queries from where group sort append columns narrow)
   "Show Org QL QUERIES in BUFFER with `taxy-org-ql-view'.
 BUFFER may be a buffer, a name of a buffer, or a name of a buffer
 to make.
@@ -564,7 +564,7 @@ contents."
 		             :buffers-files from
 		             :query query)))
                  (items (org-ql-query :from query-from :where query-where
-                                      :order-by query-sort))
+                                      :order-by query-sort :narrow narrow))
                  (taxy (thread-last (make-fn :name title)
                                     (taxy-fill items))))
             (push taxy (taxy-taxys instance-taxy))))
@@ -594,16 +594,17 @@ contents."
   (pcase-dolist ((map (:name section-name) (:from section-from)
                       (:where section-where)
                       (:sort section-sort) (:group section-group)
-                      (:queries section-queries))
+                      (:queries section-queries)
+                      (:narrow section-narrow))
                  sections)
-    (setf section-name (or section-name name))
+    (setf section-name (or section-name "[unnamed section]"))
     ;; HACK: Probably not where we really want to add this face.
     (add-face-text-property 0 (length section-name) 'org-ql-view-heading-1 nil section-name)
     (taxy-org-ql-view :buffer buffer :columns columns
       :name section-name :from (or section-from from)
       :where (or section-where where)
       :sort (or section-sort sort) :group (or section-group group)
-      :queries (or section-queries queries) :append append)
+      :queries (or section-queries queries) :append append :narrow section-narrow)
     (setf append t)))
 
 (defun taxy-org-ql-view-refresh ()
