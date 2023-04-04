@@ -5435,6 +5435,10 @@ John
 
 ** [[https://m00natic.github.io/lisp/manual-jit.html][Uniform Structured Syntax, Metaprogramming and Run-time Compilation]]
 
+** [[https://github.com/commercial-emacs/xlsp/blob/a0c47d48127f3cf53c53749028e22a04a2f61fdc/xlsp-xref.el#L97][dickmao's xlsp completion table function]]
+
+This looks like a helpful example for providing the shared-common-prefix functionality that programmed completion tables expect.
+
 * Testing
 
 [2020-01-08 Wed 07:15]  Subtree moved from =tests/data.org=.
@@ -5876,7 +5880,7 @@ I don't need this right now, but it might come in handy here or elsewhere.
 #+END_SRC
 
 
-* [#C] COMMENT Config                                              :noexport:
+* [#C] COMMENT Config  :noexport:
 :LOGBOOK:
 CLOCK: [2021-06-18 Fri 07:38]--[2021-06-18 Fri 21:51] => 14:13
 :END:
