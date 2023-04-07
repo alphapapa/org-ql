@@ -159,6 +159,10 @@
 - [[#use-macros-for-date][Use macros for date]]
 :END:
 
+** TODO Split org-ql-views into default and custom views
+
+    + Maybe this will work around this weird problem I'm having in Emacs 28.1 in which this variable is being written out to my init file in a way that causes git to think it's a binary file.
+
 ** PROJECT org-notebook idea
 :PROPERTIES:
 :ID:       892fb332-be66-4b7b-a031-a20d3a1b842a
