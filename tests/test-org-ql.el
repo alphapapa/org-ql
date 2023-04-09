@@ -1487,7 +1487,33 @@ with keyword arg NOW in PLIST."
           :buffer (org-ql-test-data-buffer "data-file-tags.org"))
         (org-ql-expect ('(tags "fruit"))
           '("Fruit" "Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org")))
+
+      (org-ql-it "with tag hierarchy"
+        (org-ql-expect ('(tags "groceries"))
+          '("Meat" "Poultry" "Chicken" "Duck" "Beef" "Fish" "Tuna" "Salmon" "Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags "food"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags "meat"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags "fish"))
+          '("Fish" "Tuna" "Salmon")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags "beef"))
+          '("Beef")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags "produce"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags "vegetable"))
+          '("Vegetable" "Broccoli" "Potato")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags "fruit"))
+          '("Fruit" "Blueberry" "Strawberry")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))))
 
     (describe "(tags-inherited)"
 
@@ -1518,7 +1544,33 @@ with keyword arg NOW in PLIST."
           :buffer (org-ql-test-data-buffer "data-file-tags.org"))
         (org-ql-expect ('(tags-inherited "fruit"))
           '("Blueberry" "Strawberry")
-          :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org")))
+
+      (org-ql-it "with tag hierarchy"
+        (org-ql-expect ('(tags-inherited "groceries"))
+          '("Meat" "Poultry" "Chicken" "Duck" "Beef" "Fish" "Tuna" "Salmon" "Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-inherited "food"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-inherited "meat"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-inherited "fish"))
+          '("Tuna" "Salmon")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-inherited "beef"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-inherited "produce"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-inherited "vegetable"))
+          '("Broccoli" "Potato")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-inherited "fruit"))
+          '("Blueberry" "Strawberry")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))))
 
     (describe "(tags-local)"
 
@@ -1548,7 +1600,33 @@ with keyword arg NOW in PLIST."
           :buffer (org-ql-test-data-buffer "data-file-tags.org"))
         (org-ql-expect ('(tags-local "fruit"))
           '("Fruit")
-          :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
+          :buffer (org-ql-test-data-buffer "data-file-tags.org")))
+
+      (org-ql-it "with tag hierarchy"
+        (org-ql-expect ('(tags-local "groceries"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-local "food"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-local "meat"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-local "fish"))
+          '("Fish")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-local "beef"))
+          '("Beef")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-local "produce"))
+          nil
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-local "vegetable"))
+          '("Vegetable")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+        (org-ql-expect ('(tags-local "fruit"))
+          '("Fruit")
+          :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))))
 
     (describe "(tags-all), (tags&)"
 
@@ -1590,6 +1668,60 @@ with keyword arg NOW in PLIST."
         (org-ql-expect ('(tags* "frui"))
           '("Fruit" "Blueberry" "Strawberry")
           :buffer (org-ql-test-data-buffer "data-file-tags.org"))))
+
+    (describe "(group-tags)"
+
+      (org-ql-it "with tag hierarchy"
+         (org-ql-expect ('(group-tags "groceries"))
+           '("Meat" "Poultry" "Chicken" "Duck" "Beef" "Fish" "Tuna" "Salmon" "Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags "food"))
+           '("Poultry" "Chicken" "Duck" "Beef" "Fish" "Tuna" "Salmon" "Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags "meat"))
+           '("Poultry" "Chicken" "Duck" "Beef" "Fish" "Tuna" "Salmon")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags "fish"))
+           '("Fish" "Tuna" "Salmon")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags "beef"))
+           '("Beef")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags "produce"))
+           '("Fruit" "Blueberry" "Strawberry" "Vegetable" "Broccoli" "Potato")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags "vegetable"))
+           '("Vegetable" "Broccoli" "Potato")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags "fruit"))
+           '("Fruit" "Blueberry" "Strawberry")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))))
+
+    (describe "(group-tags-all), (group-tags&)"
+
+      (org-ql-it "with tag hierarchy"
+         (org-ql-expect ('(group-tags-all "groceries" "like"))
+           '("Chicken" "Salmon")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags-all "poultry" "like"))
+           '("Chicken")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags-all "fish" "like"))
+           '("Salmon")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags-all "vegetables" "like"))
+           nil
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))))
+
+    (describe "(group-tags-regexp), (group-tags*)"
+
+      (org-ql-it "with tag hierarchy"
+         (org-ql-expect ('(group-tags-regexp ".*ke.*"))
+           '("Chicken" "Salmon")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))
+         (org-ql-expect ('(group-tags-regexp ".*ea.*"))
+           '("Poultry" "Chicken" "Duck" "Beef" "Fish" "Tuna" "Salmon")
+           :buffer (org-ql-test-data-buffer "data-tags-with-hierarchy.org"))))
 
     (describe "(ts)"
 
