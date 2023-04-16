@@ -1803,7 +1803,7 @@ interpreted as nil or non-nil)."
                    (setf property (substring (symbol-name property) 1)))
                  (list 'property property value
                        :inherit (cond ((plist-member plist :inherit) (plist-get plist :inherit))
-                                      ((listp org-use-property-inheritance) nil)
+                                      ((listp org-use-property-inheritance) ''selective)
                                       (t org-use-property-inheritance)))))
   ;; MAYBE: Should case folding be disabled for properties?  What about values?
   ;; MAYBE: Support (property) without args.
