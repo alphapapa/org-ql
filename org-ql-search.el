@@ -304,7 +304,7 @@ this (must be a single line in the Org buffer):
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\")
 :columns (priority todo heading) :sort (priority date)
-:ts-format \"%Y-%m-%d %H:%M\""
+:ts-format \"%Y-%m-%d %H:%M\" :not-links t"
   (-let* (((&plist :query :columns :sort :ts-format :take :not-links) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
