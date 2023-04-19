@@ -229,10 +229,10 @@ automatically from the query."
                         ('nil (org-agenda-files nil 'ifmode))
                         (_ (prog1 org-agenda-restrict
                              (with-current-buffer org-agenda-restrict
-			       ;; Narrow the buffer; remember to widen it later.
-			       (setf old-beg (point-min) old-end (point-max)
+             ;; Narrow the buffer; remember to widen it later.
+             (setf old-beg (point-min) old-end (point-max)
                                      narrow-p t)
-			       (narrow-to-region org-agenda-restrict-begin org-agenda-restrict-end))))))
+             (narrow-to-region org-agenda-restrict-begin org-agenda-restrict-end))))))
                 (items (org-ql-select from query
                          :action 'element-with-markers
                          :narrow narrow-p)))
@@ -296,13 +296,16 @@ Valid parameters include:
   :ts-format  Optional format string used to format
               timestamp-based columns.
 
+  :not-links  Optional boolean.  If non-nil, don't make headings
+              into links.
+
 For example, an org-ql dynamic block header could look like
 this (must be a single line in the Org buffer):
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\")
 :columns (priority todo heading) :sort (priority date)
 :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take) params)
+  (-let* (((&plist :query :columns :sort :ts-format :take :not-links) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
@@ -318,7 +321,9 @@ this (must be a single line in the Org buffer):
                  (cons 'heading (lambda (element)
                                   (let ((normalized-heading
                                          (org-ql-search--link-heading-search-string (org-element-property :raw-value element))))
-                                    (org-ql-search--org-make-link-string normalized-heading (org-link-display-format normalized-heading)))))
+                                    (if not-links
+                                        normalized-heading
+                                      (org-ql-search--org-make-link-string normalized-heading (org-link-display-format normalized-heading))))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
