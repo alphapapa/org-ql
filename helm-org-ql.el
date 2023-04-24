@@ -206,7 +206,7 @@ WINDOW-WIDTH should be the width of the Helm window."
   ;; I'd prefer not to do.  Maybe I should add a feature to `org-ql' to
   ;; call a setup function in a buffer before running queries.
   (let* ((prefix (concat (buffer-name) ":"))
-         (width (- window-width (length prefix)))
+         (width (max 0 (- window-width (length prefix))))
          (heading (org-get-heading t))
          (path (-> (org-get-outline-path)
                  (org-format-outline-path width nil "")
