@@ -547,6 +547,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Fixes*
 + Function ~org-ql-completing-read~ is more compatible with default Emacs completion.  (See [[https://github.com/alphapapa/org-ql/issues/338][#338]].  Thanks to [[https://github.com/arozbiz][arozbiz]] for reporting.)
++ In ~org-ql-completing-read~, format links for display, and use ~org-entry-get~ internally rather than ~org-get-heading~.
 
 ** 0.7
 

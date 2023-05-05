@@ -1,4 +1,4 @@
-This is README.info, produced by makeinfo version 5.2 from README.texi.
+This is README.info, produced by makeinfo version 6.7 from README.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -71,33 +71,33 @@ Functions / Macros
 
 Changelog
 
-* 0.7.1-pre: 071-pre. 
-* 0.7: 07. 
-* 0.6.3: 063. 
-* 0.6.2: 062. 
-* 0.6.1: 061. 
-* 0.6: 06. 
-* 0.5.2: 052. 
-* 0.5.1: 051. 
-* 0.5: 05. 
-* 0.4.9: 049. 
-* 0.4.8: 048. 
-* 0.4.7: 047. 
-* 0.4.6: 046. 
-* 0.4.5: 045. 
-* 0.4.4: 044. 
-* 0.4.3: 043. 
-* 0.4.2: 042. 
-* 0.4.1: 041. 
-* 0.4: 04. 
-* 0.3.2: 032. 
-* 0.3.1: 031. 
-* 0.3: 03. 
-* 0.2.3: 023. 
-* 0.2.2: 022. 
-* 0.2.1: 021. 
-* 0.2: 02. 
-* 0.1: 01. 
+* 0.7.1-pre: 071-pre.
+* 0.7: 07.
+* 0.6.3: 063.
+* 0.6.2: 062.
+* 0.6.1: 061.
+* 0.6: 06.
+* 0.5.2: 052.
+* 0.5.1: 051.
+* 0.5: 05.
+* 0.4.9: 049.
+* 0.4.8: 048.
+* 0.4.7: 047.
+* 0.4.6: 046.
+* 0.4.5: 045.
+* 0.4.4: 044.
+* 0.4.3: 043.
+* 0.4.2: 042.
+* 0.4.1: 041.
+* 0.4: 04.
+* 0.3.2: 032.
+* 0.3.1: 031.
+* 0.3: 03.
+* 0.2.3: 023.
+* 0.2.2: 022.
+* 0.2.1: 021.
+* 0.2: 02.
+* 0.1: 01.
 
 Notes
 
@@ -991,33 +991,33 @@ releases.
 
 * Menu:
 
-* 0.7.1-pre: 071-pre. 
-* 0.7: 07. 
-* 0.6.3: 063. 
-* 0.6.2: 062. 
-* 0.6.1: 061. 
-* 0.6: 06. 
-* 0.5.2: 052. 
-* 0.5.1: 051. 
-* 0.5: 05. 
-* 0.4.9: 049. 
-* 0.4.8: 048. 
-* 0.4.7: 047. 
-* 0.4.6: 046. 
-* 0.4.5: 045. 
-* 0.4.4: 044. 
-* 0.4.3: 043. 
-* 0.4.2: 042. 
-* 0.4.1: 041. 
-* 0.4: 04. 
-* 0.3.2: 032. 
-* 0.3.1: 031. 
-* 0.3: 03. 
-* 0.2.3: 023. 
-* 0.2.2: 022. 
-* 0.2.1: 021. 
-* 0.2: 02. 
-* 0.1: 01. 
+* 0.7.1-pre: 071-pre.
+* 0.7: 07.
+* 0.6.3: 063.
+* 0.6.2: 062.
+* 0.6.1: 061.
+* 0.6: 06.
+* 0.5.2: 052.
+* 0.5.1: 051.
+* 0.5: 05.
+* 0.4.9: 049.
+* 0.4.8: 048.
+* 0.4.7: 047.
+* 0.4.6: 046.
+* 0.4.5: 045.
+* 0.4.4: 044.
+* 0.4.3: 043.
+* 0.4.2: 042.
+* 0.4.1: 041.
+* 0.4: 04.
+* 0.3.2: 032.
+* 0.3.1: 031.
+* 0.3: 03.
+* 0.2.3: 023.
+* 0.2.2: 022.
+* 0.2.1: 021.
+* 0.2: 02.
+* 0.1: 01.
 
 
 File: README.info,  Node: 071-pre,  Next: 07,  Up: Changelog
@@ -1030,6 +1030,8 @@ File: README.info,  Node: 071-pre,  Next: 07,  Up: Changelog
      Emacs completion.  (See #338
      (https://github.com/alphapapa/org-ql/issues/338).  Thanks to
      arozbiz (https://github.com/arozbiz) for reporting.)
+   • In ‘org-ql-completing-read’, format links for display, and use
+     ‘org-entry-get’ internally rather than ‘org-get-heading’.
 
 
 File: README.info,  Node: 07,  Next: 063,  Prev: 071-pre,  Up: Changelog
@@ -1717,71 +1719,71 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1812
-Node: Screenshots1935
-Node: Installation2053
-Node: Quelpa2567
-Node: Helm support3095
-Node: Usage3498
-Node: Commands3896
-Node: org-ql-find4340
-Node: org-ql-refile4806
-Node: org-ql-search5129
-Node: helm-org-ql6825
-Node: org-ql-view7203
-Node: org-ql-view-sidebar7733
-Node: org-ql-view-recent-items8113
-Node: org-ql-sparse-tree8609
-Node: Queries9409
-Node: Non-sexp query syntax10526
-Node: General predicates12285
-Node: Ancestor/descendant predicates19272
-Node: Date/time predicates20400
-Node: Functions / Macros23524
-Node: Agenda-like views23822
-Ref: Function ‘org-ql-block’23984
-Node: Listing / acting-on results25245
-Ref: Caching25453
-Ref: Function ‘org-ql-select’26366
-Ref: Function ‘org-ql-query’28792
-Ref: Macro ‘org-ql’ (deprecated)30566
-Node: Custom predicates30881
-Ref: Macro ‘org-ql-defpred’31105
-Node: Dynamic block34546
-Node: Links37270
-Node: Tips37957
-Node: Changelog38281
-Node: 071-pre39079
-Node: 0739416
-Node: 06342344
-Node: 06242875
-Node: 06143180
-Node: 0643748
-Node: 05246802
-Node: 05147102
-Node: 0547525
-Node: 04949054
-Node: 04849336
-Node: 04749685
-Node: 04650094
-Node: 04550502
-Node: 04450863
-Node: 04351222
-Node: 04251425
-Node: 04151586
-Node: 0451833
-Node: 03255934
-Node: 03156337
-Node: 0356534
-Node: 02359834
-Node: 02260068
-Node: 02160348
-Node: 0260553
-Node: 0164631
-Node: Notes64732
-Node: Comparison with Org Agenda searches64894
-Node: org-sidebar65783
-Node: License66062
+Node: Contents1785
+Node: Screenshots1908
+Node: Installation2026
+Node: Quelpa2540
+Node: Helm support3068
+Node: Usage3471
+Node: Commands3869
+Node: org-ql-find4313
+Node: org-ql-refile4779
+Node: org-ql-search5102
+Node: helm-org-ql6798
+Node: org-ql-view7176
+Node: org-ql-view-sidebar7706
+Node: org-ql-view-recent-items8086
+Node: org-ql-sparse-tree8582
+Node: Queries9382
+Node: Non-sexp query syntax10499
+Node: General predicates12258
+Node: Ancestor/descendant predicates19245
+Node: Date/time predicates20373
+Node: Functions / Macros23497
+Node: Agenda-like views23795
+Ref: Function org-ql-block23957
+Node: Listing / acting-on results25218
+Ref: Caching25426
+Ref: Function org-ql-select26339
+Ref: Function org-ql-query28765
+Ref: Macro org-ql (deprecated)30539
+Node: Custom predicates30854
+Ref: Macro org-ql-defpred31078
+Node: Dynamic block34519
+Node: Links37243
+Node: Tips37930
+Node: Changelog38254
+Node: 071-pre39025
+Node: 0739507
+Node: 06342435
+Node: 06242966
+Node: 06143271
+Node: 0643839
+Node: 05246893
+Node: 05147193
+Node: 0547616
+Node: 04949145
+Node: 04849427
+Node: 04749776
+Node: 04650185
+Node: 04550593
+Node: 04450954
+Node: 04351313
+Node: 04251516
+Node: 04151677
+Node: 0451924
+Node: 03256025
+Node: 03156428
+Node: 0356625
+Node: 02359925
+Node: 02260159
+Node: 02160439
+Node: 0260644
+Node: 0164722
+Node: Notes64823
+Node: Comparison with Org Agenda searches64985
+Node: org-sidebar65874
+Node: License66153
 
 End Tag Table
 

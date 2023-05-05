@@ -116,7 +116,7 @@ single predicate)."
                  ;; without properties, so we have to use `org-get-heading', which added additional
                  ;; optional arguments in a certain Org version, so in those versions, it will
                  ;; return priority cookies and comment strings.
-                 (let ((heading (org-get-heading t t)))
+                 (let ((heading (org-link-display-format (org-entry-get (point) "ITEM"))))
                    (when (gethash heading table)
                      ;; Disambiguate heading (even adding the path isn't enough, because that could
                      ;; also be duplicated).
