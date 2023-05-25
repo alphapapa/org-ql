@@ -76,6 +76,7 @@ Tags are stored in match group 1.  Match group 2 stores the tags
 without the enclosing colons.")
 
 (defvaralias 'org-ql-link-regexp
+  ;; FIXME: `org-link-bracket-re' is void until `org-link-make-regexps' is called.
   (if (bound-and-true-p org-link-bracket-re)
       'org-link-bracket-re
     'org-bracket-link-regexp)
