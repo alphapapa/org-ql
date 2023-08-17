@@ -379,6 +379,7 @@ each priority the newest items would appear first."
                                              (display-warning 'org-ql-select (format "Can't open file: %s" it) :error)))))
                         ;; Ignore special/hidden buffers.
                         (--remove (string-prefix-p " " (buffer-name it)))))
+          (more-than-one-source-requested (> (length buffers-or-files) 1))
           (query (org-ql--normalize-query query))
           ((&plist :query :preamble :preamble-case-fold) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
@@ -417,8 +418,13 @@ each priority the newest items would appear first."
                               (--map (with-current-buffer it
                                        (unless (derived-mode-p 'org-mode)
                                          (display-warning 'org-ql-select (format  "Not an Org buffer: %s" (buffer-name)) :error))
-                                       (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                              :predicate predicate :action action :narrow narrow)))
+                                       (org-ql--select-cached :query query
+                                                              :preamble preamble
+                                                              :preamble-case-fold preamble-case-fold
+                                                              :predicate predicate
+                                                              :action action
+                                                              :narrow narrow
+                                                              :supress-empty-warning more-than-one-source-requested)))
                               (-flatten-n 1)))
                      (--each orig-fns
                        ;; Restore original function mappings.
@@ -503,7 +509,7 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
               (t (puthash query-cache-key (or new-result 'org-ql-nil) query-cache)))
         new-result))))
 
-(cl-defun org-ql--select (&key preamble preamble-case-fold predicate action narrow
+(cl-defun org-ql--select (&key preamble preamble-case-fold predicate action narrow supress-empty-warning
                                &allow-other-keys)
   "Return results for given arguments.
 Return results of mapping function ACTION across entries in
@@ -527,7 +533,7 @@ PREAMBLE-CASE-FOLD."
       (if (not (org-at-heading-p))
           (progn
             ;; No headings in buffer: return nil.
-            (unless (string-prefix-p " " (buffer-name))
+            (unless (or (string-prefix-p " " (buffer-name)) supress-empty-warning)
               ;; Not a special, hidden buffer: show message, because if a user accidentally
               ;; searches a buffer without headings, he might be confused.
               (message "org-ql: No headings in buffer: %s" (current-buffer)))

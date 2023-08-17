@@ -102,7 +102,7 @@ single predicate)."
   ;; complexity of the "Programmed Completion" API and the time spent trying to get this reasonably
   ;; close to "correct," I'm leaving it in, because I will undoubtedly have to go through this
   ;; process again.
-  
+
   ;;  (message "ORG-QL-COMPLETING-READ: Starts.")
   (let ((table (make-hash-table :test #'equal))
         (disambiguations (make-hash-table :test #'equal))
