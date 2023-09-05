@@ -1,7 +1,6 @@
 #+TITLE: org-ql
 
 # NOTE: Using =BEGIN_HTML= for this causes TeX/info export to fail, but this HTML block works.
-# #+HTML: <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
 #+HTML: <img src="images/dog.png" align="right">
 
 # NOTE: To avoid having this in the info manual, we use HTML rather than Org syntax; it still appears with the GitHub renderer.
