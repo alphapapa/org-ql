@@ -1030,6 +1030,11 @@ File: README.info,  Node: 071-pre,  Next: 07,  Up: Changelog
      Emacs completion.  (See #338
      (https://github.com/alphapapa/org-ql/issues/338).  Thanks to
      arozbiz (https://github.com/arozbiz) for reporting.)
+   • Function ‘org-ql-completing-read’ would sometimes stop updating
+     with changes in input.  (See #350
+     (https://github.com/alphapapa/org-ql/issues/350).  Thanks to Ankit
+     Raj Pandey (https://github.com/anpandey) for reporting and fixing,
+     and to Daniel Mendler (https://github.com/minad) for advising.)
    • In ‘org-ql-completing-read’, format links for display, and use
      ‘org-entry-get’ internally rather than ‘org-get-heading’.
 
@@ -1754,36 +1759,36 @@ Node: Links37243
 Node: Tips37930
 Node: Changelog38254
 Node: 071-pre39025
-Node: 0739507
-Node: 06342435
-Node: 06242966
-Node: 06143271
-Node: 0643839
-Node: 05246893
-Node: 05147193
-Node: 0547616
-Node: 04949145
-Node: 04849427
-Node: 04749776
-Node: 04650185
-Node: 04550593
-Node: 04450954
-Node: 04351313
-Node: 04251516
-Node: 04151677
-Node: 0451924
-Node: 03256025
-Node: 03156428
-Node: 0356625
-Node: 02359925
-Node: 02260159
-Node: 02160439
-Node: 0260644
-Node: 0164722
-Node: Notes64823
-Node: Comparison with Org Agenda searches64985
-Node: org-sidebar65874
-Node: License66153
+Node: 0739834
+Node: 06342762
+Node: 06243293
+Node: 06143598
+Node: 0644166
+Node: 05247220
+Node: 05147520
+Node: 0547943
+Node: 04949472
+Node: 04849754
+Node: 04750103
+Node: 04650512
+Node: 04550920
+Node: 04451281
+Node: 04351640
+Node: 04251843
+Node: 04152004
+Node: 0452251
+Node: 03256352
+Node: 03156755
+Node: 0356952
+Node: 02360252
+Node: 02260486
+Node: 02160766
+Node: 0260971
+Node: 0165049
+Node: Notes65150
+Node: Comparison with Org Agenda searches65312
+Node: org-sidebar66201
+Node: License66480
 
 End Tag Table
 

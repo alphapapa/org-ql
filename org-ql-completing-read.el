@@ -123,7 +123,8 @@ single predicate)."
                      (if-let ((suffix (gethash heading disambiguations)))
                          (setf heading (format "%s <%s>" heading (cl-incf suffix)))
                        (setf heading (format "%s <%s>" heading (puthash heading 2 disambiguations)))))
-                   (puthash heading (point-marker) table)))
+                   (let ((marker (point-marker)))
+                    (puthash (propertize heading 'org-marker marker) marker table))))
                 (path (marker)
                       (org-with-point-at marker
                         (let* ((path (thread-first (org-get-outline-path nil t)
@@ -140,7 +141,7 @@ single predicate)."
                 (affix (completions)
                        ;; (debug-message "AFFIX:%S" completions)
                        (cl-loop for completion in completions
-                                for marker = (gethash completion table)
+                                for marker = (get-text-property 0 'org-marker completion)
                                 for prefix = (todo marker)
                                 for suffix = (concat (path marker) " " (snippet marker))
                                 collect (list completion prefix suffix)))
@@ -150,7 +151,7 @@ single predicate)."
                             ;; Using `while-no-input' here doesn't make it as responsive as,
                             ;; e.g. Helm while typing, but it seems to help a little when using the
                             ;; org-rifle-style snippets.
-                            (or (snippet (gethash candidate table)) "")))
+                            (or (snippet (get-text-property 0 'org-marker completion)) "")))
                 (snippet
                  (marker) (when-let
                               ((snippet
@@ -161,7 +162,7 @@ single predicate)."
                                         'face 'org-ql-completing-read-snippet)))
                 (group (candidate transform)
                        (pcase transform
-                         (`nil (buffer-name (marker-buffer (gethash candidate table))))
+                         (`nil (buffer-name (marker-buffer (get-text-property 0 'org-marker candidate))))
                          (_ candidate)))
                 (try (string _collection _pred point &optional _metadata)
                      ;; (debug-message "TRY: STRING:%S" string)
