@@ -151,7 +151,7 @@ single predicate)."
                             ;; Using `while-no-input' here doesn't make it as responsive as,
                             ;; e.g. Helm while typing, but it seems to help a little when using the
                             ;; org-rifle-style snippets.
-                            (or (snippet (get-text-property 0 'org-marker completion)) "")))
+                            (or (snippet (get-text-property 0 'org-marker candidate)) "")))
                 (snippet
                  (marker) (when-let
                               ((snippet
