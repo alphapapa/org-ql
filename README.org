@@ -544,7 +544,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.7.2-pre
 
-Nothing new yet.
+*Fixes*
++ Timestamp predicates are more tolerant of partial input (e.g. preventing errors while the user is typing a query into ~org-ql-find~).
 
 ** 0.7.1
 

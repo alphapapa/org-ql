@@ -1286,6 +1286,9 @@ result form."
              to on))
      (when from
        (setq from (pcase from
+                    ("-"
+                     ;; Ignore, because it means the user is typing a negative number.
+                     nil)
                     ((or 'today "today") (->> (ts-now)
                                               (ts-apply :hour 0 :minute 0 :second 0)))
                     ((pred numberp) (->> (ts-now)
@@ -1302,6 +1305,9 @@ result form."
                     ((pred ts-p) from))))
      (when to
        (setq to (pcase to
+                  ("-"
+                   ;; Ignore, because it means the user is typing a negative number.
+                   nil)
                   ((or 'today "today") (->> (ts-now)
                                             (ts-apply :hour 23 :minute 59 :second 59)))
                   ((pred numberp) (->> (ts-now)
