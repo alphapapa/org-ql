@@ -945,7 +945,7 @@ value of `org-ql-predicates')."
                                ;; obscure bug in `peg': when one keyword is a substring of another,
                                ;; and the shorter one is listed first, the shorter one fails to match.
                                (-sort (-on #'> #'length))))
-         (pexs `((query (+ (and term (* [blank]))))
+         (pexs `((query (and (* [blank]) (+ (and term (* [blank])))))
                  (term (or (and negation (list positive-term)
                                 ;; This is a bit confusing, but it seems to work.  There's probably a better way.
                                 `(pred -- (list 'not (car pred))))
