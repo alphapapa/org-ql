@@ -172,8 +172,6 @@ single predicate)."
                      ;; (debug-message "all-completions RETURNS: %S" (all-completions string table pred))
                      (all-completions string table pred))
                 (collection (input _pred flag)
-                            (when query-prefix
-                              (setf input (concat query-prefix input)))
                             (pcase flag
                               ('metadata (list 'metadata
                                                (cons 'group-function #'group)
@@ -224,6 +222,8 @@ single predicate)."
                                `(boundaries 0 . ,(length suffix)))))
                 (run-query (input)
                            ;; (debug-message "RUN-QUERY:%S" input)
+                           (when query-prefix
+                             (setf input (concat query-prefix input)))
                            (unless (or (string-empty-p input)
                                        (equal last-input input))
                              ;; (debug-message "RUN-QUERY:%S  RUNNING" input)

@@ -1033,6 +1033,10 @@ File: README.info,  Node: 072-pre,  Next: 071,  Up: Changelog
      ‘org-ql-find’).
    • Query parser ignores leading whitespace (e.g.  preventing errors
      while the user is typing a query into ‘org-ql-find’).
+   • Use of ‘org-ql-find’ with ‘:query-prefix’ argument prevented
+     selection of results.  (#351
+     (https://github.com/alphapapa/org-ql/issues/351).  Thanks to Daniel
+     Fleischer (https://github.com/danielfleischer) for reporting.)
 
 
 File: README.info,  Node: 071,  Next: 07,  Prev: 072-pre,  Up: Changelog
@@ -1774,37 +1778,37 @@ Node: Links37257
 Node: Tips37944
 Node: Changelog38268
 Node: 072-pre39053
-Node: 07139446
-Node: 0740259
-Node: 06343183
-Node: 06243714
-Node: 06144019
-Node: 0644587
-Node: 05247641
-Node: 05147941
-Node: 0548364
-Node: 04949895
-Node: 04850177
-Node: 04750526
-Node: 04650935
-Node: 04551343
-Node: 04451704
-Node: 04352063
-Node: 04252266
-Node: 04152427
-Node: 0452674
-Node: 03256775
-Node: 03157178
-Node: 0357375
-Node: 02360675
-Node: 02260909
-Node: 02161189
-Node: 0261394
-Node: 0165472
-Node: Notes65573
-Node: Comparison with Org Agenda searches65735
-Node: org-sidebar66624
-Node: License66903
+Node: 07139697
+Node: 0740510
+Node: 06343434
+Node: 06243965
+Node: 06144270
+Node: 0644838
+Node: 05247892
+Node: 05148192
+Node: 0548615
+Node: 04950146
+Node: 04850428
+Node: 04750777
+Node: 04651186
+Node: 04551594
+Node: 04451955
+Node: 04352314
+Node: 04252517
+Node: 04152678
+Node: 0452925
+Node: 03257026
+Node: 03157429
+Node: 0357626
+Node: 02360926
+Node: 02261160
+Node: 02161440
+Node: 0261645
+Node: 0165723
+Node: Notes65824
+Node: Comparison with Org Agenda searches65986
+Node: org-sidebar66875
+Node: License67154
 
 End Tag Table
 

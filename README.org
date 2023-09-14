@@ -547,6 +547,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Fixes*
 + Timestamp predicates are more tolerant of partial input (e.g. preventing errors while the user is typing a query into ~org-ql-find~).
 + Query parser ignores leading whitespace (e.g. preventing errors while the user is typing a query into ~org-ql-find~).
++ Use of ~org-ql-find~ with ~:query-prefix~ argument prevented selection of results.  ([[https://github.com/alphapapa/org-ql/issues/351][#351]].  Thanks to [[https://github.com/danielfleischer][Daniel Fleischer]] for reporting.)
 
 ** 0.7.1
 
