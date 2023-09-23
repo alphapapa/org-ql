@@ -153,11 +153,6 @@ single predicate)."
                 ;;  (f &rest args) (apply #'message (concat "ORG-QL-COMPLETING-READ: " f) args))
                 (action ()
                   (font-lock-ensure (point-at-bol) (point-at-eol))
-                  ;; FIXME: We want the fontified string, and `org-heading-components' returns it
-                  ;; without properties, so we have to use `org-get-heading', which added additional
-                  ;; optional arguments in a certain Org version, so in those versions, it will
-                  ;; return priority cookies and comment strings.
-
                   ;; This function needs to handle multiple candidates per
                   ;; call, so we loop over a list of values by default.
                   (pcase-dolist (`(,string . ,marker) (funcall action-filter (funcall action)))
