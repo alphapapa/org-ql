@@ -111,145 +111,145 @@ single predicate)."
     (cl-labels (;; (debug-message
                 ;;  (f &rest args) (apply #'message (concat "ORG-QL-COMPLETING-READ: " f) args))
                 (action
-                 () (font-lock-ensure (point-at-bol) (point-at-eol))
-                 ;; FIXME: We want the fontified heading, and `org-heading-components' returns it
-                 ;; without properties, so we have to use `org-get-heading', which added additional
-                 ;; optional arguments in a certain Org version, so in those versions, it will
-                 ;; return priority cookies and comment strings.
-                 (let ((heading (org-link-display-format (org-entry-get (point) "ITEM"))))
-                   (when (gethash heading table)
-                     ;; Disambiguate heading (even adding the path isn't enough, because that could
-                     ;; also be duplicated).
-                     (if-let ((suffix (gethash heading disambiguations)))
-                         (setf heading (format "%s <%s>" heading (cl-incf suffix)))
-                       (setf heading (format "%s <%s>" heading (puthash heading 2 disambiguations)))))
-                   (let ((marker (point-marker)))
-                    (puthash (propertize heading 'org-marker marker) marker table))))
+                  () (font-lock-ensure (point-at-bol) (point-at-eol))
+                  ;; FIXME: We want the fontified heading, and `org-heading-components' returns it
+                  ;; without properties, so we have to use `org-get-heading', which added additional
+                  ;; optional arguments in a certain Org version, so in those versions, it will
+                  ;; return priority cookies and comment strings.
+                  (let ((heading (org-link-display-format (org-entry-get (point) "ITEM"))))
+                    (when (gethash heading table)
+                      ;; Disambiguate heading (even adding the path isn't enough, because that could
+                      ;; also be duplicated).
+                      (if-let ((suffix (gethash heading disambiguations)))
+                          (setf heading (format "%s <%s>" heading (cl-incf suffix)))
+                        (setf heading (format "%s <%s>" heading (puthash heading 2 disambiguations)))))
+                    (let ((marker (point-marker)))
+                      (puthash (propertize heading 'org-marker marker) marker table))))
                 (path (marker)
-                      (org-with-point-at marker
-                        (let* ((path (thread-first (org-get-outline-path nil t)
-                                                   (org-format-outline-path window-width nil "")
-                                                   (org-split-string "")))
-                               (formatted-path (if org-ql-completing-read-reverse-paths
-                                                   (concat "\\" (string-join (reverse path) "\\"))
-                                                 (concat "/" (string-join path "/")))))
-                          formatted-path)))
+                  (org-with-point-at marker
+                    (let* ((path (thread-first (org-get-outline-path nil t)
+                                               (org-format-outline-path window-width nil "")
+                                               (org-split-string "")))
+                           (formatted-path (if org-ql-completing-read-reverse-paths
+                                               (concat "\\" (string-join (reverse path) "\\"))
+                                             (concat "/" (string-join path "/")))))
+                      formatted-path)))
                 (todo
-                 (marker) (if-let (it (org-entry-get marker "TODO"))
-                              (concat (propertize it 'face (org-get-todo-face it)) " ")
-                            ""))
+                  (marker) (if-let (it (org-entry-get marker "TODO"))
+                               (concat (propertize it 'face (org-get-todo-face it)) " ")
+                             ""))
                 (affix (completions)
-                       ;; (debug-message "AFFIX:%S" completions)
-                       (cl-loop for completion in completions
-                                for marker = (get-text-property 0 'org-marker completion)
-                                for prefix = (todo marker)
-                                for suffix = (concat (path marker) " " (snippet marker))
-                                collect (list completion prefix suffix)))
+                  ;; (debug-message "AFFIX:%S" completions)
+                  (cl-loop for completion in completions
+                           for marker = (get-text-property 0 'org-marker completion)
+                           for prefix = (todo marker)
+                           for suffix = (concat (path marker) " " (snippet marker))
+                           collect (list completion prefix suffix)))
                 (annotate (candidate)
-                          ;; (debug-message "ANNOTATE:%S" candidate)
-                          (while-no-input
-                            ;; Using `while-no-input' here doesn't make it as responsive as,
-                            ;; e.g. Helm while typing, but it seems to help a little when using the
-                            ;; org-rifle-style snippets.
-                            (or (snippet (get-text-property 0 'org-marker candidate)) "")))
+                  ;; (debug-message "ANNOTATE:%S" candidate)
+                  (while-no-input
+                    ;; Using `while-no-input' here doesn't make it as responsive as,
+                    ;; e.g. Helm while typing, but it seems to help a little when using the
+                    ;; org-rifle-style snippets.
+                    (or (snippet (get-text-property 0 'org-marker candidate)) "")))
                 (snippet
-                 (marker) (when-let
-                              ((snippet
-                                (org-with-point-at marker
-                                  (or (funcall org-ql-completing-read-snippet-function snippet-regexp)
-                                      (org-ql-completing-read--snippet-simple)))))
-                            (propertize (concat " " snippet)
-                                        'face 'org-ql-completing-read-snippet)))
+                  (marker) (when-let
+                               ((snippet
+                                 (org-with-point-at marker
+                                   (or (funcall org-ql-completing-read-snippet-function snippet-regexp)
+                                       (org-ql-completing-read--snippet-simple)))))
+                             (propertize (concat " " snippet)
+                                         'face 'org-ql-completing-read-snippet)))
                 (group (candidate transform)
-                       (pcase transform
-                         (`nil (buffer-name (marker-buffer (get-text-property 0 'org-marker candidate))))
-                         (_ candidate)))
+                  (pcase transform
+                    (`nil (buffer-name (marker-buffer (get-text-property 0 'org-marker candidate))))
+                    (_ candidate)))
                 (try (string _collection _pred point &optional _metadata)
-                     ;; (debug-message "TRY: STRING:%S" string)
-                     (cons string point))
+                  ;; (debug-message "TRY: STRING:%S" string)
+                  (cons string point))
                 (all (string table pred _point)
-                     ;; (debug-message "all: STRING:%S" string)
-                     ;; (debug-message "all-completions RETURNS: %S" (all-completions string table pred))
-                     (all-completions string table pred))
+                  ;; (debug-message "all: STRING:%S" string)
+                  ;; (debug-message "all-completions RETURNS: %S" (all-completions string table pred))
+                  (all-completions string table pred))
                 (collection (input _pred flag)
-                            (pcase flag
-                              ('metadata (list 'metadata
-                                               (cons 'group-function #'group)
-                                               (cons 'affixation-function #'affix)
-                                               (cons 'annotation-function #'annotate)))
-                              (`t
-                               ;; (debug-message "COLLECTION:t INPUT:%S KEYS:%S"
-                               ;;                input (hash-table-keys table))
-                               ;; It's not ideal to call `run-query' unconditionally here, but due to
-                               ;; the complexity of the "Programmed Completion" API, it's basically
-                               ;; necessary, and org-ql's caching should make it nearly free.
-                               (run-query input)
-                               (hash-table-keys table))
-                              ('lambda
-                                ;; (debug-message "COLLECTION:lambda INPUT:%S KEYS:%S"
-                                ;;                input (hash-table-keys table))
-                                (if (not (hash-table-empty-p table))
-                                    (when (gethash input table)
-                                      t)
-                                  (run-query input)
-                                  (when (gethash input table)
-                                    ;; (debug-message "COLLECTION:lambda INPUT:%S FOUND" input)
-                                    t)))
-                              (`nil
-                               ;; (debug-message "COLLECTION:nil INPUT:%S" input)
-                               (if (not (hash-table-empty-p table))
-                                   (when (gethash input table)
-                                     t)
-                                 (run-query input)
-                                 ;; (debug-message "COLLECTION:nil INPUT:%S KEYS:%S"
-                                 ;;                input (hash-table-keys table))
-                                 (cond ((hash-table-empty-p table)
-                                        nil)
-                                       ((gethash input table)
-                                        t)
-                                       (t
-                                        ;; FIXME: "it should return the longest common prefix
-                                        ;; substring of all matches otherwise"...but there's no
-                                        ;; function to compute that?  At least returning an empty
-                                        ;; string doesn't seem to break anything.
-                                        input))))
-                              (`(boundaries . ,suffix)
-                               ;; (debug-message "COLLECTION:boundaries INPUT:%S SUFFIX:%S KEYS:%S"
-                               ;;                input suffix (hash-table-keys table))
-                               ;; FIXME: This is unlikely to be correct, but I'm not even sure if it
-                               ;; can be correct in this case since the input (e.g. "todo: foo")
-                               ;; usually won't match a completion candidate directly.
-                               `(boundaries 0 . ,(length suffix)))))
+                  (pcase flag
+                    ('metadata (list 'metadata
+                                     (cons 'group-function #'group)
+                                     (cons 'affixation-function #'affix)
+                                     (cons 'annotation-function #'annotate)))
+                    (`t
+                     ;; (debug-message "COLLECTION:t INPUT:%S KEYS:%S"
+                     ;;                input (hash-table-keys table))
+                     ;; It's not ideal to call `run-query' unconditionally here, but due to
+                     ;; the complexity of the "Programmed Completion" API, it's basically
+                     ;; necessary, and org-ql's caching should make it nearly free.
+                     (run-query input)
+                     (hash-table-keys table))
+                    ('lambda
+                      ;; (debug-message "COLLECTION:lambda INPUT:%S KEYS:%S"
+                      ;;                input (hash-table-keys table))
+                      (if (not (hash-table-empty-p table))
+                          (when (gethash input table)
+                            t)
+                        (run-query input)
+                        (when (gethash input table)
+                          ;; (debug-message "COLLECTION:lambda INPUT:%S FOUND" input)
+                          t)))
+                    (`nil
+                     ;; (debug-message "COLLECTION:nil INPUT:%S" input)
+                     (if (not (hash-table-empty-p table))
+                         (when (gethash input table)
+                           t)
+                       (run-query input)
+                       ;; (debug-message "COLLECTION:nil INPUT:%S KEYS:%S"
+                       ;;                input (hash-table-keys table))
+                       (cond ((hash-table-empty-p table)
+                              nil)
+                             ((gethash input table)
+                              t)
+                             (t
+                              ;; FIXME: "it should return the longest common prefix
+                              ;; substring of all matches otherwise"...but there's no
+                              ;; function to compute that?  At least returning an empty
+                              ;; string doesn't seem to break anything.
+                              input))))
+                    (`(boundaries . ,suffix)
+                     ;; (debug-message "COLLECTION:boundaries INPUT:%S SUFFIX:%S KEYS:%S"
+                     ;;                input suffix (hash-table-keys table))
+                     ;; FIXME: This is unlikely to be correct, but I'm not even sure if it
+                     ;; can be correct in this case since the input (e.g. "todo: foo")
+                     ;; usually won't match a completion candidate directly.
+                     `(boundaries 0 . ,(length suffix)))))
                 (run-query (input)
-                           ;; (debug-message "RUN-QUERY:%S" input)
-                           (when query-prefix
-                             (setf input (concat query-prefix input)))
-                           (unless (or (string-empty-p input)
-                                       (equal last-input input))
-                             ;; (debug-message "RUN-QUERY:%S  RUNNING" input)
-                             (setf last-input input)
-                             ;; Clear hash table each time the user changes the input.
-                             (clrhash table)
-                             (clrhash disambiguations)
-                             (when query-filter
-                               (setf input (funcall query-filter input)))
-                             (pcase org-ql-completing-read-snippet-function
-                               ('org-ql-completing-read--snippet-regexp
-                                (setf query-tokens
-                                      ;; Remove any tokens that specify predicates or are too short.
-                                      (--select (not (or (string-match-p (rx bos (1+ (not (any ":"))) ":") it)
-                                                         (< (length it) org-ql-completing-read-snippet-minimum-token-length)))
-                                                (split-string input nil t (rx space)))
-                                      snippet-regexp
-                                      (when query-tokens
-                                        ;; Limiting each context word to 15 characters prevents
-                                        ;; excessively long, non-word strings from ending up in
-                                        ;; snippets, which can adversely affect performance.
-                                        (rx-to-string `(seq (optional (repeat 1 3 (repeat 1 15 (not space)) (0+ space)))
-                                                            bow (or ,@query-tokens) (0+ (not space))
-                                                            (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))))
-                             (org-ql-select buffers-files (org-ql--query-string-to-sexp input)
-                               :action #'action))))
+                  ;; (debug-message "RUN-QUERY:%S" input)
+                  (when query-prefix
+                    (setf input (concat query-prefix input)))
+                  (unless (or (string-empty-p input)
+                              (equal last-input input))
+                    ;; (debug-message "RUN-QUERY:%S  RUNNING" input)
+                    (setf last-input input)
+                    ;; Clear hash table each time the user changes the input.
+                    (clrhash table)
+                    (clrhash disambiguations)
+                    (when query-filter
+                      (setf input (funcall query-filter input)))
+                    (pcase org-ql-completing-read-snippet-function
+                      ('org-ql-completing-read--snippet-regexp
+                       (setf query-tokens
+                             ;; Remove any tokens that specify predicates or are too short.
+                             (--select (not (or (string-match-p (rx bos (1+ (not (any ":"))) ":") it)
+                                                (< (length it) org-ql-completing-read-snippet-minimum-token-length)))
+                                       (split-string input nil t (rx space)))
+                             snippet-regexp
+                             (when query-tokens
+                               ;; Limiting each context word to 15 characters prevents
+                               ;; excessively long, non-word strings from ending up in
+                               ;; snippets, which can adversely affect performance.
+                               (rx-to-string `(seq (optional (repeat 1 3 (repeat 1 15 (not space)) (0+ space)))
+                                                   bow (or ,@query-tokens) (0+ (not space))
+                                                   (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))))
+                    (org-ql-select buffers-files (org-ql--query-string-to-sexp input)
+                      :action #'action))))
       ;; NOTE: It seems that the `completing-read' machinery can call, abort, and re-call the
       ;; collection function while the user is typing, which can interrupt the machinery Org uses to
       ;; prepare an Org buffer when an Org file is loaded.  This results in, e.g. the buffer being
