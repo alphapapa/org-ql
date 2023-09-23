@@ -83,7 +83,7 @@ To be used in, e.g. annotation functions.")
   "Default action for `org-ql-completing-read'.
 Returns (STRING . MARKER) cons."
   (font-lock-ensure (point-at-bol) (point-at-eol))
-  (cons (org-entry-get nil "ITEM") (point-marker)))
+  (cons (org-link-display-format (org-entry-get nil "ITEM")) (point-marker)))
 
 (defun org-ql-completing-read-snippet (marker)
   "Return snippet for entry at MARKER.
