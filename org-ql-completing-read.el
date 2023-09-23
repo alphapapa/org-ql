@@ -147,6 +147,7 @@ single predicate)."
   ;;  (message "ORG-QL-COMPLETING-READ: Starts.")
   (let ((table (make-hash-table :test #'equal))
         (disambiguations (make-hash-table :test #'equal))
+        (window-width (window-width))
         last-input org-outline-path-cache query-tokens)
     (cl-labels (;; (debug-message
                 ;;  (f &rest args) (apply #'message (concat "ORG-QL-COMPLETING-READ: " f) args))
@@ -206,7 +207,7 @@ single predicate)."
                   (marker) (when-let
                                ((snippet
                                  (org-with-point-at marker
-                                   (or (funcall org-ql-completing-read-snippet-function snippet-regexp)
+                                   (or (funcall org-ql-completing-read-snippet-function org-ql-completing-read-input-regexp)
                                        (org-ql-completing-read--snippet-simple)))))
                              (propertize (concat " " snippet)
                                          'face 'org-ql-completing-read-snippet)))
