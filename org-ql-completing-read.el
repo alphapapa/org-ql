@@ -91,13 +91,17 @@ Returns value returned by function
 `org-ql-completing-read-snippet-function' or
 `org-ql-completing-read--snippet-simple', whichever returns a
 value, or nil."
-  (while-no-input
-    ;; Using `while-no-input' here doesn't make it as
-    ;; responsive as, e.g. Helm while typing, but it seems to
-    ;; help a little when using the org-rifle-style snippets.
-    (org-with-point-at marker
-      (or (funcall org-ql-completing-read-snippet-function)
-          (org-ql-completing-read--snippet-simple)))))
+  (pcase (while-no-input
+           ;; Using `while-no-input' here doesn't make it as
+           ;; responsive as, e.g. Helm while typing, but it seems to
+           ;; help a little when using the org-rifle-style snippets.
+           (org-with-point-at marker
+             (or (funcall org-ql-completing-read-snippet-function)
+                 (org-ql-completing-read--snippet-simple))))
+    (`t
+     ;; Interrupted: return nil (which can be concatted).
+     nil)
+    (else else)))
 
 (defun org-ql-completing-read-path (marker)
   "Return formatted outline path for entry at MARKER."
