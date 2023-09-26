@@ -1037,6 +1037,7 @@ File: README.info,  Node: 072-pre,  Next: 071,  Up: Changelog
      selection of results.  (#351
      (https://github.com/alphapapa/org-ql/issues/351).  Thanks to Daniel
      Fleischer (https://github.com/danielfleischer) for reporting.)
+   • Handle narrowed buffers correctly in ‘org-ql-find’.
 
 
 File: README.info,  Node: 071,  Next: 07,  Prev: 072-pre,  Up: Changelog
@@ -1778,37 +1779,37 @@ Node: Links37257
 Node: Tips37944
 Node: Changelog38268
 Node: 072-pre39053
-Node: 07139697
-Node: 0740510
-Node: 06343434
-Node: 06243965
-Node: 06144270
-Node: 0644838
-Node: 05247892
-Node: 05148192
-Node: 0548615
-Node: 04950146
-Node: 04850428
-Node: 04750777
-Node: 04651186
-Node: 04551594
-Node: 04451955
-Node: 04352314
-Node: 04252517
-Node: 04152678
-Node: 0452925
-Node: 03257026
-Node: 03157429
-Node: 0357626
-Node: 02360926
-Node: 02261160
-Node: 02161440
-Node: 0261645
-Node: 0165723
-Node: Notes65824
-Node: Comparison with Org Agenda searches65986
-Node: org-sidebar66875
-Node: License67154
+Node: 07139760
+Node: 0740573
+Node: 06343497
+Node: 06244028
+Node: 06144333
+Node: 0644901
+Node: 05247955
+Node: 05148255
+Node: 0548678
+Node: 04950209
+Node: 04850491
+Node: 04750840
+Node: 04651249
+Node: 04551657
+Node: 04452018
+Node: 04352377
+Node: 04252580
+Node: 04152741
+Node: 0452988
+Node: 03257089
+Node: 03157492
+Node: 0357689
+Node: 02360989
+Node: 02261223
+Node: 02161503
+Node: 0261708
+Node: 0165786
+Node: Notes65887
+Node: Comparison with Org Agenda searches66049
+Node: org-sidebar66938
+Node: License67217
 
 End Tag Table
 
