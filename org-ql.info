@@ -1038,6 +1038,9 @@ File: README.info,  Node: 072-pre,  Next: 071,  Up: Changelog
      (https://github.com/alphapapa/org-ql/issues/351).  Thanks to Daniel
      Fleischer (https://github.com/danielfleischer) for reporting.)
    • Handle narrowed buffers correctly in ‘org-ql-find’.
+   • Warn about empty headings in ‘org-ql-completing-read’ (the Org
+     format allows a heading line to have no text, but it’s useless for
+     this purpose, and usually indicates unnoticed corruption).
 
 
 File: README.info,  Node: 071,  Next: 07,  Prev: 072-pre,  Up: Changelog
@@ -1779,37 +1782,37 @@ Node: Links37257
 Node: Tips37944
 Node: Changelog38268
 Node: 072-pre39053
-Node: 07139760
-Node: 0740573
-Node: 06343497
-Node: 06244028
-Node: 06144333
-Node: 0644901
-Node: 05247955
-Node: 05148255
-Node: 0548678
-Node: 04950209
-Node: 04850491
-Node: 04750840
-Node: 04651249
-Node: 04551657
-Node: 04452018
-Node: 04352377
-Node: 04252580
-Node: 04152741
-Node: 0452988
-Node: 03257089
-Node: 03157492
-Node: 0357689
-Node: 02360989
-Node: 02261223
-Node: 02161503
-Node: 0261708
-Node: 0165786
-Node: Notes65887
-Node: Comparison with Org Agenda searches66049
-Node: org-sidebar66938
-Node: License67217
+Node: 07139972
+Node: 0740785
+Node: 06343709
+Node: 06244240
+Node: 06144545
+Node: 0645113
+Node: 05248167
+Node: 05148467
+Node: 0548890
+Node: 04950421
+Node: 04850703
+Node: 04751052
+Node: 04651461
+Node: 04551869
+Node: 04452230
+Node: 04352589
+Node: 04252792
+Node: 04152953
+Node: 0453200
+Node: 03257301
+Node: 03157704
+Node: 0357901
+Node: 02361201
+Node: 02261435
+Node: 02161715
+Node: 0261920
+Node: 0165998
+Node: Notes66099
+Node: Comparison with Org Agenda searches66261
+Node: org-sidebar67150
+Node: License67429
 
 End Tag Table
 

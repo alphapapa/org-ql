@@ -117,14 +117,20 @@ single predicate)."
                   ;; optional arguments in a certain Org version, so in those versions, it will
                   ;; return priority cookies and comment strings.
                   (let ((heading (org-link-display-format (org-entry-get (point) "ITEM"))))
-                    (when (gethash heading table)
-                      ;; Disambiguate heading (even adding the path isn't enough, because that could
-                      ;; also be duplicated).
-                      (if-let ((suffix (gethash heading disambiguations)))
-                          (setf heading (format "%s <%s>" heading (cl-incf suffix)))
-                        (setf heading (format "%s <%s>" heading (puthash heading 2 disambiguations)))))
-                    (let ((marker (point-marker)))
-                      (puthash (propertize heading 'org-marker marker) marker table))))
+                    (if (string-empty-p heading)
+                        ;; A heading's string can be empty, but we can't use one because it
+                        ;; wouldn't be useful to the user; and if one is found, it's very
+                        ;; likely to indicate an unnoticed mistake or corruption in the
+                        ;; file: so display a warning and don't record it as a candidate.
+                        (warn "Empty heading at %S in %S" (point) (buffer-name))
+                      (when (gethash heading table)
+                        ;; Disambiguate heading (even adding the path isn't enough, because that could
+                        ;; also be duplicated).
+                        (if-let ((suffix (gethash heading disambiguations)))
+                            (setf heading (format "%s <%s>" heading (cl-incf suffix)))
+                          (setf heading (format "%s <%s>" heading (puthash heading 2 disambiguations)))))
+                      (let ((marker (point-marker)))
+                        (puthash (propertize heading 'org-marker marker) marker table)))))
                 (path (marker)
                   (org-with-point-at marker
                     (let* ((path (thread-first (org-get-outline-path nil t)

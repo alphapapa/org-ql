@@ -549,6 +549,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 + Query parser ignores leading whitespace (e.g. preventing errors while the user is typing a query into ~org-ql-find~).
 + Use of ~org-ql-find~ with ~:query-prefix~ argument prevented selection of results.  ([[https://github.com/alphapapa/org-ql/issues/351][#351]].  Thanks to [[https://github.com/danielfleischer][Daniel Fleischer]] for reporting.)
 + Handle narrowed buffers correctly in ~org-ql-find~.
++ Warn about empty headings in ~org-ql-completing-read~ (the Org format allows a heading line to have no text, but it's useless for this purpose, and usually indicates unnoticed corruption).
 
 ** 0.7.1
 
