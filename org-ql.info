@@ -229,6 +229,11 @@ completion facilities with an Org QL query:
    • ‘org-ql-find-in-agenda’ searches in ‘(org-agenda-files)’.
    • ‘org-ql-find-in-org-directory’ searches in ‘org-directory’.
 
+   Note that these commands are compatible with Embark
+(https://github.com/oantolin/embark): the ‘embark-act’ command can be
+called on a completion candidate (i.e.  a search result) to act on it
+immediately, without having to visit the entry in its source Org buffer.
+
 
 File: README.info,  Node: org-ql-refile,  Next: org-ql-search,  Prev: org-ql-find,  Up: Commands
 
@@ -281,6 +286,11 @@ and changing item priorities (without necessarily updating the view).
 This feature is experimental and not guaranteed to work correctly with
 all commands.  (It works to the extent it does because the appropriate
 text properties are placed on each item, imitating an Agenda buffer.)
+
+   *Note:* Also, this buffer is compatible with Embark
+(https://github.com/oantolin/embark): the ‘embark-act’ command can be
+called on an entry to act on it immediately, without having to visit the
+entry in its source Org buffer.
 
 
 File: README.info,  Node: helm-org-ql,  Next: org-ql-view,  Prev: org-ql-search,  Up: Commands
@@ -1029,7 +1039,21 @@ File: README.info,  Node: 08-pre,  Next: 072,  Up: Changelog
 5.1 0.8-pre
 ===========
 
-*Compatibility*
+*Additions*
+
+   • Function ‘org-ql-completing-read’, used by command ‘org-ql-find’,
+     now specifies the completion category as ‘org-heading’, providing
+     compatibility with Embark (https://github.com/oantolin/embark).
+     (This is a powerful feature, as it means any ‘org-ql-find’ result
+     can be acted on from inside the search results with Embark, which
+     provides common actions from Org Agenda and Org speed keys
+     bindings.)  (#299 (https://github.com/alphapapa/org-ql/issues/299).
+     Thanks to Omar Antolín Camarena (https://github.com/oantolin),
+     Daniel Mendler (https://github.com/minad), and Akira Komamura
+     (https://github.com/akirak).)
+
+   *Compatibility*
+
    • Org v9.7’s ‘org-element’ API changes required some adjustments.
      (#364 (https://github.com/alphapapa/org-ql/issues/364).  Thanks to
      several users for reporting, and to Ihor Radchenko
@@ -1769,65 +1793,65 @@ Node: Helm support3093
 Node: Usage3496
 Node: Commands3894
 Node: org-ql-find4338
-Node: org-ql-refile4804
-Node: org-ql-search5127
-Node: helm-org-ql6823
-Node: org-ql-view7201
-Node: org-ql-view-sidebar7731
-Node: org-ql-view-recent-items8111
-Node: org-ql-sparse-tree8607
-Node: Queries9407
-Node: Non-sexp query syntax10524
-Node: General predicates12283
-Node: Ancestor/descendant predicates19270
-Node: Date/time predicates20398
-Node: Functions / Macros23522
-Node: Agenda-like views23820
-Ref: Function org-ql-block23982
-Node: Listing / acting-on results25243
-Ref: Caching25451
-Ref: Function org-ql-select26364
-Ref: Function org-ql-query28790
-Ref: Macro org-ql (deprecated)30564
-Node: Custom predicates30879
-Ref: Macro org-ql-defpred31103
-Node: Dynamic block34544
-Node: Links37268
-Node: Tips37955
-Node: Changelog38279
-Node: 08-pre39075
-Node: 07239440
-Node: 07140362
-Node: 0741171
-Node: 06344095
-Node: 06244626
-Node: 06144931
-Node: 0645499
-Node: 05248553
-Node: 05148853
-Node: 0549278
-Node: 04950809
-Node: 04851091
-Node: 04751440
-Node: 04651849
-Node: 04552257
-Node: 04452618
-Node: 04352977
-Node: 04253180
-Node: 04153341
-Node: 0453588
-Node: 03257689
-Node: 03158092
-Node: 0358289
-Node: 02361589
-Node: 02261823
-Node: 02162103
-Node: 0262308
-Node: 0166386
-Node: Notes66487
-Node: Comparison with Org Agenda searches66649
-Node: org-sidebar67538
-Node: License67817
+Node: org-ql-refile5077
+Node: org-ql-search5400
+Node: helm-org-ql7331
+Node: org-ql-view7709
+Node: org-ql-view-sidebar8239
+Node: org-ql-view-recent-items8619
+Node: org-ql-sparse-tree9115
+Node: Queries9915
+Node: Non-sexp query syntax11032
+Node: General predicates12791
+Node: Ancestor/descendant predicates19778
+Node: Date/time predicates20906
+Node: Functions / Macros24030
+Node: Agenda-like views24328
+Ref: Function org-ql-block24490
+Node: Listing / acting-on results25751
+Ref: Caching25959
+Ref: Function org-ql-select26872
+Ref: Function org-ql-query29298
+Ref: Macro org-ql (deprecated)31072
+Node: Custom predicates31387
+Ref: Macro org-ql-defpred31611
+Node: Dynamic block35052
+Node: Links37776
+Node: Tips38463
+Node: Changelog38787
+Node: 08-pre39583
+Node: 07240645
+Node: 07141567
+Node: 0742376
+Node: 06345300
+Node: 06245831
+Node: 06146136
+Node: 0646704
+Node: 05249758
+Node: 05150058
+Node: 0550483
+Node: 04952014
+Node: 04852296
+Node: 04752645
+Node: 04653054
+Node: 04553462
+Node: 04453823
+Node: 04354182
+Node: 04254385
+Node: 04154546
+Node: 0454793
+Node: 03258894
+Node: 03159297
+Node: 0359494
+Node: 02362794
+Node: 02263028
+Node: 02163308
+Node: 0263513
+Node: 0167591
+Node: Notes67692
+Node: Comparison with Org Agenda searches67854
+Node: org-sidebar68743
+Node: License69022
 
 End Tag Table
 

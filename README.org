@@ -114,6 +114,8 @@ These commands jump to a heading selected using Emacs's built-in completion faci
 - ~org-ql-find-in-agenda~ searches in ~(org-agenda-files)~.
 - ~org-ql-find-in-org-directory~ searches in ~org-directory~.
 
+Note that these commands are compatible with [[https://github.com/oantolin/embark][Embark]]: the ~embark-act~ command can be called on a completion candidate (i.e. a search result) to act on it immediately, without having to visit the entry in its source Org buffer.
+
 [[images/org-ql-find.png]]
 
 *** org-ql-refile
@@ -145,6 +147,8 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 +  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 
 *Note:* The view buffer is currently put in ~org-agenda-mode~, which means that /some/ Org Agenda commands work, such as jumping to entries and changing item priorities (without necessarily updating the view).  This feature is experimental and not guaranteed to work correctly with all commands.  (It works to the extent it does because the appropriate text properties are placed on each item, imitating an Agenda buffer.)
+
+*Note:* Also, this buffer is compatible with [[https://github.com/oantolin/embark][Embark]]: the ~embark-act~ command can be called on an entry to act on it immediately, without having to visit the entry in its source Org buffer.
 
 *** helm-org-ql
 
@@ -544,7 +548,12 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.8-pre
 
+*Additions*
+
++ Function ~org-ql-completing-read~, used by command ~org-ql-find~, now specifies the completion category as ~org-heading~, providing compatibility with [[https://github.com/oantolin/embark][Embark]].  (This is a powerful feature, as it means any ~org-ql-find~ result can be acted on from inside the search results with Embark, which provides common actions from Org Agenda and Org speed keys bindings.)  ([[https://github.com/alphapapa/org-ql/issues/299][#299]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]], [[https://github.com/minad][Daniel Mendler]], and [[https://github.com/akirak][Akira Komamura]].)
+
 *Compatibility*
+
 + Org v9.7's ~org-element~ API changes required some adjustments.  ([[https://github.com/alphapapa/org-ql/issues/364][#364]].  Thanks to several users for reporting, and to [[https://github.com/yantar92][Ihor Radchenko]] for his feedback.)
 
 ** 0.7.2
