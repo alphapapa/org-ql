@@ -180,6 +180,7 @@ single predicate)."
                 (collection (input _pred flag)
                   (pcase flag
                     ('metadata (list 'metadata
+                                     (cons 'category 'org-heading)
                                      (cons 'group-function #'group)
                                      (cons 'affixation-function #'affix)
                                      (cons 'annotation-function #'annotate)))
