@@ -818,6 +818,20 @@ When opened, the link searches the buffer it's opened from."
 
 ;;;; Faces/properties
 
+(defalias 'org-ql-view--resolve-element-properties
+  ;; It would be preferable to define this as an inline function, but
+  ;; that would mean that users would have to recompile org-ql when
+  ;; upgrading to Org 9.7 or else get weird errors.
+  ;; TODO(someday): Define `org-ql-view--resolve-element-properties' as inline.
+  (if (version<= "9.7" org-version)
+      (lambda (node)
+        "Resolve NODE's properties using `org-element-properties-resolve'."
+        ;; Silence warnings about `org-element-properties-resolve'
+        ;; being unresolved on earlier Org versions.
+        (with-no-warnings
+          (org-element-properties-resolve node 'force-undefer)))
+    #'identity))
+
 (defun org-ql-view--format-element (element)
   ;; This essentially needs to do what `org-agenda-format-item' does,
   ;; which is a lot.  We are a long way from that, but it's a start.
@@ -827,6 +841,7 @@ returned by `org-element-parse-buffer'.  If ELEMENT is nil,
 return an empty string."
   (if (not element)
       ""
+    (setf element (org-ql-view--resolve-element-properties element))
     (let* ((properties (cadr element))
            ;; Remove the :parent property, which so bloats the size of
            ;; the properties list that it makes it essentially
@@ -877,7 +892,8 @@ return an empty string."
                               (char-to-string)
                               (format "[#%s]")
                               (org-ql-view--add-priority-face)))
-           (habit-property (org-with-point-at (org-element-property :begin element)
+           (habit-property (org-with-point-at (or (org-element-property :org-hd-marker element)
+                                                  (org-element-property :org-marker element))
                              (when (org-is-habit-p)
                                (org-habit-parse-todo))))
            (due-string (pcase (org-element-property :relative-due-date element)
