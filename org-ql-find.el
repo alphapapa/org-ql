@@ -54,8 +54,11 @@ See function `display-buffer'."
 (cl-defun org-ql-find (buffers-files &key query-prefix query-filter
                                      (prompt "Find entry: "))
   "Go to an Org entry in BUFFERS-FILES selected by searching entries with `org-ql'.
-Interactively, with universal prefix, select multiple buffers to
-search with completion and PROMPT.
+Interactively, search the buffers and files relevant to the
+current buffer (i.e. in `org-agenda-mode', the value of
+`org-ql-view-buffers-files' or `org-agenda-contributing-files';
+in `org-mode', that buffer).  With universal prefix, select
+multiple buffers to search with completion and PROMPT.
 
 QUERY-PREFIX may be a string to prepend to the query (e.g. use
 \"heading:\" to only search headings, easily creating a custom
@@ -75,10 +78,11 @@ single predicate)."
                                when (eq 'org-mode (buffer-local-value 'major-mode buffer))
                                collect (buffer-name buffer))
                       nil t))
-           (progn
-             (unless (eq major-mode 'org-mode)
-               (user-error "This is not an Org buffer: %S" (current-buffer)))
-             (current-buffer)))))
+           (pcase major-mode
+             ((pred (derived-mode-p 'org-agenda-mode)) (or org-ql-view-buffers-files
+                                                           org-agenda-contributing-files))
+             ((pred (derived-mode-p 'org-mode)) (current-buffer))
+             (_ (user-error "This is not an Org-related buffer: %S" (current-buffer)))))))
   (let ((marker (org-ql-completing-read buffers-files
                   :query-prefix query-prefix
                   :query-filter query-filter

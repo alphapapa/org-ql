@@ -1051,6 +1051,9 @@ File: README.info,  Node: 08-pre,  Next: 072,  Up: Changelog
      Thanks to Omar Antolín Camarena (https://github.com/oantolin),
      Daniel Mendler (https://github.com/minad), and Akira Komamura
      (https://github.com/akirak).)
+   • Command ‘org-ql-find’ may be called in an ‘org-agenda’ or
+     ‘org-ql-view’ buffer to search the buffers which contributed to the
+     agenda/view buffer.
 
    *Compatibility*
 
@@ -1820,38 +1823,38 @@ Node: Links37776
 Node: Tips38463
 Node: Changelog38787
 Node: 08-pre39583
-Node: 07240645
-Node: 07141567
-Node: 0742376
-Node: 06345300
-Node: 06245831
-Node: 06146136
-Node: 0646704
-Node: 05249758
-Node: 05150058
-Node: 0550483
-Node: 04952014
-Node: 04852296
-Node: 04752645
-Node: 04653054
-Node: 04553462
-Node: 04453823
-Node: 04354182
-Node: 04254385
-Node: 04154546
-Node: 0454793
-Node: 03258894
-Node: 03159297
-Node: 0359494
-Node: 02362794
-Node: 02263028
-Node: 02163308
-Node: 0263513
-Node: 0167591
-Node: Notes67692
-Node: Comparison with Org Agenda searches67854
-Node: org-sidebar68743
-Node: License69022
+Node: 07240820
+Node: 07141742
+Node: 0742551
+Node: 06345475
+Node: 06246006
+Node: 06146311
+Node: 0646879
+Node: 05249933
+Node: 05150233
+Node: 0550658
+Node: 04952189
+Node: 04852471
+Node: 04752820
+Node: 04653229
+Node: 04553637
+Node: 04453998
+Node: 04354357
+Node: 04254560
+Node: 04154721
+Node: 0454968
+Node: 03259069
+Node: 03159472
+Node: 0359669
+Node: 02362969
+Node: 02263203
+Node: 02163483
+Node: 0263688
+Node: 0167766
+Node: Notes67867
+Node: Comparison with Org Agenda searches68029
+Node: org-sidebar68918
+Node: License69197
 
 End Tag Table
 
