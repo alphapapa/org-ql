@@ -78,11 +78,10 @@ single predicate)."
                                when (eq 'org-mode (buffer-local-value 'major-mode buffer))
                                collect (buffer-name buffer))
                       nil t))
-           (pcase major-mode
-             ((pred (derived-mode-p 'org-agenda-mode)) (or org-ql-view-buffers-files
-                                                           org-agenda-contributing-files))
-             ((pred (derived-mode-p 'org-mode)) (current-buffer))
-             (_ (user-error "This is not an Org-related buffer: %S" (current-buffer)))))))
+           (cond ((derived-mode-p 'org-agenda-mode) (or org-ql-view-buffers-files
+                                                        org-agenda-contributing-files))
+                 ((derived-mode-p 'org-mode) (current-buffer))
+                 (t (user-error "This is not an Org-related buffer: %S" (current-buffer)))))))
   (let ((marker (org-ql-completing-read buffers-files
                   :query-prefix query-prefix
                   :query-filter query-filter
