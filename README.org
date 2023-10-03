@@ -1,7 +1,6 @@
 #+TITLE: org-ql
 
 # NOTE: Using =BEGIN_HTML= for this causes TeX/info export to fail, but this HTML block works.
-# #+HTML: <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
 #+HTML: <img src="images/dog.png" align="right">
 
 # NOTE: To avoid having this in the info manual, we use HTML rather than Org syntax; it still appears with the GitHub renderer.
@@ -543,10 +542,21 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 /Note:/ Breaking changes may be made before version 1.0, but in the event of major changes, attempts at backward compatibility will be made with obsolescence declarations, translation of arguments, etc.  Users who need stability guarantees before 1.0 may choose to use tagged stable releases.
 
-** 0.7.1-pre
+** 0.7.2
+
+*Fixes*
++ Timestamp predicates are more tolerant of partial input (e.g. preventing errors while the user is typing a query into ~org-ql-find~).
++ Query parser ignores leading whitespace (e.g. preventing errors while the user is typing a query into ~org-ql-find~).
++ Use of ~org-ql-find~ with ~:query-prefix~ argument prevented selection of results.  ([[https://github.com/alphapapa/org-ql/issues/351][#351]].  Thanks to [[https://github.com/danielfleischer][Daniel Fleischer]] for reporting.)
++ Handle narrowed buffers correctly in ~org-ql-find~.
++ Warn about empty headings in ~org-ql-completing-read~ (the Org format allows a heading line to have no text, but it's useless for this purpose, and usually indicates unnoticed corruption).
+
+** 0.7.1
 
 *Fixes*
 + Function ~org-ql-completing-read~ is more compatible with default Emacs completion.  (See [[https://github.com/alphapapa/org-ql/issues/338][#338]].  Thanks to [[https://github.com/arozbiz][arozbiz]] for reporting.)
++ Function ~org-ql-completing-read~ would sometimes stop updating with changes in input.  (See [[https://github.com/alphapapa/org-ql/issues/350][#350]].  Thanks to [[https://github.com/anpandey][Ankit Raj Pandey]] for reporting and fixing, and to [[https://github.com/minad][Daniel Mendler]] for advising.)
++ In ~org-ql-completing-read~, format links for display, and use ~org-entry-get~ internally rather than ~org-get-heading~.
 
 ** 0.7
 

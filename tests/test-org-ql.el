@@ -33,6 +33,8 @@
 (require 'org-ql-search)
 (require 'org-ql-view)
 
+(require 'xr)
+
 ;;;; Variables
 
 (defvar org-ql-test-buffer nil

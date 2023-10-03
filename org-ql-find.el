@@ -83,8 +83,7 @@ single predicate)."
                   :query-prefix query-prefix
                   :query-filter query-filter
                   :prompt prompt)))
-    (with-current-buffer (marker-buffer marker)
-      (goto-char marker)
+    (org-with-point-at marker
       (display-buffer (current-buffer) org-ql-find-display-buffer-action)
       (select-window (get-buffer-window (current-buffer)))
       (run-hook-with-args 'org-ql-find-goto-hook))))

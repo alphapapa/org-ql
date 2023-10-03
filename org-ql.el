@@ -4,7 +4,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.7.1-pre
+;; Version: 0.7.2
 ;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0.1") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -76,6 +76,7 @@ Tags are stored in match group 1.  Match group 2 stores the tags
 without the enclosing colons.")
 
 (defvaralias 'org-ql-link-regexp
+  ;; FIXME: `org-link-bracket-re' is void until `org-link-make-regexps' is called.
   (if (bound-and-true-p org-link-bracket-re)
       'org-link-bracket-re
     'org-bracket-link-regexp)
@@ -944,7 +945,7 @@ value of `org-ql-predicates')."
                                ;; obscure bug in `peg': when one keyword is a substring of another,
                                ;; and the shorter one is listed first, the shorter one fails to match.
                                (-sort (-on #'> #'length))))
-         (pexs `((query (+ (and term (* [blank]))))
+         (pexs `((query (and (* [blank]) (+ (and term (* [blank])))))
                  (term (or (and negation (list positive-term)
                                 ;; This is a bit confusing, but it seems to work.  There's probably a better way.
                                 `(pred -- (list 'not (car pred))))
@@ -1285,6 +1286,9 @@ result form."
              to on))
      (when from
        (setq from (pcase from
+                    ("-"
+                     ;; Ignore, because it means the user is typing a negative number.
+                     nil)
                     ((or 'today "today") (->> (ts-now)
                                               (ts-apply :hour 0 :minute 0 :second 0)))
                     ((pred numberp) (->> (ts-now)
@@ -1301,6 +1305,9 @@ result form."
                     ((pred ts-p) from))))
      (when to
        (setq to (pcase to
+                  ("-"
+                   ;; Ignore, because it means the user is typing a negative number.
+                   nil)
                   ((or 'today "today") (->> (ts-now)
                                             (ts-apply :hour 23 :minute 59 :second 59)))
                   ((pred numberp) (->> (ts-now)
