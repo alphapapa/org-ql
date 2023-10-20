@@ -1034,6 +1034,9 @@ File: README.info,  Node: 073-pre,  Next: 072,  Up: Changelog
      paths.  (Headings that started with a word that is also a to-do
      keyword but with different capitalization would be matched
      incorrectly.)
+   • Saving of ‘org-ql-view’ views.  (#378
+     (https://github.com/alphapapa/org-ql/issues/378).  Thanks to
+     Pentaquark1 (https://github.com/Pentaquark1) for reporting.)
 
 
 File: README.info,  Node: 072,  Next: 071,  Prev: 073-pre,  Up: Changelog
@@ -1796,38 +1799,38 @@ Node: Links37271
 Node: Tips37958
 Node: Changelog38282
 Node: 073-pre39081
-Node: 07239410
-Node: 07140333
-Node: 0741142
-Node: 06344066
-Node: 06244597
-Node: 06144902
-Node: 0645470
-Node: 05248524
-Node: 05148824
-Node: 0549249
-Node: 04950780
-Node: 04851062
-Node: 04751411
-Node: 04651820
-Node: 04552228
-Node: 04452589
-Node: 04352948
-Node: 04253151
-Node: 04153312
-Node: 0453559
-Node: 03257660
-Node: 03158063
-Node: 0358260
-Node: 02361560
-Node: 02261794
-Node: 02162074
-Node: 0262279
-Node: 0166357
-Node: Notes66458
-Node: Comparison with Org Agenda searches66620
-Node: org-sidebar67509
-Node: License67788
+Node: 07239591
+Node: 07140514
+Node: 0741323
+Node: 06344247
+Node: 06244778
+Node: 06145083
+Node: 0645651
+Node: 05248705
+Node: 05149005
+Node: 0549430
+Node: 04950961
+Node: 04851243
+Node: 04751592
+Node: 04652001
+Node: 04552409
+Node: 04452770
+Node: 04353129
+Node: 04253332
+Node: 04153493
+Node: 0453740
+Node: 03257841
+Node: 03158244
+Node: 0358441
+Node: 02361741
+Node: 02261975
+Node: 02162255
+Node: 0262460
+Node: 0166538
+Node: Notes66639
+Node: Comparison with Org Agenda searches66801
+Node: org-sidebar67690
+Node: License67969
 
 End Tag Table
 

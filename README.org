@@ -546,6 +546,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Fixes*
 + Disable ~case-fold-search~ when collecting headings in outline paths.  (Headings that started with a word that is also a to-do keyword but with different capitalization would be matched incorrectly.)
++ Saving of ~org-ql-view~ views.  ([[https://github.com/alphapapa/org-ql/issues/378][#378]].  Thanks to [[https://github.com/Pentaquark1][Pentaquark1]] for reporting.)
 
 ** 0.7.2
 

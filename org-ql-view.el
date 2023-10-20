@@ -352,7 +352,8 @@ update search arguments."
               (yes-or-no-p (format "Overwrite view \"%s\"?" name)))
       (setf (map-elt org-ql-views name nil #'equal) plist)
       (customize-set-variable 'org-ql-views org-ql-views)
-      (customize-mark-to-save 'org-ql-views))))
+      (customize-mark-to-save 'org-ql-views)
+      (custom-save-all))))
 
 (defun org-ql-view-delete ()
   "Delete current view (with confirmation)."
@@ -362,7 +363,8 @@ update search arguments."
           (--remove (equal (car it) org-ql-view-title)
                     org-ql-views))
     (customize-set-variable 'org-ql-views org-ql-views)
-    (customize-mark-to-save 'org-ql-views)))
+    (customize-mark-to-save 'org-ql-views)
+    (custom-save-all)))
 
 (defun org-ql-view-customize ()
   "Customize view at point in `org-ql-view-sidebar' buffer."
