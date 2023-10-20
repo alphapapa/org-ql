@@ -226,6 +226,7 @@ _Note: These commands use ._
 completion facilities with an Org QL query:
 
    • ‘org-ql-find’ searches in the current buffer.
+   • ‘org-ql-find-path’ searches outline paths in the current buffer.
    • ‘org-ql-find-in-agenda’ searches in ‘(org-agenda-files)’.
    • ‘org-ql-find-in-org-directory’ searches in ‘org-directory’.
 
@@ -1054,6 +1055,8 @@ File: README.info,  Node: 08-pre,  Next: 072,  Up: Changelog
    • Command ‘org-ql-find’ may be called in an ‘org-agenda’ or
      ‘org-ql-view’ buffer to search the buffers which contributed to the
      agenda/view buffer.
+   • Command ‘org-ql-find-path’, which searches outline paths in the
+     current buffer.
 
    *Compatibility*
 
@@ -1796,65 +1799,65 @@ Node: Helm support3093
 Node: Usage3496
 Node: Commands3894
 Node: org-ql-find4338
-Node: org-ql-refile5077
-Node: org-ql-search5400
-Node: helm-org-ql7331
-Node: org-ql-view7709
-Node: org-ql-view-sidebar8239
-Node: org-ql-view-recent-items8619
-Node: org-ql-sparse-tree9115
-Node: Queries9915
-Node: Non-sexp query syntax11032
-Node: General predicates12791
-Node: Ancestor/descendant predicates19778
-Node: Date/time predicates20906
-Node: Functions / Macros24030
-Node: Agenda-like views24328
-Ref: Function org-ql-block24490
-Node: Listing / acting-on results25751
-Ref: Caching25959
-Ref: Function org-ql-select26872
-Ref: Function org-ql-query29298
-Ref: Macro org-ql (deprecated)31072
-Node: Custom predicates31387
-Ref: Macro org-ql-defpred31611
-Node: Dynamic block35052
-Node: Links37776
-Node: Tips38463
-Node: Changelog38787
-Node: 08-pre39583
-Node: 07240820
-Node: 07141742
-Node: 0742551
-Node: 06345475
-Node: 06246006
-Node: 06146311
-Node: 0646879
-Node: 05249933
-Node: 05150233
-Node: 0550658
-Node: 04952189
-Node: 04852471
-Node: 04752820
-Node: 04653229
-Node: 04553637
-Node: 04453998
-Node: 04354357
-Node: 04254560
-Node: 04154721
-Node: 0454968
-Node: 03259069
-Node: 03159472
-Node: 0359669
-Node: 02362969
-Node: 02263203
-Node: 02163483
-Node: 0263688
-Node: 0167766
-Node: Notes67867
-Node: Comparison with Org Agenda searches68029
-Node: org-sidebar68918
-Node: License69197
+Node: org-ql-refile5153
+Node: org-ql-search5476
+Node: helm-org-ql7407
+Node: org-ql-view7785
+Node: org-ql-view-sidebar8315
+Node: org-ql-view-recent-items8695
+Node: org-ql-sparse-tree9191
+Node: Queries9991
+Node: Non-sexp query syntax11108
+Node: General predicates12867
+Node: Ancestor/descendant predicates19854
+Node: Date/time predicates20982
+Node: Functions / Macros24106
+Node: Agenda-like views24404
+Ref: Function org-ql-block24566
+Node: Listing / acting-on results25827
+Ref: Caching26035
+Ref: Function org-ql-select26948
+Ref: Function org-ql-query29374
+Ref: Macro org-ql (deprecated)31148
+Node: Custom predicates31463
+Ref: Macro org-ql-defpred31687
+Node: Dynamic block35128
+Node: Links37852
+Node: Tips38539
+Node: Changelog38863
+Node: 08-pre39659
+Node: 07240992
+Node: 07141914
+Node: 0742723
+Node: 06345647
+Node: 06246178
+Node: 06146483
+Node: 0647051
+Node: 05250105
+Node: 05150405
+Node: 0550830
+Node: 04952361
+Node: 04852643
+Node: 04752992
+Node: 04653401
+Node: 04553809
+Node: 04454170
+Node: 04354529
+Node: 04254732
+Node: 04154893
+Node: 0455140
+Node: 03259241
+Node: 03159644
+Node: 0359841
+Node: 02363141
+Node: 02263375
+Node: 02163655
+Node: 0263860
+Node: 0167938
+Node: Notes68039
+Node: Comparison with Org Agenda searches68201
+Node: org-sidebar69090
+Node: License69369
 
 End Tag Table
 

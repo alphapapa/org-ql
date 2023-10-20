@@ -111,6 +111,7 @@ Lisp code examples are in [[examples.org]].
 These commands jump to a heading selected using Emacs's built-in completion facilities with an Org QL query:
 
 - ~org-ql-find~ searches in the current buffer.
+- ~org-ql-find-path~ searches outline paths in the current buffer.
 - ~org-ql-find-in-agenda~ searches in ~(org-agenda-files)~.
 - ~org-ql-find-in-org-directory~ searches in ~org-directory~.
 
@@ -552,6 +553,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 + Function ~org-ql-completing-read~, used by command ~org-ql-find~, now specifies the completion category as ~org-heading~, providing compatibility with [[https://github.com/oantolin/embark][Embark]].  (This is a powerful feature, as it means any ~org-ql-find~ result can be acted on from inside the search results with Embark, which provides common actions from Org Agenda and Org speed keys bindings.)  ([[https://github.com/alphapapa/org-ql/issues/299][#299]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]], [[https://github.com/minad][Daniel Mendler]], and [[https://github.com/akirak][Akira Komamura]].)
 + Command ~org-ql-find~ may be called in an ~org-agenda~ or ~org-ql-view~ buffer to search the buffers which contributed to the agenda/view buffer.
++ Command ~org-ql-find-path~, which searches outline paths in the current buffer.
 
 *Compatibility*
 

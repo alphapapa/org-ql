@@ -132,6 +132,13 @@ which see (but only the files are used)."
   (interactive)
   (org-ql-find (org-ql-search-directories-files)))
 
+;;;###autoload
+(defun org-ql-find-path ()
+  "Call `org-ql-find' to search outline paths in the current buffer."
+  (interactive)
+  (let ((org-ql-default-predicate 'outline-path))
+    (org-ql-find (current-buffer))))
+
 (provide 'org-ql-find)
 
 ;;; org-ql-find.el ends here
