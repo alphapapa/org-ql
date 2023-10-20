@@ -544,7 +544,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.7.3-pre
 
-Nothing new yet.
+*Fixes*
++ Disable ~case-fold-search~ when collecting headings in outline paths.  (Headings that started with a word that is also a to-do keyword but with different capitalization would be matched incorrectly.)
 
 ** 0.7.2
 

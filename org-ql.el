@@ -624,9 +624,10 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
   "Return outline path for heading at point."
   (save-excursion
     (let ((heading (save-match-data
-                     (if (looking-at org-complex-heading-regexp)
-                         (or (match-string 4) "")
-                       ""))))
+                     (let (case-fold-search)
+                       (if (looking-at org-complex-heading-regexp)
+                           (or (match-string-no-properties 4) "")
+                         "")))))
       (if (org-up-heading-safe)
           ;; MAYBE: It seems wrong to call the cache function from
           ;; inside this function, like a violation of separation of
