@@ -1784,13 +1784,14 @@ priority B)."
        (cl-loop for priority-arg in args
                 thereis (= item-priority (* 1000 (- org-lowest-priority (string-to-char priority-arg)))))))))
 
-(org-ql-defpred property (property &optional value &key inherit)
+(org-ql-defpred property (property &optional value &key inherit multi)
   "Return non-nil if current entry has PROPERTY, and optionally VALUE.
 If INHERIT is nil, only match entries with PROPERTY set on the
 entry; if t, also match entries with inheritance.  If INHERIT is
 not specified, use the Boolean value of
 `org-use-property-inheritance', which see (i.e. it is only
-interpreted as nil or non-nil)."
+interpreted as nil or non-nil).  If MULTI is non-nil, also check for
+multi-value properties."
   :normalizers ((`(,predicate-names)
                  ;; HACK: This clause protects against the case in
                  ;; which the arguments are nil, which would cause an
@@ -1811,26 +1812,31 @@ interpreted as nil or non-nil)."
                  (list 'property property value
                        :inherit (if (plist-member plist :inherit)
                                     (plist-get plist :inherit)
-                                  org-use-property-inheritance))))
+                                  org-use-property-inheritance)
+                       :multi (when (plist-member plist :multi)
+                                (plist-get plist :multi)))))
   ;; MAYBE: Should case folding be disabled for properties?  What about values?
   ;; MAYBE: Support (property) without args.
 
   ;; NOTE: When inheritance is enabled, the preamble can't be used,
   ;; which will make the search slower.
-  :preambles ((`(,predicate-names ,property ,value . ,(map :inherit))
+  :preambles ((`(,predicate-names ,property ,value ,(map :multi) . ,(map :inherit))
                ;; We do NOT return nil, because the predicate still needs to be tested,
                ;; because the regexp could match a string not inside a property drawer.
                (list :regexp (unless inherit
-                               (rx-to-string `(seq bol (0+ space) ":" ,property ":"
+                               (rx-to-string `(seq bol (0+ space) ":" ,property
+                                                   ,@(when multi '((? "+"))) ":"
                                                    (1+ space) ,value (0+ space) eol)))
                      :query query))
-              (`(,predicate-names ,property . ,(map :inherit))
+              (`(,predicate-names ,property ,(map :multi) . ,(map :inherit))
                ;; We do NOT return nil, because the predicate still needs to be tested,
                ;; because the regexp could match a string not inside a property drawer.
                ;; NOTE: The preamble only matches if there appears to be a value.
                ;; A line like ":ID: " without any other text does not match.
                (list :regexp (unless inherit
-                               (rx-to-string `(seq bol (0+ space) ":" ,property ":" (1+ space)
+                               (rx-to-string `(seq bol (0+ space) ":" ,property
+                                                   ,@(when multi '((? "+")))
+                                                   ":" (1+ space)
                                                    (minimal-match (1+ not-newline)) eol)))
                      :query query)))
   :body
@@ -1848,9 +1854,18 @@ interpreted as nil or non-nil)."
           ;; TODO: Since --value-at doesn't account for inheritance,
           ;; we should generalize --tags-at to also work for property
           ;; inheritance and use it here, which should be much faster.
-          (string-equal value (org-ql--value-at
-                               (point) (lambda ()
-                                         (org-entry-get (point) property inherit)))))))))
+          (if multi
+              (when-let (values (org-ql--value-at
+                                 (point) (lambda ()
+                                           ;; The default separator is space
+                                           (let ((org-property-separators `((,property . "\n"))))
+                                             (org-entry-get (point) property inherit)))))
+                (seq-some (lambda (v)
+                            (string-equal value v))
+                          (split-string values "\n")))
+            (string-equal value (org-ql--value-at
+                                 (point) (lambda ()
+                                           (org-entry-get (point) property inherit))))))))))
 
 ;; TODO: Add property-local, property-inherit, etc. to match tags predicates.
 ;; TODO: Add tests for property inheritance.
