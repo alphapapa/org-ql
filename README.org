@@ -559,6 +559,13 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 + Org v9.7's ~org-element~ API changes required some adjustments.  ([[https://github.com/alphapapa/org-ql/issues/364][#364]].  Thanks to several users for reporting, and to [[https://github.com/yantar92][Ihor Radchenko]] for his feedback.)
 
+** 0.7.3
+
+*Fixes*
++ Disable ~case-fold-search~ when collecting headings in outline paths.  (Headings that started with a word that is also a to-do keyword but with different capitalization would be matched incorrectly.)
++ Saving of ~org-ql-view~ views.  ([[https://github.com/alphapapa/org-ql/issues/378][#378]].  Thanks to [[https://github.com/Pentaquark1][Pentaquark1]] for reporting.)
++ Command ~org-ql-find~ didn't move point to the selected entry.  ([[https://github.com/alphapapa/org-ql/issues/380][#380]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]] for reporting.)
+
 ** 0.7.2
 
 *Fixes*

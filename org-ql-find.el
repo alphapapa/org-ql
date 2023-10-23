@@ -41,6 +41,7 @@
 
 (defcustom org-ql-find-goto-hook '(org-show-entry org-reveal)
   "Functions called when selecting an entry."
+  ;; TODO: Add common choices, including `org-tree-to-indirect-buffer'.
   :type 'hook)
 
 (defcustom org-ql-find-display-buffer-action '(display-buffer-same-window)
@@ -86,10 +87,11 @@ single predicate)."
                   :query-prefix query-prefix
                   :query-filter query-filter
                   :prompt prompt)))
-    (org-with-point-at marker
-      (display-buffer (current-buffer) org-ql-find-display-buffer-action)
-      (select-window (get-buffer-window (current-buffer)))
-      (run-hook-with-args 'org-ql-find-goto-hook))))
+    (set-buffer (marker-buffer marker))
+    (goto-char marker)
+    (display-buffer (current-buffer) org-ql-find-display-buffer-action)
+    (select-window (get-buffer-window (current-buffer)))
+    (run-hook-with-args 'org-ql-find-goto-hook)))
 
 ;;;###autoload
 (defun org-ql-refile (marker)
