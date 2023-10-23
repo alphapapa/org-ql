@@ -41,6 +41,7 @@
 
 (defcustom org-ql-find-goto-hook '(org-show-entry org-reveal)
   "Functions called when selecting an entry."
+  ;; TODO: Add common choices, including `org-tree-to-indirect-buffer'.
   :type 'hook)
 
 (defcustom org-ql-find-display-buffer-action '(display-buffer-same-window)
