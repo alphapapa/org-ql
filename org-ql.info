@@ -71,7 +71,7 @@ Functions / Macros
 
 Changelog
 
-* 0.7.3-pre: 073-pre.
+* 0.7.3: 073.
 * 0.7.2: 072.
 * 0.7.1: 071.
 * 0.7: 07.
@@ -993,7 +993,7 @@ releases.
 
 * Menu:
 
-* 0.7.3-pre: 073-pre.
+* 0.7.3: 073.
 * 0.7.2: 072.
 * 0.7.1: 071.
 * 0.7: 07.
@@ -1024,10 +1024,10 @@ releases.
 * 0.1: 01.
 
 
-File: README.info,  Node: 073-pre,  Next: 072,  Up: Changelog
+File: README.info,  Node: 073,  Next: 072,  Up: Changelog
 
-5.1 0.7.3-pre
-=============
+5.1 0.7.3
+=========
 
 *Fixes*
    • Disable ‘case-fold-search’ when collecting headings in outline
@@ -1042,7 +1042,7 @@ File: README.info,  Node: 073-pre,  Next: 072,  Up: Changelog
      Omar Antolín Camarena (https://github.com/oantolin) for reporting.)
 
 
-File: README.info,  Node: 072,  Next: 071,  Prev: 073-pre,  Up: Changelog
+File: README.info,  Node: 072,  Next: 071,  Prev: 073,  Up: Changelog
 
 5.2 0.7.2
 =========
@@ -1767,73 +1767,73 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1813
-Node: Screenshots1936
-Node: Installation2054
-Node: Quelpa2568
-Node: Helm support3096
-Node: Usage3499
-Node: Commands3897
-Node: org-ql-find4341
-Node: org-ql-refile4807
-Node: org-ql-search5130
-Node: helm-org-ql6826
-Node: org-ql-view7204
-Node: org-ql-view-sidebar7734
-Node: org-ql-view-recent-items8114
-Node: org-ql-sparse-tree8610
-Node: Queries9410
-Node: Non-sexp query syntax10527
-Node: General predicates12286
-Node: Ancestor/descendant predicates19273
-Node: Date/time predicates20401
-Node: Functions / Macros23525
-Node: Agenda-like views23823
-Ref: Function org-ql-block23985
-Node: Listing / acting-on results25246
-Ref: Caching25454
-Ref: Function org-ql-select26367
-Ref: Function org-ql-query28793
-Ref: Macro org-ql (deprecated)30567
-Node: Custom predicates30882
-Ref: Macro org-ql-defpred31106
-Node: Dynamic block34547
-Node: Links37271
-Node: Tips37958
-Node: Changelog38282
-Node: 073-pre39081
-Node: 07239813
-Node: 07140736
-Node: 0741545
-Node: 06344469
-Node: 06245000
-Node: 06145305
-Node: 0645873
-Node: 05248927
-Node: 05149227
-Node: 0549652
-Node: 04951183
-Node: 04851465
-Node: 04751814
-Node: 04652223
-Node: 04552631
-Node: 04452992
-Node: 04353351
-Node: 04253554
-Node: 04153715
-Node: 0453962
-Node: 03258063
-Node: 03158466
-Node: 0358663
-Node: 02361963
-Node: 02262197
-Node: 02162477
-Node: 0262682
-Node: 0166760
-Node: Notes66861
-Node: Comparison with Org Agenda searches67023
-Node: org-sidebar67912
-Node: License68191
+Node: Contents1805
+Node: Screenshots1928
+Node: Installation2046
+Node: Quelpa2560
+Node: Helm support3088
+Node: Usage3491
+Node: Commands3889
+Node: org-ql-find4333
+Node: org-ql-refile4799
+Node: org-ql-search5122
+Node: helm-org-ql6818
+Node: org-ql-view7196
+Node: org-ql-view-sidebar7726
+Node: org-ql-view-recent-items8106
+Node: org-ql-sparse-tree8602
+Node: Queries9402
+Node: Non-sexp query syntax10519
+Node: General predicates12278
+Node: Ancestor/descendant predicates19265
+Node: Date/time predicates20393
+Node: Functions / Macros23517
+Node: Agenda-like views23815
+Ref: Function org-ql-block23977
+Node: Listing / acting-on results25238
+Ref: Caching25446
+Ref: Function org-ql-select26359
+Ref: Function org-ql-query28785
+Ref: Macro org-ql (deprecated)30559
+Node: Custom predicates30874
+Ref: Macro org-ql-defpred31098
+Node: Dynamic block34539
+Node: Links37263
+Node: Tips37950
+Node: Changelog38274
+Node: 07339065
+Node: 07239785
+Node: 07140704
+Node: 0741513
+Node: 06344437
+Node: 06244968
+Node: 06145273
+Node: 0645841
+Node: 05248895
+Node: 05149195
+Node: 0549620
+Node: 04951151
+Node: 04851433
+Node: 04751782
+Node: 04652191
+Node: 04552599
+Node: 04452960
+Node: 04353319
+Node: 04253522
+Node: 04153683
+Node: 0453930
+Node: 03258031
+Node: 03158434
+Node: 0358631
+Node: 02361931
+Node: 02262165
+Node: 02162445
+Node: 0262650
+Node: 0166728
+Node: Notes66829
+Node: Comparison with Org Agenda searches66991
+Node: org-sidebar67880
+Node: License68159
 
 End Tag Table
 
