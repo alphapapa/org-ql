@@ -1037,6 +1037,9 @@ File: README.info,  Node: 073-pre,  Next: 072,  Up: Changelog
    • Saving of ‘org-ql-view’ views.  (#378
      (https://github.com/alphapapa/org-ql/issues/378).  Thanks to
      Pentaquark1 (https://github.com/Pentaquark1) for reporting.)
+   • Command ‘org-ql-find’ didn’t move point to the selected entry.
+     (#380 (https://github.com/alphapapa/org-ql/issues/380).  Thanks to
+     Omar Antolín Camarena (https://github.com/oantolin) for reporting.)
 
 
 File: README.info,  Node: 072,  Next: 071,  Prev: 073-pre,  Up: Changelog
@@ -1799,38 +1802,38 @@ Node: Links37271
 Node: Tips37958
 Node: Changelog38282
 Node: 073-pre39081
-Node: 07239591
-Node: 07140514
-Node: 0741323
-Node: 06344247
-Node: 06244778
-Node: 06145083
-Node: 0645651
-Node: 05248705
-Node: 05149005
-Node: 0549430
-Node: 04950961
-Node: 04851243
-Node: 04751592
-Node: 04652001
-Node: 04552409
-Node: 04452770
-Node: 04353129
-Node: 04253332
-Node: 04153493
-Node: 0453740
-Node: 03257841
-Node: 03158244
-Node: 0358441
-Node: 02361741
-Node: 02261975
-Node: 02162255
-Node: 0262460
-Node: 0166538
-Node: Notes66639
-Node: Comparison with Org Agenda searches66801
-Node: org-sidebar67690
-Node: License67969
+Node: 07239813
+Node: 07140736
+Node: 0741545
+Node: 06344469
+Node: 06245000
+Node: 06145305
+Node: 0645873
+Node: 05248927
+Node: 05149227
+Node: 0549652
+Node: 04951183
+Node: 04851465
+Node: 04751814
+Node: 04652223
+Node: 04552631
+Node: 04452992
+Node: 04353351
+Node: 04253554
+Node: 04153715
+Node: 0453962
+Node: 03258063
+Node: 03158466
+Node: 0358663
+Node: 02361963
+Node: 02262197
+Node: 02162477
+Node: 0262682
+Node: 0166760
+Node: Notes66861
+Node: Comparison with Org Agenda searches67023
+Node: org-sidebar67912
+Node: License68191
 
 End Tag Table
 

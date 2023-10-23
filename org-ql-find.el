@@ -84,10 +84,11 @@ single predicate)."
                   :query-prefix query-prefix
                   :query-filter query-filter
                   :prompt prompt)))
-    (org-with-point-at marker
-      (display-buffer (current-buffer) org-ql-find-display-buffer-action)
-      (select-window (get-buffer-window (current-buffer)))
-      (run-hook-with-args 'org-ql-find-goto-hook))))
+    (set-buffer (marker-buffer marker))
+    (goto-char marker)
+    (display-buffer (current-buffer) org-ql-find-display-buffer-action)
+    (select-window (get-buffer-window (current-buffer)))
+    (run-hook-with-args 'org-ql-find-goto-hook)))
 
 ;;;###autoload
 (defun org-ql-refile (marker)
