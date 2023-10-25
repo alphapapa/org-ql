@@ -141,6 +141,57 @@ which see (but only the files are used)."
   (let ((org-ql-default-predicate 'outline-path))
     (org-ql-find (current-buffer))))
 
+;;;###autoload
+(cl-defun org-ql-open-link (buffers-files &key query-prefix query-filter
+                                          (prompt "Open link: "))
+  "Open a link selected with `org-ql-completing-read'.
+Links found in entries matching the input query are offered as
+candidates, and the selected one is opened with
+`org-open-at-point'.  Arguments BUFFERS-FILES, QUERY-FILTER,
+QUERY-PREFIX, and PROMPT are passed to `org-ql-completing-read',
+which see."
+  (interactive
+   ;; FIXME: Factor this out.
+   (list (if current-prefix-arg
+             (mapcar #'get-buffer
+                     (completing-read-multiple
+                      "Buffers: "
+                      (cl-loop for buffer in (buffer-list)
+                               when (eq 'org-mode (buffer-local-value 'major-mode buffer))
+                               collect (buffer-name buffer))
+                      nil t))
+           (progn
+             (unless (eq major-mode 'org-mode)
+               (user-error "This is not an Org buffer: %S" (current-buffer)))
+             (current-buffer)))))
+  (let* ((marker (org-ql-completing-read buffers-files
+                   :query-prefix query-prefix
+                   :query-filter query-filter
+                   :prompt prompt
+                   :action-filter #'identity
+                   :action (lambda ()
+                             (save-excursion
+                               (cl-loop with limit = (org-entry-end-position)
+                                        while (re-search-forward org-link-any-re limit t)
+                                        for link = (string-trim (match-string 0))
+                                        do (progn
+                                             (set-text-properties 0 (length link) '(face org-link) link)
+                                             (setf link (org-link-display-format link)))
+                                        collect (cons link (copy-marker (match-beginning 0))))))
+                   :snippet (lambda (&rest _)
+                              "")
+                   :path (lambda (marker)
+                           (org-with-point-at marker
+                             (let* ((path (thread-first (org-get-outline-path t t)
+                                                        (org-format-outline-path (window-width) nil "")
+                                                        (org-split-string "")))
+                                    (formatted-path (if org-ql-completing-read-reverse-paths
+                                                        (concat "\\" (string-join (reverse path) "\\"))
+                                                      (concat "/" (string-join path "/")))))
+                               formatted-path))))))
+    (org-with-point-at marker
+      (org-open-at-point))))
+
 (provide 'org-ql-find)
 
 ;;; org-ql-find.el ends here
