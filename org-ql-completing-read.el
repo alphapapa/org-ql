@@ -81,7 +81,7 @@ To be used in, e.g. annotation functions.")
 
 (defun org-ql-completing-read-action ()
   "Default action for `org-ql-completing-read'.
-Returns (STRING . MARKER) cons."
+Returns (STRING . MARKER) cons for entry at point."
   (font-lock-ensure (point-at-bol) (point-at-eol))
   (cons (org-link-display-format (org-entry-get nil "ITEM")) (point-marker)))
 
@@ -98,21 +98,19 @@ value, or nil."
            (org-with-point-at marker
              (or (funcall org-ql-completing-read-snippet-function)
                  (org-ql-completing-read--snippet-simple))))
-    (`t
-     ;; Interrupted: return nil (which can be concatted).
+    (`t  ;; Interrupted: return nil (which can be concatted).
      nil)
     (else else)))
 
 (defun org-ql-completing-read-path (marker)
   "Return formatted outline path for entry at MARKER."
   (org-with-point-at marker
-    (let* ((path (thread-first (org-get-outline-path nil t)
-                               (org-format-outline-path (window-width) nil "")
-                               (org-split-string "")))
-           (formatted-path (if org-ql-completing-read-reverse-paths
-                               (concat "\\" (string-join (reverse path) "\\"))
-                             (concat "/" (string-join path "/")))))
-      formatted-path)))
+    (let ((path (thread-first (org-get-outline-path nil t)
+                              (org-format-outline-path (window-width) nil "")
+                              (org-split-string ""))))
+      (if org-ql-completing-read-reverse-paths
+          (concat "\\" (string-join (reverse path) "\\"))
+        (concat "/" (string-join path "/"))))))
 
 ;;;;; Completing read
 
@@ -166,7 +164,7 @@ single predicate)."
                           ;; wouldn't be useful to the user; and if one is found, it's very
                           ;; likely to indicate an unnoticed mistake or corruption in the
                           ;; file: so display a warning and don't record it as a candidate.
-                          (warn "Empty heading at %S" marker)
+                          (display-warning 'org-ql-completing-read (format-message "Empty heading at %S" marker))
                         (when (gethash string table)
                           ;; Disambiguate string (even adding the path isn't enough, because that could
                           ;; also be duplicated).
@@ -297,7 +295,7 @@ single predicate)."
                           ;; Remove any tokens that specify predicates or are too short.
                           (--select (not (or (string-match-p (rx bos (1+ (not (any ":"))) ":") it)
                                              (< (length it) org-ql-completing-read-snippet-minimum-token-length)))
-                                    (split-string input nil t (rx space)))
+                                    (split-string input nil t (rx blank)))
                           org-ql-completing-read-input-regexp
                           (when query-tokens
                             ;; Limiting each context word to 15 characters prevents
@@ -306,20 +304,20 @@ single predicate)."
                             (rx-to-string `(seq (optional (repeat 1 3 (repeat 1 15 (not space)) (0+ space)))
                                                 bow (or ,@query-tokens) (0+ (not space))
                                                 (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))
-                    ;; NOTE: It seems that the `completing-read' machinery can call, abort, and re-call the
-                    ;; collection function while the user is typing, which can interrupt the machinery Org uses to
-                    ;; prepare an Org buffer when an Org file is loaded.  This results in, e.g. the buffer being
-                    ;; left in fundamental-mode, unprepared to be used as an Org buffer, which breaks many things
-                    ;; and is very confusing for the user.  Ideally, of course, we would solve this in
-                    ;; `org-ql-select', and we already attempt to, but that function is called by the
-                    ;; `completing-read' machinery, which interrupts it, so we must work around this problem by
-                    ;; ensuring all of the BUFFERS-FILES are loaded and initialized before calling
-                    ;; `completing-read'.
                     (org-ql-select buffers-files (org-ql--query-string-to-sexp input)
                       :action #'action))))
       (unless (listp buffers-files)
         ;; Since we map across this argument, we ensure it's a list.
         (setf buffers-files (list buffers-files)))
+      ;; NOTE: It seems that the `completing-read' machinery can call, abort, and re-call the
+      ;; collection function while the user is typing, which can interrupt the machinery Org uses to
+      ;; prepare an Org buffer when an Org file is loaded.  This results in, e.g. the buffer being
+      ;; left in fundamental-mode, unprepared to be used as an Org buffer, which breaks many things
+      ;; and is very confusing for the user.  Ideally, of course, we would solve this in
+      ;; `org-ql-select', and we already attempt to, but that function is called by the
+      ;; `completing-read' machinery, which interrupts it, so we must work around this problem by
+      ;; ensuring all of the BUFFERS-FILES are loaded and initialized before calling
+      ;; `completing-read'.
       (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-completing-read))
              (completion-styles-alist (list (list 'org-ql-completing-read #'try #'all "Org QL Find")))

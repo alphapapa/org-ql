@@ -144,7 +144,12 @@ which see (but only the files are used)."
 ;;;###autoload
 (cl-defun org-ql-open-link (buffers-files &key query-prefix query-filter
                                           (prompt "Open link: "))
-  "FIXME: Docstring."
+  "Open a link selected with `org-ql-completing-read'.
+Links found in entries matching the input query are offered as
+candidates, and the selected one is opened with
+`org-open-at-point'.  Arguments BUFFERS-FILES, QUERY-FILTER,
+QUERY-PREFIX, and PROMPT are passed to `org-ql-completing-read',
+which see."
   (interactive
    ;; FIXME: Factor this out.
    (list (if current-prefix-arg
