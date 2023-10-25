@@ -48,6 +48,7 @@ Usage
 Commands
 
 * org-ql-find::
+* org-ql-open-link::
 * org-ql-refile::
 * org-ql-search::
 * helm-org-ql::
@@ -207,6 +208,7 @@ File: README.info,  Node: Commands,  Next: Queries,  Up: Usage
 * Menu:
 
 * org-ql-find::
+* org-ql-open-link::
 * org-ql-refile::
 * org-ql-search::
 * helm-org-ql::
@@ -216,7 +218,7 @@ File: README.info,  Node: Commands,  Next: Queries,  Up: Usage
 * org-ql-sparse-tree::
 
 
-File: README.info,  Node: org-ql-find,  Next: org-ql-refile,  Up: Commands
+File: README.info,  Node: org-ql-find,  Next: org-ql-open-link,  Up: Commands
 
 4.1.1 org-ql-find
 -----------------
@@ -237,9 +239,28 @@ called on a completion candidate (i.e.  a search result) to act on it
 immediately, without having to visit the entry in its source Org buffer.
 
 
-File: README.info,  Node: org-ql-refile,  Next: org-ql-search,  Prev: org-ql-find,  Up: Commands
+File: README.info,  Node: org-ql-open-link,  Next: org-ql-refile,  Prev: org-ql-find,  Up: Commands
 
-4.1.2 org-ql-refile
+4.1.2 org-ql-open-link
+----------------------
+
+This command finds links in entries matching the input query and offers
+them for selection; the selected link is then opened with
+‘org-open-at-point’.
+
+   The input is matched using the default predicate, which means it
+searches both entry content and outline paths.  This is helpful when a
+collection of links are kept in Org files: rather than having to first
+visit the entry containing the desired link, then locate it within the
+entry, and then open it, the user can simply select the link and open it
+directly.  For example, if an entry with the heading ‘Emacs’ contained a
+link named ‘mailing list’, one could search for ‘Emacs list’ and open
+the link to the mailing list directly.
+
+
+File: README.info,  Node: org-ql-refile,  Next: org-ql-search,  Prev: org-ql-open-link,  Up: Commands
+
+4.1.3 org-ql-refile
 -------------------
 
 This command refiles the current Org entry to one selected by searching
@@ -249,7 +270,7 @@ with Org QL completion.  It searches files listed in
 
 File: README.info,  Node: org-ql-search,  Next: helm-org-ql,  Prev: org-ql-refile,  Up: Commands
 
-4.1.3 org-ql-search
+4.1.4 org-ql-search
 -------------------
 
 _Note: This command supports both sexp queries and ._
@@ -297,7 +318,7 @@ entry in its source Org buffer.
 
 File: README.info,  Node: helm-org-ql,  Next: org-ql-view,  Prev: org-ql-search,  Up: Commands
 
-4.1.4 helm-org-ql
+4.1.5 helm-org-ql
 -----------------
 
 _Note: This command uses .  It is available separately in the package
@@ -311,7 +332,7 @@ _Note: This command uses .  It is available separately in the package
 
 File: README.info,  Node: org-ql-view,  Next: org-ql-view-sidebar,  Prev: helm-org-ql,  Up: Commands
 
-4.1.5 org-ql-view
+4.1.6 org-ql-view
 -----------------
 
 Choose and display a view stored in ‘org-ql-views’.
@@ -326,7 +347,7 @@ Choose and display a view stored in ‘org-ql-views’.
 
 File: README.info,  Node: org-ql-view-sidebar,  Next: org-ql-view-recent-items,  Prev: org-ql-view,  Up: Commands
 
-4.1.6 org-ql-view-sidebar
+4.1.7 org-ql-view-sidebar
 -------------------------
 
 Show a sidebar window listing views stored in ‘org-ql-views’ for easy
@@ -336,7 +357,7 @@ point, and press ‘c’ to customize the view at point.
 
 File: README.info,  Node: org-ql-view-recent-items,  Next: org-ql-sparse-tree,  Prev: org-ql-view-sidebar,  Up: Commands
 
-4.1.7 org-ql-view-recent-items
+4.1.8 org-ql-view-recent-items
 ------------------------------
 
 Show items in ‘FILES’ from last ‘DAYS’ days with timestamps of ‘TYPE’.
@@ -347,7 +368,7 @@ returned by the function ‘org-agenda-files’.
 
 File: README.info,  Node: org-ql-sparse-tree,  Prev: org-ql-view-recent-items,  Up: Commands
 
-4.1.8 org-ql-sparse-tree
+4.1.9 org-ql-sparse-tree
 ------------------------
 
 Arguments: ‘(query &key keep-previous (buffer (current-buffer)))’
@@ -1059,6 +1080,13 @@ File: README.info,  Node: 08-pre,  Next: 073,  Up: Changelog
      agenda/view buffer.
    • Command ‘org-ql-find-path’, which searches outline paths in the
      current buffer.
+   • Command ‘org-ql-open-link’, which finds links in entries matching
+     the given query, and opens the selected one with
+     ‘org-open-at-point’.  (This is helpful when a collection of links
+     are kept in Org files: rather than having to first visit the entry
+     containing the desired link, then locate it within the entry, and
+     then open it, the user can simply select the link and open it
+     directly.)
 
    *Compatibility*
 
@@ -1811,74 +1839,75 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1824
-Node: Screenshots1947
-Node: Installation2065
-Node: Quelpa2579
-Node: Helm support3107
-Node: Usage3510
-Node: Commands3908
-Node: org-ql-find4352
-Node: org-ql-refile5167
-Node: org-ql-search5490
-Node: helm-org-ql7421
-Node: org-ql-view7799
-Node: org-ql-view-sidebar8329
-Node: org-ql-view-recent-items8709
-Node: org-ql-sparse-tree9205
-Node: Queries10005
-Node: Non-sexp query syntax11122
-Node: General predicates12881
-Node: Ancestor/descendant predicates19868
-Node: Date/time predicates20996
-Node: Functions / Macros24120
-Node: Agenda-like views24418
-Ref: Function org-ql-block24580
-Node: Listing / acting-on results25841
-Ref: Caching26049
-Ref: Function org-ql-select26962
-Ref: Function org-ql-query29388
-Ref: Macro org-ql (deprecated)31162
-Node: Custom predicates31477
-Ref: Macro org-ql-defpred31701
-Node: Dynamic block35142
-Node: Links37866
-Node: Tips38553
-Node: Changelog38877
-Node: 08-pre39687
-Node: 07341020
-Node: 07241755
-Node: 07142674
-Node: 0743483
-Node: 06346407
-Node: 06246938
-Node: 06147243
-Node: 0647811
-Node: 05250865
-Node: 05151167
-Node: 0551592
-Node: 04953123
-Node: 04853405
-Node: 04753754
-Node: 04654163
-Node: 04554571
-Node: 04454932
-Node: 04355291
-Node: 04255494
-Node: 04155655
-Node: 0455902
-Node: 03260003
-Node: 03160406
-Node: 0360603
-Node: 02363903
-Node: 02264137
-Node: 02164417
-Node: 0264622
-Node: 0168700
-Node: Notes68801
-Node: Comparison with Org Agenda searches68963
-Node: org-sidebar69852
-Node: License70131
+Node: Contents1845
+Node: Screenshots1968
+Node: Installation2086
+Node: Quelpa2600
+Node: Helm support3128
+Node: Usage3531
+Node: Commands3929
+Node: org-ql-find4394
+Node: org-ql-open-link5212
+Node: org-ql-refile6067
+Node: org-ql-search6395
+Node: helm-org-ql8326
+Node: org-ql-view8704
+Node: org-ql-view-sidebar9234
+Node: org-ql-view-recent-items9614
+Node: org-ql-sparse-tree10110
+Node: Queries10910
+Node: Non-sexp query syntax12027
+Node: General predicates13786
+Node: Ancestor/descendant predicates20773
+Node: Date/time predicates21901
+Node: Functions / Macros25025
+Node: Agenda-like views25323
+Ref: Function org-ql-block25485
+Node: Listing / acting-on results26746
+Ref: Caching26954
+Ref: Function org-ql-select27867
+Ref: Function org-ql-query30293
+Ref: Macro org-ql (deprecated)32067
+Node: Custom predicates32382
+Ref: Macro org-ql-defpred32606
+Node: Dynamic block36047
+Node: Links38771
+Node: Tips39458
+Node: Changelog39782
+Node: 08-pre40592
+Node: 07342357
+Node: 07243092
+Node: 07144011
+Node: 0744820
+Node: 06347744
+Node: 06248275
+Node: 06148580
+Node: 0649148
+Node: 05252202
+Node: 05152504
+Node: 0552929
+Node: 04954460
+Node: 04854742
+Node: 04755091
+Node: 04655500
+Node: 04555908
+Node: 04456269
+Node: 04356628
+Node: 04256831
+Node: 04156992
+Node: 0457239
+Node: 03261340
+Node: 03161743
+Node: 0361940
+Node: 02365240
+Node: 02265474
+Node: 02165754
+Node: 0265959
+Node: 0170037
+Node: Notes70138
+Node: Comparison with Org Agenda searches70300
+Node: org-sidebar71189
+Node: License71468
 
 End Tag Table
 

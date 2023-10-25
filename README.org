@@ -119,6 +119,12 @@ Note that these commands are compatible with [[https://github.com/oantolin/embar
 
 [[images/org-ql-find.png]]
 
+*** org-ql-open-link
+
+This command finds links in entries matching the input query and offers them for selection; the selected link is then opened with ~org-open-at-point~.
+
+The input is matched using the default predicate, which means it searches both entry content and outline paths.  This is helpful when a collection of links are kept in Org files: rather than having to first visit the entry containing the desired link, then locate it within the entry, and then open it, the user can simply select the link and open it directly.  For example, if an entry with the heading =Emacs= contained a link named =mailing list=, one could search for =Emacs list= and open the link to the mailing list directly.
+
 *** org-ql-refile
 
 This command refiles the current Org entry to one selected by searching with Org QL completion.  It searches files listed in ~org-refile-targets~ as well as the current buffer.
@@ -554,6 +560,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 + Function ~org-ql-completing-read~, used by command ~org-ql-find~, now specifies the completion category as ~org-heading~, providing compatibility with [[https://github.com/oantolin/embark][Embark]].  (This is a powerful feature, as it means any ~org-ql-find~ result can be acted on from inside the search results with Embark, which provides common actions from Org Agenda and Org speed keys bindings.)  ([[https://github.com/alphapapa/org-ql/issues/299][#299]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]], [[https://github.com/minad][Daniel Mendler]], and [[https://github.com/akirak][Akira Komamura]].)
 + Command ~org-ql-find~ may be called in an ~org-agenda~ or ~org-ql-view~ buffer to search the buffers which contributed to the agenda/view buffer.
 + Command ~org-ql-find-path~, which searches outline paths in the current buffer.
++ Command ~org-ql-open-link~, which finds links in entries matching the given query, and opens the selected one with ~org-open-at-point~.  (This is helpful when a collection of links are kept in Org files: rather than having to first visit the entry containing the desired link, then locate it within the entry, and then open it, the user can simply select the link and open it directly.)
 
 *Compatibility*
 
