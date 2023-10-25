@@ -118,6 +118,7 @@ value, or nil."
 (cl-defun org-ql-completing-read
     (buffers-files &key query-prefix query-filter
                    (action #'org-ql-completing-read-action)
+                   ;; FIXME: Unused argument.
                    (annotate #'org-ql-completing-read-snippet)
                    (snippet #'org-ql-completing-read-snippet)
                    (path #'org-ql-completing-read-path)
