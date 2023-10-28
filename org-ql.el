@@ -4,7 +4,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
-;; Version: 0.7-pre
+;; Version: 0.8-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0.1") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -75,10 +75,11 @@ That is, \"CLOSED:\", \"DEADLINE:\", or \"SCHEDULED:\".")
 Tags are stored in match group 1.  Match group 2 stores the tags
 without the enclosing colons.")
 
-(defconst org-ql-link-regexp
+(defvaralias 'org-ql-link-regexp
+  ;; FIXME: `org-link-bracket-re' is void until `org-link-make-regexps' is called.
   (if (bound-and-true-p org-link-bracket-re)
-      org-link-bracket-re
-    org-bracket-link-regexp)
+      'org-link-bracket-re
+    'org-bracket-link-regexp)
   "Regexp used to match Org bracket links.
 Necessary because of changes in Org 9.something.")
 
@@ -229,7 +230,8 @@ regexps.")
                                    (group-n 1 (regexp ,org-ql-regexp-ts-inactive)))
                               (seq (or "DEADLINE" "SCHEDULED") ":" (0+ " ")
                                    (group-n 1 (regexp ,org-ql-regexp-ts-active))))))
-  "Matches CLOSED, DEADLINE or SCHEDULED keyword with timestamp, with or without time.")
+  "Matches CLOSED, DEADLINE or SCHEDULED keyword with timestamp.
+Matches with or without time.")
 
 (defvar org-ql-regexp-planning-with-time
   (rx-to-string `(seq bow (or (seq "CLOSED" ":" (0+ " ")
@@ -503,8 +505,14 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
 
 (cl-defun org-ql--select (&key preamble preamble-case-fold predicate action narrow
                                &allow-other-keys)
-  "Return results of mapping function ACTION across entries in current buffer matching function PREDICATE.
-If NARROW is non-nil, buffer will not be widened."
+  "Return results for given arguments.
+Return results of mapping function ACTION across entries in
+current buffer matching function PREDICATE.  If NARROW is
+non-nil, buffer will not be widened.
+
+PREAMBLE may be a regexp to search for before calling PREDICATE.
+When doing so, `case-fold-search' is bound to
+PREAMBLE-CASE-FOLD."
   ;; Since the mappings are stored in the variable `org-ql-predicates', macros like `flet'
   ;; can't be used, so we do it manually (this is same as the equivalent `flet' expansion).
   ;; Mappings are stored in the variable because it allows predicates to be defined with a
@@ -584,7 +592,7 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
                                                        (cond ((and (listp inherited)
                                                                    (listp local))
                                                               (->> (append inherited local)
-                                                                -non-nil -uniq))
+                                                                   -non-nil -uniq))
                                                              ((listp inherited) inherited)
                                                              ((listp local) local)))))
                                          (cl-typecase org-use-tag-inheritance
@@ -616,9 +624,10 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
   "Return outline path for heading at point."
   (save-excursion
     (let ((heading (save-match-data
-                     (if (looking-at org-complex-heading-regexp)
-                         (or (match-string 4) "")
-                       ""))))
+                     (let (case-fold-search)
+                       (if (looking-at org-complex-heading-regexp)
+                           (or (match-string-no-properties 4) "")
+                         "")))))
       (if (org-up-heading-safe)
           ;; MAYBE: It seems wrong to call the cache function from
           ;; inside this function, like a violation of separation of
@@ -680,8 +689,8 @@ from within ELEMENT's buffer."
   ;; time?  I don't know, but for now, it seems that we have to use `copy-marker'.
   (let* ((marker (copy-marker (org-element-property :begin element)))
          (properties (--> (cadr element)
-                       (plist-put it :org-marker marker)
-                       (plist-put it :org-hd-marker marker))))
+                          (plist-put it :org-marker marker)
+                          (plist-put it :org-hd-marker marker))))
     (setf (cadr element) properties)
     element))
 
@@ -768,7 +777,7 @@ be coalesced."
   "Signal error if any forms in FORM do not have preconditions met.
 Or, when possible, fix the problem."
   (cl-flet ((check (symbol)
-                   (cl-case symbol
+                   (pcase symbol
                      ('done (unless org-done-keywords
                               ;; NOTE: This check needs to be done from within the Org buffer being checked.
                               (error "Variable `org-done-keywords' is nil.  Are you running this from an Org buffer?"))))))
@@ -787,38 +796,43 @@ DESCRIPTION-OR-TARGET, match it in either description or target.
 If DESCRIPTION, match it in the description.  If TARGET, match it
 in the target.  If both DESCRIPTION and TARGET, match both,
 respectively."
-  (cl-labels
-      ((no-desc
-        (match) (rx-to-string `(seq (or bol (1+ blank))
-                                    "[[" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
-                                    "]]")))
-       (match-both
-        (description target)
-        (rx-to-string `(seq (or bol (1+ blank))
-                            "[[" (0+ (not (any "]"))) (regexp ,target) (0+ (not (any "]")))
-                            "][" (0+ (not (any "]"))) (regexp ,description) (0+ (not (any "]")))
-                            "]]")))
-       ;; Note that these actually allow empty descriptions
-       ;; or targets, depending on what they are matching.
-       (match-desc
-        (match) (rx-to-string `(seq (or bol (1+ blank))
-                                    "[[" (0+ (not (any "]")))
-                                    "][" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
-                                    "]]")))
-       (match-target
-        (match) (rx-to-string `(seq (or bol (1+ blank))
-                                    "[[" (0+ (not (any "]"))) (regexp ,match) (0+ (not (any "]")))
-                                    "][" (0+ (not (any "]")))
-                                    "]]"))))
-    (cond (description-or-target
-           (rx-to-string `(or (regexp ,(no-desc description-or-target))
-                              (regexp ,(match-desc description-or-target))
-                              (regexp ,(match-target description-or-target)))))
-          ((and description target)
-           (match-both description target))
-          (description (match-desc description))
-          (target (rx-to-string `(or (regexp ,(no-desc target))
-                                     (regexp ,(match-target target))))))))
+  ;; This `rx' part is borrowed from `org-make-link-regexps'.  It matches the interior of an
+  ;; Org link target (i.e. the parts between the brackets, including any escaped brackets).
+  (let ((link-target-part '(0+ (or (not (any "[]\\"))
+			           (and "\\" (0+ "\\\\") (any "[]"))
+			           (and (1+ "\\") (not (any "[]")))))))
+    (cl-labels
+        ((no-desc
+          (match) (rx-to-string `(seq (or bol (1+ blank))
+                                      "[[" ,link-target-part (regexp ,match) ,link-target-part
+                                      "]]")))
+         (match-both
+          (description target)
+          (rx-to-string `(seq (or bol (1+ blank))
+                              "[[" ,link-target-part (regexp ,target) ,link-target-part
+                              "][" (*? anything) (regexp ,description) (*? anything)
+                              "]]")))
+         ;; Note that these actually allow empty descriptions
+         ;; or targets, depending on what they are matching.
+         (match-desc
+          (match) (rx-to-string `(seq (or bol (1+ blank))
+                                      "[[" ,link-target-part
+                                      "][" (*? anything) (regexp ,match) (*? anything)
+                                      "]]")))
+         (match-target
+          (match) (rx-to-string `(seq (or bol (1+ blank))
+                                      "[[" ,link-target-part (regexp ,match) ,link-target-part
+                                      "][" (*? anything)
+                                      "]]"))))
+      (cond (description-or-target
+             (rx-to-string `(or (regexp ,(no-desc description-or-target))
+                                (regexp ,(match-desc description-or-target))
+                                (regexp ,(match-target description-or-target)))))
+            ((and description target)
+             (match-both description target))
+            (description (match-desc description))
+            (target (rx-to-string `(or (regexp ,(no-desc target))
+                                       (regexp ,(match-target target)))))))))
 
 (defun org-ql--format-src-block-regexp (&optional lang)
   "Return regexp equivalent to `org-babel-src-block-regexp' with LANG filled in."
@@ -922,17 +936,17 @@ value of `org-ql-predicates')."
   (let* ((names (--map (symbol-name (plist-get (cdr it) :name))
                        predicates))
          (aliases (->> predicates
-                    (--map (plist-get (cdr it) :aliases))
-                    -non-nil
-                    -flatten
-                    (-map #'symbol-name)))
+                       (--map (plist-get (cdr it) :aliases))
+                       -non-nil
+                       -flatten
+                       (-map #'symbol-name)))
          (predicate-names (->> (append names aliases)
-                            -uniq
-                            ;; Sort the keywords longest-first to work around what seems to be an
-                            ;; obscure bug in `peg': when one keyword is a substring of another,
-                            ;; and the shorter one is listed first, the shorter one fails to match.
-                            (-sort (-on #'> #'length))))
-         (pexs `((query (+ (and term (* [blank]))))
+                               -uniq
+                               ;; Sort the keywords longest-first to work around what seems to be an
+                               ;; obscure bug in `peg': when one keyword is a substring of another,
+                               ;; and the shorter one is listed first, the shorter one fails to match.
+                               (-sort (-on #'> #'length))))
+         (pexs `((query (and (* [blank]) (+ (and term (* [blank])))))
                  (term (or (and negation (list positive-term)
                                 ;; This is a bit confusing, but it seems to work.  There's probably a better way.
                                 `(pred -- (list 'not (car pred))))
@@ -1003,8 +1017,8 @@ manually; see the definition of `org-ql-defpred').")
   "Define function `org-ql--normalize-query' for PREDICATES.
 PREDICATES should be the value of `org-ql-predicates'."
   (let ((normalizer-patterns (->> predicates
-                               (--map (plist-get (cdr it) :normalizers))
-                               (-flatten-n 1))))
+                                  (--map (plist-get (cdr it) :normalizers))
+                                  (-flatten-n 1))))
     (fset 'org-ql--normalize-query
           (byte-compile
            `(lambda (query)
@@ -1273,34 +1287,40 @@ result form."
              to on))
      (when from
        (setq from (pcase from
+                    ("-"
+                     ;; Ignore, because it means the user is typing a negative number.
+                     nil)
                     ((or 'today "today") (->> (ts-now)
-                                           (ts-apply :hour 0 :minute 0 :second 0)))
+                                              (ts-apply :hour 0 :minute 0 :second 0)))
                     ((pred numberp) (->> (ts-now)
-                                      (ts-adjust 'day from)
-                                      (ts-apply :hour 0 :minute 0 :second 0)))
+                                         (ts-adjust 'day from)
+                                         (ts-apply :hour 0 :minute 0 :second 0)))
                     ((and (pred stringp)
                           (guard (ignore-errors (cl-parse-integer from))))
                      ;; The `pcase' `let' pattern doesn't bind values in the
                      ;; body forms, so we have to parse the integer again.
                      (->> (ts-now)
-                       (ts-adjust 'day (cl-parse-integer from))
-                       (ts-apply :hour 0 :minute 0 :second 0)))
+                          (ts-adjust 'day (cl-parse-integer from))
+                          (ts-apply :hour 0 :minute 0 :second 0)))
                     ((pred stringp) (ts-parse-fill 'begin from))
                     ((pred ts-p) from))))
      (when to
        (setq to (pcase to
+                  ("-"
+                   ;; Ignore, because it means the user is typing a negative number.
+                   nil)
                   ((or 'today "today") (->> (ts-now)
-                                         (ts-apply :hour 23 :minute 59 :second 59)))
+                                            (ts-apply :hour 23 :minute 59 :second 59)))
                   ((pred numberp) (->> (ts-now)
-                                    (ts-adjust 'day to)
-                                    (ts-apply :hour 23 :minute 59 :second 59)))
+                                       (ts-adjust 'day to)
+                                       (ts-apply :hour 23 :minute 59 :second 59)))
                   ((and (pred stringp)
                         (guard (ignore-errors (cl-parse-integer to))))
                    ;; The `pcase' `let' pattern doesn't bind values in the
                    ;; body forms, so we have to parse the integer again.
                    (->> (ts-now)
-                     (ts-adjust 'day (cl-parse-integer to))
-                     (ts-apply :hour 23 :minute 59 :second 59)))
+                        (ts-adjust 'day (cl-parse-integer to))
+                        (ts-apply :hour 23 :minute 59 :second 59)))
                   ((pred stringp) (ts-parse-fill 'end to))
                   ((pred ts-p) to))))
      (setf result (progn ,@body))
@@ -1326,8 +1346,13 @@ result form."
 ;; redefinitions until all of the predicates have been defined.
 (setf org-ql-defpred-defer t)
 
+(org-ql-defpred blocked ()
+  "Return non-nil if entry is blocked.
+Calls `org-entry-blocked-p', which see."
+  :body (org-entry-blocked-p))
+
 (org-ql-defpred (category c) (&rest categories)
-  "Return non-nil if current heading is in one or more of CATEGORIES (a list of strings)."
+  "Return non-nil if current heading is in one or more of CATEGORIES."
   :normalizers ((`(,predicate-names . ,rest)
                  `(category ,@rest)))
   :body (when-let ((category (org-get-category (point))))
@@ -1340,18 +1365,16 @@ result form."
   ;; NOTE: This was a defsubst before being defined with the macro.  Might be good to make it a defsubst again.
   :body (or (apply #'org-ql--predicate-todo org-done-keywords)))
 
-(defun org-ql--duration-to-minutes (duration)
+(defalias 'org-ql--duration-to-minutes
+  ;; TODO: Remove when compatibility with Org 9.0 is dropped.
+  (cond ((fboundp 'org-duration-to-minutes) #'org-duration-to-minutes)
+        ((fboundp 'org-duration-string-to-minutes) #'org-duration-string-to-minutes)
+        (t (error "org-ql: Unable to define alias `org-ql-search--link-heading-search-string'.  Please report this as a bug")))
   "Return DURATION string as a number of minutes.
 For compatibility, since Org 9.1 deprecated
 `org-duration-string-to-minutes', replacing it with
 `org-duration-to-minutes', which seems to return floats instead
-of integers."
-  ;; FIXME: Define this as an alias instead.
-  ;; MAYBE: Remove if compatibility with Org 9.0 is dropped.
-  (funcall (if (fboundp 'org-duration-to-minutes)
-               #'org-duration-to-minutes
-             #'org-duration-string-to-minutes)
-           duration))
+of integers.")
 
 (org-ql-defpred effort (&optional effort-or-comparator effort)
   "Return non-nil if current heading's effort property matches arguments.
@@ -1359,7 +1382,8 @@ The following forms are accepted:
 
   (effort DURATION): Matches if effort is DURATION.
   (effort DURATION DURATION): Matches if effort is between DURATIONs, inclusive.
-  (effort COMPARATOR DURATION): Matches if effort compares to DURATION with COMPARATOR.
+  (effort COMPARATOR DURATION): Matches if effort compares to DURATION with
+                                COMPARATOR.
 
 COMPARATOR may be `<', `<=', `>', or `>='.  DURATION should be an
 Org effort string, like \"5\" or \"0:05\"."
@@ -1492,8 +1516,10 @@ Matching is done case-insensitively."
 The following forms are accepted:
 
   (level NUMBER): Matches if heading level is NUMBER.
-  (level NUMBER NUMBER): Matches if heading level is equal to or between NUMBERs.
-  (level COMPARATOR NUMBER): Matches if heading level compares to NUMBER with COMPARATOR.
+  (level NUMBER NUMBER): Matches if heading level is equal to or between
+                         NUMBERs.
+  (level COMPARATOR NUMBER): Matches if heading level compares to NUMBER with
+                             COMPARATOR.
 
 COMPARATOR may be `<', `<=', `>', or `>='."
   :normalizers ((`(,predicate-names . ,args)
@@ -1550,12 +1576,8 @@ any link is found."
   ;; enabled nearly all of the time, in which case this function won't be called anyway, it's
   ;; probably not worth rewriting code all over the place to fix this.
   :preambles ((`(,predicate-names)
-               (list :regexp ;; Match a link with a target and optionally a description.
-                     (rx (or bol (1+ blank))
-                         "[[" (1+ (not (any "]"))) "]"
-                         (optional (seq "[" (0+ (not (any "]"))) "]"))
-                         "]"
-                         (or eol blank))))
+               ;; Match a link with a target and optionally a description.
+               (list :regexp (org-ql--link-regexp :target ".*")))
               (`(,predicate-names ,(and description-or-target
                                         (guard (not (keywordp description-or-target))))
                                   . ,plist)
@@ -1610,7 +1632,7 @@ any link is found."
                                        (match-string org-ql-link-description-group)))))))))
 
 (org-ql-defpred (rifle smart) (&rest strings)
-  "Return non-nil if each string argument is found in either the entry or its outline path.
+  "Return non-nil if each of strings is found in the entry or its outline path.
 Works like `org-rifle'.  This is probably the most useful,
 intuitive, general-purpose predicate."
   ;; NOTE: This predicate advertises that it takes strings, but they
@@ -1677,7 +1699,7 @@ contiguous segment of the outline path:
   :body (org-ql--infix-p regexps (org-ql--value-at (point) #'org-ql--outline-path)))
 
 (org-ql-defpred path (&rest regexps)
-  "Return non-nil if current heading's buffer's filename path matches any of REGEXPS (regexp strings).
+  "Return non-nil if current heading's buffer's file path matches any of REGEXPS.
 Without arguments, return non-nil if buffer is file-backed."
   ;; FIXME: This should AND the regexps together, not OR them.
   :body (when (buffer-file-name)
@@ -1764,7 +1786,7 @@ priority B)."
                 thereis (= item-priority (* 1000 (- org-lowest-priority (string-to-char priority-arg)))))))))
 
 (org-ql-defpred property (property &optional value &key inherit)
-  "Return non-nil if current entry has PROPERTY (a string), and optionally VALUE (a string).
+  "Return non-nil if current entry has PROPERTY, and optionally VALUE.
 If INHERIT is nil, only match entries with PROPERTY set on the
 entry; if t, also match entries with inheritance.  If INHERIT is
 not specified, use the Boolean value of
@@ -1856,7 +1878,7 @@ interpreted as nil or non-nil)."
                         (re-search-forward regexp end t))))))
 
 (org-ql-defpred src (&key regexps lang)
-  "Return non-nil if current entry contains an Org source block matching all of REGEXPS.
+  "Return non-nil if current entry has an Org source block matching all REGEXPS.
 If keyword argument LANG is non-nil, the block must be in that
 language.  Matching is done case-insensitively."
   :coalesce (lambda (coalesced-args current-args)
@@ -1925,26 +1947,22 @@ language.  Matching is done case-insensitively."
                      ;; Always check contents with predicate.
                      :query query)))
   :body
-  (catch 'return
-    (save-excursion
-      (save-match-data
-        (when (re-search-forward org-babel-src-block-regexp (org-entry-end-position) t)
-          (when lang
-            (unless (string= lang (match-string 2))
-              (throw 'return nil)))
-          (if regexps
-              (let ((contents-beg (progn
-                                    (goto-char (match-beginning 0))
-                                    (forward-line 1)
-                                    (point)))
-                    (contents-end (progn
-                                    (goto-char (match-end 0))
-                                    (point-at-bol))))
-                (cl-loop for re in regexps
-                         do (goto-char contents-beg)
-                         always (re-search-forward re contents-end t)))
-            ;; No regexps to check: return non-nil.
-            t))))))
+  (save-excursion
+    (save-match-data
+      (cl-loop while (re-search-forward org-babel-src-block-regexp (org-entry-end-position) t)
+               thereis (when (or (not lang) (equal lang (match-string 2)))
+                         (or (not regexps)
+                             (save-excursion
+                               (let ((contents-beg (progn
+                                                     (goto-char (match-beginning 0))
+                                                     (forward-line 1)
+                                                     (point)))
+                                     (contents-end (progn
+                                                     (goto-char (match-end 0))
+                                                     (point-at-bol))))
+                                 (cl-loop for re in regexps
+                                          do (goto-char contents-beg)
+                                          always (re-search-forward re contents-end t))))))))))
 
 (org-ql-defpred (tags) (&rest tags)
   "Return non-nil if current heading has one or more of TAGS (a list of strings).
@@ -1972,7 +1990,7 @@ Tests both inherited and local tags."
   :body (apply #'org-ql--predicate-tags tags))
 
 (org-ql-defpred (tags-inherited inherited-tags tags-i itags) (&rest tags)
-  "Return non-nil if current heading's inherited tags include one or more of TAGS (a list of strings).
+  "Return non-nil if current heading's inherited tags include any of TAGS.
 If TAGS is nil, return non-nil if heading has any inherited tags."
   :normalizers ((`(,predicate-names . ,tags)
                  `(tags-inherited ,@tags)))
@@ -1986,7 +2004,7 @@ If TAGS is nil, return non-nil if heading has any inherited tags."
                            (seq-intersection tags inherited)))))))
 
 (org-ql-defpred (tags-local local-tags tags-l ltags) (&rest tags)
-  "Return non-nil if current heading's local tags include one or more of TAGS (a list of strings).
+  "Return non-nil if current heading's local tags include any of TAGS.
 If TAGS is nil, return non-nil if heading has any local tags."
   :normalizers ((`(,predicate-names . ,tags)
                  `(tags-local ,@tags)))
@@ -2029,7 +2047,7 @@ Tests both inherited and local tags."
 
 (org-ql-defpred todo (&rest keywords)
   "Return non-nil if current heading is a TODO item.
-With KEYWORDS, return non-nil if its keyword is one of KEYWORDS (a list of strings)."
+With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   ;; TODO: Can we make a preamble for plain (todo) queries?
   :preambles ((`(,predicate-names . ,(and todo-keywords (guard todo-keywords)))
                (list :case-fold nil :regexp (rx-to-string `(seq bol (1+ "*") (1+ space) (or ,@todo-keywords) (or " " eol)) t))))
@@ -2219,8 +2237,8 @@ non-nil if entry has a deadline."
   :normalizers ((`(,predicate-names auto . ,rest)
                  ;; Use `org-deadline-warning-days' as the :to arg.
                  (let ((ts (->> (ts-now)
-                             (ts-adjust 'day org-deadline-warning-days)
-                             (ts-apply :hour 23 :minute 59 :second 59))))
+                                (ts-adjust 'day org-deadline-warning-days)
+                                (ts-apply :hour 23 :minute 59 :second 59))))
                    `(deadline-warning :to ,ts ,@rest)))
                 (`(,predicate-names . ,(and rest (guard (numberp (car rest)))))
                  (org-ql--normalize-from-to-on
@@ -2243,7 +2261,8 @@ non-nil if entry has a deadline."
 (org-ql-defpred deadline-warning (&key from to)
   ;; TODO: Should this also accept a WITH-TIME argument?
   ;; MAYBE: Use the new org-ql-regexps?
-  "Internal predicate used to handle `org-deadline-warning-days' and deadlines with warning periods."
+  "Internal predicate.
+Used to handle `org-deadline-warning-days' and deadlines with warning periods."
   :preambles ((`(,predicate-names . ,_)
                (list :regexp org-deadline-time-regexp :query query)))
   :body

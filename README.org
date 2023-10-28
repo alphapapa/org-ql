@@ -1,7 +1,6 @@
 #+TITLE: org-ql
 
 # NOTE: Using =BEGIN_HTML= for this causes TeX/info export to fail, but this HTML block works.
-# #+HTML: <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
 #+HTML: <img src="images/dog.png" align="right">
 
 # NOTE: To avoid having this in the info manual, we use HTML rather than Org syntax; it still appears with the GitHub renderer.
@@ -112,10 +111,19 @@ Lisp code examples are in [[examples.org]].
 These commands jump to a heading selected using Emacs's built-in completion facilities with an Org QL query:
 
 - ~org-ql-find~ searches in the current buffer.
+- ~org-ql-find-path~ searches outline paths in the current buffer.
 - ~org-ql-find-in-agenda~ searches in ~(org-agenda-files)~.
 - ~org-ql-find-in-org-directory~ searches in ~org-directory~.
 
+Note that these commands are compatible with [[https://github.com/oantolin/embark][Embark]]: the ~embark-act~ command can be called on a completion candidate (i.e. a search result) to act on it immediately, without having to visit the entry in its source Org buffer.
+
 [[images/org-ql-find.png]]
+
+*** org-ql-open-link
+
+This command finds links in entries matching the input query and offers them for selection; the selected link is then opened with ~org-open-at-point~.
+
+The input is matched using the default predicate, which means it searches both entry content and outline paths.  This is helpful when a collection of links are kept in Org files: rather than having to first visit the entry containing the desired link, then locate it within the entry, and then open it, the user can simply select the link and open it directly.  For example, if an entry with the heading =Emacs= contained a link named =mailing list=, one could search for =Emacs list= and open the link to the mailing list directly.
 
 *** org-ql-refile
 
@@ -146,6 +154,8 @@ Read ~QUERY~ and search with ~org-ql~.  Interactively, prompt for these variable
 +  =C-x C-s=: Save query to variable ~org-ql-views~ (accessible with command ~org-ql-view~).
 
 *Note:* The view buffer is currently put in ~org-agenda-mode~, which means that /some/ Org Agenda commands work, such as jumping to entries and changing item priorities (without necessarily updating the view).  This feature is experimental and not guaranteed to work correctly with all commands.  (It works to the extent it does because the appropriate text properties are placed on each item, imitating an Agenda buffer.)
+
+*Note:* Also, this buffer is compatible with [[https://github.com/oantolin/embark][Embark]]: the ~embark-act~ command can be called on an entry to act on it immediately, without having to visit the entry in its source Org buffer.
 
 *** helm-org-ql
 
@@ -221,6 +231,7 @@ Note that the =effort=, =level=, and =priority= predicates do not support compar
 
 Arguments are listed next to predicate names, where applicable.
 
++  =blocked= :: Return non-nil if current heading is blocked.  Calls ~org-entry-blocked-p~, which see.
 +  =category (&optional categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
 +  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
 +  =effort (&optional effort-or-comparator effort)= :: Return non-nil if current heading's effort property matches arguments.  The following forms are accepted: ~(effort DURATION)~: Matches if effort is ~DURATION~.  ~(effort DURATION DURATION)~: Matches if effort is between DURATIONs, inclusive.  ~(effort COMPARATOR DURATION)~: Matches if effort compares to ~DURATION~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.  ~DURATION~ should be an Org effort string, like =5= or =0:05=.
@@ -542,7 +553,43 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 /Note:/ Breaking changes may be made before version 1.0, but in the event of major changes, attempts at backward compatibility will be made with obsolescence declarations, translation of arguments, etc.  Users who need stability guarantees before 1.0 may choose to use tagged stable releases.
 
-** 0.7-pre
+** 0.8-pre
+
+*Additions*
+
++ Function ~org-ql-completing-read~, used by command ~org-ql-find~, now specifies the completion category as ~org-heading~, providing compatibility with [[https://github.com/oantolin/embark][Embark]].  (This is a powerful feature, as it means any ~org-ql-find~ result can be acted on from inside the search results with Embark, which provides common actions from Org Agenda and Org speed keys bindings.)  ([[https://github.com/alphapapa/org-ql/issues/299][#299]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]], [[https://github.com/minad][Daniel Mendler]], and [[https://github.com/akirak][Akira Komamura]].)
++ Command ~org-ql-find~ may be called in an ~org-agenda~ or ~org-ql-view~ buffer to search the buffers which contributed to the agenda/view buffer.
++ Command ~org-ql-find-path~, which searches outline paths in the current buffer.
++ Command ~org-ql-open-link~, which finds links in entries matching the given query, and opens the selected one with ~org-open-at-point~.  (This is helpful when a collection of links are kept in Org files: rather than having to first visit the entry containing the desired link, then locate it within the entry, and then open it, the user can simply select the link and open it directly.)
+
+*Compatibility*
+
++ Org v9.7's ~org-element~ API changes required some adjustments.  ([[https://github.com/alphapapa/org-ql/issues/364][#364]].  Thanks to several users for reporting, and to [[https://github.com/yantar92][Ihor Radchenko]] for his feedback.)
+
+** 0.7.3
+
+*Fixes*
++ Disable ~case-fold-search~ when collecting headings in outline paths.  (Headings that started with a word that is also a to-do keyword but with different capitalization would be matched incorrectly.)
++ Saving of ~org-ql-view~ views.  ([[https://github.com/alphapapa/org-ql/issues/378][#378]].  Thanks to [[https://github.com/Pentaquark1][Pentaquark1]] for reporting.)
++ Command ~org-ql-find~ didn't move point to the selected entry.  ([[https://github.com/alphapapa/org-ql/issues/380][#380]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]] for reporting.)
+
+** 0.7.2
+
+*Fixes*
++ Timestamp predicates are more tolerant of partial input (e.g. preventing errors while the user is typing a query into ~org-ql-find~).
++ Query parser ignores leading whitespace (e.g. preventing errors while the user is typing a query into ~org-ql-find~).
++ Use of ~org-ql-find~ with ~:query-prefix~ argument prevented selection of results.  ([[https://github.com/alphapapa/org-ql/issues/351][#351]].  Thanks to [[https://github.com/danielfleischer][Daniel Fleischer]] for reporting.)
++ Handle narrowed buffers correctly in ~org-ql-find~.
++ Warn about empty headings in ~org-ql-completing-read~ (the Org format allows a heading line to have no text, but it's useless for this purpose, and usually indicates unnoticed corruption).
+
+** 0.7.1
+
+*Fixes*
++ Function ~org-ql-completing-read~ is more compatible with default Emacs completion.  (See [[https://github.com/alphapapa/org-ql/issues/338][#338]].  Thanks to [[https://github.com/arozbiz][arozbiz]] for reporting.)
++ Function ~org-ql-completing-read~ would sometimes stop updating with changes in input.  (See [[https://github.com/alphapapa/org-ql/issues/350][#350]].  Thanks to [[https://github.com/anpandey][Ankit Raj Pandey]] for reporting and fixing, and to [[https://github.com/minad][Daniel Mendler]] for advising.)
++ In ~org-ql-completing-read~, format links for display, and use ~org-entry-get~ internally rather than ~org-get-heading~.
+
+** 0.7
 
 *Added*
 +  Commands ~org-ql-find~, ~org-ql-find-heading~, and ~org-ql-find-path~, which jump to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
@@ -551,17 +598,23 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 +  Option ~org-ql-default-predicate~, applied to plain-string query tokens (before, the ~regexp~ predicate was always used, but now it may be customized).
 +  Alias ~c~ for predicate ~category~.
 +  Predicate ~property~ now accepts the argument ~:inherit~ to match entries with property inheritance, and when unspecified, the option ~org-use-property-inheritance~ controls whether inheritance is used.
++  Predicate ~blocked~.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
 
 *Changed*
 +  Give more useful error message for invalid queries.
 +  Predicate ~src~ now matches case-insensitively.
++  Command ~org-ql-sparse-tree~ accepts both string and sexp queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]].)
 
 *Fixed*
-+  Predicate ~src~'s matching of begin/end block lines, normalization of arguments, and handling in non-sexp queries.
++  Predicate ~link~ matches links whose descriptions contain escaped brackets (changed in Org 9.3).  (Thanks to [[https://github.com/exot][Daniel Borchmann]] for reporting.)
++  Predicate ~src~'s matching of begin/end block lines, normalization of arguments, and handling in non-sexp queries.  (Thanks to [[https://github.com/akirak][Akira Komamura]] for reporting.)
++  Predicate ~src~'s behavior with various arguments.
++  Various compilation warnings.
 
 *Internal*
 +  Certain query predicates, when called multiple times in an ~and~ sub-expression, are optimized to a single call.
 +  Use ~buffer-chars-modified-tick~ instead of ~buffer-modified-tick~.  (Thanks to [[https://github.com/yantar92][Ihor Radchenko]].)
++  Implemented tests for ~src~ predicate.
 
 *Credits*
 +  Thanks to [[https://github.com/chasecaleb][Caleb Chase]] for help with [[https://github.com/alphapapa/org-ql/pull/285][#285]], fixed in [[https://github.com/alphapapa/org-ql/commit/91908186fcca4b5fd2e9d26da5bc0375c2b41acf][9190818]].

@@ -41,6 +41,7 @@
 
 (defcustom org-ql-find-goto-hook '(org-show-entry org-reveal)
   "Functions called when selecting an entry."
+  ;; TODO: Add common choices, including `org-tree-to-indirect-buffer'.
   :type 'hook)
 
 (defcustom org-ql-find-display-buffer-action '(display-buffer-same-window)
@@ -54,8 +55,11 @@ See function `display-buffer'."
 (cl-defun org-ql-find (buffers-files &key query-prefix query-filter
                                      (prompt "Find entry: "))
   "Go to an Org entry in BUFFERS-FILES selected by searching entries with `org-ql'.
-Interactively, with universal prefix, select multiple buffers to
-search with completion.
+Interactively, search the buffers and files relevant to the
+current buffer (i.e. in `org-agenda-mode', the value of
+`org-ql-view-buffers-files' or `org-agenda-contributing-files';
+in `org-mode', that buffer).  With universal prefix, select
+multiple buffers to search with completion and PROMPT.
 
 QUERY-PREFIX may be a string to prepend to the query (e.g. use
 \"heading:\" to only search headings, easily creating a custom
@@ -75,19 +79,19 @@ single predicate)."
                                when (eq 'org-mode (buffer-local-value 'major-mode buffer))
                                collect (buffer-name buffer))
                       nil t))
-           (progn
-             (unless (eq major-mode 'org-mode)
-               (user-error "This is not an Org buffer: %S" (current-buffer)))
-             (current-buffer)))))
+           (cond ((derived-mode-p 'org-agenda-mode) (or org-ql-view-buffers-files
+                                                        org-agenda-contributing-files))
+                 ((derived-mode-p 'org-mode) (current-buffer))
+                 (t (user-error "This is not an Org-related buffer: %S" (current-buffer)))))))
   (let ((marker (org-ql-completing-read buffers-files
                   :query-prefix query-prefix
                   :query-filter query-filter
                   :prompt prompt)))
-    (with-current-buffer (marker-buffer marker)
-      (goto-char marker)
-      (display-buffer (current-buffer) org-ql-find-display-buffer-action)
-      (select-window (get-buffer-window (current-buffer)))
-      (run-hook-with-args 'org-ql-find-goto-hook))))
+    (set-buffer (marker-buffer marker))
+    (goto-char marker)
+    (display-buffer (current-buffer) org-ql-find-display-buffer-action)
+    (select-window (get-buffer-window (current-buffer)))
+    (run-hook-with-args 'org-ql-find-goto-hook)))
 
 ;;;###autoload
 (defun org-ql-refile (marker)
@@ -129,6 +133,64 @@ which see (but only the files are used)."
   "Call `org-ql-find' on files in `org-directory'."
   (interactive)
   (org-ql-find (org-ql-search-directories-files)))
+
+;;;###autoload
+(defun org-ql-find-path ()
+  "Call `org-ql-find' to search outline paths in the current buffer."
+  (interactive)
+  (let ((org-ql-default-predicate 'outline-path))
+    (org-ql-find (current-buffer))))
+
+;;;###autoload
+(cl-defun org-ql-open-link (buffers-files &key query-prefix query-filter
+                                          (prompt "Open link: "))
+  "Open a link selected with `org-ql-completing-read'.
+Links found in entries matching the input query are offered as
+candidates, and the selected one is opened with
+`org-open-at-point'.  Arguments BUFFERS-FILES, QUERY-FILTER,
+QUERY-PREFIX, and PROMPT are passed to `org-ql-completing-read',
+which see."
+  (interactive
+   ;; FIXME: Factor this out.
+   (list (if current-prefix-arg
+             (mapcar #'get-buffer
+                     (completing-read-multiple
+                      "Buffers: "
+                      (cl-loop for buffer in (buffer-list)
+                               when (eq 'org-mode (buffer-local-value 'major-mode buffer))
+                               collect (buffer-name buffer))
+                      nil t))
+           (progn
+             (unless (eq major-mode 'org-mode)
+               (user-error "This is not an Org buffer: %S" (current-buffer)))
+             (current-buffer)))))
+  (let* ((marker (org-ql-completing-read buffers-files
+                   :query-prefix query-prefix
+                   :query-filter query-filter
+                   :prompt prompt
+                   :action-filter #'identity
+                   :action (lambda ()
+                             (save-excursion
+                               (cl-loop with limit = (org-entry-end-position)
+                                        while (re-search-forward org-link-any-re limit t)
+                                        for link = (string-trim (match-string 0))
+                                        do (progn
+                                             (set-text-properties 0 (length link) '(face org-link) link)
+                                             (setf link (org-link-display-format link)))
+                                        collect (cons link (copy-marker (match-beginning 0))))))
+                   :snippet (lambda (&rest _)
+                              "")
+                   :path (lambda (marker)
+                           (org-with-point-at marker
+                             (let* ((path (thread-first (org-get-outline-path t t)
+                                                        (org-format-outline-path (window-width) nil "")
+                                                        (org-split-string "")))
+                                    (formatted-path (if org-ql-completing-read-reverse-paths
+                                                        (concat "\\" (string-join (reverse path) "\\"))
+                                                      (concat "/" (string-join path "/")))))
+                               formatted-path))))))
+    (org-with-point-at marker
+      (org-open-at-point))))
 
 (provide 'org-ql-find)
 

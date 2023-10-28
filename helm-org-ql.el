@@ -59,8 +59,8 @@ Based on `helm-map'.")
   (helm-make-source "Org QL Views" 'helm-source-sync
     :candidates (lambda ()
                   (->> org-ql-views
-                    (-map #'car)
-                    (-sort #'string<)))
+                       (-map #'car)
+                       (-sort #'string<)))
     :action (list (cons "Show view" #'org-ql-view)))
   "Helm source for `org-ql-views'.")
 
@@ -97,6 +97,8 @@ Based on `helm-map'.")
   "Display results in BUFFERS-FILES for an `org-ql' non-sexp query using Helm.
 Interactively, search the current buffer.  Note that this command
 only accepts non-sexp, \"plain\" queries.
+
+NAME is passed to `helm-org-ql-source', which see.
 
 NOTE: Atoms in the query are turned into strings where
 appropriate, which makes it unnecessary to type quotation marks
@@ -209,8 +211,8 @@ WINDOW-WIDTH should be the width of the Helm window."
          (width (- window-width (length prefix)))
          (heading (org-get-heading t))
          (path (-> (org-get-outline-path)
-                 (org-format-outline-path width nil "")
-                 (org-split-string "")))
+                   (org-format-outline-path width nil "")
+                   (org-split-string "")))
          (path (if helm-org-ql-reverse-paths
                    (concat heading "\\" (s-join "\\" (nreverse path)))
                  (concat (s-join "/" path) "/" heading))))
