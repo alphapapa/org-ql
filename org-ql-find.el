@@ -76,9 +76,8 @@ single predicate)."
                   :query-filter query-filter
                   :prompt prompt)))
     (set-buffer (marker-buffer marker))
+    (pop-to-buffer (current-buffer) org-ql-find-display-buffer-action)
     (goto-char marker)
-    (display-buffer (current-buffer) org-ql-find-display-buffer-action)
-    (select-window (get-buffer-window (current-buffer)))
     (run-hook-with-args 'org-ql-find-goto-hook)))
 
 ;;;###autoload
