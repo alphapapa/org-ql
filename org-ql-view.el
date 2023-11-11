@@ -1030,6 +1030,27 @@ property."
 
 (declare-function org-ql-search-directories-files "org-ql-search" t)
 
+(defun org-ql-view--buffers-files-to-uniq-strings (buffers-files)
+  "Flatten, remove duplicates and convert elements in BUFFERS-FILES to strings.
+This used by `org-ql-view--contract-buffers-files' and
+`org-ql-view--expand-buffers-files'.  Would signal error
+if an element is not a buffer or string."
+  (cl-labels ((convert-to-strings
+               ;; Expanding all buffers to file names or buffer names to remove duplicate entries.
+               (list) (--map
+                       (pcase-exhaustive it
+                         ((pred bufferp) (or (buffer-file-name it)
+                                             (buffer-name it)))
+                         ;; Any values at this point should be a buffer or string.
+                         ;; Testing for string anyways.
+                         ((pred stringp) it))
+                       list)))
+    (--> buffers-files
+      -flatten
+      -non-nil
+      convert-to-strings
+      -uniq)))
+
 (defun org-ql-view--contract-buffers-files (buffers-files)
   "Return BUFFERS-FILES in its \"contracted\" form.
 The contracted form is \"org-agenda-files\" if BUFFERS-FILES
@@ -1044,54 +1065,91 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
                                (string (expand-file-name it))
                                (otherwise it))
                              list)))
-    ;; TODO: Test this more exhaustively.
-    (pcase buffers-files
-      ((pred listp)
-       (pcase (expand-files buffers-files)
-         ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
-          "org-agenda-files")
-         ((and (guard (file-exists-p org-directory))
-               (pred (seq-set-equal-p (org-ql-search-directories-files
-                                       :directories (list org-directory)))))
-          "org-directory")
-         (_ buffers-files)))
-      ((pred (equal (current-buffer)))
-       "buffer")
-      ((or 'org-agenda-files '(function org-agenda-files))
-       "org-agenda-files")
-      ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
-       (buffer-file-name buffers-files))
-      (_ buffers-files))))
+    (let ((contracted-buffers-files
+           ;; TODO: Test this more exhaustively.
+           (pcase buffers-files
+             ((pred functionp) (pcase buffers-files
+                                 ('org-agenda-files "org-agenda-files")
+                                 (_ buffers-files)))
+             ((pred listp)
+              (pcase (expand-files buffers-files)
+                ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
+                 "org-agenda-files")
+                ((and (guard (file-exists-p org-directory))
+                      (pred (seq-set-equal-p (org-ql-search-directories-files
+                                              :directories (list org-directory)))))
+                 "org-directory")
+                (_ buffers-files)))
+             ((pred (equal (current-buffer)))
+              "buffer")
+             ((or 'org-agenda-files '(function org-agenda-files))
+              "org-agenda-files")
+             ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
+              (buffer-file-name buffers-files))
+             ((pred bufferp)
+              (buffer-name buffers-files))
+             (_ buffers-files))))
+      ;; To filter duplicates with the extend counterpart of this function,
+      ;; this needs to be a string or a list of string.
+      ;; Hence, making sure the buffers are convered to file names or buffer names.
+      ;; Using file-names when it's a file-buffer to avoid duplicates resulting from
+      ;; the file-buffer and file name being entered.
+      (cl-typecase contracted-buffers-files
+        (function contracted-buffers-files)
+        (string contracted-buffers-files)
+        (list (org-ql-view--buffers-files-to-uniq-strings contracted-buffers-files))
+        (t (error (format "Value %s is not a string, a valid function or a list of buffer/strings" contracted-buffers-files)))))))
 
 (defun org-ql-view--complete-buffers-files ()
-  "Return value for `org-ql-view-buffers-files' using completion."
-  (cl-labels ((initial-input
-               () (when org-ql-view-buffers-files
-                    (org-ql-view--contract-buffers-files
-                     org-ql-view-buffers-files))))
-    (if (and org-ql-view-buffers-files
-             (bufferp org-ql-view-buffers-files))
-        ;; Buffers can't be input by name, so if the default value is a buffer, just use it.
-        ;; TODO: Find a way to fix this.
+  "Return value for `org-ql-view-buffers-files' using completion.
+When `org-ql-view-buffers-files' cannot be contracted to a string
+representation `org-ql-view-buffers-files' is returned."
+  (let* ((contracted-org-ql-view-buffers-files
+          (when org-ql-view-buffers-files
+            (org-ql-view--contract-buffers-files
+             org-ql-view-buffers-files)))
+         (initial-input (pcase contracted-org-ql-view-buffers-files
+                          ('nil nil)
+                          ('string contracted-org-ql-view-buffers-files)
+                          ((pred functionp) contracted-org-ql-view-buffers-files)
+                          ((pred listp)
+                           (mapconcat 'identity contracted-org-ql-view-buffers-files
+                                      ","))
+                          (_ (format "%s" contracted-org-ql-view-buffers-files))))
+         (completion-read-result (if (functionp contracted-org-ql-view-buffers-files)
+                                     (progn
+                                       (message "`org-ql-view-buffers-files' is a function, cannot use completion with it.")
+                                       contracted-org-ql-view-buffers-files)
+                                   (completing-read-multiple
+                                    "Buffers/Files: "
+                                    (list 'buffer 'org-agenda-files 'org-directory 'all)
+                                    nil nil initial-input))))
+    (if (equal completion-read-result initial-input)
         org-ql-view-buffers-files
-      (org-ql-view--expand-buffers-files
-       (completing-read "Buffers/Files: "
-                        (list 'buffer 'org-agenda-files 'org-directory 'all)
-                        nil nil (initial-input))))))
+      (org-ql-view--expand-buffers-files completion-read-result))))
 
 (defun org-ql-view--expand-buffers-files (buffers-files)
   "Return BUFFERS-FILES expanded to a list of files or buffers.
-The counterpart to `org-ql-view--contract-buffers-files'."
-  (pcase-exhaustive buffers-files
-    ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
-                     (buffer-list)))
-    ("org-agenda-files" (org-agenda-files))
-    ("org-directory" (org-ql-search-directories-files))
-    ((or "" "buffer") (current-buffer))
-    ((pred bufferp) buffers-files)
-    ((pred listp) buffers-files)
-    ;; A single filename.
-    ((pred stringp) buffers-files)))
+The counterpart to `org-ql-view--contract-buffers-files'.
+This always returns a list of string values."
+  (let ((expanded-buffers-files
+         (--> buffers-files
+           -list -non-nil
+           (-map (lambda (buffer-file)
+                   (pcase-exhaustive buffer-file
+                     ("all" (--select (equal (buffer-local-value 'major-mode it) 'org-mode)
+                                      (buffer-list)))
+                     ("org-agenda-files" (org-agenda-files))
+                     ("org-directory" (org-ql-search-directories-files))
+                     ((or "" "buffer")
+                      (current-buffer))
+                     ((or (pred bufferp)
+                          ;; A single filename.
+                          (pred stringp))
+                      buffer-file)
+                     (_ (error (format "Value %s is not a valid buffer/file" buffer-file)))))
+                 it))))
+    (org-ql-view--buffers-files-to-uniq-strings expanded-buffers-files)))
 
 (defun org-ql-view--complete-super-groups ()
   "Return value for `org-ql-view-super-groups' using completion."
