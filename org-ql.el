@@ -333,11 +333,12 @@ See Info node `(org-ql)Queries'."
                                                     (sxhash-equal (prin1-to-string args))))
 
 ;;;###autoload
-(cl-defun org-ql-select (buffers-or-files query &key action narrow sort)
-  "Return items matching QUERY in BUFFERS-OR-FILES.
+(cl-defun org-ql-select (in query &key action narrow sort)
+  "Return items matching QUERY in IN.
 
-BUFFERS-OR-FILES is a file or buffer, a list of files and/or
-buffers, or a function which returns such a list.
+IN is a buffer, file, or Org entry ID string (i.e. findable with
+`org-id-goto'), or a list of one or more of such items, or a
+function which returns such a list.
 
 QUERY is an `org-ql' query sexp (quoted, since this is a
 function).
@@ -374,23 +375,28 @@ would appear first.  In contrast, `(date reverse priority)' would
 also present items with the highest priority first, but within
 each priority the newest items would appear first."
   (declare (indent defun))
-  (-let* ((buffers (->> (cl-typecase buffers-or-files
-                          (null (list (current-buffer)))
-                          (function (funcall buffers-or-files))
-                          (list buffers-or-files)
-                          (otherwise (list buffers-or-files)))
-                        (--map (cl-etypecase it
-                                 ;; NOTE: This etypecase is essential to opening links safely,
-                                 ;; as it rejects, e.g. lambdas in the buffers-files argument.
-                                 (buffer it)
-                                 (string (or (find-buffer-visiting it)
-                                             (when (file-readable-p it)
-                                               ;; It feels unintuitive that `find-file-noselect' returns
-                                               ;; a buffer if the filename doesn't exist.
-                                               (find-file-noselect it))
-                                             (display-warning 'org-ql-select (format "Can't open file: %s" it) :error)))))
-                        ;; Ignore special/hidden buffers.
-                        (--remove (string-prefix-p " " (buffer-name it)))))
+  (-let* ((in (->> (cl-typecase in
+                     (null (list (current-buffer)))
+                     (function (funcall in))
+                     (list in)
+                     (otherwise (list in)))
+                   (--map (pcase-exhaustive it
+                            ;; NOTE: This exhaustive pcase is essential to opening links safely,
+                            ;; as it rejects, e.g. lambdas in the buffers-files argument.
+                            ((cl-type buffer) it)
+                            ((and (cl-type string)
+                                  (pred file-readable-p))
+                             (or (find-buffer-visiting it)
+                                 (when (file-readable-p it)
+                                   ;; It feels unintuitive that `find-file-noselect' returns
+                                   ;; a buffer if the filename doesn't exist.
+                                   (find-file-noselect it))
+                                 (display-warning 'org-ql-select (format "Can't open file: %s" it) :error)))
+                            ((cl-type string)
+                             ;; Assumed to be an Org ID string (without the "id:" prefix).
+                             it)))
+                   ;; Ignore special/hidden buffers.
+                   (--remove (and (bufferp it) (string-prefix-p " " (buffer-name it))))))
           (query (org-ql--normalize-query query))
           ((&plist :query :preamble :preamble-case-fold) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
@@ -425,12 +431,19 @@ each priority the newest items would appear first."
                              ;; Temporarily set new function definition.
                              (fset name fn)))
                          ;; Run query on buffers.
-                         (->> buffers
-                              (--map (with-current-buffer it
-                                       (unless (derived-mode-p 'org-mode)
-                                         (display-warning 'org-ql-select (format  "Not an Org buffer: %s" (buffer-name)) :error))
-                                       (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                              :predicate predicate :action action :narrow narrow)))
+                         (->> in
+                              (--map (let* ((marker)
+                                            (buffer (cl-etypecase it
+                                                      (buffer it)
+                                                      (string (marker-buffer
+                                                               (setf marker (org-id-find it 'as-marker)))))))
+                                       (with-current-buffer buffer
+                                         (unless (derived-mode-p 'org-mode)
+                                           (display-warning 'org-ql-select (format  "Not an Org buffer: %s" (buffer-name)) :error))
+                                         (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
+                                                                :predicate predicate :action action
+                                                                ;; FIXME: Is it okay to use a marker here, or do we need to use the ID and get a new position each time?
+                                                                :narrow (or marker narrow)))))
                               (-flatten-n 1)))
                      (--each orig-fns
                        ;; Restore original function mappings.
@@ -466,8 +479,7 @@ are returned by this function.  It may be:
 
 - A function symbol.
 
-FROM corresponds to the `org-ql-select' argument BUFFERS-OR-FILES.
-It may be one or a list of file paths and/or buffers.
+FROM corresponds to the `org-ql-select' argument IN, which see.
 
 WHERE corresponds to the `org-ql-select' argument QUERY.  It
 should be an `org-ql' query sexp.
@@ -491,10 +503,12 @@ NARROW corresponds to the `org-ql-select' argument NARROW."
            ;; The key must include the preamble, because some queries are replaced by
            ;; the preamble, leaving a nil query, which would make the key ambiguous.
            (list :query query :preamble preamble :action action :preamble-case-fold preamble-case-fold
-                 (if narrow
-                     ;; Use bounds of narrowed portion of buffer.
-                     (cons (point-min) (point-max))
-                   nil))))
+                 :narrow (pcase-exhaustive narrow
+                           ((cl-type string) narrow)
+                           ((cl-type marker) narrow)
+                           (`t ;; Use bounds of narrowed portion of buffer.
+                            (cons (point-min) (point-max)))
+                           (`nil nil)))))
     (if-let* ((buffer-cache (gethash (current-buffer) org-ql-cache))
               (query-cache (cadr buffer-cache))
               (modified-tick (car buffer-cache))
@@ -529,32 +543,44 @@ PREAMBLE-CASE-FOLD."
   ;; can't be used, so we do it manually (this is same as the equivalent `flet' expansion).
   ;; Mappings are stored in the variable because it allows predicates to be defined with a
   ;; macro, which allows documentation to be easily generated for them.
-  (save-excursion
-    (save-restriction
-      (unless narrow
-        (widen))
-      (goto-char (point-min))
-      (when (org-before-first-heading-p)
-        (outline-next-heading))
-      (if (not (org-at-heading-p))
-          (progn
-            ;; No headings in buffer: return nil.
-            (unless (string-prefix-p " " (buffer-name))
-              ;; Not a special, hidden buffer: show message, because if a user accidentally
-              ;; searches a buffer without headings, he might be confused.
-              (message "org-ql: No headings in buffer: %s" (current-buffer)))
-            nil)
-        ;; Find matching entries.
-        ;; TODO: Bind `case-fold-search' around the preamble loop.
-        (cond (preamble (cl-loop while (let ((case-fold-search preamble-case-fold))
-                                         (re-search-forward preamble nil t))
-                                 do (outline-back-to-heading 'invisible-ok)
-                                 when (funcall predicate)
-                                 collect (funcall action)
-                                 do (outline-next-heading)))
-              (t (cl-loop when (funcall predicate)
-                          collect (funcall action)
-                          while (outline-next-heading))))))))
+  (let (old-restriction)
+    (save-excursion
+      (save-restriction
+        (pcase narrow
+          ((cl-type marker)
+           (switch-to-buffer (marker-buffer narrow)) ;; Can change buffer!
+           (setf old-restriction (if (buffer-narrowed-p)
+                                     (cons (point-min) (point-max))
+                                   t))
+           (goto-char narrow)
+           (org-narrow-to-subtree))
+          (`nil (widen)))
+        (goto-char (point-min))
+        (when (org-before-first-heading-p)
+          (outline-next-heading))
+        (if (not (org-at-heading-p))
+            (progn
+              ;; No headings in buffer: return nil.
+              (unless (string-prefix-p " " (buffer-name))
+                ;; Not a special, hidden buffer: show message, because if a user accidentally
+                ;; searches a buffer without headings, he might be confused.
+                (message "org-ql: No headings in buffer: %s" (current-buffer)))
+              nil)
+          ;; Find matching entries.
+          ;; TODO: Bind `case-fold-search' around the preamble loop.
+          (unwind-protect
+              (cond (preamble (cl-loop while (let ((case-fold-search preamble-case-fold))
+                                               (re-search-forward preamble nil t))
+                                       do (outline-back-to-heading 'invisible-ok)
+                                       when (funcall predicate)
+                                       collect (funcall action)
+                                       do (outline-next-heading)))
+                    (t (cl-loop when (funcall predicate)
+                                collect (funcall action)
+                                while (outline-next-heading))))
+            (pcase old-restriction
+              (`t (widen))
+              (`(,start . ,end) (narrow-to-region start end)))))))))
 
 ;;;;; Helpers
 
