@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Support questions
+    url: https://github.com/alphapapa/org-ql/discussions
+    about: Please ask and answer support questions here.

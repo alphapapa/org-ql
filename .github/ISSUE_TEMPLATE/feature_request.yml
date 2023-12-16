@@ -1,0 +1,45 @@
+name: Feature Request
+description: File a feature request
+labels: ["enhancement"]
+body:
+  - type: input
+    id: os-platform
+    attributes:
+      label: OS/platform
+      description: What operating system or platform are you running Emacs on?
+    validations:
+      required: true
+  - type: textarea
+    id: emacs-provenance
+    attributes:
+      label: Emacs version and provenance
+      description: What version of Emacs are you using, where did you acquire it, and how did you install it?
+    validations:
+      required: true
+  - type: textarea
+    id: org-provenance
+    attributes:
+      label: Org version and provenance
+      description: What version of Org are you using, where did you acquire it, and how did you install it?
+    validations:
+      required: true
+  - type: input
+    id: package-provenance
+    attributes:
+      label: org-ql package version and provenance
+      description: What version of org-ql are you using, where did you acquire it, and how did you install it?
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe your request.
+    validations:
+      required: true
+  - type: textarea
+    id: etc
+    attributes:
+      label: Etc.
+      description: Any other information that seems relevant
+
