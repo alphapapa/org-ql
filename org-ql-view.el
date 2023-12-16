@@ -487,11 +487,11 @@ If TITLE, prepend it to the header."
 Makes QUERY more readable, e.g. timestamp objects are replaced
 with human-readable strings."
   (cl-labels ((rec (form)
-                   (cl-typecase form
-                     (ts (ts-format form))
-                     (cons (cons (rec (car form))
-                                 (rec (cdr form))))
-                     (otherwise form))))
+                (cl-typecase form
+                  (ts (ts-format form))
+                  (cons (cons (rec (car form))
+                              (rec (cdr form))))
+                  (otherwise form))))
     (format "%S" (rec query))))
 
 (defun org-ql-view--font-lock-string (mode s)
@@ -533,14 +533,14 @@ dates in the past, and negative for dates in the future."
 
 (defun org-ql-view-bookmark-make-record ()
   "Return a bookmark record for the current Org QL View buffer."
-  (cl-labels ((file-nameize
-               (b-f) (abbreviate-file-name
-                      (cl-typecase b-f
-                        (string b-f)
-                        (buffer (or (buffer-file-name b-f)
-                                    (when (buffer-base-buffer b-f)
-                                      (buffer-file-name (buffer-base-buffer b-f)))))
-                        (t (user-error "Only file-backed buffers can be bookmarked by Org QL View: %s" b-f))))))
+  (cl-labels ((file-nameize (b-f)
+                (abbreviate-file-name
+                 (cl-typecase b-f
+                   (string b-f)
+                   (buffer (or (buffer-file-name b-f)
+                               (when (buffer-base-buffer b-f)
+                                 (buffer-file-name (buffer-base-buffer b-f)))))
+                   (t (user-error "Only file-backed buffers can be bookmarked by Org QL View: %s" b-f))))))
     (-let* ((plist (org-ql-view--plist (current-buffer)))
             ((&plist :buffers-files) plist))
       ;; Replace buffers with their filenames, and signal error if any are not file-backed.
@@ -655,23 +655,25 @@ When opened, the link searches the buffer it's opened from."
   (when org-ql-view-query
     ;; Only Org QL View buffers should have `org-ql-view-query' set.
     (cl-labels ((prompt-for (buffers-files)
-                            (pcase-exhaustive
-                                (completing-read (format "Make link that searches: ")
-                                                 '("file link is in" "files currently searched")
-                                                 nil t nil nil "file link is in")
-                              ("file link is in" nil)
-                              ("files currently searched" buffers-files)))
-                (strings-or-file-buffers-p
-                 (thing) (cl-etypecase thing
-                           (list (cl-every #'strings-or-file-buffers-p thing))
-                           (string thing)
-                           (buffer (or (buffer-file-name thing)
-                                       ;; TODO: Should indirect buffers be allowed?  Maybe not, since their narrowing isn't preserved.
-                                       ;; On the other hand, it's possible to accidentally make a search view for an indirect buffer
-                                       ;; that's since been widened, and forcing the user to manually change that would be awkward,
-                                       ;; and trying to communicate the problem would be difficult, so maybe it's okay to allow it.
-                                       (when (buffer-base-buffer thing)
-                                         (buffer-file-name (buffer-base-buffer thing))))))))
+                  (pcase-exhaustive
+                      (completing-read (format "Make link that searches: ")
+                                       '("file link is in" "files currently searched")
+                                       nil t nil nil "file link is in")
+                    ("file link is in" nil)
+                    ("files currently searched" buffers-files)))
+                (strings-or-file-buffers-p (thing)
+                  (cl-etypecase thing
+                    (list (cl-every #'strings-or-file-buffers-p thing))
+                    (string thing)
+                    (buffer (or (buffer-file-name thing)
+                                ;; TODO: Should indirect buffers be allowed?  Maybe not, since their
+                                ;; narrowing isn't preserved.  On the other hand, it's possible to
+                                ;; accidentally make a search view for an indirect buffer that's
+                                ;; since been widened, and forcing the user to manually change that
+                                ;; would be awkward, and trying to communicate the problem would be
+                                ;; difficult, so maybe it's okay to allow it.
+                                (when (buffer-base-buffer thing)
+                                  (buffer-file-name (buffer-base-buffer thing))))))))
       (unless (strings-or-file-buffers-p org-ql-view-buffers-files)
         (user-error "%s" "Views that search non-file-backed buffers can't be linked to"))
       (let* ((query-string (--if-let (org-ql--query-sexp-to-string org-ql-view-query)
@@ -1048,11 +1050,11 @@ the variable), \"org-directory\" if it matches the value of
 current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
   ;; Used in `org-ql-view--complete-buffers-files' and
   ;; `org-ql-view--header-line-format'.
-  (cl-labels ((expand-files
-               (list) (--map (cl-typecase it
-                               (string (expand-file-name it))
-                               (otherwise it))
-                             list)))
+  (cl-labels ((expand-files (list)
+                (--map (cl-typecase it
+                         (string (expand-file-name it))
+                         (otherwise it))
+                       list)))
     ;; TODO: Test this more exhaustively.
     (pcase buffers-files
       ((pred listp)
@@ -1074,10 +1076,10 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion."
-  (cl-labels ((initial-input
-               () (when org-ql-view-buffers-files
-                    (org-ql-view--contract-buffers-files
-                     org-ql-view-buffers-files))))
+  (cl-labels ((initial-input ()
+                (when org-ql-view-buffers-files
+                  (org-ql-view--contract-buffers-files
+                   org-ql-view-buffers-files))))
     (if (and org-ql-view-buffers-files
              (bufferp org-ql-view-buffers-files))
         ;; Buffers can't be input by name, so if the default value is a buffer, just use it.

@@ -341,17 +341,17 @@ this (must be a single line in the Org buffer):
       (setf elements (cl-etypecase take
                        ((and integer (satisfies cl-minusp)) (-take-last (abs take) elements))
                        (integer (-take take elements)))))
-    (cl-labels ((format-element
-                 (element) (string-join (cl-loop for column in columns
-                                                 collect (or (pcase-exhaustive column
-                                                               ((pred symbolp)
-                                                                (funcall (alist-get column format-fns) element))
-                                                               (`((,column . ,args) ,_header)
-                                                                (apply (alist-get column format-fns) element args))
-                                                               (`(,column ,_header)
-                                                                (funcall (alist-get column format-fns) element)))
-                                                             ""))
-                                        " | ")))
+    (cl-labels ((format-element (element)
+                  (string-join (cl-loop for column in columns
+                                        collect (or (pcase-exhaustive column
+                                                      ((pred symbolp)
+                                                       (funcall (alist-get column format-fns) element))
+                                                      (`((,column . ,args) ,_header)
+                                                       (apply (alist-get column format-fns) element args))
+                                                      (`(,column ,_header)
+                                                       (funcall (alist-get column format-fns) element)))
+                                                    ""))
+                               " | ")))
       ;; Table header
       (insert "| " (string-join (--map (pcase it
                                          ((pred symbolp) (capitalize (symbol-name it)))
