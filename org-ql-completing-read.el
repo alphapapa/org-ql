@@ -82,7 +82,7 @@ To be used in, e.g. annotation functions.")
 (defun org-ql-completing-read-action ()
   "Default action for `org-ql-completing-read'.
 Returns (STRING . MARKER) cons for entry at point."
-  (font-lock-ensure (point-at-bol) (point-at-eol))
+  (font-lock-ensure (pos-bol) (pos-eol))
   (cons (org-link-display-format (org-entry-get nil "ITEM")) (point-marker)))
 
 (defun org-ql-completing-read-snippet (marker)
@@ -155,7 +155,7 @@ single predicate)."
     (cl-labels (;; (debug-message
                 ;;  (f &rest args) (apply #'message (concat "ORG-QL-COMPLETING-READ: " f) args))
                 (action ()
-                  (font-lock-ensure (point-at-bol) (point-at-eol))
+                  (font-lock-ensure (pos-bol) (pos-eol))
                   ;; This function needs to handle multiple candidates per
                   ;; call, so we loop over a list of values by default.
                   (pcase-dolist (`(,string . ,marker) (funcall action-filter (funcall action)))

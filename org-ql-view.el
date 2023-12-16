@@ -302,10 +302,10 @@ SLOT is passed to `display-buffer-in-side-window', which see."
 (defun org-ql-view-switch ()
   "Switch to view at point."
   (interactive)
-  (let ((key (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+  (let ((key (buffer-substring-no-properties (pos-bol) (pos-eol))))
     (unless (string-empty-p key)
       (ov-clear :org-ql-view-selected)
-      (ov (point-at-bol) (1+ (point-at-eol)) :org-ql-view-selected t
+      (ov (pos-bol) (1+ (pos-eol)) :org-ql-view-selected t
           'face '(:weight bold :inherit highlight))
       (org-ql-view key))))
 
@@ -369,7 +369,7 @@ update search arguments."
 (defun org-ql-view-customize ()
   "Customize view at point in `org-ql-view-sidebar' buffer."
   (interactive)
-  (let ((key (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+  (let ((key (buffer-substring-no-properties (pos-bol) (pos-eol))))
     (customize-option 'org-ql-views)
     (search-forward (concat "Name: " key))))
 

@@ -5,7 +5,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 ;; Version: 0.8-pre
-;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0.1") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
+;; Package-Requires: ((emacs "26.1") (compat "29.1") (dash "2.18.1") (f "0.17.2") (map "2.1") (org "9.0") (org-super-agenda "1.2") (ov "1.0.6") (peg "1.0.1") (s "1.12.0") (transient "0.1") (ts "0.2-pre"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; License:
@@ -43,6 +43,7 @@
 (require 'seq)
 (require 'subr-x)
 
+(require 'compat)
 (require 'dash)
 (require 'map)
 (require 'ts)
@@ -1973,7 +1974,7 @@ language.  Matching is done case-insensitively."
                                                      (point)))
                                      (contents-end (progn
                                                      (goto-char (match-end 0))
-                                                     (point-at-bol))))
+                                                     (pos-bol))))
                                  (cl-loop for re in regexps
                                           do (goto-char contents-beg)
                                           always (re-search-forward re contents-end t))))))))))
