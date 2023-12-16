@@ -521,9 +521,8 @@ Arguments are listed next to predicate names, where applicable.
      Return non-nil if current entry has ‘PROPERTY’ (a string), and
      optionally ‘VALUE’ (a string).  If ‘INHERIT’ is nil, only match
      entries with ‘PROPERTY’ set on the entry; if t, also match entries
-     with inheritance.  If ‘INHERIT’ is not specified, use the Boolean
-     value of ‘org-use-property-inheritance’, which see (i.e.  it is
-     only interpreted as nil or non-nil).
+     with inheritance.  If ‘INHERIT’ is not specified, use the value of
+     ‘org-use-property-inheritance’, which see.
 ‘regexp (&rest regexps)’
      Return non-nil if current entry matches all of ‘REGEXPS’ (regexp
      strings).  Matches against entire entry, from beginning of its
@@ -1094,6 +1093,12 @@ File: README.info,  Node: 08-pre,  Next: 074,  Up: Changelog
      ‘org-super-agenda’’s category-related selectors.  (#363
      (https://github.com/alphapapa/org-ql/issues/363).  Thanks to
      Gabriele Mongiano (https://github.com/kofm) for reporting.)
+
+   *Fixes*
+
+   • Predicate ‘property’ correctly uses the value of
+     ‘org-use-property-inheritance’ when not specified (#356
+     (https://github.com/alphapapa/org-ql/issues/356)).
 
    *Compatibility*
 
@@ -1875,57 +1880,57 @@ Node: org-ql-sparse-tree10124
 Node: Queries10924
 Node: Non-sexp query syntax12041
 Node: General predicates13800
-Node: Ancestor/descendant predicates20787
-Node: Date/time predicates21915
-Node: Functions / Macros25039
-Node: Agenda-like views25337
-Ref: Function org-ql-block25499
-Node: Listing / acting-on results26760
-Ref: Caching26968
-Ref: Function org-ql-select27881
-Ref: Function org-ql-query30307
-Ref: Macro org-ql (deprecated)32081
-Node: Custom predicates32396
-Ref: Macro org-ql-defpred32620
-Node: Dynamic block36061
-Node: Links38785
-Node: Tips39472
-Node: Changelog39796
-Node: 08-pre40620
-Node: 07442732
-Node: 07342959
-Node: 07243691
-Node: 07144610
-Node: 0745419
-Node: 06348343
-Node: 06248874
-Node: 06149179
-Node: 0649747
-Node: 05252803
-Node: 05153105
-Node: 0553530
-Node: 04955061
-Node: 04855343
-Node: 04755692
-Node: 04656101
-Node: 04556509
-Node: 04456870
-Node: 04357229
-Node: 04257432
-Node: 04157593
-Node: 0457840
-Node: 03261941
-Node: 03162344
-Node: 0362541
-Node: 02365841
-Node: 02266075
-Node: 02166355
-Node: 0266560
-Node: 0170638
-Node: Notes70739
-Node: Comparison with Org Agenda searches70901
-Node: org-sidebar71790
-Node: License72069
+Node: Ancestor/descendant predicates20725
+Node: Date/time predicates21853
+Node: Functions / Macros24977
+Node: Agenda-like views25275
+Ref: Function org-ql-block25437
+Node: Listing / acting-on results26698
+Ref: Caching26906
+Ref: Function org-ql-select27819
+Ref: Function org-ql-query30245
+Ref: Macro org-ql (deprecated)32019
+Node: Custom predicates32334
+Ref: Macro org-ql-defpred32558
+Node: Dynamic block35999
+Node: Links38723
+Node: Tips39410
+Node: Changelog39734
+Node: 08-pre40558
+Node: 07442864
+Node: 07343091
+Node: 07243823
+Node: 07144742
+Node: 0745551
+Node: 06348475
+Node: 06249006
+Node: 06149311
+Node: 0649879
+Node: 05252935
+Node: 05153237
+Node: 0553662
+Node: 04955193
+Node: 04855475
+Node: 04755824
+Node: 04656233
+Node: 04556641
+Node: 04457002
+Node: 04357361
+Node: 04257564
+Node: 04157725
+Node: 0457972
+Node: 03262073
+Node: 03162476
+Node: 0362673
+Node: 02365973
+Node: 02266207
+Node: 02166487
+Node: 0266692
+Node: 0170770
+Node: Notes70871
+Node: Comparison with Org Agenda searches71033
+Node: org-sidebar71922
+Node: License72201
 
 End Tag Table
 
