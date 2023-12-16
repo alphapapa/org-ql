@@ -569,6 +569,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Compatibility*
 
++ Emacs 27.1 or later is now required.
 + Org v9.7's ~org-element~ API changes required some adjustments.  ([[https://github.com/alphapapa/org-ql/issues/364][#364]].  Thanks to several users for reporting, and to [[https://github.com/yantar92][Ihor Radchenko]] for his feedback.)
 
 ** 0.7.4

@@ -1104,6 +1104,7 @@ File: README.info,  Node: 08-pre,  Next: 074,  Up: Changelog
 
    *Compatibility*
 
+   • Emacs 27.1 or later is now required.
    • Org v9.7’s ‘org-element’ API changes required some adjustments.
      (#364 (https://github.com/alphapapa/org-ql/issues/364).  Thanks to
      several users for reporting, and to Ihor Radchenko
@@ -1899,40 +1900,40 @@ Node: Links38723
 Node: Tips39410
 Node: Changelog39734
 Node: 08-pre40558
-Node: 07442987
-Node: 07343214
-Node: 07243946
-Node: 07144865
-Node: 0745674
-Node: 06348598
-Node: 06249129
-Node: 06149434
-Node: 0650002
-Node: 05253058
-Node: 05153360
-Node: 0553785
-Node: 04955316
-Node: 04855598
-Node: 04755947
-Node: 04656356
-Node: 04556764
-Node: 04457125
-Node: 04357484
-Node: 04257687
-Node: 04157848
-Node: 0458095
-Node: 03262196
-Node: 03162599
-Node: 0362796
-Node: 02366096
-Node: 02266330
-Node: 02166610
-Node: 0266815
-Node: 0170893
-Node: Notes70994
-Node: Comparison with Org Agenda searches71156
-Node: org-sidebar72045
-Node: License72324
+Node: 07443031
+Node: 07343258
+Node: 07243990
+Node: 07144909
+Node: 0745718
+Node: 06348642
+Node: 06249173
+Node: 06149478
+Node: 0650046
+Node: 05253102
+Node: 05153404
+Node: 0553829
+Node: 04955360
+Node: 04855642
+Node: 04755991
+Node: 04656400
+Node: 04556808
+Node: 04457169
+Node: 04357528
+Node: 04257731
+Node: 04157892
+Node: 0458139
+Node: 03262240
+Node: 03162643
+Node: 0362840
+Node: 02366140
+Node: 02266374
+Node: 02166654
+Node: 0266859
+Node: 0170937
+Node: Notes71038
+Node: Comparison with Org Agenda searches71200
+Node: org-sidebar72089
+Node: License72368
 
 End Tag Table
 
