@@ -648,6 +648,14 @@ with keyword arg NOW in PLIST."
 
       ;; TODO: Other predicates.
 
+      (it "Ignores empty quoted strings"
+        (expect (org-ql--query-string-to-sexp "\"\"")
+                :to-equal nil)
+        (expect (org-ql--query-string-to-sexp "foo \"\" bar")
+                :to-equal '(and (rifle "foo") (rifle "bar")))
+        (expect (org-ql--query-string-to-sexp "foo \"baz\" bar")
+                :to-equal '(and (rifle "foo") (rifle "baz") (rifle "bar"))))
+
       (it "Negated terms"
         (expect (org-ql--query-string-to-sexp "todo: !todo:CHECK,SOMEDAY")
                 :to-equal '(and (todo) (not (todo "CHECK" "SOMEDAY"))))
