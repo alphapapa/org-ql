@@ -1135,7 +1135,7 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
     (byte-compile 'org-ql--query-preamble)))
 
 (cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers coalesce)
-  "Define an `org-ql' selector predicate named `org-ql--predicate-NAME'.
+  "Define an \\+`org-ql' selector predicate \\=`org-ql--predicate-NAME'.
 NAME may be a symbol or a list of symbols: if a list, the first
 is used as NAME and the rest are aliases.  A function is only
 created for NAME, not for aliases, so a normalizer should be used
@@ -1180,7 +1180,7 @@ to variables bound in the pattern:
   :case-fold  Bound to `case-fold-search' around the regexp search.
 
   :query      Expression which should replace the query expression,
-              or `query' if it should not be changed (e.g. if the
+              or \\+`query' if it should not be changed (e.g. if the
               regexp is insufficient to determine whether a
               heading matches, in which case the predicate's body
               needs to be tested on the heading).  If the regexp
@@ -1207,7 +1207,7 @@ e.g. a predicate takes keyword arguments, so arguments to
 multiple calls can't be simply appended.)
 
 For convenience, within the `pcase' patterns, the symbol
-`predicate-names' is a special form which is replaced with a
+\\+`predicate-names' is a special form which is replaced with a
 pattern matching any of the predicate's name and aliases.  For
 example, if NAME were:
 
@@ -1215,13 +1215,13 @@ example, if NAME were:
 
 Then if NORMALIZERS were:
 
-  ((`(,predicate-names . ,args)
-  `(heading ,@args)))
+  ((\\=`(,predicate-names . ,args)
+    \\=`(heading ,@args)))
 
 It would be expanded to:
 
-  ((`(,(or 'heading 'h) . ,args)
-  `(heading ,@args)))"
+  ((\\=`(,(or 'heading 'h) . ,args)
+    \\=`(heading ,@args)))"
   ;; FIXME: Update defpred tutorial to include :coalesce.
 
   ;; NOTE: The debug form works, completely!  For example, use `edebug-defun'
