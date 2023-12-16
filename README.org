@@ -561,6 +561,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 + Command ~org-ql-find~ may be called in an ~org-agenda~ or ~org-ql-view~ buffer to search the buffers which contributed to the agenda/view buffer.
 + Command ~org-ql-find-path~, which searches outline paths in the current buffer.
 + Command ~org-ql-open-link~, which finds links in entries matching the given query, and opens the selected one with ~org-open-at-point~.  (This is helpful when a collection of links are kept in Org files: rather than having to first visit the entry containing the desired link, then locate it within the entry, and then open it, the user can simply select the link and open it directly.)
++ Items in ~org-ql-view~ buffers now include the ~org-category~ text property, like Org Agenda buffers, which allows grouping with ~org-super-agenda~'s category-related selectors.  ([[https://github.com/alphapapa/org-ql/issues/363][#363]].  Thanks to [[https://github.com/kofm][Gabriele Mongiano]] for reporting.)
 
 *Compatibility*
 

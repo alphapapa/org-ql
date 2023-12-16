@@ -1089,6 +1089,11 @@ File: README.info,  Node: 08-pre,  Next: 074,  Up: Changelog
      containing the desired link, then locate it within the entry, and
      then open it, the user can simply select the link and open it
      directly.)
+   • Items in ‘org-ql-view’ buffers now include the ‘org-category’ text
+     property, like Org Agenda buffers, which allows grouping with
+     ‘org-super-agenda’’s category-related selectors.  (#363
+     (https://github.com/alphapapa/org-ql/issues/363).  Thanks to
+     Gabriele Mongiano (https://github.com/kofm) for reporting.)
 
    *Compatibility*
 
@@ -1887,40 +1892,40 @@ Node: Links38785
 Node: Tips39472
 Node: Changelog39796
 Node: 08-pre40620
-Node: 07442385
-Node: 07342612
-Node: 07243344
-Node: 07144263
-Node: 0745072
-Node: 06347996
-Node: 06248527
-Node: 06148832
-Node: 0649400
-Node: 05252456
-Node: 05152758
-Node: 0553183
-Node: 04954714
-Node: 04854996
-Node: 04755345
-Node: 04655754
-Node: 04556162
-Node: 04456523
-Node: 04356882
-Node: 04257085
-Node: 04157246
-Node: 0457493
-Node: 03261594
-Node: 03161997
-Node: 0362194
-Node: 02365494
-Node: 02265728
-Node: 02166008
-Node: 0266213
-Node: 0170291
-Node: Notes70392
-Node: Comparison with Org Agenda searches70554
-Node: org-sidebar71443
-Node: License71722
+Node: 07442732
+Node: 07342959
+Node: 07243691
+Node: 07144610
+Node: 0745419
+Node: 06348343
+Node: 06248874
+Node: 06149179
+Node: 0649747
+Node: 05252803
+Node: 05153105
+Node: 0553530
+Node: 04955061
+Node: 04855343
+Node: 04755692
+Node: 04656101
+Node: 04556509
+Node: 04456870
+Node: 04357229
+Node: 04257432
+Node: 04157593
+Node: 0457840
+Node: 03261941
+Node: 03162344
+Node: 0362541
+Node: 02365841
+Node: 02266075
+Node: 02166355
+Node: 0266560
+Node: 0170638
+Node: Notes70739
+Node: Comparison with Org Agenda searches70901
+Node: org-sidebar71790
+Node: License72069
 
 End Tag Table
 

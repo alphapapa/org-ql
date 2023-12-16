@@ -889,7 +889,15 @@ return an empty string."
                               (s-join ":" it)
                               (s-wrap it ":")
                               (org-add-props it nil 'face 'org-tag))))
-           ;;  (category (org-element-property :category element))
+           (category (or (org-element-property :CATEGORY element)
+                         (when-let ((marker (or (org-element-property :org-hd-marker element)
+                                                (org-element-property :org-marker element))))
+                           (org-with-point-at marker
+                             (or (org-get-category)
+                                 (when buffer-file-name
+			           (file-name-sans-extension
+			            (file-name-nondirectory buffer-file-name))))))
+                         ""))
            (priority-string (-some->> (org-element-property :priority element)
                               (char-to-string)
                               (format "[#%s]")
@@ -909,6 +917,7 @@ return an empty string."
            (concat "  " it)
            (org-add-props it properties
              'org-agenda-type 'search
+             'org-category category
              'todo-state todo-keyword
              'tags tag-list
              'org-habit-p habit-property)))))
