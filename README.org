@@ -565,7 +565,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Fixes*
 
-+ Predicate ~property~ correctly uses the value of ~org-use-property-inheritance~ when not specified ([[https://github.com/alphapapa/org-ql/issues/356][#356]]).
++ Predicate ~property~ correctly uses the value of ~org-use-property-inheritance~ when not specified.  ([[https://github.com/alphapapa/org-ql/pull/346][#346]], [[https://github.com/alphapapa/org-ql/issues/356][#356]].  Thanks to [[https://github.com/bram85][Bram Schoenmakers]].)
 
 *Compatibility*
 

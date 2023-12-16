@@ -1097,8 +1097,10 @@ File: README.info,  Node: 08-pre,  Next: 074,  Up: Changelog
    *Fixes*
 
    • Predicate ‘property’ correctly uses the value of
-     ‘org-use-property-inheritance’ when not specified (#356
-     (https://github.com/alphapapa/org-ql/issues/356)).
+     ‘org-use-property-inheritance’ when not specified.  (#346
+     (https://github.com/alphapapa/org-ql/pull/346), #356
+     (https://github.com/alphapapa/org-ql/issues/356).  Thanks to Bram
+     Schoenmakers (https://github.com/bram85).)
 
    *Compatibility*
 
@@ -1897,40 +1899,40 @@ Node: Links38723
 Node: Tips39410
 Node: Changelog39734
 Node: 08-pre40558
-Node: 07442864
-Node: 07343091
-Node: 07243823
-Node: 07144742
-Node: 0745551
-Node: 06348475
-Node: 06249006
-Node: 06149311
-Node: 0649879
-Node: 05252935
-Node: 05153237
-Node: 0553662
-Node: 04955193
-Node: 04855475
-Node: 04755824
-Node: 04656233
-Node: 04556641
-Node: 04457002
-Node: 04357361
-Node: 04257564
-Node: 04157725
-Node: 0457972
-Node: 03262073
-Node: 03162476
-Node: 0362673
-Node: 02365973
-Node: 02266207
-Node: 02166487
-Node: 0266692
-Node: 0170770
-Node: Notes70871
-Node: Comparison with Org Agenda searches71033
-Node: org-sidebar71922
-Node: License72201
+Node: 07442987
+Node: 07343214
+Node: 07243946
+Node: 07144865
+Node: 0745674
+Node: 06348598
+Node: 06249129
+Node: 06149434
+Node: 0650002
+Node: 05253058
+Node: 05153360
+Node: 0553785
+Node: 04955316
+Node: 04855598
+Node: 04755947
+Node: 04656356
+Node: 04556764
+Node: 04457125
+Node: 04357484
+Node: 04257687
+Node: 04157848
+Node: 0458095
+Node: 03262196
+Node: 03162599
+Node: 0362796
+Node: 02366096
+Node: 02266330
+Node: 02166610
+Node: 0266815
+Node: 0170893
+Node: Notes70994
+Node: Comparison with Org Agenda searches71156
+Node: org-sidebar72045
+Node: License72324
 
 End Tag Table
 

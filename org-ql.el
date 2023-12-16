@@ -1823,14 +1823,10 @@ interpreted as nil or non-nil)."
                  ;; otherwise would require ugly special-casing in the parsing).
                  (when (keywordp property)
                    (setf property (substring (symbol-name property) 1)))
-                 `(property ,property ,value
-                            :inherit ,(if (plist-member plist :inherit)
-                                          (plist-get plist :inherit)
-                                        ;; TODO: Add tests for these cases.
-                                        (pcase org-use-property-inheritance
-                                          (`nil nil) (`t t)
-                                          ((pred stringp) org-use-property-inheritance)
-                                          ((pred listp) `(quote ,org-use-property-inheritance)))))))
+                 (list 'property property value
+                       :inherit (cond ((plist-member plist :inherit) (plist-get plist :inherit))
+                                      ((listp org-use-property-inheritance) ''selective)
+                                      (t org-use-property-inheritance)))))
   ;; MAYBE: Should case folding be disabled for properties?  What about values?
   ;; MAYBE: Support (property) without args.
 
