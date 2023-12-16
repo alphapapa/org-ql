@@ -285,6 +285,11 @@ Matches with or without time.")
   :link '(custom-manual "(org-ql)Usage")
   :link '(url-link "https://github.com/alphapapa/org-ql"))
 
+(defcustom org-ql-signal-peg-failure nil
+  "Signal an error when parsing a plain-string query fails.
+This should only be enabled while debugging."
+  :type 'boolean)
+
 (defcustom org-ql-ask-unsafe-queries t
   "Ask before running a query that could run arbitrary code.
 Org QL queries in sexp form can contain arbitrary expressions.
@@ -950,7 +955,7 @@ value of `org-ql-predicates')."
                  (term (or (and negation (list positive-term)
                                 ;; This is a bit confusing, but it seems to work.  There's probably a better way.
                                 `(pred -- (list 'not (car pred))))
-                           positive-term))
+                           positive-term empty-quote))
                  (positive-term (or (and predicate-with-args `(pred args -- (cons (intern pred) args)))
                                     (and predicate-without-args `(pred -- (list (intern pred))))
                                     (and plain-string `(s -- (list org-ql-default-predicate s)))))
@@ -963,6 +968,12 @@ value of `org-ql-predicates')."
                  (keyword (substring (+ (not (or separator "=" "\"" (syntax-class whitespace))) (any))))
                  (quoted-arg "\"" (substring (+ (not (or separator "\"")) (any))) "\"")
                  (unquoted-arg (substring (+ (not (or separator "\"" (syntax-class whitespace))) (any))))
+                 (empty-quote
+                  ;; This avoids aborting parsing or signaling an
+                  ;; error if the user types in two successive
+                  ;; quotation marks while typing a query (e.g. when
+                  ;; using electric-pair-mode).
+                  "\"\"")
                  (negation "!")
                  (separator "," )))
          (closure (lambda (input &optional boolean)
@@ -983,7 +994,10 @@ value of `org-ql-predicates')."
                                 ;; have to borrow some code.  It ends up that we only have to
                                 ;; borrow this `with-peg-rules' call, which isn't too bad.
                                 (eval `(with-peg-rules ,pexs
-                                         (peg-run (peg ,(caar pexs)) #'peg-signal-failure))))))
+                                         (peg-run (peg ,(caar pexs))
+                                                  (lambda (failures)
+                                                    (when org-ql-signal-peg-failure
+                                                      (peg-signal-failure failures)))))))))
                         (pcase parsed-sexp
                           (`(,one-predicate) one-predicate)
                           (`(,_ . ,_) (cons boolean (reverse parsed-sexp)))

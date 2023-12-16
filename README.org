@@ -566,6 +566,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 + Org v9.7's ~org-element~ API changes required some adjustments.  ([[https://github.com/alphapapa/org-ql/issues/364][#364]].  Thanks to several users for reporting, and to [[https://github.com/yantar92][Ihor Radchenko]] for his feedback.)
 
+** 0.7.4
+
+*Fixes*
++ Ignore empty quoted strings in plain-string queries ([[https://github.com/alphapapa/org-ql/issues/383][#383]]).
+
 ** 0.7.3
 
 *Fixes*
