@@ -114,6 +114,17 @@ value, or nil."
 
 ;;;;; Completing read
 
+(defun org-ql-export-view ()
+  "Create `org-ql-view' buffer from current minibuffer org-ql search."
+  (interactive)
+  (user-error "Must be run from within an `org-ql-completing-read' session"))
+
+(defvar org-ql-completing-read-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-e") #'org-ql-export-view)
+    map)
+  "Keymap active during `org-ql-completing-read' minibuffer sessions.")
+
 ;;;###autoload
 (cl-defun org-ql-completing-read
     (buffers-files &key query-prefix query-filter
@@ -325,20 +336,20 @@ single predicate)."
              (selected
               (minibuffer-with-setup-hook
                   (lambda ()
-                    (let ((map (make-sparse-keymap)))
-                      (define-key
-                       map (kbd "C-c C-e")
-                       (lambda ()
-                         (interactive)
-                         (run-at-time 0 nil
-                                      #'org-ql-search
-                                      buffers-files
-                                      (minibuffer-contents-no-properties))
-                         (if (fboundp 'minibuffer-quit-recursive-edit)
-                             (minibuffer-quit-recursive-edit)
-                           (abort-recursive-edit))))
-                      (use-local-map (make-composed-keymap map (current-local-map)))))
-                (completing-read prompt #'collection nil t))))
+                    (use-local-map (make-composed-keymap org-ql-completing-read-map (current-local-map))))
+                (cl-letf* (((symbol-function 'org-ql-export-view)
+                            (lambda ()
+                              (interactive)
+                              (run-at-time 0 nil
+                                           #'org-ql-search
+                                           buffers-files
+                                           (minibuffer-contents-no-properties))
+                              (if (fboundp 'minibuffer-quit-recursive-edit)
+                                  (minibuffer-quit-recursive-edit)
+                                (abort-recursive-edit))))
+                           ((symbol-function 'embark-export)
+                            (symbol-function 'org-ql-export-view)))
+                  (completing-read prompt #'collection nil t)))))
         ;; (debug-message "SELECTED:%S  KEYS:%S" selected (hash-table-keys table))
         (or (gethash selected table)
             ;; If there are completions in the table, but none of them exactly match the user input
