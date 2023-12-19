@@ -1,8 +1,8 @@
 name: Bug Report
 description: File a bug report
-labels: ["bug"]
-assignees:
-  - alphapapa
+# labels: ["bug"]
+# assignees:
+#   - alphapapa
 body:
   - type: markdown
     attributes:
@@ -29,13 +29,13 @@ body:
       description: By what method did you run Emacs?  (i.e. what command did you run?)
     validations:
       required: true
-  # - type: input
-  #   id: emacs-frame
-  #   attributes:
-  #     label: Emacs frame type
-  #     description: Did the problem happen on a GUI or tty Emacs frame?
-  #   validations:
-  #     required: true
+  - type: textarea
+    id: org-provenance
+    attributes:
+      label: Org version and provenance
+      description: What version of Org are you using, where did you acquire it, and how did you install it?
+    validations:
+      required: true
   - type: input
     id: package-provenance
     attributes:
