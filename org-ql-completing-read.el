@@ -30,7 +30,11 @@
 
 (defvar-keymap org-ql-completing-read-map
   :doc "Active during `org-ql-completing-read' sessions."
-  (kbd "C-c C-e") #'org-ql-completing-read-export)
+  "C-c C-e" #'org-ql-completing-read-export)
+
+;; `embark-collect' doesn't work for `org-ql-completing-read', so remap
+;; it to `embark-export' (which `keymap-set', et al doesn't allow).
+(define-key org-ql-completing-read-map [remap embark-collect] 'embark-export)
 
 ;;;; Customization
 
