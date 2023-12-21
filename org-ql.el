@@ -1,6 +1,6 @@
 ;;; org-ql.el --- Org Query Language, search command, and agenda-like view  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017-2022  Adam Porter
+;; Copyright (C) 2017-2023  Adam Porter
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql

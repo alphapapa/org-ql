@@ -1,5 +1,7 @@
 ;;; org-ql-view.el --- Agenda-like view based on org-ql  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2019-2023  Adam Porter
+
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 

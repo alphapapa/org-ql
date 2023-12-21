@@ -1,5 +1,7 @@
 ;;; org-ql-search.el --- Search commands for org-ql  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2019-2023  Adam Porter
+
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 

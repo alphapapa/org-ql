@@ -1,6 +1,6 @@
 ;;; org-ql-completing-read.el --- Completing read of Org entries using org-ql  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022  Adam Porter
+;; Copyright (C) 2022-2023  Adam Porter
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 
