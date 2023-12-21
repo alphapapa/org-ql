@@ -134,7 +134,7 @@ value, or nil."
     (buffers-files &key query-prefix query-filter
                    (action #'org-ql-completing-read-action)
                    ;; FIXME: Unused argument.
-                   (annotate #'org-ql-completing-read-snippet)
+                   ;; (annotate #'org-ql-completing-read-snippet)
                    (snippet #'org-ql-completing-read-snippet)
                    (path #'org-ql-completing-read-path)
                    (action-filter #'list)
@@ -188,7 +188,6 @@ single predicate)."
                               (setf string (format "%s <%s>" string (cl-incf suffix)))
                             (setf string (format "%s <%s>" string (puthash string 2 disambiguations)))))
                         (puthash (propertize string 'org-marker marker) marker table)))))
-
                 (path (marker)
                   (org-with-point-at marker
                     (let* ((path (thread-first (org-get-outline-path nil t)
@@ -198,10 +197,10 @@ single predicate)."
                                                (concat "\\" (string-join (reverse path) "\\"))
                                              (concat "/" (string-join path "/")))))
                       formatted-path)))
-                (todo
-                  (marker) (if-let (it (org-entry-get marker "TODO"))
-                               (concat (propertize it 'face (org-get-todo-face it)) " ")
-                             ""))
+                (todo (marker)
+                  (if-let (it (org-entry-get marker "TODO"))
+                      (concat (propertize it 'face (org-get-todo-face it)) " ")
+                    ""))
                 (affix (completions)
                   ;; (debug-message "AFFIX:%S" completions)
                   (cl-loop for completion in completions
@@ -216,14 +215,14 @@ single predicate)."
                     ;; e.g. Helm while typing, but it seems to help a little when using the
                     ;; org-rifle-style snippets.
                     (or (snippet (get-text-property 0 'org-marker candidate)) "")))
-                (snippet
-                  (marker) (when-let
-                               ((snippet
-                                 (org-with-point-at marker
-                                   (or (funcall org-ql-completing-read-snippet-function org-ql-completing-read-input-regexp)
-                                       (org-ql-completing-read--snippet-simple)))))
-                             (propertize (concat " " snippet)
-                                         'face 'org-ql-completing-read-snippet)))
+                (snippet (marker)
+                  (when-let
+                      ((snippet
+                        (org-with-point-at marker
+                          (or (funcall org-ql-completing-read-snippet-function org-ql-completing-read-input-regexp)
+                              (org-ql-completing-read--snippet-simple)))))
+                    (propertize (concat " " snippet)
+                                'face 'org-ql-completing-read-snippet)))
                 (group (candidate transform)
                   (pcase transform
                     (`nil (buffer-name (marker-buffer (get-text-property 0 'org-marker candidate))))
