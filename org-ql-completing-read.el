@@ -26,6 +26,12 @@
 
 (require 'org-ql)
 
+;;;; Variables
+
+(defvar-keymap org-ql-completing-read-map
+  :doc "Active during `org-ql-completing-read' sessions."
+  (kbd "C-c C-e") #'org-ql-completing-read-export)
+
 ;;;; Customization
 
 (defgroup org-ql-completing-read nil
@@ -114,16 +120,10 @@ value, or nil."
 
 ;;;;; Completing read
 
-(defun org-ql-export-view ()
-  "Create `org-ql-view' buffer from current minibuffer org-ql search."
+(defun org-ql-completing-read-export ()
+  "Show `org-ql-view' buffer for current `org-ql-completing-read'-based search."
   (interactive)
-  (user-error "Must be run from within an `org-ql-completing-read' session"))
-
-(defvar org-ql-completing-read-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-e") #'org-ql-export-view)
-    map)
-  "Keymap active during `org-ql-completing-read' minibuffer sessions.")
+  (user-error "Not in an `org-ql-completing-read' session"))
 
 ;;;###autoload
 (cl-defun org-ql-completing-read
@@ -337,7 +337,7 @@ single predicate)."
               (minibuffer-with-setup-hook
                   (lambda ()
                     (use-local-map (make-composed-keymap org-ql-completing-read-map (current-local-map))))
-                (cl-letf* (((symbol-function 'org-ql-export-view)
+                (cl-letf* (((symbol-function 'org-ql-completing-read-export)
                             (lambda ()
                               (interactive)
                               (run-at-time 0 nil
@@ -348,7 +348,7 @@ single predicate)."
                                   (minibuffer-quit-recursive-edit)
                                 (abort-recursive-edit))))
                            ((symbol-function 'embark-export)
-                            (symbol-function 'org-ql-export-view)))
+                            (symbol-function 'org-ql-completing-read-export)))
                   (completing-read prompt #'collection nil t)))))
         ;; (debug-message "SELECTED:%S  KEYS:%S" selected (hash-table-keys table))
         (or (gethash selected table)
