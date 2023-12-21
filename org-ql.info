@@ -237,7 +237,9 @@ completion facilities with an Org QL query:
    Note that these commands are compatible with Embark
 (https://github.com/oantolin/embark): the ‘embark-act’ command can be
 called on a completion candidate (i.e.  a search result) to act on it
-immediately, without having to visit the entry in its source Org buffer.
+immediately, without having to visit the entry in its source Org buffer,
+and ‘embark-export’ may be called to show the results in an
+‘org-ql-view’ buffer.
 
 
 File: README.info,  Node: org-ql-open-link,  Next: org-ql-refile,  Prev: org-ql-find,  Up: Commands
@@ -1076,6 +1078,10 @@ File: README.info,  Node: 08-pre,  Next: 074,  Up: Changelog
      Thanks to Omar Antolín Camarena (https://github.com/oantolin),
      Daniel Mendler (https://github.com/minad), and Akira Komamura
      (https://github.com/akirak).)
+        • Command ‘org-ql-completing-read-export’, bound to ‘C-c C-e’ or
+          ‘embark-export’ while in an ‘org-ql-completing-read’ session,
+          exits and shows an ‘org-ql-view’ buffer for the current
+          search.
    • Command ‘org-ql-find’ may be called in an ‘org-agenda’ or
      ‘org-ql-view’ buffer to search the buffers which contributed to the
      agenda/view buffer.
@@ -1872,68 +1878,68 @@ Node: Helm support3142
 Node: Usage3545
 Node: Commands3943
 Node: org-ql-find4408
-Node: org-ql-open-link5226
-Node: org-ql-refile6081
-Node: org-ql-search6409
-Node: helm-org-ql8340
-Node: org-ql-view8718
-Node: org-ql-view-sidebar9248
-Node: org-ql-view-recent-items9628
-Node: org-ql-sparse-tree10124
-Node: Queries10924
-Node: Non-sexp query syntax12041
-Node: General predicates13800
-Node: Ancestor/descendant predicates20725
-Node: Date/time predicates21853
-Node: Functions / Macros24977
-Node: Agenda-like views25275
-Ref: Function org-ql-block25437
-Node: Listing / acting-on results26698
-Ref: Caching26906
-Ref: Function org-ql-select27819
-Ref: Function org-ql-query30245
-Ref: Macro org-ql (deprecated)32019
-Node: Custom predicates32334
-Ref: Macro org-ql-defpred32558
-Node: Dynamic block35999
-Node: Links38723
-Node: Tips39410
-Node: Changelog39734
-Node: 08-pre40558
-Node: 07443031
-Node: 07343258
-Node: 07243990
-Node: 07144909
-Node: 0745718
-Node: 06348642
-Node: 06249173
-Node: 06149478
-Node: 0650046
-Node: 05253102
-Node: 05153404
-Node: 0553829
-Node: 04955360
-Node: 04855642
-Node: 04755991
-Node: 04656400
-Node: 04556808
-Node: 04457169
-Node: 04357528
-Node: 04257731
-Node: 04157892
-Node: 0458139
-Node: 03262240
-Node: 03162643
-Node: 0362840
-Node: 02366140
-Node: 02266374
-Node: 02166654
-Node: 0266859
-Node: 0170937
-Node: Notes71038
-Node: Comparison with Org Agenda searches71200
-Node: org-sidebar72089
-Node: License72368
+Node: org-ql-open-link5316
+Node: org-ql-refile6171
+Node: org-ql-search6499
+Node: helm-org-ql8430
+Node: org-ql-view8808
+Node: org-ql-view-sidebar9338
+Node: org-ql-view-recent-items9718
+Node: org-ql-sparse-tree10214
+Node: Queries11014
+Node: Non-sexp query syntax12131
+Node: General predicates13890
+Node: Ancestor/descendant predicates20815
+Node: Date/time predicates21943
+Node: Functions / Macros25067
+Node: Agenda-like views25365
+Ref: Function org-ql-block25527
+Node: Listing / acting-on results26788
+Ref: Caching26996
+Ref: Function org-ql-select27909
+Ref: Function org-ql-query30335
+Ref: Macro org-ql (deprecated)32109
+Node: Custom predicates32424
+Ref: Macro org-ql-defpred32648
+Node: Dynamic block36089
+Node: Links38813
+Node: Tips39500
+Node: Changelog39824
+Node: 08-pre40648
+Node: 07443372
+Node: 07343599
+Node: 07244331
+Node: 07145250
+Node: 0746059
+Node: 06348983
+Node: 06249514
+Node: 06149819
+Node: 0650387
+Node: 05253443
+Node: 05153745
+Node: 0554170
+Node: 04955701
+Node: 04855983
+Node: 04756332
+Node: 04656741
+Node: 04557149
+Node: 04457510
+Node: 04357869
+Node: 04258072
+Node: 04158233
+Node: 0458480
+Node: 03262581
+Node: 03162984
+Node: 0363181
+Node: 02366481
+Node: 02266715
+Node: 02166995
+Node: 0267200
+Node: 0171278
+Node: Notes71379
+Node: Comparison with Org Agenda searches71541
+Node: org-sidebar72430
+Node: License72709
 
 End Tag Table
 
