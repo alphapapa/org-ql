@@ -58,6 +58,16 @@
         ((fboundp 'org-store-link-props) #'org-store-link-props)
         (t (error "org-ql: Unable to define alias `org-ql-search--org-link-store-props'.  Please report this as a bug"))))
 
+(defalias 'org-ql--org-hide-archived-subtrees
+  (if (version<= "9.6" org-version)
+      'org-fold-hide-archived-subtrees
+    'org-hide-archived-subtrees))
+
+(defalias 'org-ql--org-show-context
+  (if (version<= "9.6" org-version)
+      'org-fold-show-context
+    'org-show-context))
+
 ;;;; Variables
 
 (defvar org-ql-block-header nil
@@ -126,10 +136,10 @@ Runs `org-occur-hook' after making the sparse tree."
                     query))))
       (org-ql-select buffer query
         :action (lambda ()
-                  (org-show-context 'occur-tree)
+                  (org-ql--org-show-context 'occur-tree)
                   (cl-incf num-results)))
       (unless org-sparse-tree-open-archived-trees
-        (org-hide-archived-subtrees (point-min) (point-max)))
+        (org-ql--org-hide-archived-subtrees (point-min) (point-max)))
       (run-hooks 'org-occur-hook)
       (unless (get-buffer-window buffer)
         (pop-to-buffer buffer))

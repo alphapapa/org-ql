@@ -96,6 +96,12 @@ Necessary because of backward-incompatible changes in Org
 `org-bracket-link-regexp' was marked as an obsolete alias for it,
 but the match groups were changed, so they are not compatible.")
 
+;;;; Compatibility
+(defalias 'org-ql--org-timestamp-format
+  (if (version<= "9.6" org-version)
+      'org-format-timestamp
+    'org-timestamp-format))
+
 ;;;; Variables
 
 (defvar org-ql--today nil)
@@ -2478,7 +2484,7 @@ Deadline is considered before scheduled."
 A and B are Org timestamp elements."
   (cl-macrolet ((ts (ts)
                   `(when ,ts
-                     (org-timestamp-format ,ts "%s"))))
+                     (org-ql--org-timestamp-format ,ts "%s"))))
     (let* ((a-ts (ts a))
            (b-ts (ts b)))
       (cond ((and a-ts b-ts)
