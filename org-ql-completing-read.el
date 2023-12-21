@@ -26,6 +26,16 @@
 
 (require 'org-ql)
 
+;;;; Variables
+
+(defvar-keymap org-ql-completing-read-map
+  :doc "Active during `org-ql-completing-read' sessions."
+  "C-c C-e" #'org-ql-completing-read-export)
+
+;; `embark-collect' doesn't work for `org-ql-completing-read', so remap
+;; it to `embark-export' (which `keymap-set', et al doesn't allow).
+(define-key org-ql-completing-read-map [remap embark-collect] 'embark-export)
+
 ;;;; Customization
 
 (defgroup org-ql-completing-read nil
@@ -113,6 +123,11 @@ value, or nil."
         (concat "/" (string-join path "/"))))))
 
 ;;;;; Completing read
+
+(defun org-ql-completing-read-export ()
+  "Show `org-ql-view' buffer for current `org-ql-completing-read'-based search."
+  (interactive)
+  (user-error "Not in an `org-ql-completing-read' session"))
 
 ;;;###autoload
 (cl-defun org-ql-completing-read
@@ -322,7 +337,23 @@ single predicate)."
       (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-completing-read))
              (completion-styles-alist (list (list 'org-ql-completing-read #'try #'all "Org QL Find")))
-             (selected (completing-read prompt #'collection nil t)))
+             (selected
+              (minibuffer-with-setup-hook
+                  (lambda ()
+                    (use-local-map (make-composed-keymap org-ql-completing-read-map (current-local-map))))
+                (cl-letf* (((symbol-function 'org-ql-completing-read-export)
+                            (lambda ()
+                              (interactive)
+                              (run-at-time 0 nil
+                                           #'org-ql-search
+                                           buffers-files
+                                           (minibuffer-contents-no-properties))
+                              (if (fboundp 'minibuffer-quit-recursive-edit)
+                                  (minibuffer-quit-recursive-edit)
+                                (abort-recursive-edit))))
+                           ((symbol-function 'embark-export)
+                            (symbol-function 'org-ql-completing-read-export)))
+                  (completing-read prompt #'collection nil t)))))
         ;; (debug-message "SELECTED:%S  KEYS:%S" selected (hash-table-keys table))
         (or (gethash selected table)
             ;; If there are completions in the table, but none of them exactly match the user input
