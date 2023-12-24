@@ -220,8 +220,7 @@ necessary."
                                          (symbol (symbol-value super-groups))
                                          (list super-groups))))
           (setf strings (org-super-agenda--group-items strings))))
-      (org-ql-view--display :buffer buffer :header header
-        :string (s-join "\n" strings)))))
+      (org-ql-view--display :buffer buffer :header header :strings strings))))
 
 ;;;###autoload
 (defun org-ql-search-block (query)

@@ -408,7 +408,7 @@ update search arguments."
 
 (defvar bookmark-make-record-function)
 
-(cl-defun org-ql-view--display (&key (buffer org-ql-view-buffer) header string)
+(cl-defun org-ql-view--display (&key (buffer org-ql-view-buffer) header strings)
   "Display STRING in `org-ql-view' BUFFER.
 
 BUFFER may be a buffer, or a string naming a buffer, which is
@@ -446,7 +446,9 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
       ;; Clear buffer, insert entries, etc.
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (insert string "\n")
+        (dolist (string strings)
+          (insert string "\n"))
+        (insert "\n")
         (pop-to-buffer (current-buffer) org-ql-view-display-buffer-action)
         (org-agenda-finalize)
         (goto-char (point-min))))))
