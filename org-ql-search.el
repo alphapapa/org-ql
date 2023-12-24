@@ -168,8 +168,9 @@ SUPER-GROUPS: An `org-super-agenda' group set.  See variable
 `org-super-agenda-groups' and Info node `(org-super-agenda)Group
 selectors'.
 
-NARROW: When non-nil, don't widen buffers before
-searching.  Interactively, with prefix, leave narrowed.
+NARROW: When non-nil, don't widen buffers before searching.
+Interactively, when buffer is narrowed, search within subtree
+narrowed to.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority' (see Info node `(org-ql)Listing / acting-on results').
@@ -181,13 +182,19 @@ display the results.  By default, the value of
 `org-ql-view-buffer' is used, and a new buffer is created if
 necessary."
   (declare (indent defun))
-  (interactive (list (org-ql-view--complete-buffers-files)
-                     (read-string "Query: " (when org-ql-view-query
-                                              (format "%S" org-ql-view-query)))
-                     ;; FIXME: Automatically narrow when searching current buffer and it's narrowed (use ID if it has one, otherwise use a marker--and then add an ID later if bookmarking the search and it doesn't have one).
-                     :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
-                     :super-groups (org-ql-view--complete-super-groups)
-                     :sort (org-ql-view--complete-sort)))
+  (interactive
+   (let* ((in (org-ql-view--complete-buffers-files))
+          (query (read-string "Query: " (when org-ql-view-query
+                                          (format "%S" org-ql-view-query))))
+          (narrow (if (equal in (current-buffer))
+                      (or org-ql-view-narrow
+                          (when (buffer-narrowed-p)
+                            (setf in (or (org-id-get (point-min))
+                                         (copy-marker (point-min))))))
+                    org-ql-view-narrow)))
+     (list in query :narrow narrow
+           :super-groups (org-ql-view--complete-super-groups)
+           :sort (org-ql-view--complete-sort))))
   ;; NOTE: Using `with-temp-buffer' is a hack to work around the fact that `make-local-variable'
   ;; does not work reliably from inside a `let' form when the target buffer is current on entry
   ;; to or exit from the `let', even though `make-local-variable' is actually done in

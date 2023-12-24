@@ -1056,20 +1056,28 @@ current buffer.  Otherwise IN is returned unchanged."
   (cl-labels ((expand-elt (it)
                 (cl-typecase it
                   (string (or (expanded it)
-                              (id-location it)
+                              (location-of it)
                               (error "Unknown expansion for %S" it)))
+                  (marker (or (location-of it)
+                              (error "Unknown location for %S" it)))
                   (otherwise it)))
               (expanded (filename)
                 (when-let ((expanded (expand-file-name filename))
                            ((file-readable-p expanded)))
                   expanded))
-              (id-location (id)
-                (when-let ((marker (org-id-find id 'marker))
+              (location-of (place)
+                (when-let ((marker (cl-etypecase place
+                                     (marker place)
+                                     (string (org-id-find place 'marker))))
                            (heading (org-link-display-format (org-entry-get marker "ITEM"))))
                   (setf heading (if (string-empty-p heading)
-                                    id
-                                  ;; FIXME: The help-echo gets overridden elsewhere.
-                                  (propertize heading 'help-echo (format "ID: %s" id))))
+                                    place
+                                  (or (org-id-get marker)
+                                      (string-join (org-with-point-at marker
+                                                     (org-get-outline-path t))
+                                                   " › ")))
+                        ;; FIXME: The help-echo gets overridden elsewhere.
+                        heading (propertize heading 'help-echo (format "%s" place)))
                   (format "\"%s\" in %S"
                           heading (abbreviate-file-name (buffer-file-name (marker-buffer marker)))))))
     ;; TODO: Test this more exhaustively.

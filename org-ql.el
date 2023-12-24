@@ -383,6 +383,7 @@ each priority the newest items would appear first."
                                  ;; NOTE: This exhaustive pcase is essential to opening links
                                  ;; safely, as it rejects, e.g. lambdas in the IN argument.
                                  ((cl-type buffer) it)
+                                 ((cl-type marker) it)
                                  ((and (cl-type string)
                                        (pred file-readable-p))
                                   (or (find-buffer-visiting it)
