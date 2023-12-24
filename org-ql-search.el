@@ -184,6 +184,7 @@ necessary."
   (interactive (list (org-ql-view--complete-buffers-files)
                      (read-string "Query: " (when org-ql-view-query
                                               (format "%S" org-ql-view-query)))
+                     ;; FIXME: Automatically narrow when searching current buffer and it's narrowed (use ID if it has one, otherwise use a marker--and then add an ID later if bookmarking the search and it doesn't have one).
                      :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
                      :super-groups (org-ql-view--complete-super-groups)
                      :sort (org-ql-view--complete-sort)))
