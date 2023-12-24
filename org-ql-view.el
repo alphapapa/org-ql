@@ -480,7 +480,7 @@ If TITLE, prepend it to the header."
     (concat title
             (when query (propertize "Query:" 'face 'transient-argument))
             (when query query-propertized)
-            (when query "  ")
+            (when query " ")
             (when buffers-files
               (propertize "In:" 'face 'transient-argument))
             (when buffers-files-formatted
@@ -1044,38 +1044,52 @@ property."
 
 (declare-function org-ql-search-directories-files "org-ql-search" t)
 
-(defun org-ql-view--contract-buffers-files (buffers-files)
-  "Return BUFFERS-FILES in its \"contracted\" form.
-The contracted form is \"org-agenda-files\" if BUFFERS-FILES
-matches the value of `org-agenda-files' (either the function or
-the variable), \"org-directory\" if it matches the value of
+(defun org-ql-view--contract-buffers-files (in)
+  "Return IN in its \"contracted\" form.
+The contracted form is \"org-agenda-files\" if IN matches the
+value of `org-agenda-files' (either the function or the
+variable), \"org-directory\" if it matches the value of
 `org-ql-search-directories-files', or \"buffer\" if it is the
-current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
+current buffer.  Otherwise IN is returned unchanged."
   ;; Used in `org-ql-view--complete-buffers-files' and
   ;; `org-ql-view--header-line-format'.
-  (cl-labels ((expand-files (list)
-                (--map (cl-typecase it
-                         (string (expand-file-name it))
-                         (otherwise it))
-                       list)))
+  (cl-labels ((expand-elt (it)
+                (cl-typecase it
+                  (string (or (expanded it)
+                              (id-location it)
+                              (error "Unknown expansion for %S" it)))
+                  (otherwise it)))
+              (expanded (filename)
+                (when-let ((expanded (expand-file-name filename))
+                           ((file-readable-p expanded)))
+                  expanded))
+              (id-location (id)
+                (when-let ((marker (org-id-find id 'marker))
+                           (heading (org-link-display-format (org-entry-get marker "ITEM"))))
+                  (setf heading (if (string-empty-p heading)
+                                    id
+                                  ;; FIXME: The help-echo gets overridden elsewhere.
+                                  (propertize heading 'help-echo (format "ID: %s" id))))
+                  (format "\"%s\" in %S"
+                          heading (abbreviate-file-name (buffer-file-name (marker-buffer marker)))))))
     ;; TODO: Test this more exhaustively.
-    (pcase buffers-files
+    (pcase in
       ((pred listp)
-       (pcase (expand-files buffers-files)
+       (pcase (mapcar #'expand-elt in)
          ((pred (seq-set-equal-p (mapcar #'expand-file-name (org-agenda-files))))
           "org-agenda-files")
          ((and (guard (file-exists-p org-directory))
                (pred (seq-set-equal-p (org-ql-search-directories-files
                                        :directories (list org-directory)))))
           "org-directory")
-         (_ buffers-files)))
+         (_ in)))
       ((pred (equal (current-buffer)))
-       "buffer")
+       (buffer-name (current-buffer)))
       ((or 'org-agenda-files '(function org-agenda-files))
        "org-agenda-files")
-      ((and (pred bufferp) (guard (buffer-file-name buffers-files)))
-       (buffer-file-name buffers-files))
-      (_ buffers-files))))
+      ((and (pred bufferp) (guard (buffer-file-name in)))
+       (buffer-file-name in))
+      (_ (expand-elt in)))))
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion."
