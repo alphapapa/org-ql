@@ -375,28 +375,26 @@ would appear first.  In contrast, `(date reverse priority)' would
 also present items with the highest priority first, but within
 each priority the newest items would appear first."
   (declare (indent defun))
-  (-let* ((in (->> (cl-typecase in
-                     (null (list (current-buffer)))
-                     (function (funcall in))
-                     (list in)
-                     (otherwise (list in)))
-                   (--map (pcase-exhaustive it
-                            ;; NOTE: This exhaustive pcase is essential to opening links safely,
-                            ;; as it rejects, e.g. lambdas in the buffers-files argument.
-                            ((cl-type buffer) it)
-                            ((and (cl-type string)
-                                  (pred file-readable-p))
-                             (or (find-buffer-visiting it)
-                                 (when (file-readable-p it)
-                                   ;; It feels unintuitive that `find-file-noselect' returns
-                                   ;; a buffer if the filename doesn't exist.
-                                   (find-file-noselect it))
-                                 (display-warning 'org-ql-select (format "Can't open file: %s" it) :error)))
-                            ((cl-type string)
-                             ;; Assumed to be an Org ID string (without the "id:" prefix).
-                             it)))
-                   ;; Ignore special/hidden buffers.
-                   (--remove (and (bufferp it) (string-prefix-p " " (buffer-name it))))))
+  (-let* ((sources (->> (cl-typecase in
+                          (null (list (current-buffer)))
+                          (list in)
+                          (otherwise (list in)))
+                        (--map (pcase-exhaustive it
+                                 ;; NOTE: This exhaustive pcase is essential to opening links
+                                 ;; safely, as it rejects, e.g. lambdas in the IN argument.
+                                 ((cl-type buffer) it)
+                                 ((and (cl-type string)
+                                       (pred file-readable-p))
+                                  (or (find-buffer-visiting it)
+                                      (when (file-readable-p it)
+                                        (find-file-noselect it))
+                                      (display-warning 'org-ql-select (format "Can't open file: %s" it) :error)))
+                                 ((cl-type string)
+                                  (org-id-find it 'marker))
+                                 ((cl-type function)
+                                  (funcall it))))
+                        ;; Ignore special/hidden buffers.
+                        (--remove (and (bufferp it) (string-prefix-p " " (buffer-name it))))))
           (query (org-ql--normalize-query query))
           ((&plist :query :preamble :preamble-case-fold) (org-ql--query-preamble query))
           (predicate (org-ql--query-predicate query))
@@ -420,6 +418,18 @@ each priority the newest items would appear first."
                          ,action)))
                     (_ (user-error "Invalid action form: %s" action))))
           (org-ql--today (ts-now))
+          (select-in (lambda (it)
+                       (let* ((marker)
+                              (buffer (cl-etypecase it
+                                        (buffer it)
+                                        (marker (marker-buffer (setf marker it))))))
+                         (with-current-buffer buffer
+                           (unless (derived-mode-p 'org-mode)
+                             (display-warning 'org-ql-select (format  "Not an Org buffer: %s" (buffer-name)) :error))
+                           (org-ql--select-cached :query query :preamble preamble
+                                                  :preamble-case-fold preamble-case-fold
+                                                  :predicate predicate :action action
+                                                  :narrow (or marker narrow))))))
           (items (let (orig-fns)
                    (unwind-protect
                        (progn
@@ -430,21 +440,8 @@ each priority the newest items would appear first."
                              (push (list :name name :fn (symbol-function name)) orig-fns)
                              ;; Temporarily set new function definition.
                              (fset name fn)))
-                         ;; Run query on buffers.
-                         (->> in
-                              (--map (let* ((marker)
-                                            (buffer (cl-etypecase it
-                                                      (buffer it)
-                                                      (string (marker-buffer
-                                                               (setf marker (org-id-find it 'as-marker)))))))
-                                       (with-current-buffer buffer
-                                         (unless (derived-mode-p 'org-mode)
-                                           (display-warning 'org-ql-select (format  "Not an Org buffer: %s" (buffer-name)) :error))
-                                         (org-ql--select-cached :query query :preamble preamble :preamble-case-fold preamble-case-fold
-                                                                :predicate predicate :action action
-                                                                ;; FIXME: Is it okay to use a marker here, or do we need to use the ID and get a new position each time?
-                                                                :narrow (or marker narrow)))))
-                              (-flatten-n 1)))
+                         ;; Collect results.
+                         (-flatten-n 1 (mapcar select-in sources)))
                      (--each orig-fns
                        ;; Restore original function mappings.
                        (-let (((&plist :name :fn) it))
