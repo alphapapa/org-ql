@@ -110,10 +110,11 @@ which see (but only the files are used)."
                marker)))
 
 ;;;###autoload
-(defun org-ql-find-in-agenda ()
-  "Call `org-ql-find' on `org-agenda-files'."
-  (interactive)
-  (org-ql-find (org-agenda-files)))
+(defun org-ql-find-in-agenda (arg)
+  "Call `org-ql-find' on `org-agenda-files'.
+With a prefix argument, include archive files as well."
+  (interactive "P")
+  (org-ql-find (org-agenda-files nil (not (not arg)))))
 
 ;;;###autoload
 (defun org-ql-find-in-org-directory ()
