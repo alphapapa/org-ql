@@ -168,9 +168,9 @@ SUPER-GROUPS: An `org-super-agenda' group set.  See variable
 `org-super-agenda-groups' and Info node `(org-super-agenda)Group
 selectors'.
 
-NARROW: When non-nil, don't widen buffers before searching.
-Interactively, when buffer is narrowed, search within subtree
-narrowed to.
+NARROW: Passed to `org-ql-select', but set automatically when
+called interactively based on the value of BUFFERS-FILES; the
+user should not need to pass this argument.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority' (see Info node `(org-ql)Listing / acting-on results').
