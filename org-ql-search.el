@@ -147,13 +147,13 @@ Runs `org-occur-hook' after making the sparse tree."
       num-results)))
 
 ;;;###autoload
-(cl-defun org-ql-search (buffers-files query &key narrow super-groups sort title
-                                       (buffer org-ql-view-buffer))
+(cl-defun org-ql-search (in query &key narrow super-groups sort title
+                            (buffer org-ql-view-buffer))
   "Search for QUERY with `org-ql'.
 Interactively, prompt for these variables:
 
-BUFFERS-FILES: A list of buffers and/or files to search.
-Interactively, may also be:
+IN: Passed to `org-ql-select', which see.  Interactively, may
+also be:
 
 - `buffer': search the current buffer
 - `all': search all Org buffers
@@ -209,16 +209,16 @@ necessary."
                               ;; Parse non-sexp query into sexp query.
                               (org-ql--query-string-to-sexp query)))
                     (list query)))
-           (results (org-ql-select buffers-files query
+           (results (org-ql-select in query
                       :action 'element-with-markers
                       :narrow narrow
                       :sort sort))
            (strings (-map #'org-ql-view--format-element results))
            (buffer (or buffer (format "%s %s*" org-ql-view-buffer-name-prefix (or title query))))
            (header (org-ql-view--header-line-format
-                    :buffers-files buffers-files :query query :title title))
+                    :buffers-files in :query query :title title))
            ;; Bind variables for `org-ql-view--display' to set.
-           (org-ql-view-buffers-files buffers-files)
+           (org-ql-view-buffers-files in)
            (org-ql-view-query query)
            (org-ql-view-sort sort)
            (org-ql-view-narrow narrow)
