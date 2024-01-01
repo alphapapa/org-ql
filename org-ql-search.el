@@ -157,9 +157,10 @@ Interactively, may also be:
 
 - `buffer': search the current buffer
 - `all': search all Org buffers
-- `agenda': search buffers returned by the function `org-agenda-files'
+- `agenda': search buffers returned by the function
+  `org-agenda-files'
 - `directory': search Org files in `org-directory'
-- A space-separated list of file or buffer names
+- A space-separated list of file/buffer names or Org heading IDs
 
 QUERY: An `org-ql' query in either sexp or non-sexp form (see
 Info node `(org-ql)Queries').
