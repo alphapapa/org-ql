@@ -1068,7 +1068,10 @@ File: README.info,  Node: 081-pre,  Next: 08,  Up: Changelog
 5.1 0.8.1-pre
 =============
 
-Nothing new yet.
+*Fixes*
+
+   • Command ‘org-ql-find’ widens the buffer before going to the
+     selected entry.
 
 
 File: README.info,  Node: 08,  Next: 074,  Prev: 081-pre,  Up: Changelog
@@ -1916,41 +1919,41 @@ Node: Links38827
 Node: Tips39514
 Node: Changelog39838
 Node: 081-pre40676
-Node: 0840787
-Node: 07443515
-Node: 07343738
-Node: 07244470
-Node: 07145389
-Node: 0746198
-Node: 06349122
-Node: 06249653
-Node: 06149958
-Node: 0650528
-Node: 05253584
-Node: 05153886
-Node: 0554311
-Node: 04955842
-Node: 04856124
-Node: 04756473
-Node: 04656882
-Node: 04557290
-Node: 04457651
-Node: 04358010
-Node: 04258213
-Node: 04158374
-Node: 0458621
-Node: 03262722
-Node: 03163125
-Node: 0363322
-Node: 02366622
-Node: 02266856
-Node: 02167136
-Node: 0267341
-Node: 0171419
-Node: Notes71520
-Node: Comparison with Org Agenda searches71682
-Node: org-sidebar72571
-Node: License72850
+Node: 0840871
+Node: 07443599
+Node: 07343822
+Node: 07244554
+Node: 07145473
+Node: 0746282
+Node: 06349206
+Node: 06249737
+Node: 06150042
+Node: 0650612
+Node: 05253668
+Node: 05153970
+Node: 0554395
+Node: 04955926
+Node: 04856208
+Node: 04756557
+Node: 04656966
+Node: 04557374
+Node: 04457735
+Node: 04358094
+Node: 04258297
+Node: 04158458
+Node: 0458705
+Node: 03262806
+Node: 03163209
+Node: 0363406
+Node: 02366706
+Node: 02266940
+Node: 02167220
+Node: 0267425
+Node: 0171503
+Node: Notes71604
+Node: Comparison with Org Agenda searches71766
+Node: org-sidebar72655
+Node: License72934
 
 End Tag Table
 

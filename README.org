@@ -555,7 +555,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.8.1-pre
 
-Nothing new yet.
+*Fixes*
+
++ Command ~org-ql-find~ widens the buffer before going to the selected entry.
 
 ** 0.8
 
