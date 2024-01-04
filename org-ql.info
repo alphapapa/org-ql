@@ -1072,6 +1072,10 @@ File: README.info,  Node: 081-pre,  Next: 08,  Up: Changelog
 
    • Command ‘org-ql-find’ widens the buffer before going to the
      selected entry.
+   • In ‘org-ql-view’ buffers, links in headings remain clickable links.
+     (Fixes #282 (https://github.com/alphapapa/org-ql/issues/282).
+     Thanks to Jacob Boxerman (https://github.com/jakebox) for
+     reporting.)
 
 
 File: README.info,  Node: 08,  Next: 074,  Prev: 081-pre,  Up: Changelog
@@ -1919,41 +1923,41 @@ Node: Links38827
 Node: Tips39514
 Node: Changelog39838
 Node: 081-pre40676
-Node: 0840871
-Node: 07443599
-Node: 07343822
-Node: 07244554
-Node: 07145473
-Node: 0746282
-Node: 06349206
-Node: 06249737
-Node: 06150042
-Node: 0650612
-Node: 05253668
-Node: 05153970
-Node: 0554395
-Node: 04955926
-Node: 04856208
-Node: 04756557
-Node: 04656966
-Node: 04557374
-Node: 04457735
-Node: 04358094
-Node: 04258297
-Node: 04158458
-Node: 0458705
-Node: 03262806
-Node: 03163209
-Node: 0363406
-Node: 02366706
-Node: 02266940
-Node: 02167220
-Node: 0267425
-Node: 0171503
-Node: Notes71604
-Node: Comparison with Org Agenda searches71766
-Node: org-sidebar72655
-Node: License72934
+Node: 0841097
+Node: 07443825
+Node: 07344048
+Node: 07244780
+Node: 07145699
+Node: 0746508
+Node: 06349432
+Node: 06249963
+Node: 06150268
+Node: 0650838
+Node: 05253894
+Node: 05154196
+Node: 0554621
+Node: 04956152
+Node: 04856434
+Node: 04756783
+Node: 04657192
+Node: 04557600
+Node: 04457961
+Node: 04358320
+Node: 04258523
+Node: 04158684
+Node: 0458931
+Node: 03263032
+Node: 03163435
+Node: 0363632
+Node: 02366932
+Node: 02267166
+Node: 02167446
+Node: 0267651
+Node: 0171729
+Node: Notes71830
+Node: Comparison with Org Agenda searches71992
+Node: org-sidebar72881
+Node: License73160
 
 End Tag Table
 

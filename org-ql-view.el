@@ -869,8 +869,7 @@ return an empty string."
            ;; Adding the relative due date property should probably be done explicitly and separately
            ;; (which would also make it easier to do it independently of faces, etc).
            (title (--> (org-ql-view--add-faces element)
-                       (org-element-property :raw-value it)
-                       (org-link-display-format it)))
+                       (org-element-property :raw-value it)))
            (todo-keyword (-some--> (org-element-property :todo-keyword element)
                            (org-ql-view--add-todo-face it)))
            (tag-list (if org-use-tag-inheritance

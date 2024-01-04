@@ -558,6 +558,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 *Fixes*
 
 + Command ~org-ql-find~ widens the buffer before going to the selected entry.
++ In ~org-ql-view~ buffers, links in headings remain clickable links.  (Fixes [[https://github.com/alphapapa/org-ql/issues/282][#282]].  Thanks to [[https://github.com/jakebox][Jacob Boxerman]] for reporting.)
 
 ** 0.8
 
