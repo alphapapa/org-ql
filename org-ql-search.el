@@ -229,10 +229,10 @@ automatically from the query."
                         ('nil (org-agenda-files nil 'ifmode))
                         (_ (prog1 org-agenda-restrict
                              (with-current-buffer org-agenda-restrict
-             ;; Narrow the buffer; remember to widen it later.
-             (setf old-beg (point-min) old-end (point-max)
+			       ;; Narrow the buffer; remember to widen it later.
+			       (setf old-beg (point-min) old-end (point-max)
                                      narrow-p t)
-             (narrow-to-region org-agenda-restrict-begin org-agenda-restrict-end))))))
+			       (narrow-to-region org-agenda-restrict-begin org-agenda-restrict-end))))))
                 (items (org-ql-select from query
                          :action 'element-with-markers
                          :narrow narrow-p)))
