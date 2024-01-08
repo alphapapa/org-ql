@@ -296,13 +296,16 @@ Valid parameters include:
   :ts-format  Optional format string used to format
               timestamp-based columns.
 
+  :table-name Optional string. If non-nil, add `#+tblname: <name>'
+              before the table. Allowing it to be referenced.
+
 For example, an org-ql dynamic block header could look like
 this (must be a single line in the Org buffer):
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\")
 :columns (priority todo heading) :sort (priority date)
 :ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take) params)
+  (-let* (((&plist :query :columns :sort :ts-format :take :table-name) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
@@ -353,6 +356,8 @@ this (must be a single line in the Org buffer):
                                                              ""))
                                         " | ")))
       ;; Table header
+      (if table-name
+            (insert (concat "#+tblname: " (format "%s" table-name) "\n")))
       (insert "| " (string-join (--map (pcase it
                                          ((pred symbolp) (capitalize (symbol-name it)))
                                          (`(,_ ,name) name))
