@@ -1070,7 +1070,13 @@ File: README.info,  Node: 082-pre,  Next: 081,  Up: Changelog
 5.1 0.8.2-pre
 =============
 
-Nothing new yet.
+*Fixes*
+
+   • Command ‘org-ql-find’ incorrectly restored the buffer after jumping
+     when not using indirect buffers.  (See #380
+     (https://github.com/alphapapa/org-ql/issues/380#issuecomment-1881913025).
+     Thanks to Bram Schoenmakers (https://github.com/bram85) for
+     reporting.)
 
 
 File: README.info,  Node: 081,  Next: 08,  Prev: 082-pre,  Up: Changelog
@@ -1932,42 +1938,42 @@ Node: Links38841
 Node: Tips39528
 Node: Changelog39852
 Node: 082-pre40704
-Node: 08140816
-Node: 0841241
-Node: 07443965
-Node: 07344188
-Node: 07244920
-Node: 07145839
-Node: 0746648
-Node: 06349512
-Node: 06250043
-Node: 06150350
-Node: 0650920
-Node: 05253976
-Node: 05154278
-Node: 0554703
-Node: 04956234
-Node: 04856516
-Node: 04756865
-Node: 04657274
-Node: 04557682
-Node: 04458043
-Node: 04358402
-Node: 04258605
-Node: 04158766
-Node: 0459013
-Node: 03263114
-Node: 03163517
-Node: 0363714
-Node: 02367014
-Node: 02267248
-Node: 02167528
-Node: 0267733
-Node: 0171811
-Node: Notes71912
-Node: Comparison with Org Agenda searches72074
-Node: org-sidebar72963
-Node: License73242
+Node: 08141097
+Node: 0841522
+Node: 07444246
+Node: 07344469
+Node: 07245201
+Node: 07146120
+Node: 0746929
+Node: 06349793
+Node: 06250324
+Node: 06150631
+Node: 0651201
+Node: 05254257
+Node: 05154559
+Node: 0554984
+Node: 04956515
+Node: 04856797
+Node: 04757146
+Node: 04657555
+Node: 04557963
+Node: 04458324
+Node: 04358683
+Node: 04258886
+Node: 04159047
+Node: 0459294
+Node: 03263395
+Node: 03163798
+Node: 0363995
+Node: 02367295
+Node: 02267529
+Node: 02167809
+Node: 0268014
+Node: 0172092
+Node: Notes72193
+Node: Comparison with Org Agenda searches72355
+Node: org-sidebar73244
+Node: License73523
 
 End Tag Table
 
