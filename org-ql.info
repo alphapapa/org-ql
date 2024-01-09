@@ -72,7 +72,7 @@ Functions / Macros
 
 Changelog
 
-* 0.8.2-pre: 082-pre.
+* 0.8.2: 082.
 * 0.8.1: 081.
 * 0.8: 08.
 * 0.7.4: 074.
@@ -1030,7 +1030,7 @@ releases.
 
 * Menu:
 
-* 0.8.2-pre: 082-pre.
+* 0.8.2: 082.
 * 0.8.1: 081.
 * 0.8: 08.
 * 0.7.4: 074.
@@ -1065,10 +1065,10 @@ releases.
 * 0.1: 01.
 
 
-File: README.info,  Node: 082-pre,  Next: 081,  Up: Changelog
+File: README.info,  Node: 082,  Next: 081,  Up: Changelog
 
-5.1 0.8.2-pre
-=============
+5.1 0.8.2
+=========
 
 *Fixes*
 
@@ -1079,7 +1079,7 @@ File: README.info,  Node: 082-pre,  Next: 081,  Up: Changelog
      reporting.)
 
 
-File: README.info,  Node: 081,  Next: 08,  Prev: 082-pre,  Up: Changelog
+File: README.info,  Node: 081,  Next: 08,  Prev: 082,  Up: Changelog
 
 5.2 0.8.1
 =========
@@ -1902,78 +1902,78 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1887
-Node: Screenshots2010
-Node: Installation2128
-Node: Quelpa2642
-Node: Helm support3170
-Node: Usage3573
-Node: Commands3971
-Node: org-ql-find4436
-Node: org-ql-open-link5344
-Node: org-ql-refile6199
-Node: org-ql-search6527
-Node: helm-org-ql8458
-Node: org-ql-view8836
-Node: org-ql-view-sidebar9366
-Node: org-ql-view-recent-items9746
-Node: org-ql-sparse-tree10242
-Node: Queries11042
-Node: Non-sexp query syntax12159
-Node: General predicates13918
-Node: Ancestor/descendant predicates20843
-Node: Date/time predicates21971
-Node: Functions / Macros25095
-Node: Agenda-like views25393
-Ref: Function org-ql-block25555
-Node: Listing / acting-on results26816
-Ref: Caching27024
-Ref: Function org-ql-select27937
-Ref: Function org-ql-query30363
-Ref: Macro org-ql (deprecated)32137
-Node: Custom predicates32452
-Ref: Macro org-ql-defpred32676
-Node: Dynamic block36117
-Node: Links38841
-Node: Tips39528
-Node: Changelog39852
-Node: 082-pre40704
-Node: 08141097
-Node: 0841522
-Node: 07444246
-Node: 07344469
-Node: 07245201
-Node: 07146120
-Node: 0746929
-Node: 06349793
-Node: 06250324
-Node: 06150631
-Node: 0651201
-Node: 05254257
-Node: 05154559
-Node: 0554984
-Node: 04956515
-Node: 04856797
-Node: 04757146
-Node: 04657555
-Node: 04557963
-Node: 04458324
-Node: 04358683
-Node: 04258886
-Node: 04159047
-Node: 0459294
-Node: 03263395
-Node: 03163798
-Node: 0363995
-Node: 02367295
-Node: 02267529
-Node: 02167809
-Node: 0268014
-Node: 0172092
-Node: Notes72193
-Node: Comparison with Org Agenda searches72355
-Node: org-sidebar73244
-Node: License73523
+Node: Contents1879
+Node: Screenshots2002
+Node: Installation2120
+Node: Quelpa2634
+Node: Helm support3162
+Node: Usage3565
+Node: Commands3963
+Node: org-ql-find4428
+Node: org-ql-open-link5336
+Node: org-ql-refile6191
+Node: org-ql-search6519
+Node: helm-org-ql8450
+Node: org-ql-view8828
+Node: org-ql-view-sidebar9358
+Node: org-ql-view-recent-items9738
+Node: org-ql-sparse-tree10234
+Node: Queries11034
+Node: Non-sexp query syntax12151
+Node: General predicates13910
+Node: Ancestor/descendant predicates20835
+Node: Date/time predicates21963
+Node: Functions / Macros25087
+Node: Agenda-like views25385
+Ref: Function org-ql-block25547
+Node: Listing / acting-on results26808
+Ref: Caching27016
+Ref: Function org-ql-select27929
+Ref: Function org-ql-query30355
+Ref: Macro org-ql (deprecated)32129
+Node: Custom predicates32444
+Ref: Macro org-ql-defpred32668
+Node: Dynamic block36109
+Node: Links38833
+Node: Tips39520
+Node: Changelog39844
+Node: 08240688
+Node: 08141069
+Node: 0841490
+Node: 07444214
+Node: 07344437
+Node: 07245169
+Node: 07146088
+Node: 0746897
+Node: 06349761
+Node: 06250292
+Node: 06150599
+Node: 0651169
+Node: 05254225
+Node: 05154527
+Node: 0554952
+Node: 04956483
+Node: 04856765
+Node: 04757114
+Node: 04657523
+Node: 04557931
+Node: 04458292
+Node: 04358651
+Node: 04258854
+Node: 04159015
+Node: 0459262
+Node: 03263363
+Node: 03163766
+Node: 0363963
+Node: 02367263
+Node: 02267497
+Node: 02167777
+Node: 0267982
+Node: 0172060
+Node: Notes72161
+Node: Comparison with Org Agenda searches72323
+Node: org-sidebar73212
+Node: License73491
 
 End Tag Table
 
