@@ -557,6 +557,12 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 Nothing new yet.
 
+** 0.8.2
+
+*Fixes*
+
++ Command ~org-ql-find~ incorrectly restored the buffer after jumping when not using indirect buffers.  (See [[https://github.com/alphapapa/org-ql/issues/380#issuecomment-1881913025][#380]].  Thanks to [[https://github.com/bram85][Bram Schoenmakers]] for reporting.)
+
 ** 0.8.1
 
 *Fixes*

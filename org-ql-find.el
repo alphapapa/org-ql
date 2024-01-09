@@ -77,7 +77,7 @@ single predicate)."
                   :prompt prompt)))
     (set-buffer (marker-buffer marker))
     (pop-to-buffer (current-buffer) org-ql-find-display-buffer-action)
-    (org-with-point-at marker
+    (without-restriction
       (run-hook-with-args 'org-ql-find-goto-hook))))
 
 ;;;###autoload
