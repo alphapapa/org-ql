@@ -555,7 +555,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.8.3-pre
 
-Nothing new yet.
+*Fixes*
+
++ Command ~org-ql-find~ incorrectly moved point.  (See [[https://github.com/alphapapa/org-ql/issues/380#issuecomment-1881913025][#380]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]] for reporting.)
 
 ** 0.8.2
 

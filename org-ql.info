@@ -1072,7 +1072,12 @@ File: README.info,  Node: 083-pre,  Next: 082,  Up: Changelog
 5.1 0.8.3-pre
 =============
 
-Nothing new yet.
+*Fixes*
+
+   • Command ‘org-ql-find’ incorrectly moved point.  (See #380
+     (https://github.com/alphapapa/org-ql/issues/380#issuecomment-1881913025).
+     Thanks to Omar Antolín Camarena (https://github.com/oantolin) for
+     reporting.)
 
 
 File: README.info,  Node: 082,  Next: 081,  Prev: 083-pre,  Up: Changelog
@@ -1948,43 +1953,43 @@ Node: Links38855
 Node: Tips39542
 Node: Changelog39866
 Node: 083-pre40732
-Node: 08240844
-Node: 08141241
-Node: 0841662
-Node: 07444386
-Node: 07344609
-Node: 07245341
-Node: 07146260
-Node: 0747069
-Node: 06349933
-Node: 06250466
-Node: 06150773
-Node: 0651343
-Node: 05254399
-Node: 05154701
-Node: 0555126
-Node: 04956657
-Node: 04856939
-Node: 04757288
-Node: 04657697
-Node: 04558105
-Node: 04458466
-Node: 04358825
-Node: 04259028
-Node: 04159189
-Node: 0459436
-Node: 03263537
-Node: 03163940
-Node: 0364137
-Node: 02367437
-Node: 02267671
-Node: 02167951
-Node: 0268156
-Node: 0172234
-Node: Notes72335
-Node: Comparison with Org Agenda searches72497
-Node: org-sidebar73386
-Node: License73665
+Node: 08241073
+Node: 08141470
+Node: 0841891
+Node: 07444615
+Node: 07344838
+Node: 07245570
+Node: 07146489
+Node: 0747298
+Node: 06350162
+Node: 06250695
+Node: 06151002
+Node: 0651572
+Node: 05254628
+Node: 05154930
+Node: 0555355
+Node: 04956886
+Node: 04857168
+Node: 04757517
+Node: 04657926
+Node: 04558334
+Node: 04458695
+Node: 04359054
+Node: 04259257
+Node: 04159418
+Node: 0459665
+Node: 03263766
+Node: 03164169
+Node: 0364366
+Node: 02367666
+Node: 02267900
+Node: 02168180
+Node: 0268385
+Node: 0172463
+Node: Notes72564
+Node: Comparison with Org Agenda searches72726
+Node: org-sidebar73615
+Node: License73894
 
 End Tag Table
 
