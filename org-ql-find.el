@@ -78,7 +78,20 @@ single predicate)."
     (set-buffer (marker-buffer marker))
     (pop-to-buffer (current-buffer) org-ql-find-display-buffer-action)
     (without-restriction
-      (run-hook-with-args 'org-ql-find-goto-hook))))
+      (goto-char marker)
+      (run-hook-with-args 'org-ql-find-goto-hook))
+    (when (equal (current-buffer) (marker-buffer marker))
+      ;; Ensure point is still within visible portion of buffer.  (If
+      ;; `org-tree-to-indirect-buffer' is used in `org-ql-find-goto-hook',
+      ;; the buffer will have been changed and it won't matter; otherwise,
+      ;; the buffer could have been narrowed to a region excluding the
+      ;; selected entry.)
+      (let ((end-of-subtree (org-with-point-at marker
+                              (org-end-of-subtree 'invisible-ok))))
+        (unless (and (<= (point-min) marker)
+                     (>= (point-max) end-of-subtree))
+          (widen)
+          (goto-char marker))))))
 
 ;;;###autoload
 (defun org-ql-refile (marker)
