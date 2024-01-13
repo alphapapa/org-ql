@@ -3,7 +3,7 @@
 # * makem.sh --- Script to aid building and testing Emacs Lisp packages
 
 # URL: https://github.com/alphapapa/makem.sh
-# Version: 0.6-pre
+# Version: 0.7
 
 # * Commentary:
 
@@ -112,6 +112,12 @@ Source files are automatically discovered from git, or may be
 specified with options.  Package dependencies are discovered from
 "Package-Requires" headers in source files, from -pkg.el files, and
 from a Cask file.
+
+Checkdoc's spell checker may not recognize some words, causing the
+`lint-checkdoc' rule to fail.  Custom words can be added in file-local
+or directory-local variables using the variable
+`ispell-buffer-session-localwords', which should be set to a list of
+strings.
 EOF
 }
 
@@ -177,6 +183,7 @@ function elisp-checkdoc-file {
               (setq makem-checkdoc-errors-p t)
               ;; Return nil because we *are* generating a buffered list of errors.
               nil))))
+    (put 'ispell-buffer-session-localwords 'safe-local-variable #'list-of-strings-p)
     (mapcar #'checkdoc-file files)
     (when makem-checkdoc-errors-p
       (kill-emacs 1))))
@@ -379,6 +386,36 @@ function byte-compile-file {
 
 # ** Files
 
+function submodules {
+    # Echo a list of submodules's paths relative to the repo root.
+    # TODO: Parse with bash regexp instead of cut.
+    git submodule status | awk '{print $2}'
+}
+
+function project-root {
+    # Echo the root of the project (or superproject, if running from
+    # within a submodule).
+    root_dir=$(git rev-parse --show-superproject-working-tree)
+    [[ $root_dir ]] || root_dir=$(git rev-parse --show-toplevel)
+    [[ $root_dir ]] || error "Can't find repo root."
+
+    echo "$root_dir"
+}
+
+function files-project {
+    # Echo a list of files in project; or with $1, files in it
+    # matching that pattern with "git ls-files".  Excludes submodules.
+    [[ $1 ]] && pattern="/$1" || pattern="."
+
+    local excludes
+    for submodule in $(submodules)
+    do
+        excludes+=(":!:$submodule")
+    done
+
+    git ls-files -- "$pattern" "${excludes[@]}"
+}
+
 function dirs-project {
     # Echo list of directories to be used in load path.
     files-project-feature | dirnames
@@ -387,7 +424,7 @@ function dirs-project {
 
 function files-project-elisp {
     # Echo list of Elisp files in project.
-    git ls-files 2>/dev/null \
+    files-project 2>/dev/null \
         | egrep "\.el$" \
         | filter-files-exclude-default \
         | filter-files-exclude-args
@@ -396,13 +433,13 @@ function files-project-elisp {
 function files-project-feature {
     # Echo list of Elisp files that are not tests and provide a feature.
     files-project-elisp \
-        | egrep -v "$test_files_regexp" \
+        | grep -E -v "$test_files_regexp" \
         | filter-files-feature
 }
 
 function files-project-test {
     # Echo list of Elisp test files.
-    files-project-elisp | egrep "$test_files_regexp"
+    files-project-elisp | grep -E "$test_files_regexp"
 }
 
 function dirnames {
@@ -415,7 +452,7 @@ function dirnames {
 
 function filter-files-exclude-default {
     # Filter out paths (STDIN) which should be excluded by default.
-    egrep -v "(/\.cask/|-autoloads.el|.dir-locals)"
+    grep -E -v "(/\.cask/|-autoloads\.el|\.dir-locals)"
 }
 
 function filter-files-exclude-args {
@@ -441,7 +478,7 @@ function filter-files-feature {
     # Read paths on STDIN and echo ones that (provide 'a-feature).
     while read path
     do
-        egrep "^\\(provide '" "$path" &>/dev/null \
+        grep -E "^\\(provide '" "$path" &>/dev/null \
             && echo "$path"
     done
 }
@@ -489,7 +526,7 @@ function ert-tests-p {
 
 function package-main-file {
     # Echo the package's main file.
-    file_pkg=$(git ls-files ./*-pkg.el 2>/dev/null)
+    file_pkg=$(files-project "*-pkg.el" 2>/dev/null)
 
     if [[ $file_pkg ]]
     then
@@ -512,23 +549,23 @@ function dependencies {
 
     # Search package headers.  Use -a so grep won't think that an Elisp file containing
     # control characters (rare, but sometimes necessary) is binary and refuse to search it.
-    egrep -a -i '^;; Package-Requires: ' $(files-project-feature) $(files-project-test) \
-        | egrep -o '\([^([:space:]][^)]*\)' \
-        | egrep -o '^[^[:space:])]+' \
+    grep -E -a -i '^;; Package-Requires: ' $(files-project-feature) $(files-project-test) \
+        | grep -E -o '\([^([:space:]][^)]*\)' \
+        | grep -E -o '^[^[:space:])]+' \
         | sed -r 's/\(//g' \
-        | egrep -v '^emacs$'  # Ignore Emacs version requirement.
+        | grep -E -v '^emacs$'  # Ignore Emacs version requirement.
 
     # Search Cask file.
     if [[ -r Cask ]]
     then
-        egrep '\(depends-on "[^"]+"' Cask \
+        grep -E '\(depends-on "[^"]+"' Cask \
             | sed -r -e 's/\(depends-on "([^"]+)".*/\1/g'
     fi
 
     # Search -pkg.el file.
-    if [[ $(git ls-files ./*-pkg.el 2>/dev/null) ]]
+    if [[ $(files-project "*-pkg.el" 2>/dev/null) ]]
     then
-        sed -nr 's/.*\(([-[:alnum:]]+)[[:blank:]]+"[.[:digit:]]+"\).*/\1/p' $(git ls-files ./*-pkg.el 2>/dev/null)
+        sed -nr 's/.*\(([-[:alnum:]]+)[[:blank:]]+"[.[:digit:]]+"\).*/\1/p' $(files-project- -- -pkg.el 2>/dev/null)
     fi
 }
 
@@ -580,6 +617,9 @@ function sandbox {
     then
         local deps=($(dependencies))
         debug "Installing dependencies: ${deps[@]}"
+
+        # Ensure built-in packages get upgraded to newer versions from ELPA.
+        args_sandbox_package_install+=(--eval "(setq package-install-upgrade-built-in t)")
 
         for package in "${deps[@]}"
         do
@@ -1192,6 +1232,9 @@ paths_temp+=("$package_initialize_file")
 # * Main
 
 trap cleanup EXIT INT TERM
+
+# Change to project root directory first.
+cd "$(project-root)"
 
 # Discover project files.
 files_project_feature=($(files-project-feature))
