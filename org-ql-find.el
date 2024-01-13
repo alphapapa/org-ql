@@ -75,7 +75,8 @@ single predicate)."
                   :query-prefix query-prefix
                   :query-filter query-filter
                   :prompt prompt)))
-    (set-buffer (marker-buffer marker))
+    (set-buffer (or (buffer-base-buffer (marker-buffer marker))
+                    (marker-buffer marker)))
     (pop-to-buffer (current-buffer) org-ql-find-display-buffer-action)
     (without-restriction
       (goto-char marker)

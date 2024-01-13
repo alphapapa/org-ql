@@ -555,7 +555,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.8.4-pre
 
-Nothing new yet.
+*Fixes*
+
++ Command ~org-ql-find~ goes to the selected entry in the base buffer (rather than potentially an indirect buffer, whose narrowing could leave the selected entry hidden.  The nuances around going to entries in buffers that may be indirect and/or narrowed are surprisingly complicated.  Hopefully this is the last fix).
 
 ** 0.8.3
 

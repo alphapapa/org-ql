@@ -1074,7 +1074,13 @@ File: README.info,  Node: 084-pre,  Next: 083,  Up: Changelog
 5.1 0.8.4-pre
 =============
 
-Nothing new yet.
+*Fixes*
+
+   • Command ‘org-ql-find’ goes to the selected entry in the base buffer
+     (rather than potentially an indirect buffer, whose narrowing could
+     leave the selected entry hidden.  The nuances around going to
+     entries in buffers that may be indirect and/or narrowed are
+     surprisingly complicated.  Hopefully this is the last fix).
 
 
 File: README.info,  Node: 083,  Next: 082,  Prev: 084-pre,  Up: Changelog
@@ -1963,44 +1969,44 @@ Node: Links38869
 Node: Tips39556
 Node: Changelog39880
 Node: 084-pre40760
-Node: 08340872
-Node: 08241217
-Node: 08141610
-Node: 0842031
-Node: 07444755
-Node: 07344978
-Node: 07245710
-Node: 07146629
-Node: 0747438
-Node: 06350304
-Node: 06250837
-Node: 06151144
-Node: 0651714
-Node: 05254770
-Node: 05155072
-Node: 0555497
-Node: 04957028
-Node: 04857310
-Node: 04757659
-Node: 04658068
-Node: 04558476
-Node: 04458837
-Node: 04359196
-Node: 04259399
-Node: 04159560
-Node: 0459807
-Node: 03263908
-Node: 03164311
-Node: 0364508
-Node: 02367808
-Node: 02268042
-Node: 02168322
-Node: 0268527
-Node: 0172605
-Node: Notes72706
-Node: Comparison with Org Agenda searches72868
-Node: org-sidebar73757
-Node: License74036
+Node: 08341212
+Node: 08241557
+Node: 08141950
+Node: 0842371
+Node: 07445095
+Node: 07345318
+Node: 07246050
+Node: 07146969
+Node: 0747778
+Node: 06350644
+Node: 06251177
+Node: 06151484
+Node: 0652054
+Node: 05255110
+Node: 05155412
+Node: 0555837
+Node: 04957368
+Node: 04857650
+Node: 04757999
+Node: 04658408
+Node: 04558816
+Node: 04459177
+Node: 04359536
+Node: 04259739
+Node: 04159900
+Node: 0460147
+Node: 03264248
+Node: 03164651
+Node: 0364848
+Node: 02368148
+Node: 02268382
+Node: 02168662
+Node: 0268867
+Node: 0172945
+Node: Notes73046
+Node: Comparison with Org Agenda searches73208
+Node: org-sidebar74097
+Node: License74376
 
 End Tag Table
 
