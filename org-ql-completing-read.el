@@ -26,6 +26,8 @@
 
 (require 'org-ql)
 
+(declare-function org-ql-search "org-ql-search")
+
 ;;;; Variables
 
 (defvar-keymap org-ql-completing-read-map
