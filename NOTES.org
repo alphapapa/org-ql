@@ -29,17 +29,17 @@
 ** Milestones ([[org-ql-search:todo%253A?super-groups=%2528%2528%253Aauto-property%2520%2522milestone%2522%2529%2529&sort=%2528todo%2529&title=%2522Milestones%2522][view]])
 
 #+BEGIN: org-ql :query "todo: property:milestone" :columns (((property "milestone") "M") (priority "P") todo heading) :sort (priority date) :take 9
-|      M | P | Todo    | Heading                                                                        |
-|--------+---+---------+--------------------------------------------------------------------------------|
-|    0.7 | A | PROJECT | [[Taxy-based search view][Taxy-based search view]]                                                         |
-|    0.7 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                 |
-| future | B | TODO    | [[Sorter for property values][Sorter for property values]]                                                     |
-|    0.7 | B | TODO    | [[Verify that ~(clocked)~ regexp matches happen in logbook drawers][Verify that ~(clocked)~ regexp matches happen in logbook drawers]]                 |
-|    0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
-|    0.7 | B | TODO    | [[Change ~clocked~ and ~closed~'s behavior with just-number args][Change ~clocked~ and ~closed~'s behavior with just-number args]]                     |
-|    0.7 | B | TODO    | [[Review all normalizers for potential loops][Review all normalizers for potential loops]]                                     |
-|    0.7 | B | TODO    | [[Normalize query while preserving body][Normalize query while preserving body]]                                          |
-|    0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                               |
+|   M | P | Todo    | Heading                                                                                          |
+|-----+---+---------+--------------------------------------------------------------------------------------------------|
+| 0.7 | A | PROJECT | [[Taxy-based search view][Taxy-based search view]]                                                                           |
+| 0.7 | A | PROJECT | [[Compatibility with Org 9.4 custom link changes][Compatibility with Org 9.4 custom link changes]]                                                   |
+| 0.7 | B | TODO    | [[Verify that ~(clocked)~ regexp matches happen in logbook drawers][Verify that ~(clocked)~ regexp matches happen in logbook drawers]]                        |
+| 0.7 | B | TODO    | [[Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate][Bookmarks save list of files instead of e.g. ~org-agenda-files~ when appropriate]] |
+| 0.7 | B | TODO    | [[Change ~clocked~ and ~closed~'s behavior with just-number args][Change ~clocked~ and ~closed~'s behavior with just-number args]]                      |
+| 0.7 | B | TODO    | [[Review all normalizers for potential loops][Review all normalizers for potential loops]]                                                       |
+| 0.7 | B | TODO    | [[Normalize query while preserving body][Normalize query while preserving body]]                                                            |
+| 0.6 | B | TODO    | [[Use string queries in view headers when possible][Use string queries in view headers when possible]]                                                 |
+| 0.7 | B | PROJECT | [[Logbook state change predicate][Logbook state change predicate]]                                                                   |
 #+END:
 
 ** Underway ([[org-ql-search:todo%253AUNDERWAY?sort=%2528priority%2529&title=%2522Underway%2522][view]])
@@ -76,11 +76,11 @@
 |--------+---+-----------------------------------------|
 | 0.7    | A | [[Taxy-based search view][Taxy-based search view]]                  |
 |        | A | [[Convert simple sexp queries to non-sexp][Convert simple sexp queries to non-sexp]] |
-|        | A | [[Org%20link%20types%20%5B2/3%5D][Org link types {2/3}]]                    |
+|        | A | [[Org link types][Org link types]]                          |
+|        | B | [[Sorters with arguments][Sorters with arguments]]                  |
 |        | B | [[Outline path predicate][Outline path predicate]]                  |
 |        | B | [[Document the sorting functions][Document the sorting functions]]          |
 | future | B | [[Recursive queries][Recursive queries]]                       |
-| future | B | [[Timeline view][Timeline view]]                           |
 #+END:
 
 * [#A] Tasks
@@ -5883,6 +5883,15 @@ I don't need this right now, but it might come in handy here or elsewhere.
        output))
 #+END_SRC
 
+* Testimonials
+
+I don't know if I'll ever use these, but maybe they could help some people understand that it's not as hard or intimidating as it may seem; it's intended to be the opposite.
+
+** [[https://old.reddit.com/r/orgmode/comments/19876xa/stylistic_question_one_large_vs_many_smaller_files/kiku3t5/][u/TiMueller]]
+
+#+begin_quote
+I had ~org-ql~ installed, but I didn't use it, somehow I was afraid it would be difficult or complicated. Now I tried ~org-ql-find~ for a few days and I am enthusiastic. It is so fast, and it seems to "know" the most important findings. I also like the way it shows the contents backwards: first the finding, then the headings going upwards. Will be my main function for searching inside my Org files from now on. Thank you so much!
+#+end_quote
 
 * [#C] COMMENT Config  :noexport:
 :LOGBOOK:
