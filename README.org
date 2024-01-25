@@ -115,7 +115,7 @@ These commands jump to a heading selected using Emacs's built-in completion faci
 - ~org-ql-find-in-agenda~ searches in ~(org-agenda-files)~.
 - ~org-ql-find-in-org-directory~ searches in ~org-directory~.
 
-Note that these commands are compatible with [[https://github.com/oantolin/embark][Embark]]: the ~embark-act~ command can be called on a completion candidate (i.e. a search result) to act on it immediately, without having to visit the entry in its source Org buffer.
+Note that these commands are compatible with [[https://github.com/oantolin/embark][Embark]]: the ~embark-act~ command can be called on a completion candidate (i.e. a search result) to act on it immediately, without having to visit the entry in its source Org buffer, and ~embark-export~ may be called to show the results in an ~org-ql-view~ buffer.
 
 [[images/org-ql-find.png]]
 
@@ -248,7 +248,7 @@ Arguments are listed next to predicate names, where applicable.
      -  Aliases: ~olps~.
 +  =path (&rest regexps)= :: Return non-nil if current heading's buffer's filename path matches any of ~REGEXPS~ (regexp strings).  Without arguments, return non-nil if buffer is file-backed.
 +  =priority (&rest args)= :: Return non-nil if current heading has a certain priority.  ~ARGS~ may be either a list of one or more priority letters as strings, or a comparator function symbol followed by a priority letter string.  For example:  ~(priority "A") (priority "A" "B") (priority '>= "B")~ Note that items without a priority cookie never match this predicate (while Org itself considers items without a cookie to have the default priority, which, by default, is equal to priority ~B~).
-+  =property (property &optional value &key inherit)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  If ~INHERIT~ is nil, only match entries with ~PROPERTY~ set on the entry; if t, also match entries with inheritance.  If ~INHERIT~ is not specified, use the Boolean value of ~org-use-property-inheritance~, which see (i.e. it is only interpreted as nil or non-nil).
++  =property (property &optional value &key inherit)= :: Return non-nil if current entry has ~PROPERTY~ (a string), and optionally ~VALUE~ (a string).  If ~INHERIT~ is nil, only match entries with ~PROPERTY~ set on the entry; if t, also match entries with inheritance.  If ~INHERIT~ is not specified, use the value of ~org-use-property-inheritance~, which see.
 +  =regexp (&rest regexps)= :: Return non-nil if current entry matches all of ~REGEXPS~ (regexp strings).  Matches against entire entry, from beginning of its heading to the next heading.
      -  Aliases: =r=.
 +  =rifle (&rest strings)= :: Return non-nil if each string is found in either the entry or its outline path.  Works like =org-rifle=.  This is probably the most useful, intuitive, general-purpose predicate.
@@ -553,18 +553,59 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 /Note:/ Breaking changes may be made before version 1.0, but in the event of major changes, attempts at backward compatibility will be made with obsolescence declarations, translation of arguments, etc.  Users who need stability guarantees before 1.0 may choose to use tagged stable releases.
 
-** 0.8-pre
+** 0.9-pre
+
+Nothing new yet.
+
+** 0.8.4
+
+*Fixes*
+
++ Command ~org-ql-find~ goes to the selected entry in the base buffer (rather than potentially an indirect buffer, whose narrowing could leave the selected entry hidden.  The nuances around going to entries in buffers that may be indirect and/or narrowed are surprisingly complicated.  Hopefully this is the last fix).
+
+** 0.8.3
+
+*Fixes*
+
++ Command ~org-ql-find~ incorrectly moved point.  (See [[https://github.com/alphapapa/org-ql/issues/380#issuecomment-1881913025][#380]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]] for reporting.)
+
+** 0.8.2
+
+*Fixes*
+
++ Command ~org-ql-find~ incorrectly restored the buffer after jumping when not using indirect buffers.  (See [[https://github.com/alphapapa/org-ql/issues/380#issuecomment-1881913025][#380]].  Thanks to [[https://github.com/bram85][Bram Schoenmakers]] for reporting.)
+
+** 0.8.1
+
+*Fixes*
+
++ Command ~org-ql-find~ widens the buffer before going to the selected entry.
++ In ~org-ql-view~ buffers, links in headings remain clickable links.  (Fixes [[https://github.com/alphapapa/org-ql/issues/282][#282]].  Thanks to [[https://github.com/jakebox][Jacob Boxerman]] for reporting.)
+
+** 0.8
 
 *Additions*
 
 + Function ~org-ql-completing-read~, used by command ~org-ql-find~, now specifies the completion category as ~org-heading~, providing compatibility with [[https://github.com/oantolin/embark][Embark]].  (This is a powerful feature, as it means any ~org-ql-find~ result can be acted on from inside the search results with Embark, which provides common actions from Org Agenda and Org speed keys bindings.)  ([[https://github.com/alphapapa/org-ql/issues/299][#299]].  Thanks to [[https://github.com/oantolin][Omar Antolín Camarena]], [[https://github.com/minad][Daniel Mendler]], and [[https://github.com/akirak][Akira Komamura]].)
+  - Command ~org-ql-completing-read-export~, bound to ~C-c C-e~ or ~embark-export~ while in an ~org-ql-completing-read~ session, exits and shows an ~org-ql-view~ buffer for the current search.
 + Command ~org-ql-find~ may be called in an ~org-agenda~ or ~org-ql-view~ buffer to search the buffers which contributed to the agenda/view buffer.
 + Command ~org-ql-find-path~, which searches outline paths in the current buffer.
 + Command ~org-ql-open-link~, which finds links in entries matching the given query, and opens the selected one with ~org-open-at-point~.  (This is helpful when a collection of links are kept in Org files: rather than having to first visit the entry containing the desired link, then locate it within the entry, and then open it, the user can simply select the link and open it directly.)
++ Items in ~org-ql-view~ buffers now include the ~org-category~ text property, like Org Agenda buffers, which allows grouping with ~org-super-agenda~'s category-related selectors.  ([[https://github.com/alphapapa/org-ql/issues/363][#363]].  Thanks to [[https://github.com/kofm][Gabriele Mongiano]] for reporting.)
+
+*Fixes*
+
++ Predicate ~property~ correctly uses the value of ~org-use-property-inheritance~ when not specified.  ([[https://github.com/alphapapa/org-ql/pull/346][#346]], [[https://github.com/alphapapa/org-ql/issues/356][#356]].  Thanks to [[https://github.com/bram85][Bram Schoenmakers]].)
 
 *Compatibility*
 
++ Emacs 27.1 or later is now required.
 + Org v9.7's ~org-element~ API changes required some adjustments.  ([[https://github.com/alphapapa/org-ql/issues/364][#364]].  Thanks to several users for reporting, and to [[https://github.com/yantar92][Ihor Radchenko]] for his feedback.)
+
+** 0.7.4
+
+*Fixes*
++ Ignore empty quoted strings in plain-string queries ([[https://github.com/alphapapa/org-ql/issues/383][#383]]).
 
 ** 0.7.3
 
@@ -592,7 +633,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 ** 0.7
 
 *Added*
-+  Commands ~org-ql-find~, ~org-ql-find-heading~, and ~org-ql-find-path~, which jump to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
++  Command ~org-ql-find~, which jumps to entries selected using Emacs's built-in completion facilities and Org QL queries (like ~helm-org-ql~, but doesn't require Helm.).
 +  Command ~org-ql-refile~, which refiles the entry at point to one selected using Org QL completion.
 +  Predicate ~rifle~, which matches an entry if each of the given arguments is found in either the entry's contents or its outline path.  This provides very intuitive results, mimicing the behavior of [[https://github.com/alphapapa/org-rifle][=org-rifle=]].  In fact, the results are so useful that it's now the default predicate for plain-string query tokens.  (It is also aliased to ~smart~, since it's so "smart," and not all users have used =org-rifle=.)
 +  Option ~org-ql-default-predicate~, applied to plain-string query tokens (before, the ~regexp~ predicate was always used, but now it may be customized).

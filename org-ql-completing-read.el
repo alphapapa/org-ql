@@ -1,6 +1,6 @@
 ;;; org-ql-completing-read.el --- Completing read of Org entries using org-ql  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022  Adam Porter
+;; Copyright (C) 2022-2023  Adam Porter
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 
@@ -25,6 +25,18 @@
 ;;; Code:
 
 (require 'org-ql)
+
+(declare-function org-ql-search "org-ql-search")
+
+;;;; Variables
+
+(defvar-keymap org-ql-completing-read-map
+  :doc "Active during `org-ql-completing-read' sessions."
+  "C-c C-e" #'org-ql-completing-read-export)
+
+;; `embark-collect' doesn't work for `org-ql-completing-read', so remap
+;; it to `embark-export' (which `keymap-set', et al doesn't allow).
+(define-key org-ql-completing-read-map [remap embark-collect] 'embark-export)
 
 ;;;; Customization
 
@@ -82,7 +94,7 @@ To be used in, e.g. annotation functions.")
 (defun org-ql-completing-read-action ()
   "Default action for `org-ql-completing-read'.
 Returns (STRING . MARKER) cons for entry at point."
-  (font-lock-ensure (point-at-bol) (point-at-eol))
+  (font-lock-ensure (pos-bol) (pos-eol))
   (cons (org-link-display-format (org-entry-get nil "ITEM")) (point-marker)))
 
 (defun org-ql-completing-read-snippet (marker)
@@ -114,12 +126,17 @@ value, or nil."
 
 ;;;;; Completing read
 
+(defun org-ql-completing-read-export ()
+  "Show `org-ql-view' buffer for current `org-ql-completing-read'-based search."
+  (interactive)
+  (user-error "Not in an `org-ql-completing-read' session"))
+
 ;;;###autoload
 (cl-defun org-ql-completing-read
     (buffers-files &key query-prefix query-filter
                    (action #'org-ql-completing-read-action)
                    ;; FIXME: Unused argument.
-                   (annotate #'org-ql-completing-read-snippet)
+                   ;; (annotate #'org-ql-completing-read-snippet)
                    (snippet #'org-ql-completing-read-snippet)
                    (path #'org-ql-completing-read-path)
                    (action-filter #'list)
@@ -155,7 +172,7 @@ single predicate)."
     (cl-labels (;; (debug-message
                 ;;  (f &rest args) (apply #'message (concat "ORG-QL-COMPLETING-READ: " f) args))
                 (action ()
-                  (font-lock-ensure (point-at-bol) (point-at-eol))
+                  (font-lock-ensure (pos-bol) (pos-eol))
                   ;; This function needs to handle multiple candidates per
                   ;; call, so we loop over a list of values by default.
                   (pcase-dolist (`(,string . ,marker) (funcall action-filter (funcall action)))
@@ -173,7 +190,6 @@ single predicate)."
                               (setf string (format "%s <%s>" string (cl-incf suffix)))
                             (setf string (format "%s <%s>" string (puthash string 2 disambiguations)))))
                         (puthash (propertize string 'org-marker marker) marker table)))))
-
                 (path (marker)
                   (org-with-point-at marker
                     (let* ((path (thread-first (org-get-outline-path nil t)
@@ -183,10 +199,10 @@ single predicate)."
                                                (concat "\\" (string-join (reverse path) "\\"))
                                              (concat "/" (string-join path "/")))))
                       formatted-path)))
-                (todo
-                  (marker) (if-let (it (org-entry-get marker "TODO"))
-                               (concat (propertize it 'face (org-get-todo-face it)) " ")
-                             ""))
+                (todo (marker)
+                  (if-let (it (org-entry-get marker "TODO"))
+                      (concat (propertize it 'face (org-get-todo-face it)) " ")
+                    ""))
                 (affix (completions)
                   ;; (debug-message "AFFIX:%S" completions)
                   (cl-loop for completion in completions
@@ -201,14 +217,14 @@ single predicate)."
                     ;; e.g. Helm while typing, but it seems to help a little when using the
                     ;; org-rifle-style snippets.
                     (or (snippet (get-text-property 0 'org-marker candidate)) "")))
-                (snippet
-                  (marker) (when-let
-                               ((snippet
-                                 (org-with-point-at marker
-                                   (or (funcall org-ql-completing-read-snippet-function org-ql-completing-read-input-regexp)
-                                       (org-ql-completing-read--snippet-simple)))))
-                             (propertize (concat " " snippet)
-                                         'face 'org-ql-completing-read-snippet)))
+                (snippet (marker)
+                  (when-let
+                      ((snippet
+                        (org-with-point-at marker
+                          (or (funcall org-ql-completing-read-snippet-function org-ql-completing-read-input-regexp)
+                              (org-ql-completing-read--snippet-simple)))))
+                    (propertize (concat " " snippet)
+                                'face 'org-ql-completing-read-snippet)))
                 (group (candidate transform)
                   (pcase transform
                     (`nil (buffer-name (marker-buffer (get-text-property 0 'org-marker candidate))))
@@ -322,7 +338,23 @@ single predicate)."
       (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-completing-read))
              (completion-styles-alist (list (list 'org-ql-completing-read #'try #'all "Org QL Find")))
-             (selected (completing-read prompt #'collection nil t)))
+             (selected
+              (minibuffer-with-setup-hook
+                  (lambda ()
+                    (use-local-map (make-composed-keymap org-ql-completing-read-map (current-local-map))))
+                (cl-letf* (((symbol-function 'org-ql-completing-read-export)
+                            (lambda ()
+                              (interactive)
+                              (run-at-time 0 nil
+                                           #'org-ql-search
+                                           buffers-files
+                                           (minibuffer-contents-no-properties))
+                              (if (fboundp 'minibuffer-quit-recursive-edit)
+                                  (minibuffer-quit-recursive-edit)
+                                (abort-recursive-edit))))
+                           ((symbol-function 'embark-export)
+                            (symbol-function 'org-ql-completing-read-export)))
+                  (completing-read prompt #'collection nil t)))))
         ;; (debug-message "SELECTED:%S  KEYS:%S" selected (hash-table-keys table))
         (or (gethash selected table)
             ;; If there are completions in the table, but none of them exactly match the user input

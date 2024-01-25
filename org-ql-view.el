@@ -1,5 +1,7 @@
 ;;; org-ql-view.el --- Agenda-like view based on org-ql  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2019-2023  Adam Porter
+
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: https://github.com/alphapapa/org-ql
 
@@ -302,10 +304,10 @@ SLOT is passed to `display-buffer-in-side-window', which see."
 (defun org-ql-view-switch ()
   "Switch to view at point."
   (interactive)
-  (let ((key (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+  (let ((key (buffer-substring-no-properties (pos-bol) (pos-eol))))
     (unless (string-empty-p key)
       (ov-clear :org-ql-view-selected)
-      (ov (point-at-bol) (1+ (point-at-eol)) :org-ql-view-selected t
+      (ov (pos-bol) (1+ (pos-eol)) :org-ql-view-selected t
           'face '(:weight bold :inherit highlight))
       (org-ql-view key))))
 
@@ -369,7 +371,7 @@ update search arguments."
 (defun org-ql-view-customize ()
   "Customize view at point in `org-ql-view-sidebar' buffer."
   (interactive)
-  (let ((key (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+  (let ((key (buffer-substring-no-properties (pos-bol) (pos-eol))))
     (customize-option 'org-ql-views)
     (search-forward (concat "Name: " key))))
 
@@ -406,7 +408,7 @@ update search arguments."
 
 (defvar bookmark-make-record-function)
 
-(cl-defun org-ql-view--display (&key (buffer org-ql-view-buffer) header string)
+(cl-defun org-ql-view--display (&key (buffer org-ql-view-buffer) header strings)
   "Display STRING in `org-ql-view' BUFFER.
 
 BUFFER may be a buffer, or a string naming a buffer, which is
@@ -444,7 +446,9 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
       ;; Clear buffer, insert entries, etc.
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (insert string "\n")
+        (dolist (string strings)
+          (insert string "\n"))
+        (insert "\n")
         (pop-to-buffer (current-buffer) org-ql-view-display-buffer-action)
         (org-agenda-finalize)
         (goto-char (point-min))))))
@@ -487,11 +491,11 @@ If TITLE, prepend it to the header."
 Makes QUERY more readable, e.g. timestamp objects are replaced
 with human-readable strings."
   (cl-labels ((rec (form)
-                   (cl-typecase form
-                     (ts (ts-format form))
-                     (cons (cons (rec (car form))
-                                 (rec (cdr form))))
-                     (otherwise form))))
+                (cl-typecase form
+                  (ts (ts-format form))
+                  (cons (cons (rec (car form))
+                              (rec (cdr form))))
+                  (otherwise form))))
     (format "%S" (rec query))))
 
 (defun org-ql-view--font-lock-string (mode s)
@@ -533,14 +537,14 @@ dates in the past, and negative for dates in the future."
 
 (defun org-ql-view-bookmark-make-record ()
   "Return a bookmark record for the current Org QL View buffer."
-  (cl-labels ((file-nameize
-               (b-f) (abbreviate-file-name
-                      (cl-typecase b-f
-                        (string b-f)
-                        (buffer (or (buffer-file-name b-f)
-                                    (when (buffer-base-buffer b-f)
-                                      (buffer-file-name (buffer-base-buffer b-f)))))
-                        (t (user-error "Only file-backed buffers can be bookmarked by Org QL View: %s" b-f))))))
+  (cl-labels ((file-nameize (b-f)
+                (abbreviate-file-name
+                 (cl-typecase b-f
+                   (string b-f)
+                   (buffer (or (buffer-file-name b-f)
+                               (when (buffer-base-buffer b-f)
+                                 (buffer-file-name (buffer-base-buffer b-f)))))
+                   (t (user-error "Only file-backed buffers can be bookmarked by Org QL View: %s" b-f))))))
     (-let* ((plist (org-ql-view--plist (current-buffer)))
             ((&plist :buffers-files) plist))
       ;; Replace buffers with their filenames, and signal error if any are not file-backed.
@@ -655,23 +659,25 @@ When opened, the link searches the buffer it's opened from."
   (when org-ql-view-query
     ;; Only Org QL View buffers should have `org-ql-view-query' set.
     (cl-labels ((prompt-for (buffers-files)
-                            (pcase-exhaustive
-                                (completing-read (format "Make link that searches: ")
-                                                 '("file link is in" "files currently searched")
-                                                 nil t nil nil "file link is in")
-                              ("file link is in" nil)
-                              ("files currently searched" buffers-files)))
-                (strings-or-file-buffers-p
-                 (thing) (cl-etypecase thing
-                           (list (cl-every #'strings-or-file-buffers-p thing))
-                           (string thing)
-                           (buffer (or (buffer-file-name thing)
-                                       ;; TODO: Should indirect buffers be allowed?  Maybe not, since their narrowing isn't preserved.
-                                       ;; On the other hand, it's possible to accidentally make a search view for an indirect buffer
-                                       ;; that's since been widened, and forcing the user to manually change that would be awkward,
-                                       ;; and trying to communicate the problem would be difficult, so maybe it's okay to allow it.
-                                       (when (buffer-base-buffer thing)
-                                         (buffer-file-name (buffer-base-buffer thing))))))))
+                  (pcase-exhaustive
+                      (completing-read (format "Make link that searches: ")
+                                       '("file link is in" "files currently searched")
+                                       nil t nil nil "file link is in")
+                    ("file link is in" nil)
+                    ("files currently searched" buffers-files)))
+                (strings-or-file-buffers-p (thing)
+                  (cl-etypecase thing
+                    (list (cl-every #'strings-or-file-buffers-p thing))
+                    (string thing)
+                    (buffer (or (buffer-file-name thing)
+                                ;; TODO: Should indirect buffers be allowed?  Maybe not, since their
+                                ;; narrowing isn't preserved.  On the other hand, it's possible to
+                                ;; accidentally make a search view for an indirect buffer that's
+                                ;; since been widened, and forcing the user to manually change that
+                                ;; would be awkward, and trying to communicate the problem would be
+                                ;; difficult, so maybe it's okay to allow it.
+                                (when (buffer-base-buffer thing)
+                                  (buffer-file-name (buffer-base-buffer thing))))))))
       (unless (strings-or-file-buffers-p org-ql-view-buffers-files)
         (user-error "%s" "Views that search non-file-backed buffers can't be linked to"))
       (let* ((query-string (--if-let (org-ql--query-sexp-to-string org-ql-view-query)
@@ -865,8 +871,7 @@ return an empty string."
            ;; Adding the relative due date property should probably be done explicitly and separately
            ;; (which would also make it easier to do it independently of faces, etc).
            (title (--> (org-ql-view--add-faces element)
-                       (org-element-property :raw-value it)
-                       (org-link-display-format it)))
+                       (org-element-property :raw-value it)))
            (todo-keyword (-some--> (org-element-property :todo-keyword element)
                            (org-ql-view--add-todo-face it)))
            (tag-list (if org-use-tag-inheritance
@@ -889,17 +894,20 @@ return an empty string."
                               (s-join ":" it)
                               (s-wrap it ":")
                               (org-add-props it nil 'face 'org-tag))))
-           ;;  (category (org-element-property :category element))
-           ;; Org Agenda priorities are subtracted from `org-priority-lowest'
-           ;; and multiplied by 1000, so do the same here. Also assume that <65
-           ;; means the priority is a number and covert to its ASCII equivalent,
-           ;; which is what `org-priority-to-value' implicitly does. See also
-           ;; `org-get-priority' and `org-priority-lowest'.
            (priority (cl-flet ((adjust (p) (if (>= p 65) p (+ p 48))))
                        (-if-let (pri (org-element-property :priority element))
                            (* 1000 (- (adjust org-priority-lowest) pri))
                          (* 1000 (- (adjust org-priority-lowest)
                                     (adjust org-priority-default))))))
+           (category (or (org-element-property :CATEGORY element)
+                         (when-let ((marker (or (org-element-property :org-hd-marker element)
+                                                (org-element-property :org-marker element))))
+                           (org-with-point-at marker
+                             (or (org-get-category)
+                                 (when buffer-file-name
+			           (file-name-sans-extension
+			            (file-name-nondirectory buffer-file-name))))))
+                         ""))
            (priority-string (-some->> (org-element-property :priority element)
                               (char-to-string)
                               (format "[#%s]")
@@ -915,14 +923,15 @@ return an empty string."
       (remove-list-of-text-properties 0 (length string) '(line-prefix) string)
       ;; Add all the necessary properties and faces to the whole string
       (--> string
-        ;; FIXME: Use proper prefix
-        (concat "  " it)
-        (org-add-props it properties
-          'org-agenda-type 'search
-          'priority priority
-          'todo-state todo-keyword
-          'tags tag-list
-          'org-habit-p habit-property)))))
+           ;; FIXME: Use proper prefix
+           (concat "  " it)
+           (org-add-props it properties
+             'org-agenda-type 'search
+             'priority priority
+             'org-category category
+             'todo-state todo-keyword
+             'tags tag-list
+             'org-habit-p habit-property)))))
 
 (defun org-ql-view--add-faces (element)
   "Return ELEMENT with deadline and scheduled faces added."
@@ -1050,11 +1059,11 @@ the variable), \"org-directory\" if it matches the value of
 current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
   ;; Used in `org-ql-view--complete-buffers-files' and
   ;; `org-ql-view--header-line-format'.
-  (cl-labels ((expand-files
-               (list) (--map (cl-typecase it
-                               (string (expand-file-name it))
-                               (otherwise it))
-                             list)))
+  (cl-labels ((expand-files (list)
+                (--map (cl-typecase it
+                         (string (expand-file-name it))
+                         (otherwise it))
+                       list)))
     ;; TODO: Test this more exhaustively.
     (pcase buffers-files
       ((pred listp)
@@ -1076,10 +1085,10 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
 
 (defun org-ql-view--complete-buffers-files ()
   "Return value for `org-ql-view-buffers-files' using completion."
-  (cl-labels ((initial-input
-               () (when org-ql-view-buffers-files
-                    (org-ql-view--contract-buffers-files
-                     org-ql-view-buffers-files))))
+  (cl-labels ((initial-input ()
+                (when org-ql-view-buffers-files
+                  (org-ql-view--contract-buffers-files
+                   org-ql-view-buffers-files))))
     (if (and org-ql-view-buffers-files
              (bufferp org-ql-view-buffers-files))
         ;; Buffers can't be input by name, so if the default value is a buffer, just use it.

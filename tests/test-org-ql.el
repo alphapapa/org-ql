@@ -648,6 +648,14 @@ with keyword arg NOW in PLIST."
 
       ;; TODO: Other predicates.
 
+      (it "Ignores empty quoted strings"
+        (expect (org-ql--query-string-to-sexp "\"\"")
+                :to-equal nil)
+        (expect (org-ql--query-string-to-sexp "foo \"\" bar")
+                :to-equal '(and (rifle "foo") (rifle "bar")))
+        (expect (org-ql--query-string-to-sexp "foo \"baz\" bar")
+                :to-equal '(and (rifle "foo") (rifle "baz") (rifle "bar"))))
+
       (it "Negated terms"
         (expect (org-ql--query-string-to-sexp "todo: !todo:CHECK,SOMEDAY")
                 :to-equal '(and (todo) (not (todo "CHECK" "SOMEDAY"))))
@@ -1836,14 +1844,14 @@ with keyword arg NOW in PLIST."
     ;; have a chance to be gathered.  So we make a test buffer and run the test in that, with a test heading.
 
     (let ((test-buffer (get-buffer-create "*test-org-ql*")))
-      (cl-flet ((open-link
-                 (link) (with-current-buffer test-buffer
-                          (erase-buffer)
-                          (org-mode)
-                          (insert "* TODO Test heading \n\n")
-                          (insert link)
-                          (backward-char 1)
-                          (call-interactively #'org-open-at-point))))
+      (cl-flet ((open-link (link)
+                  (with-current-buffer test-buffer
+                    (erase-buffer)
+                    (org-mode)
+                    (insert "* TODO Test heading \n\n")
+                    (insert link)
+                    (backward-char 1)
+                    (call-interactively #'org-open-at-point))))
 
         (describe "buffers-files parameter"
           :var ((quoted-lambda-link "[[org-ql-search:todo:?buffers-files%3D%28lambda%20nil%20%28error%20%22UNSAFE%22%29%29]]")
@@ -1998,16 +2006,15 @@ with keyword arg NOW in PLIST."
           (when-let ((buffer (find-file-noselect filename 'nowarn)))
             (kill-buffer buffer))))
 
-      (cl-flet ((var-after-bookmark-set-and-jump
-                 (var buffers-files query &key sort super-groups)
-                 (org-ql-search buffers-files query
-                   :super-groups super-groups
-                   :sort sort :title title :buffer view-buffer)
-                 (set-buffer view-buffer)
-                 (bookmark-set title)
-                 (kill-buffer)
-                 (bookmark-jump title)
-                 (buffer-local-value var (get-buffer (concat "*Org QL View: " title "*")))))
+      (cl-flet ((var-after-bookmark-set-and-jump (var buffers-files query &key sort super-groups)
+                  (org-ql-search buffers-files query
+                    :super-groups super-groups
+                    :sort sort :title title :buffer view-buffer)
+                  (set-buffer view-buffer)
+                  (bookmark-set title)
+                  (kill-buffer)
+                  (bookmark-jump title)
+                  (buffer-local-value var (get-buffer (concat "*Org QL View: " title "*")))))
 
         (describe "Grouping"
           :var ((query '(and (todo "TODO") (regexp "heading")))
@@ -2061,18 +2068,18 @@ with keyword arg NOW in PLIST."
     (describe "Dynamic blocks"
       (describe "warn about sexp queries"
 
-        (cl-flet ((test-dblock
-                   (&optional input) (with-current-buffer (get-buffer-create "*TEST DBLOCK*")
-                                       (erase-buffer)
-                                       (org-mode)
-                                       (insert "* TODO Heading 1\n\n"
-                                               "#+BEGIN: org-ql :query (or (todo) (regexp \"Heading\")) :columns (todo)\n"
-                                               "#+END:")
-                                       (goto-char (point-min))
-                                       (forward-line 2)
-                                       (with-simulated-input input
-                                         (org-dblock-update))
-                                       (kill-buffer))))
+        (cl-flet ((test-dblock (&optional input)
+                    (with-current-buffer (get-buffer-create "*TEST DBLOCK*")
+                      (erase-buffer)
+                      (org-mode)
+                      (insert "* TODO Heading 1\n\n"
+                              "#+BEGIN: org-ql :query (or (todo) (regexp \"Heading\")) :columns (todo)\n"
+                              "#+END:")
+                      (goto-char (point-min))
+                      (forward-line 2)
+                      (with-simulated-input input
+                        (org-dblock-update))
+                      (kill-buffer))))
 
           (it "when org-ql-ask-unsafe-queries is non-nil"
             ;; TODO: Should the query be converted to string form if possible and only warn if not?
@@ -2101,39 +2108,37 @@ with keyword arg NOW in PLIST."
           (insert "* TODO Test heading\n\n")
           (org-mode)))
 
-      (cl-flet* ((open-link-in
-                  (link buffer input)
-                  ;; Org REDUCED THE NUMBER OF ARGUMENTS TO `org-open-link-from-string'!  That BREAKS BACKWARD
-                  ;; COMPATIBILITY!  So I have to make my own function so these tests can work across Org versions!
-                  (with-current-buffer buffer
-                    (erase-buffer)
-                    (org-mode)
-                    (insert "* TODO Test heading\n\n")
-                    (insert link)
-                    (backward-char 1)
-                    (with-simulated-input input
-                      (org-open-at-point))))
+      (cl-flet* ((open-link-in (link buffer input)
+                   ;; Org REDUCED THE NUMBER OF ARGUMENTS TO `org-open-link-from-string'!  That BREAKS BACKWARD
+                   ;; COMPATIBILITY!  So I have to make my own function so these tests can work across Org versions!
+                   (with-current-buffer buffer
+                     (erase-buffer)
+                     (org-mode)
+                     (insert "* TODO Test heading\n\n")
+                     (insert link)
+                     (backward-char 1)
+                     (with-simulated-input input
+                       (org-open-at-point))))
 
-                 (var-after-link-save-open
-                  (var buffers-files query &key sort super-groups
-                       (buffer link-buffer) (store-input "RET") open-input)
-                  (org-ql-search buffers-files query
-                    :super-groups super-groups
-                    :sort sort :title title :buffer view-buffer)
-                  (with-current-buffer view-buffer
-                    (cl-assert (member '("org-ql-search" :follow org-ql-view--link-follow :store org-ql-view--link-store)
-                                       org-link-parameters)
-                               t)
-                    (with-simulated-input store-input
-                      ;; Avoid writing "Stored: ..." to test output.
-                      (let ((inhibit-message t))
-                        (call-interactively #'org-store-link nil)))
-                    (kill-buffer))
-                  (cl-assert (and org-stored-links (caar org-stored-links)) t)
-                  (open-link-in (caar org-stored-links) buffer open-input)
-                  (with-current-buffer (get-buffer (concat "*Org QL View: " title "*"))
-                    (prog1 (buffer-local-value var (current-buffer))
-                      (kill-buffer)))))
+                 (var-after-link-save-open (var buffers-files query &key sort super-groups
+                                                (buffer link-buffer) (store-input "RET") open-input)
+                   (org-ql-search buffers-files query
+                     :super-groups super-groups
+                     :sort sort :title title :buffer view-buffer)
+                   (with-current-buffer view-buffer
+                     (cl-assert (member '("org-ql-search" :follow org-ql-view--link-follow :store org-ql-view--link-store)
+                                        org-link-parameters)
+                                t)
+                     (with-simulated-input store-input
+                       ;; Avoid writing "Stored: ..." to test output.
+                       (let ((inhibit-message t))
+                         (call-interactively #'org-store-link nil)))
+                     (kill-buffer))
+                   (cl-assert (and org-stored-links (caar org-stored-links)) t)
+                   (open-link-in (caar org-stored-links) buffer open-input)
+                   (with-current-buffer (get-buffer (concat "*Org QL View: " title "*"))
+                     (prog1 (buffer-local-value var (current-buffer))
+                       (kill-buffer)))))
 
         (describe "Queries"
           :var ((string-query "todo:TODO regexp:heading")
