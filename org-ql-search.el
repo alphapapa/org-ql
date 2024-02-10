@@ -73,6 +73,9 @@
 (defvar org-ql-block-header nil
   "Optional string overriding default header in `org-ql-block' agenda blocks.")
 
+(defvar org-ql-block-sort nil
+  "Optional value or list of Org QL sorting methods (see `org-ql-select').")
+
 ;;;; Customization
 
 (defgroup org-ql-search nil
@@ -246,7 +249,8 @@ automatically from the query."
 			       (narrow-to-region org-agenda-restrict-begin org-agenda-restrict-end))))))
                 (items (org-ql-select from query
                          :action 'element-with-markers
-                         :narrow narrow-p)))
+                         :narrow narrow-p
+                         :sort org-ql-block-sort)))
       (when narrow-p
         ;; Restore buffer's previous restrictions.
         (with-current-buffer from
