@@ -5909,6 +5909,10 @@ I love the rifle predicate, I almost never use any other (maybe I've used the to
 One thing I do miss from consult-outline is the preview as I moved the cursor among the candidates, but for org-ql-find I find that embark-dwim is good enough as a preview: I do have to trigger it manually but that's perfectly fine, I don't need them all the time. And it's been great clocking in with org-ql-find and embark-act, without having to actually visit the clocked in heading at all.
 #+end_quote
 
+#+begin_quote
+I mean, I think I understood what it did. I just thought I didn't need it, that the advantage was small because I I could usually remember words from the headings. But now I regularly find headings through their body text so either I was wrong about being able to remember heading words or I have adapted to not having to. I guess another thing I didn't realize is that it is often easier for me to be sure I have the right for some body text by looking at the heading (I go, "oh yeah, that one!") than by looking at the surrounding body text. I'm pretty surprised by both of those things. I think not expecting them was keeping me from trying it sooner.
+#+end_quote
+
 * [#C] COMMENT Config  :noexport:
 :LOGBOOK:
 CLOCK: [2021-06-18 Fri 07:38]--[2021-06-18 Fri 21:51] => 14:13
