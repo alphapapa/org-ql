@@ -553,7 +553,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 /Note:/ Breaking changes may be made before version 1.0, but in the event of major changes, attempts at backward compatibility will be made with obsolescence declarations, translation of arguments, etc.  Users who need stability guarantees before 1.0 may choose to use tagged stable releases.
 
-** 0.8.5-pre
+** 0.8.5
 
 *Fixes*
 + Predicate ~heading~ incorrectly matched strings as regular expressions, sometimes returning incorrect results.  (See [[https://github.com/alphapapa/org-ql/discussions/410][discussion]].  Thanks to [[https://github.com/al3xandru][Alex Popescu]] for reporting.)
