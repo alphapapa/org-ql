@@ -557,6 +557,12 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 Nothing new yet.
 
+** 0.8.5
+
+*Fixes*
++ Predicate ~heading~ incorrectly matched strings as regular expressions, sometimes returning incorrect results.  (See [[https://github.com/alphapapa/org-ql/discussions/410][discussion]].  Thanks to [[https://github.com/al3xandru][Alex Popescu]] for reporting.)
++ Predicates ~ancestor~ and ~parent~ did not normalize their sub-queries, sometimes returning incorrect results.  ([[https://github.com/alphapapa/org-ql/issues/365][#365]].  Thanks to [[https://github.com/kofm][Gabriele Mongiano]] for reporting.)
+
 ** 0.8.4
 
 *Fixes*

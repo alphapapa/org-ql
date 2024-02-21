@@ -1461,40 +1461,16 @@ Org effort string, like \"5\" or \"0:05\"."
                (list :regexp (rx bol (0+ space) ":STYLE:" (1+ space) "habit" (0+ space) eol))))
   :body (org-is-habit-p))
 
-(org-ql-defpred (heading h) (&rest strings)
+(org-ql-defpred (heading h) (&rest _strings)
   "Return non-nil if current entry's heading matches all STRINGS.
 Matching is done case-insensitively."
   :coalesce t
   :normalizers ((`(,predicate-names . ,args)
-                 ;; "h" alias.
-                 `(heading ,@args)))
-  ;; TODO: Adjust regexp to avoid matching in tag list.
-  :preambles ((`(,predicate-names)
-               ;; This clause protects against the case in which the
-               ;; arguments are nil, which would cause an error in
-               ;; `rx-to-string' in other clauses.  This can happen
-               ;; with `org-ql-completing-read', e.g. when the input
-               ;; is "h:" while the user is typing.
-               (list :regexp (rx bol (1+ "*") (1+ blank) (0+ nonl))
-                     :case-fold t :query query))
-              (`(,predicate-names ,string)
-               ;; Only one string: match with preamble, then let predicate confirm (because
-               ;; the match could be in e.g. the tags rather than the heading text).
-               (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
-                                                 ,string)
-                                           'no-group)
-                     :case-fold t :query query))
-              (`(,predicate-names . ,strings)
-               ;; Multiple strings: use preamble to match against first
-               ;; string, then let the predicate match the rest.
-               (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl)
-                                                 ,(car strings))
-                                           'no-group)
-                     :case-fold t :query query)))
-  ;; TODO: In Org 9.2+, `org-get-heading' takes 2 more arguments.
-  :body (let ((heading (org-get-heading 'no-tags 'no-todo))
-              (case-fold-search t))
-          (--all? (string-match it heading) strings)))
+                 ;; NOTE: Each string argument must be converted to a regexp
+                 ;; for testing by the body, so we just normalize to the
+                 ;; `heading-regexp' predicate, leaving this predicate as
+                 ;; one that merely regexp-quotes its arguments.
+                 `(heading-regexp ,@(mapcar #'regexp-quote args)))))
 
 (org-ql-defpred (heading-regexp h*) (&rest regexps)
   "Return non-nil if current entry's heading matches all REGEXPS (regexp strings).
@@ -2101,7 +2077,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   :normalizers ((`(,predicate-names
                    ;; Avoid infinitely compiling already-compiled functions.
                    ,(and query (guard (not (byte-code-function-p query)))))
-                 `(ancestors ,(org-ql--query-predicate (rec query))))
+                 `(ancestors ,(org-ql--query-predicate (org-ql--normalize-query query))))
                 (`(,predicate-names) '(ancestors (lambda () t))))
   :body
   (org-with-wide-buffer
@@ -2113,7 +2089,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   :normalizers ((`(,predicate-names
                    ;; Avoid infinitely compiling already-compiled functions.
                    ,(and query (guard (not (byte-code-function-p query)))))
-                 `(parent ,(org-ql--query-predicate (rec query))))
+                 `(parent ,(org-ql--query-predicate (org-ql--normalize-query query))))
                 (`(,predicate-names) '(parent (lambda () t))))
   :body
   (org-with-wide-buffer

@@ -218,7 +218,8 @@ with keyword arg NOW in PLIST."
       (it "coalesces a single AND clause that uses two predicates (and preserves predicate order)"
         (expect (org-ql--normalize-query '(and (rifle "foo") (rifle "bar")
                                                (heading "baz") (heading "buz")))
-                :to-equal '(and (rifle :regexps '("foo" "bar")) (heading "baz" "buz"))))
+                ;; NOTE: `heading' is normalized to `heading-regexp'.
+                :to-equal '(and (rifle :regexps '("foo" "bar")) (heading-regexp "baz" "buz"))))
       (it "preserves independent OR clauses"
         (expect (org-ql--normalize-query '(and (or (rifle "foo") (rifle "bar"))
                                                (or (rifle "baz") (rifle "buz"))))
@@ -252,6 +253,18 @@ with keyword arg NOW in PLIST."
                 :to-equal '(rifle :regexps '("scheduled")))
         (expect (org-ql--normalize-query "\"quoted phrase\"")
                 :to-equal '(rifle :regexps '("\"quoted phrase\""))))
+
+      (describe "Ancestor/Parent predicates"
+        ;; NOTE: Because the ancestor and parent predicates byte-compile their
+        ;; subquery predicates, we have to test the byte-compiled forms here.
+        (expect (org-ql--normalize-query '(ancestors "scheduled"))
+                ;; No colon after keyword, so not a predicate query.
+                :to-equal ;; '(ancestors (rifle :regexps '("scheduled")))
+                `(ancestors #[nil "\300\301\302\"\207" [rifle :regexps ("scheduled")] 3]))
+        (expect (org-ql--normalize-query '(parent "scheduled"))
+                ;; No colon after keyword, so not a predicate query.
+                :to-equal ;; '(parent (rifle :regexps '("scheduled")))
+                `(parent #[nil "\300\301\302\"\207" [rifle :regexps ("scheduled")] 3])))
 
       (describe "Plain strings"
         (it "normalizes plain strings to the default predicate (using AND)"
@@ -1112,7 +1125,12 @@ with keyword arg NOW in PLIST."
           '("Take over the world")))
       (org-ql-it "with two arguments"
         (org-ql-expect ('(heading "Take over" "world"))
-          '("Take over the world"))))
+          '("Take over the world")))
+      (org-ql-it "does not match strings as regexps"
+        (org-ql-expect ('(heading "over"))
+          '("Take over the universe" "Take over the world" "Take over Mars" "Take over the moon"))
+        (org-ql-expect ('(heading "[over]"))
+          nil)))
 
     (describe "(heading-regexp)"
       (org-ql-it "with one argument"
