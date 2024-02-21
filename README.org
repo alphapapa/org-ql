@@ -555,7 +555,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.8.5-pre
 
-Nothing new yet.
+*Fixes*
++ Predicate ~heading~ incorrectly matched strings as regular expressions, sometimes returning incorrect results.  (See [[https://github.com/alphapapa/org-ql/discussions/410][discussion]].  Thanks to [[https://github.com/al3xandru][Alex Popescu]] for reporting.)
 
 ** 0.8.4
 

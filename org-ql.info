@@ -1076,7 +1076,12 @@ File: README.info,  Node: 085-pre,  Next: 084,  Up: Changelog
 5.1 0.8.5-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Predicate ‘heading’ incorrectly matched strings as regular
+     expressions, sometimes returning incorrect results.  (See
+     discussion (https://github.com/alphapapa/org-ql/discussions/410).
+     Thanks to Alex Popescu (https://github.com/al3xandru) for
+     reporting.)
 
 
 File: README.info,  Node: 084,  Next: 083,  Prev: 085-pre,  Up: Changelog
@@ -1979,45 +1984,45 @@ Node: Links38883
 Node: Tips39570
 Node: Changelog39894
 Node: 085-pre40788
-Node: 08440900
-Node: 08341356
-Node: 08241697
-Node: 08142090
-Node: 0842511
-Node: 07445235
-Node: 07345458
-Node: 07246190
-Node: 07147109
-Node: 0747920
-Node: 06350786
-Node: 06251319
-Node: 06151626
-Node: 0652196
-Node: 05255252
-Node: 05155554
-Node: 0555979
-Node: 04957510
-Node: 04857792
-Node: 04758141
-Node: 04658550
-Node: 04558958
-Node: 04459319
-Node: 04359678
-Node: 04259881
-Node: 04160042
-Node: 0460289
-Node: 03264390
-Node: 03164793
-Node: 0364990
-Node: 02368290
-Node: 02268524
-Node: 02168804
-Node: 0269009
-Node: 0173087
-Node: Notes73188
-Node: Comparison with Org Agenda searches73350
-Node: org-sidebar74239
-Node: License74518
+Node: 08441175
+Node: 08341631
+Node: 08241972
+Node: 08142365
+Node: 0842786
+Node: 07445510
+Node: 07345733
+Node: 07246465
+Node: 07147384
+Node: 0748195
+Node: 06351061
+Node: 06251594
+Node: 06151901
+Node: 0652471
+Node: 05255527
+Node: 05155829
+Node: 0556254
+Node: 04957785
+Node: 04858067
+Node: 04758416
+Node: 04658825
+Node: 04559233
+Node: 04459594
+Node: 04359953
+Node: 04260156
+Node: 04160317
+Node: 0460564
+Node: 03264665
+Node: 03165068
+Node: 0365265
+Node: 02368565
+Node: 02268799
+Node: 02169079
+Node: 0269284
+Node: 0173362
+Node: Notes73463
+Node: Comparison with Org Agenda searches73625
+Node: org-sidebar74514
+Node: License74793
 
 End Tag Table
 
