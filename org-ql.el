@@ -2077,7 +2077,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   :normalizers ((`(,predicate-names
                    ;; Avoid infinitely compiling already-compiled functions.
                    ,(and query (guard (not (byte-code-function-p query)))))
-                 `(ancestors ,(org-ql--query-predicate (rec query))))
+                 `(ancestors ,(org-ql--query-predicate (org-ql--normalize-query query))))
                 (`(,predicate-names) '(ancestors (lambda () t))))
   :body
   (org-with-wide-buffer
@@ -2089,7 +2089,7 @@ With KEYWORDS, return non-nil if its keyword is one of KEYWORDS."
   :normalizers ((`(,predicate-names
                    ;; Avoid infinitely compiling already-compiled functions.
                    ,(and query (guard (not (byte-code-function-p query)))))
-                 `(parent ,(org-ql--query-predicate (rec query))))
+                 `(parent ,(org-ql--query-predicate (org-ql--normalize-query query))))
                 (`(,predicate-names) '(parent (lambda () t))))
   :body
   (org-with-wide-buffer

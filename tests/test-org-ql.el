@@ -254,6 +254,18 @@ with keyword arg NOW in PLIST."
         (expect (org-ql--normalize-query "\"quoted phrase\"")
                 :to-equal '(rifle :regexps '("\"quoted phrase\""))))
 
+      (describe "Ancestor/Parent predicates"
+        ;; NOTE: Because the ancestor and parent predicates byte-compile their
+        ;; subquery predicates, we have to test the byte-compiled forms here.
+        (expect (org-ql--normalize-query '(ancestors "scheduled"))
+                ;; No colon after keyword, so not a predicate query.
+                :to-equal ;; '(ancestors (rifle :regexps '("scheduled")))
+                `(ancestors #[nil "\300\301\302\"\207" [rifle :regexps ("scheduled")] 3]))
+        (expect (org-ql--normalize-query '(parent "scheduled"))
+                ;; No colon after keyword, so not a predicate query.
+                :to-equal ;; '(parent (rifle :regexps '("scheduled")))
+                `(parent #[nil "\300\301\302\"\207" [rifle :regexps ("scheduled")] 3])))
+
       (describe "Plain strings"
         (it "normalizes plain strings to the default predicate (using AND)"
           (expect (org-ql--normalize-query '(and "string1" "string2"))
