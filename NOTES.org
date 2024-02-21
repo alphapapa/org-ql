@@ -5893,6 +5893,22 @@ I don't know if I'll ever use these, but maybe they could help some people under
 I had ~org-ql~ installed, but I didn't use it, somehow I was afraid it would be difficult or complicated. Now I tried ~org-ql-find~ for a few days and I am enthusiastic. It is so fast, and it seems to "know" the most important findings. I also like the way it shows the contents backwards: first the finding, then the headings going upwards. Will be my main function for searching inside my Org files from now on. Thank you so much!
 #+end_quote
 
+** [[https://matrix.to/#/!rUhEinythPhVTdddsb:matrix.org/$17084833114948KGKOB:matrix.org?via=matrix.org&via=envs.net&via=kde.org][oantolin in #org-mode:matrix.org]]
+
++ [2024-02-20 Tue 21:25] 
+
+#+begin_quote markdown
+>> oantolin: After using org-ql-find for a while I don't know how I lived without it before. It even replaced a consult command for me and I don't think I've ever before stopped using anything Daniel Mendler wrote! I've settled on always searching the current buffer (if it's an org buffer), all agenda files and all files containing refile targets. So convenient. I also use org-ql-open-link on that same set of the files a lot. 
+
+> alphapapa: Thanks, it's good to hear that someone "gets" org-ql-find. :) May I quote you on that someday? I'm beginning to wonder if a few testimonials might get some people who don't seem to get it to try it.
+
+oantolin: Sure, you can quote me. Well, maybe not the part about how I don't use consult-outline any more. :) But you can certainly quote me as saying I don't know how I lived without it before. 
+
+I love the rifle predicate, I almost never use any other (maybe I've used the todo and link predicates a couple of times, but that's it). The fact that it searches body text is what got me to switch. Previously my strategy was to search headings with consult-outline and if necessary switch to consult-line to search for lines of text anywhere in the buffer. I had the impression that I could almost always remember a word in the heading but, while I never gathered statistics, I don't actually think that was true. And searching for body text with something like consult-line or isearch, say, is actually not as convenient for me as with org-ql-find because it turns out that I can make sure I have the right match quicker by looking at the headings than at the occurrence of the search terms in the body text. 
+
+One thing I do miss from consult-outline is the preview as I moved the cursor among the candidates, but for org-ql-find I find that embark-dwim is good enough as a preview: I do have to trigger it manually but that's perfectly fine, I don't need them all the time. And it's been great clocking in with org-ql-find and embark-act, without having to actually visit the clocked in heading at all.
+#+end_quote
+
 * [#C] COMMENT Config  :noexport:
 :LOGBOOK:
 CLOCK: [2021-06-18 Fri 07:38]--[2021-06-18 Fri 21:51] => 14:13
