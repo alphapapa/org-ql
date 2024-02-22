@@ -26,6 +26,7 @@ and saved views.
 * Installation::
 * Usage::
 * Changelog::
+* Development::
 * Notes::
 * License::
 
@@ -110,6 +111,10 @@ Changelog
 * 0.2: 02.
 * 0.1: 01.
 
+Development
+
+* Copyright assignment::
+
 Notes
 
 * Comparison with Org Agenda searches::
@@ -122,7 +127,7 @@ File: README.info,  Node: Contents,  Next: Screenshots,  Prev: Top,  Up: Top
 1 Contents
 **********
 
-   • • • • 
+   • • • • • 
 
 File: README.info,  Node: Screenshots,  Next: Installation,  Prev: Contents,  Up: Top
 
@@ -1021,7 +1026,7 @@ File: README.info,  Node: Tips,  Prev: Links,  Up: Usage
      (https://github.com/alphapapa/burly.el).
 
 
-File: README.info,  Node: Changelog,  Next: Notes,  Prev: Usage,  Up: Top
+File: README.info,  Node: Changelog,  Next: Development,  Prev: Usage,  Up: Top
 
 5 Changelog
 ***********
@@ -1910,9 +1915,36 @@ File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 First tagged release.
 
 
-File: README.info,  Node: Notes,  Next: License,  Prev: Changelog,  Up: Top
+File: README.info,  Node: Development,  Next: Notes,  Prev: Changelog,  Up: Top
 
-6 Notes
+6 Development
+*************
+
+Bug reports, feature requests, and suggestions are welcome.  For
+patches, see below.
+
+* Menu:
+
+* Copyright assignment::
+
+
+File: README.info,  Node: Copyright assignment,  Up: Development
+
+6.1 Copyright assignment
+========================
+
+While Org QL is currently distributed in MELPA, it’s intended
+(https://github.com/alphapapa/org-ql/issues/409) to merge Org QL into
+Org mode.  When that happens, it will become a part of Emacs and Org,
+and therefore cumulative contributions of more than 15 lines of code
+will require that the author assign copyright of such contributions to
+the FSF.  Authors who are interested in doing so may contact
+assign@gnu.org <assign@gnu.org> to request the appropriate form.
+
+
+File: README.info,  Node: Notes,  Next: License,  Prev: Development,  Up: Top
+
+7 Notes
 *******
 
 * Menu:
@@ -1923,7 +1955,7 @@ File: README.info,  Node: Notes,  Next: License,  Prev: Changelog,  Up: Top
 
 File: README.info,  Node: Comparison with Org Agenda searches,  Next: org-sidebar,  Up: Notes
 
-6.1 Comparison with Org Agenda searches
+7.1 Comparison with Org Agenda searches
 =======================================
 
 Of course, queries like these can already be written with Org Agenda
@@ -1943,7 +1975,7 @@ todo:TO-READ’, or in Lisp syntax, ‘(and "lisp" (todo "TO-READ"))’.
 
 File: README.info,  Node: org-sidebar,  Prev: Comparison with Org Agenda searches,  Up: Notes
 
-6.2 org-sidebar
+7.2 org-sidebar
 ===============
 
 This package is used by org-sidebar
@@ -1953,7 +1985,7 @@ customizable agenda-like view in a sidebar window.
 
 File: README.info,  Node: License,  Prev: Notes,  Up: Top
 
-7 License
+8 License
 *********
 
 GPLv3
@@ -1962,82 +1994,84 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1940
-Node: Screenshots2063
-Node: Installation2181
-Node: Quelpa2695
-Node: Helm support3223
-Node: Usage3626
-Node: Commands4024
-Node: org-ql-find4489
-Node: org-ql-open-link5397
-Node: org-ql-refile6252
-Node: org-ql-search6580
-Node: helm-org-ql8511
-Node: org-ql-view8889
-Node: org-ql-view-sidebar9419
-Node: org-ql-view-recent-items9799
-Node: org-ql-sparse-tree10295
-Node: Queries11095
-Node: Non-sexp query syntax12212
-Node: General predicates13971
-Node: Ancestor/descendant predicates20896
-Node: Date/time predicates22024
-Node: Functions / Macros25148
-Node: Agenda-like views25446
-Ref: Function org-ql-block25608
-Node: Listing / acting-on results26869
-Ref: Caching27077
-Ref: Function org-ql-select27990
-Ref: Function org-ql-query30416
-Ref: Macro org-ql (deprecated)32190
-Node: Custom predicates32505
-Ref: Macro org-ql-defpred32729
-Node: Dynamic block36170
-Node: Links38894
-Node: Tips39581
-Node: Changelog39905
-Node: 09-pre40810
-Node: 08540917
-Node: 08441576
-Node: 08342028
-Node: 08242369
-Node: 08142762
-Node: 0843183
-Node: 07445907
-Node: 07346130
-Node: 07246862
-Node: 07147783
-Node: 0748594
-Node: 06351460
-Node: 06251993
-Node: 06152300
-Node: 0652870
-Node: 05255926
-Node: 05156228
-Node: 0556653
-Node: 04958184
-Node: 04858466
-Node: 04758815
-Node: 04659224
-Node: 04559632
-Node: 04459993
-Node: 04360352
-Node: 04260555
-Node: 04160716
-Node: 0460963
-Node: 03265064
-Node: 03165467
-Node: 0365664
-Node: 02368964
-Node: 02269198
-Node: 02169478
-Node: 0269683
-Node: 0173761
-Node: Notes73862
-Node: Comparison with Org Agenda searches74024
-Node: org-sidebar74913
-Node: License75192
+Node: Contents1995
+Node: Screenshots2122
+Node: Installation2240
+Node: Quelpa2754
+Node: Helm support3282
+Node: Usage3685
+Node: Commands4083
+Node: org-ql-find4548
+Node: org-ql-open-link5456
+Node: org-ql-refile6311
+Node: org-ql-search6639
+Node: helm-org-ql8570
+Node: org-ql-view8948
+Node: org-ql-view-sidebar9478
+Node: org-ql-view-recent-items9858
+Node: org-ql-sparse-tree10354
+Node: Queries11154
+Node: Non-sexp query syntax12271
+Node: General predicates14030
+Node: Ancestor/descendant predicates20955
+Node: Date/time predicates22083
+Node: Functions / Macros25207
+Node: Agenda-like views25505
+Ref: Function org-ql-block25667
+Node: Listing / acting-on results26928
+Ref: Caching27136
+Ref: Function org-ql-select28049
+Ref: Function org-ql-query30475
+Ref: Macro org-ql (deprecated)32249
+Node: Custom predicates32564
+Ref: Macro org-ql-defpred32788
+Node: Dynamic block36229
+Node: Links38953
+Node: Tips39640
+Node: Changelog39964
+Node: 09-pre40875
+Node: 08540982
+Node: 08441641
+Node: 08342093
+Node: 08242434
+Node: 08142827
+Node: 0843248
+Node: 07445972
+Node: 07346195
+Node: 07246927
+Node: 07147848
+Node: 0748659
+Node: 06351525
+Node: 06252058
+Node: 06152365
+Node: 0652935
+Node: 05255991
+Node: 05156293
+Node: 0556718
+Node: 04958249
+Node: 04858531
+Node: 04758880
+Node: 04659289
+Node: 04559697
+Node: 04460058
+Node: 04360417
+Node: 04260620
+Node: 04160781
+Node: 0461028
+Node: 03265129
+Node: 03165532
+Node: 0365729
+Node: 02369029
+Node: 02269263
+Node: 02169543
+Node: 0269748
+Node: 0173826
+Node: Development73927
+Node: Copyright assignment74160
+Node: Notes74750
+Node: Comparison with Org Agenda searches74914
+Node: org-sidebar75803
+Node: License76082
 
 End Tag Table
 

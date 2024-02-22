@@ -19,6 +19,7 @@ It includes three libraries: The =org-ql= library is flexible and may be used as
 - [[#installation][Installation]]
 - [[#usage][Usage]]
 - [[#changelog][Changelog]]
+- [[#development][Development]]
 :END:
 
 
@@ -948,6 +949,14 @@ Nothing new yet.
 ** 0.1
 
 First tagged release.
+
+* Development
+
+Bug reports, feature requests, and suggestions are welcome.  For patches, see below.
+
+** Copyright assignment
+
+While Org QL is currently distributed in MELPA, it's [[https://github.com/alphapapa/org-ql/issues/409][intended]] to merge Org QL into Org mode.  When that happens, it will become a part of Emacs and Org, and therefore cumulative contributions of more than 15 lines of code will require that the author assign copyright of such contributions to the FSF.  Authors who are interested in doing so may contact [[mailto:assign@gnu.org][assign@gnu.org]] to request the appropriate form.
 
 * Notes
 :PROPERTIES:
