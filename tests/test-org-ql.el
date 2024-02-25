@@ -176,6 +176,20 @@ with keyword arg NOW in PLIST."
                                       (cl-loop while (re-search-forward org-heading-regexp nil t)
                                                sum 1)))))
 
+  (describe "Agenda"
+
+            (require 'org-agenda)
+
+            (it "Sets effort properties for formatted element"
+                (let* ((element (car (org-ql-select org-ql-test-buffer '(effort 30))))
+                       (item (org-ql-view--format-element element)))
+                  (with-temp-buffer
+                    (goto-char (point-min))
+                    (insert item)
+                    (expect
+                     (org-agenda-compare-effort #'= 30.0)
+                     :to-equal t)))))
+
   (describe "Caching"
 
     (it "Clears value cache after buffer changes"

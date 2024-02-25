@@ -904,6 +904,8 @@ return an empty string."
 			           (file-name-sans-extension
 			            (file-name-nondirectory buffer-file-name))))))
                          ""))
+           (effort-string (org-element-property (intern (concat ":" (upcase org-effort-property))) element))
+           (effort (when effort-string (org-duration-to-minutes effort-string)))
            (priority-string (-some->> (org-element-property :priority element)
                               (char-to-string)
                               (format "[#%s]")
@@ -926,6 +928,9 @@ return an empty string."
              'org-category category
              'todo-state todo-keyword
              'tags tag-list
+             'txt (org-add-props string nil
+                      'effort effort-string
+                      'effort-minutes effort)
              'org-habit-p habit-property)))))
 
 (defun org-ql-view--add-faces (element)
