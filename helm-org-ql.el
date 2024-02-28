@@ -189,7 +189,8 @@ Is transformed into this query:
                       (ignore-errors
                         ;; Ignore errors that might be caused by partially typed queries.
                         (org-ql-select buffers-files query
-                          :action `(helm-org-ql--heading ,window-width))))))
+                          :action (lambda ()
+                                    (org-ql--heading-cons window-width helm-org-ql-reverse-paths)))))))
     :match #'identity
     :fuzzy-match nil
     :multimatch nil
@@ -197,26 +198,6 @@ Is transformed into this query:
     :volatile t
     :keymap helm-org-ql-map
     :action helm-org-ql-actions))
-
-(defun helm-org-ql--heading (window-width)
-  "Return string for Helm for heading at point.
-WINDOW-WIDTH should be the width of the Helm window."
-  (font-lock-ensure (point-at-bol) (point-at-eol))
-  ;; TODO: It would be better to avoid calculating the prefix and width
-  ;; at each heading, but there's no easy way to do that once in each
-  ;; buffer, unless we manually called `org-ql' in each buffer, which
-  ;; I'd prefer not to do.  Maybe I should add a feature to `org-ql' to
-  ;; call a setup function in a buffer before running queries.
-  (let* ((prefix (concat (buffer-name) ":"))
-         (width (- window-width (length prefix)))
-         (heading (org-get-heading t))
-         (path (-> (org-get-outline-path)
-                   (org-format-outline-path width nil "")
-                   (org-split-string "")))
-         (path (if helm-org-ql-reverse-paths
-                   (concat heading "\\" (s-join "\\" (nreverse path)))
-                 (concat (s-join "/" path) "/" heading))))
-    (cons (concat prefix path) (point-marker))))
 
 ;;;; Footer
 
