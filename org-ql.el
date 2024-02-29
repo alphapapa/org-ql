@@ -1706,14 +1706,12 @@ Without arguments, return non-nil if buffer is file-backed."
 
 (org-ql-defpred priority (&rest args)
   "Return non-nil if current heading has a certain priority.
-ARGS may be either a list of one or more priority letters as
+ARGS may be either a list of one or more priority values as
 strings, or a comparator function symbol followed by a priority
-letter string.  For example:
-
+value string.  For example:
   (priority \"A\")
   (priority \"A\" \"B\")
   (priority '>= \"B\")
-
 Note that items without a priority cookie never match this
 predicate (while Org itself considers items without a cookie to
 have the default priority, which, by default, is equal to
@@ -1725,21 +1723,20 @@ priority B)."
   ;; query like (priority "B") to match an item that has no priority cookie.
   ;; TODO: Convert priority arg(s) to numeric values in pre-processing.
   :normalizers
-  ((`(,predicate-names ,(and (or '= '< '> '<= '>=) comparator) ,letter)
+  ((`(,predicate-names ,(and (or '= '< '> '<= '>=) comparator) ,value)
     ;; Quote comparator.
-    `(priority ',comparator ,letter)))
+    `(priority ',comparator ,value)))
 
   :preambles
-  (;; NOTE: This only accepts A, B, or C.  I haven't seen
-   ;; other priorities in the wild, so this will do for now.
-   (`(,predicate-names)
+  ((`(,predicate-names)
     ;; Any priority cookie.
-    (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl) "[#" (in "ABC") "]") t)))
-   (`(,predicate-names ,(and (or ''= ''< ''> ''<= ''>=) comparator) ,letter)
-    ;; Comparator and priority letter.
+    (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl) "[#" (or (in "A-Z") (1+ (in "0-9"))) "]") t)))
+   (`(,predicate-names ,(and (or ''= ''< ''> ''<= ''>=) comparator) ,value)
+    ;; Comparator and priority value.
     ;; NOTE: The double-quoted comparators.  See below.
-    (let* ((priority-letters '("A" "B" "C"))
-           (index (-elem-index letter priority-letters))
+    (let* ((priority-values (append (mapcar #'string (number-sequence 65 (+ 65 25)))
+                                    (mapcar #'number-to-string (number-sequence 0 64))))
+           (index (-elem-index value priority-values))
            ;; NOTE: Higher priority == lower number.
            ;; NOTE: Because we need to support both preamble-based queries and
            ;; regular predicate ones, we work around an idiosyncrasy of query
@@ -1753,12 +1750,12 @@ priority B)."
                                     ((or '<= ''<=) (cl-subseq priority-letters index))))))
       (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (optional (1+ upper) (1+ blank))
                                         "[#" (in ,priorities) "]") t))))
-   (`(,predicate-names . ,letters)
+   (`(,predicate-names . ,values)
     ;; One or more priorities.
     ;; MAYBE: Disable case-folding.
     (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank)
                                       (optional (1+ upper) (1+ blank))
-                                      "[#" (or ,@letters) "]") t))))
+                                      "[#" (or ,@values) "]") t))))
   :body
   (when-let* ((item-priority (save-excursion
                                (save-match-data
