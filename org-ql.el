@@ -325,6 +325,11 @@ See Info node `(org-ql)Queries'."
                  (const outline-path)
                  (const outline-path-segment)))
 
+(defcustom org-ql-warn-no-heading t
+  "Whether to display a warning message when a regular buffer with
+no headings are searched."
+  :type 'boolean)
+
 ;;;; Functions
 
 ;;;;; Query execution
@@ -539,7 +544,7 @@ PREAMBLE-CASE-FOLD."
       (if (not (org-at-heading-p))
           (progn
             ;; No headings in buffer: return nil.
-            (unless (string-prefix-p " " (buffer-name))
+            (unless (or (not org-ql-warn-no-heading) (string-prefix-p " " (buffer-name)))
               ;; Not a special, hidden buffer: show message, because if a user accidentally
               ;; searches a buffer without headings, he might be confused.
               (message "org-ql: No headings in buffer: %s" (current-buffer)))
