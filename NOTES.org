@@ -3246,6 +3246,10 @@ If I made the =date= selector a macro, I could avoid the need to quote the compa
 
 Also, maybe instead of having a single =date= selector, I should have =scheduled=, =deadline=, etc.
 
+** NEXT [#A] Add org-super-agenda's ~:ancestor-with-todo~ selector to group completions
+
++ [2024-04-03 Wed 18:12]
+
 * Checklists
 
 ** Commits
