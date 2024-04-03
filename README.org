@@ -558,6 +558,11 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 Nothing new yet.
 
+** 0.8.6
+
+*Fixes*
++ Bookmarking ~org-ql-view~ buffers when the ~buffers-files~ argument is a symbol (like ~org-agenda-files~).
+
 ** 0.8.5
 
 *Fixes*

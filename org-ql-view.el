@@ -550,6 +550,7 @@ dates in the past, and negative for dates in the future."
       ;; Replace buffers with their filenames, and signal error if any are not file-backed.
       (setf plist (plist-put plist :buffers-files
                              (cl-etypecase buffers-files
+                               (symbol buffers-files)
                                (string buffers-files)
                                (buffer (file-nameize buffers-files))
                                (list (mapcar #'file-nameize buffers-files)))))
