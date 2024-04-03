@@ -1078,7 +1078,9 @@ File: README.info,  Node: 086-pre,  Next: 085,  Up: Changelog
 5.1 0.8.6-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Bookmarking ‘org-ql-view’ buffers when the ‘buffers-files’ argument
+     is a symbol (like ‘org-agenda-files’).
 
 
 File: README.info,  Node: 085,  Next: 084,  Prev: 086-pre,  Up: Changelog
@@ -1998,46 +2000,46 @@ Node: Links38897
 Node: Tips39584
 Node: Changelog39908
 Node: 086-pre40816
-Node: 08540928
-Node: 08441588
-Node: 08342040
-Node: 08242381
-Node: 08142774
-Node: 0843195
-Node: 07445919
-Node: 07346142
-Node: 07246874
-Node: 07147795
-Node: 0748606
-Node: 06351472
-Node: 06252005
-Node: 06152312
-Node: 0652882
-Node: 05255938
-Node: 05156240
-Node: 0556665
-Node: 04958196
-Node: 04858478
-Node: 04758827
-Node: 04659236
-Node: 04559644
-Node: 04460005
-Node: 04360364
-Node: 04260567
-Node: 04160728
-Node: 0460975
-Node: 03265076
-Node: 03165479
-Node: 0365676
-Node: 02368976
-Node: 02269210
-Node: 02169490
-Node: 0269695
-Node: 0173773
-Node: Notes73874
-Node: Comparison with Org Agenda searches74036
-Node: org-sidebar74925
-Node: License75204
+Node: 08541050
+Node: 08441710
+Node: 08342162
+Node: 08242503
+Node: 08142896
+Node: 0843317
+Node: 07446041
+Node: 07346264
+Node: 07246996
+Node: 07147917
+Node: 0748728
+Node: 06351594
+Node: 06252127
+Node: 06152434
+Node: 0653004
+Node: 05256060
+Node: 05156362
+Node: 0556787
+Node: 04958318
+Node: 04858600
+Node: 04758949
+Node: 04659358
+Node: 04559766
+Node: 04460127
+Node: 04360486
+Node: 04260689
+Node: 04160850
+Node: 0461097
+Node: 03265198
+Node: 03165601
+Node: 0365798
+Node: 02369098
+Node: 02269332
+Node: 02169612
+Node: 0269817
+Node: 0173895
+Node: Notes73996
+Node: Comparison with Org Agenda searches74158
+Node: org-sidebar75047
+Node: License75326
 
 End Tag Table
 
