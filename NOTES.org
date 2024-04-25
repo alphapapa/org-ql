@@ -5917,6 +5917,81 @@ One thing I do miss from consult-outline is the preview as I moved the cursor am
 I mean, I think I understood what it did. I just thought I didn't need it, that the advantage was small because I I could usually remember words from the headings. But now I regularly find headings through their body text so either I was wrong about being able to remember heading words or I have adapted to not having to. I guess another thing I didn't realize is that it is often easier for me to be sure I have the right for some body text by looking at the heading (I go, "oh yeah, that one!") than by looking at the surrounding body text. I'm pretty surprised by both of those things. I think not expecting them was keeping me from trying it sooner.
 #+end_quote
 
+** [[https://old.reddit.com/r/emacs/comments/1ccrw5f/orgqlsearch_custom_sort/][u/clausimu9 in r/emacs]]
+
+#+begin_src markdown
+  First of all - org-ql is a game changer for me. Absolutely amazing! The combination with super-agenda is perfect. At work I use orgmode and org-roam to manage teams, projects, meetings, and information.
+
+  One thing I can't seem to figure out is how to use custom sorting in org-ql-search. According to the documentation (https://github.com/alphapapa/org-ql) you can use a "a user-defined comparator function that accepts two items as arguments and returns nil or non-nil".
+
+  Assuming meetings are saved using the following structure:
+
+  ``` org
+  ,** payment updates :meeting:
+  :PROPERTIES:
+  :ID: A10CB210-2877-427E-AB8B-AE85E58ECBBB
+  :DATE: [2024-04-24 Wed]
+  :ATTENDEES: [[id:6B3BC68C-B75E-4ABE-B4B9-93E8CAF6AD40][Katrin]] [[id:2F6436D1-12C9-45DA-BFA3-FAE70A24597A][Peter]]
+  :CATEGORY: lead_team
+  :END:
+
+  ```
+
+  I can pull all meetings with a specific person using org-ql-search and super-agenda (using a custom predicate I created called "person") with this:
+
+  ``` emacs-lisp
+  (org-ql-search (current-buffer)
+  '(and (person "Katrin")
+        (tags "meeting"))
+  :title "Meetings with Katrin"
+  :super-groups '((:auto-property "CATEGORY"
+                   :order 1)))
+  ```
+
+  I would like to sort these meetings by the custom property :DATE:. I found this solution here that should provide the sorting:
+
+  ``` emacs-lisp
+  (defun cmp-date-property (prop)
+  "Compare two \org-mode' agenda entries, `A' and `B', by some date property.`
+  If a is before b, return -1. If a is after b, return 1. If they
+  are equal return nil."
+  (lexical-let ((prop prop))
+    #'(lambda (a b)
+        (let* ((a-pos (get-text-property 0 'org-marker a))
+               (b-pos (get-text-property 0 'org-marker b))
+               (a-date (or (org-entry-get a-pos prop)
+                           (format "<%s>" (org-read-date t nil "now"))))
+               (b-date (or (org-entry-get b-pos prop)
+                           (format "<%s>" (org-read-date t nil "now"))))
+               (cmp (compare-strings a-date nil nil b-date nil nil))
+               )
+        (if (eq cmp t) nil (signum cmp))
+         ))))
+  ```
+
+  This should work for orgmode agendas using the org-agenda-cmp-user-defined setting:
+
+      org-agenda-cmp-user-defined (cmp-date-property ("DATE"))
+
+  But I can't plug this into org-ql-search directly like this:
+
+  ``` emacs-lisp
+  (org-ql-search (current-buffer)
+  '(and (person "Emily")
+        (tags "meeting"))
+  :title "Meetings with Emily"
+  :super-groups '((:auto-property "CATEGORY"
+                   :order 1))
+  :sort '(cmp-date-property "DATE"))
+  ```
+
+  because :sort expects "a comparison function of two arguments".
+
+  Has anyone plugged in a custom sorting function into org-ql-search that depends on a property value? I can't find any examples online that would help me figure out the next steps.
+
+  Any pointers would be greatly appreciated!
+#+end_src
+
 * [#C] COMMENT Config  :noexport:
 :LOGBOOK:
 CLOCK: [2021-06-18 Fri 07:38]--[2021-06-18 Fri 21:51] => 14:13
