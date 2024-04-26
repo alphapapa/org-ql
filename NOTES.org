@@ -5992,6 +5992,14 @@ I mean, I think I understood what it did. I just thought I didn't need it, that 
   Any pointers would be greatly appreciated!
 #+end_src
 
++ He [[https://old.reddit.com/r/emacs/comments/1ccrw5f/orgqlsearch_custom_sort/l1eyzvf/][followed up]]:
+
+  #+begin_src markdown
+    Ha, "working well" is an understatement! I think about my orgmode data in a completely different way now that I have found your package. Some of my org files have ~ 40k lines, just meetings are ~20k lines. Rookie numbers by some standards, I'm sure. But it is getting to the point where org-ql is changing my daily work.
+
+    While being a solid every-day user of emacs/orgmode for over a decade, I have never really ventured into elisp-land. But I am teased to dive in. Thanks for the pointer, I will definitely look under the hood of your built-in sorting functions.
+  #+end_src
+
 * [#C] COMMENT Config  :noexport:
 :LOGBOOK:
 CLOCK: [2021-06-18 Fri 07:38]--[2021-06-18 Fri 21:51] => 14:13
