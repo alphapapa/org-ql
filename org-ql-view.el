@@ -44,6 +44,7 @@
 
 (declare-function org-ql-search "org-ql-search" t)
 (declare-function org-ql-search--org-link-store-props "org-ql-search" t)
+(declare-function org-ql--normalize-query "org-ql" t t)
 
 (require 'dash)
 (require 's)

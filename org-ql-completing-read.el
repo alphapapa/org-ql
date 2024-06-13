@@ -27,6 +27,7 @@
 (require 'org-ql)
 
 (declare-function org-ql-search "org-ql-search")
+(declare-function org-ql--normalize-query "org-ql" t t)
 
 ;;;; Variables
 

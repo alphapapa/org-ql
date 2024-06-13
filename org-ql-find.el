@@ -33,6 +33,8 @@
 (require 'org-ql-search)
 (require 'org-ql-completing-read)
 
+(declare-function org-ql--normalize-query "org-ql" t t)
+
 ;;;; Customization
 
 (defgroup org-ql-find nil

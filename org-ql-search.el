@@ -40,6 +40,8 @@
 (require 'org-ql)
 (require 'org-ql-view)
 
+(declare-function org-ql--normalize-query "org-ql" t t)
+
 ;;;; Compatibility
 
 (defalias 'org-ql-search--link-heading-search-string

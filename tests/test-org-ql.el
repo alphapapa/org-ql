@@ -35,6 +35,8 @@
 
 (require 'xr)
 
+(declare-function org-ql--normalize-query "org-ql" t t)
+
 ;;;; Variables
 
 (defvar org-ql-test-buffer nil
