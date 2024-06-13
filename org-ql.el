@@ -1118,6 +1118,9 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
                                         ;; Only one preamble is allowed
                                         element)
                                       (pcase element
+                                        ;; FIXME: Should the pattern below be "`(or . ,_)"?  It
+                                        ;; seems to work fine either way, but it seems like it
+                                        ;; should be changed.
                                         (`(or _) element)
 
                                         ,@preamble-patterns
