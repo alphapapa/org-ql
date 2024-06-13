@@ -558,6 +558,10 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 Nothing new yet.
 
+*** helm-org-ql
+
+Tagged v0.6.2, fixing a compilation warning.
+
 ** 0.8.6
 
 *Fixes*

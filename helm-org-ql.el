@@ -2,8 +2,8 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/org-ql
-;; Version: 0.6.1
-;; Package-Requires: ((emacs "26.1") (dash "2.18.1") (s "1.12.0") (helm-org "1.0") (org-ql "0.6-pre"))
+;; Version: 0.6.2
+;; Package-Requires: ((emacs "26.1") (compat "29.1.4.5") (dash "2.18.1") (s "1.12.0") (helm-org "1.0") (org-ql "0.6-pre"))
 
 ;;; Commentary:
 
@@ -35,6 +35,7 @@
 (require 'cl-lib)
 (require 'org)
 
+(require 'compat)
 (require 'dash)
 (require 's)
 
@@ -43,6 +44,15 @@
 
 (require 'org-ql)
 (require 'org-ql-search)
+
+(declare-function org-ql--normalize-query "org-ql" t t)
+
+;;;; Compatibility
+
+(defalias 'helm-org-ql--show-entry
+  (if (version< org-version "9.6")
+      'org-show-entry
+    'org-fold-show-entry))
 
 ;;;; Variables
 
@@ -102,7 +112,7 @@ NAME is passed to `helm-org-ql-source', which see.
 
 NOTE: Atoms in the query are turned into strings where
 appropriate, which makes it unnecessary to type quotation marks
-around words that are intended to be searched for as indepenent
+around words that are intended to be searched for as independent
 strings.
 
 All query tokens are wrapped in the operator BOOLEAN (default
@@ -151,7 +161,7 @@ Is transformed into this query:
   ;; it to go to the previous heading.  I don't know why it does that.
   (switch-to-buffer (marker-buffer marker))
   (goto-char marker)
-  (org-show-entry))
+  (helm-org-ql--show-entry))
 
 (defun helm-org-ql-show-marker-indirect (marker)
   "Show heading at MARKER with `org-tree-to-indirect-buffer'."
@@ -177,7 +187,7 @@ Is transformed into this query:
 
 ;;;###autoload
 (cl-defun helm-org-ql-source (buffers-files &key (name "helm-org-ql"))
-  "Return Helm source named NAME that searches BUFFERS-FILES with `helm-org-ql'."
+  "Return Helm source named NAME to search BUFFERS-FILES with `helm-org-ql'."
   ;; Expansion of `helm-build-sync-source' macro.
   (helm-make-source name 'helm-source-sync
     :candidates (lambda ()
@@ -201,7 +211,7 @@ Is transformed into this query:
 (defun helm-org-ql--heading (window-width)
   "Return string for Helm for heading at point.
 WINDOW-WIDTH should be the width of the Helm window."
-  (font-lock-ensure (point-at-bol) (point-at-eol))
+  (font-lock-ensure (pos-bol) (pos-eol))
   ;; TODO: It would be better to avoid calculating the prefix and width
   ;; at each heading, but there's no easy way to do that once in each
   ;; buffer, unless we manually called `org-ql' in each buffer, which
