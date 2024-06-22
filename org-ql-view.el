@@ -611,6 +611,7 @@ The optional, second argument is temporarily _IGNORED for
 purposes of compatibility with changes in Org 9.4."
   (require 'url-parse)
   (require 'url-util)
+  (declare-function url-path-and-query "url-parse")
   (when (version<= "9.3" (org-version))
     ;; Org 9.3+ makes a backward-incompatible change to link escaping.
     ;; I don't think it would be a good idea to try to guess whether
@@ -711,6 +712,8 @@ When opened, the link searches the buffer it's opened from."
 ;; NOTE: I don't really know what I'm doing here.  Even though the
 ;; Transient manual is written very well, not everything is covered in
 ;; it, so I'm having to try to imitate examples from `magit-transient'.
+
+(require 'eieio-core)
 
 (require 'transient)
 
