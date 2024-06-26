@@ -1089,6 +1089,8 @@ File: README.info,  Node: 087-pre,  Next: 086,  Up: Changelog
      (https://github.com/alphapapa/org-ql/pull/237) and #371
      (https://github.com/alphapapa/org-ql/issues/371).  Thanks to Ihor
      Radchenko (https://github.com/yantar92).)
+   • Command ‘org-ql-search’ did not narrow properly when called
+     interactively.
 
 
 File: README.info,  Node: 086,  Next: 085,  Prev: 087-pre,  Up: Changelog
@@ -2018,47 +2020,47 @@ Node: Links38911
 Node: Tips39598
 Node: Changelog39922
 Node: 087-pre40844
-Node: 08641453
-Node: 08541691
-Node: 08442347
-Node: 08342799
-Node: 08243140
-Node: 08143533
-Node: 0843954
-Node: 07446678
-Node: 07346901
-Node: 07247635
-Node: 07148556
-Node: 0749367
-Node: 06352233
-Node: 06252766
-Node: 06153073
-Node: 0653643
-Node: 05256699
-Node: 05157001
-Node: 0557426
-Node: 04958957
-Node: 04859239
-Node: 04759588
-Node: 04659997
-Node: 04560405
-Node: 04460766
-Node: 04361125
-Node: 04261328
-Node: 04161489
-Node: 0461736
-Node: 03265837
-Node: 03166240
-Node: 0366437
-Node: 02369737
-Node: 02269971
-Node: 02170251
-Node: 0270456
-Node: 0174534
-Node: Notes74635
-Node: Comparison with Org Agenda searches74797
-Node: org-sidebar75686
-Node: License75965
+Node: 08641544
+Node: 08541782
+Node: 08442438
+Node: 08342890
+Node: 08243231
+Node: 08143624
+Node: 0844045
+Node: 07446769
+Node: 07346992
+Node: 07247726
+Node: 07148647
+Node: 0749458
+Node: 06352324
+Node: 06252857
+Node: 06153164
+Node: 0653734
+Node: 05256790
+Node: 05157092
+Node: 0557517
+Node: 04959048
+Node: 04859330
+Node: 04759679
+Node: 04660088
+Node: 04560496
+Node: 04460857
+Node: 04361216
+Node: 04261419
+Node: 04161580
+Node: 0461827
+Node: 03265928
+Node: 03166331
+Node: 0366528
+Node: 02369828
+Node: 02270062
+Node: 02170342
+Node: 0270547
+Node: 0174625
+Node: Notes74726
+Node: Comparison with Org Agenda searches74888
+Node: org-sidebar75777
+Node: License76056
 
 End Tag Table
 

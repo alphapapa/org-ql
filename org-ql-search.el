@@ -184,7 +184,7 @@ necessary."
   (interactive (list (org-ql-view--complete-buffers-files)
                      (read-string "Query: " (when org-ql-view-query
                                               (format "%S" org-ql-view-query)))
-                     :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
+                     :narrow (or org-ql-view-narrow (equal current-prefix-arg '(4)))
                      :super-groups (org-ql-view--complete-super-groups)
                      :sort (org-ql-view--complete-sort)))
   ;; NOTE: Using `with-temp-buffer' is a hack to work around the fact that `make-local-variable'
