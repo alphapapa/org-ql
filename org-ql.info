@@ -1089,6 +1089,11 @@ File: README.info,  Node: 087-pre,  Next: 086,  Up: Changelog
      (https://github.com/alphapapa/org-ql/pull/237) and #371
      (https://github.com/alphapapa/org-ql/issues/371).  Thanks to Ihor
      Radchenko (https://github.com/yantar92).)
+   • Timestamps with day-of-the-week abbreviations are matched more
+     flexibly (allowing, e.g.  a period in French locales).  (See #429
+     (https://github.com/alphapapa/org-ql/discussions/429), #432
+     (https://github.com/alphapapa/org-ql/issues/432).  Thanks to
+     Florian D.  (https://github.com/neurolit) for reporting.)
    • Command ‘org-ql-search’ did not narrow properly when called
      interactively.
 
@@ -2020,47 +2025,47 @@ Node: Links38911
 Node: Tips39598
 Node: Changelog39922
 Node: 087-pre40844
-Node: 08641544
-Node: 08541782
-Node: 08442438
-Node: 08342890
-Node: 08243231
-Node: 08143624
-Node: 0844045
-Node: 07446769
-Node: 07346992
-Node: 07247726
-Node: 07148647
-Node: 0749458
-Node: 06352324
-Node: 06252857
-Node: 06153164
-Node: 0653734
-Node: 05256790
-Node: 05157092
-Node: 0557517
-Node: 04959048
-Node: 04859330
-Node: 04759679
-Node: 04660088
-Node: 04560496
-Node: 04460857
-Node: 04361216
-Node: 04261419
-Node: 04161580
-Node: 0461827
-Node: 03265928
-Node: 03166331
-Node: 0366528
-Node: 02369828
-Node: 02270062
-Node: 02170342
-Node: 0270547
-Node: 0174625
-Node: Notes74726
-Node: Comparison with Org Agenda searches74888
-Node: org-sidebar75777
-Node: License76056
+Node: 08641879
+Node: 08542117
+Node: 08442773
+Node: 08343225
+Node: 08243566
+Node: 08143959
+Node: 0844380
+Node: 07447104
+Node: 07347327
+Node: 07248061
+Node: 07148982
+Node: 0749793
+Node: 06352659
+Node: 06253192
+Node: 06153499
+Node: 0654069
+Node: 05257125
+Node: 05157427
+Node: 0557852
+Node: 04959383
+Node: 04859665
+Node: 04760014
+Node: 04660423
+Node: 04560831
+Node: 04461192
+Node: 04361551
+Node: 04261754
+Node: 04161915
+Node: 0462162
+Node: 03266263
+Node: 03166666
+Node: 0366863
+Node: 02370163
+Node: 02270397
+Node: 02170677
+Node: 0270882
+Node: 0174960
+Node: Notes75061
+Node: Comparison with Org Agenda searches75223
+Node: org-sidebar76112
+Node: License76391
 
 End Tag Table
 

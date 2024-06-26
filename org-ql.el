@@ -157,10 +157,9 @@ This list should not contain any duplicates."))
 (defvar org-ql-regexp-part-ts-date
   (rx (repeat 4 digit) "-" (repeat 2 digit) "-" (repeat 2 digit)
       ;; Day of week
-      (optional " " (1+ alpha)))
+      (optional " " (1+ (or alpha punct))))
   "Matches the inner, date part of an Org timestamp, both active and inactive.
-Also matches optional day-of-week.  Used to build other timestamp
-regexps.")
+Used to build other timestamp regexps.")
 
 (defvar org-ql-regexp-part-ts-repeaters
   ;; Repeaters (not sure if the colon is necessary, but it's in the org.el one)

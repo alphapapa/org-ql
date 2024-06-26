@@ -1700,16 +1700,16 @@ with keyword arg NOW in PLIST."
                                               (1- (cl-loop while (re-search-forward org-heading-regexp nil t)
                                                            sum 1))))))
 
-          (org-ql-it "without specified timestamp"
+          (org-ql-it "without :with-time"
             (org-ql-expect ('(ts-active))
-              '("Single-timestamp, without repeater" "Single-timestamp, with repeater (deadline)" "Multi-timestamp, without repeater")))
-          (org-ql-it "with specified timestamps"
-            (org-ql-expect ('(ts-active :on "2024-06-25"))
+              '("Single-timestamp, without repeater" "Single-timestamp, with repeater (deadline)" "Multi-timestamp, without repeater" "French")))
+          (org-ql-it ":with-time t"
+            (org-ql-expect ('(ts-active :on "2024-06-25" :with-time t))
               '("Single-timestamp, without repeater" "Single-timestamp, with repeater (deadline)" "Multi-timestamp, without repeater"))
-            (org-ql-expect ('(ts-active :on "2024-06-26"))
+            (org-ql-expect ('(ts-active :on "2024-06-26" :with-time t))
               '("Multi-timestamp, without repeater")))
-          (org-ql-it "with specified time values"
-            (org-ql-expect ('(ts-active :to "2024-06-25 09:00"))
+          (org-ql-it ":with-time t and with specified time value in :to"
+            (org-ql-expect ('(ts-active :to "2024-06-25 09:00" :with-time t))
               '("Single-timestamp, without repeater" "Single-timestamp, with repeater (deadline)" "Multi-timestamp, without repeater"))
             ;; FIXME: The test below fails because timestamps with
             ;; ranges are not yet parsed into multiple timestamps and
@@ -1856,7 +1856,20 @@ with keyword arg NOW in PLIST."
               '("Visit Mars")))
           (org-ql-then (:now "2019-07-07")
             (org-ql-expect ('(ts :on today))
-              nil)))))
+              nil))))
+
+      (describe "Day-of-week abbreviations"
+        (before-each
+          (setq org-ql-test-buffer (org-ql-test-data-buffer "data-ts.org")
+                org-ql-test-num-headings (with-current-buffer org-ql-test-buffer
+                                           (org-with-wide-buffer
+                                            (goto-char (point-min))
+                                            ;; Exclude the "Canary" heading.
+                                            (1- (cl-loop while (re-search-forward org-heading-regexp nil t)
+                                                         sum 1))))))
+        (org-ql-it "matches French abbreviations (with trailing period)"
+          (org-ql-expect ('(ts :on "2024-07-12"))
+            '("French")))))
 
     (describe "Compound queries"
 

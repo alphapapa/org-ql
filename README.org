@@ -557,6 +557,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Fixes*
 + Timestamps with internal time ranges (e.g. ~<2024-06-26 10:00-11:00>~) are matched for simple queries.  (This support is not yet comprehensive, e.g. a query that depends on the specific inner time range may not behave as expected.  Previously such timestamps were not matched at all.  See [[https://github.com/alphapapa/org-ql/pull/237][#237]] and [[https://github.com/alphapapa/org-ql/issues/371][#371]].  Thanks to [[https://github.com/yantar92][Ihor Radchenko]].)
++ Timestamps with day-of-the-week abbreviations are matched more flexibly (allowing, e.g. a period in French locales).  (See [[https://github.com/alphapapa/org-ql/discussions/429][#429]], [[https://github.com/alphapapa/org-ql/issues/432][#432]].  Thanks to [[https://github.com/neurolit][Florian D.]] for reporting.)  
 + Command ~org-ql-search~ did not narrow properly when called interactively.
 
 ** 0.8.6
