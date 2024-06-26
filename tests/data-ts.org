@@ -1,0 +1,23 @@
+#+title: Timestamp-specific tests
+
+/Timestamps in this file are active ones./
+
+* Single-timestamp ranges
+
+** Single-timestamp, without repeater
+<2024-06-25 Tue 08:00-09:00>
+
+** Single-timestamp, with repeater (deadline)
+DEADLINE: <2024-06-25 Tue 08:00-09:00 ++7d>
+
+* Multi-timestamp ranges
+
+/Not sure that it would make sense to use repeaters for this kind of range./
+
+** Multi-timestamp, without repeater
+<2024-06-25 Tue 08:00>--<2024-06-26 Wed 08:00>
+
+* Canary
+
+/This entry should never be matched./
+
