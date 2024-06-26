@@ -186,7 +186,7 @@ necessary."
   (interactive (list (org-ql-view--complete-buffers-files)
                      (read-string "Query: " (when org-ql-view-query
                                               (format "%S" org-ql-view-query)))
-                     :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
+                     :narrow (or org-ql-view-narrow (equal current-prefix-arg '(4)))
                      :super-groups (org-ql-view--complete-super-groups)
                      :sort (org-ql-view--complete-sort)))
   ;; NOTE: Using `with-temp-buffer' is a hack to work around the fact that `make-local-variable'
@@ -348,7 +348,8 @@ this (must be a single line in the Org buffer):
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
           (elements (org-ql-query :from (current-buffer)
                                   :where query
-                                  :select '(org-element-headline-parser (line-end-position))
+                                  :select '(org-ql-view--resolve-element-properties
+                                            (org-element-headline-parser (line-end-position)))
                                   :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
