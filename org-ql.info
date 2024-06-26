@@ -1097,6 +1097,11 @@ File: README.info,  Node: 087-pre,  Next: 086,  Up: Changelog
    • Command ‘org-ql-search’ did not narrow properly when called
      interactively.
 
+   *Compatibility*
+   • Dynamic blocks work with Org 9.7.  (#431
+     (https://github.com/alphapapa/org-ql/issues/431).  Thanks to Jez
+     Cope (https://github.com/jezcope) for reporting.)
+
 
 File: README.info,  Node: 086,  Next: 085,  Prev: 087-pre,  Up: Changelog
 
@@ -2025,47 +2030,47 @@ Node: Links38911
 Node: Tips39598
 Node: Changelog39922
 Node: 087-pre40844
-Node: 08641879
-Node: 08542117
-Node: 08442773
-Node: 08343225
-Node: 08243566
-Node: 08143959
-Node: 0844380
-Node: 07447104
-Node: 07347327
-Node: 07248061
-Node: 07148982
-Node: 0749793
-Node: 06352659
-Node: 06253192
-Node: 06153499
-Node: 0654069
-Node: 05257125
-Node: 05157427
-Node: 0557852
-Node: 04959383
-Node: 04859665
-Node: 04760014
-Node: 04660423
-Node: 04560831
-Node: 04461192
-Node: 04361551
-Node: 04261754
-Node: 04161915
-Node: 0462162
-Node: 03266263
-Node: 03166666
-Node: 0366863
-Node: 02370163
-Node: 02270397
-Node: 02170677
-Node: 0270882
-Node: 0174960
-Node: Notes75061
-Node: Comparison with Org Agenda searches75223
-Node: org-sidebar76112
-Node: License76391
+Node: 08642072
+Node: 08542310
+Node: 08442966
+Node: 08343418
+Node: 08243759
+Node: 08144152
+Node: 0844573
+Node: 07447297
+Node: 07347520
+Node: 07248254
+Node: 07149175
+Node: 0749986
+Node: 06352852
+Node: 06253385
+Node: 06153692
+Node: 0654262
+Node: 05257318
+Node: 05157620
+Node: 0558045
+Node: 04959576
+Node: 04859858
+Node: 04760207
+Node: 04660616
+Node: 04561024
+Node: 04461385
+Node: 04361744
+Node: 04261947
+Node: 04162108
+Node: 0462355
+Node: 03266456
+Node: 03166859
+Node: 0367056
+Node: 02370356
+Node: 02270590
+Node: 02170870
+Node: 0271075
+Node: 0175153
+Node: Notes75254
+Node: Comparison with Org Agenda searches75416
+Node: org-sidebar76305
+Node: License76584
 
 End Tag Table
 

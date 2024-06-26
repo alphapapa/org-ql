@@ -560,6 +560,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 + Timestamps with day-of-the-week abbreviations are matched more flexibly (allowing, e.g. a period in French locales).  (See [[https://github.com/alphapapa/org-ql/discussions/429][#429]], [[https://github.com/alphapapa/org-ql/issues/432][#432]].  Thanks to [[https://github.com/neurolit][Florian D.]] for reporting.)  
 + Command ~org-ql-search~ did not narrow properly when called interactively.
 
+*Compatibility*
++ Dynamic blocks work with Org 9.7.  ([[https://github.com/alphapapa/org-ql/issues/431][#431]].  Thanks to [[https://github.com/jezcope][Jez Cope]] for reporting.)
+
 ** 0.8.6
 
 *Fixes*

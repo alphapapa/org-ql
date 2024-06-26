@@ -347,7 +347,8 @@ this (must be a single line in the Org buffer):
                                    (org-element-property (intern (concat ":" (upcase property))) element)))))
           (elements (org-ql-query :from (current-buffer)
                                   :where query
-                                  :select '(org-element-headline-parser (line-end-position))
+                                  :select '(org-ql-view--resolve-element-properties
+                                            (org-element-headline-parser (line-end-position)))
                                   :order-by sort)))
     (when take
       (setf elements (cl-etypecase take
