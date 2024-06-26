@@ -170,7 +170,8 @@ regexps.")
 Includes leading space character.")
 
 (defvar org-ql-regexp-part-ts-time
-  (rx " " (repeat 1 2 digit) ":" (repeat 2 digit))
+  (rx " " (repeat 1 2 digit) ":" (repeat 2 digit)
+      (optional "-" (repeat 1 2 digit) ":" (repeat 2 digit)))
   "Matches the inner, time part of an Org timestamp (i.e. HH:MM).
 Includes leading space character.  Used to build other timestamp
 regexps.")
