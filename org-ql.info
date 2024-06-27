@@ -1091,7 +1091,11 @@ File: README.info,  Node: 09-pre,  Next: 087,  Up: Changelog
 5.1 0.9-pre
 ===========
 
-Nothing new yet.
+*Compatibility*
+   • Fix compilation error on Emacs 30.  (#433
+     (https://github.com/alphapapa/org-ql/issues/433).  Thanks to Akira
+     Komamura (https://github.com/akirak) and Stefan Monnier
+     (https://github.com/monnier).)
 
 * Menu:
 
@@ -2088,51 +2092,51 @@ Node: Links39023
 Node: Tips39710
 Node: Changelog40034
 Node: 09-pre40973
-Node: helm-org-ql (1)41122
-Node: 08741263
-Node: 08642494
-Node: 08542728
-Node: 08443384
-Node: 08343836
-Node: 08244177
-Node: 08144570
-Node: 0844991
-Node: 07447715
-Node: 07347940
-Node: 07248674
-Node: 07149595
-Node: 0750406
-Node: 06353272
-Node: 06253805
-Node: 06154112
-Node: 0654682
-Node: 05257738
-Node: 05158040
-Node: 0558465
-Node: 04959996
-Node: 04860278
-Node: 04760627
-Node: 04661036
-Node: 04561444
-Node: 04461805
-Node: 04362164
-Node: 04262367
-Node: 04162528
-Node: 0462775
-Node: 03266876
-Node: 03167279
-Node: 0367476
-Node: 02370776
-Node: 02271010
-Node: 02171290
-Node: 0271495
-Node: 0175573
-Node: Development75674
-Node: Copyright assignment75907
-Node: Notes76497
-Node: Comparison with Org Agenda searches76661
-Node: org-sidebar77550
-Node: License77829
+Node: helm-org-ql (1)41339
+Node: 08741480
+Node: 08642711
+Node: 08542945
+Node: 08443601
+Node: 08344053
+Node: 08244394
+Node: 08144787
+Node: 0845208
+Node: 07447932
+Node: 07348157
+Node: 07248891
+Node: 07149812
+Node: 0750623
+Node: 06353489
+Node: 06254022
+Node: 06154329
+Node: 0654899
+Node: 05257955
+Node: 05158257
+Node: 0558682
+Node: 04960213
+Node: 04860495
+Node: 04760844
+Node: 04661253
+Node: 04561661
+Node: 04462022
+Node: 04362381
+Node: 04262584
+Node: 04162745
+Node: 0462992
+Node: 03267093
+Node: 03167496
+Node: 0367693
+Node: 02370993
+Node: 02271227
+Node: 02171507
+Node: 0271712
+Node: 0175790
+Node: Development75891
+Node: Copyright assignment76124
+Node: Notes76714
+Node: Comparison with Org Agenda searches76878
+Node: org-sidebar77767
+Node: License78046
 
 End Tag Table
 

@@ -1118,10 +1118,10 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
                                         ;; Only one preamble is allowed
                                         element)
                                       (pcase element
-                                        ;; FIXME: Should the pattern below be "`(or . ,_)"?  It
-                                        ;; seems to work fine either way, but it seems like it
-                                        ;; should be changed.
-                                        (`(or _) element)
+                                        (`(or ,element)
+                                         ;; A predicate with a single name: unwrap the OR.  (Pcase doesn't like
+                                         ;; "one-armed ORs", giving a "Please avoid it" compilation error.)
+                                         element)
 
                                         ,@preamble-patterns
 

@@ -556,7 +556,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.9-pre
 
-Nothing new yet.
+*Compatibility*
++ Fix compilation error on Emacs 30.  ([[https://github.com/alphapapa/org-ql/issues/433][#433]].  Thanks to [[https://github.com/akirak][Akira Komamura]] and [[https://github.com/monnier][Stefan Monnier]].)
 
 *** helm-org-ql
 
