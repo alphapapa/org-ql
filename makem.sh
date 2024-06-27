@@ -3,7 +3,7 @@
 # * makem.sh --- Script to aid building and testing Emacs Lisp packages
 
 # URL: https://github.com/alphapapa/makem.sh
-# Version: 0.7
+# Version: 0.7.1
 
 # * Commentary:
 
@@ -307,7 +307,6 @@ function elisp-package-initialize-file {
 (setq package-archives (list (cons "gnu" "https://elpa.gnu.org/packages/")
                              (cons "melpa" "https://melpa.org/packages/")
                              (cons "melpa-stable" "https://stable.melpa.org/packages/")))
-$elisp_org_package_archive
 (package-initialize)
 EOF
     echo $file
@@ -1124,21 +1123,15 @@ args_package_archives=(
     --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)"
 )
 
-args_org_package_archives=(
-    --eval "(add-to-list 'package-archives '(\"org\" . \"https://orgmode.org/elpa/\") t)"
-)
-
 args_package_init=(
     --eval "(package-initialize)"
 )
 
-elisp_org_package_archive="(add-to-list 'package-archives '(\"org\" . \"https://orgmode.org/elpa/\") t)"
-
 # * Args
 
 args=$(getopt -n "$0" \
-              -o dhce:E:i:s::vf:CO \
-              -l compile-batch,exclude:,emacs:,install-deps,install-linters,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,no-org-repo,sandbox:: \
+              -o dhce:E:i:s::vf:C \
+              -l compile-batch,exclude:,emacs:,install-deps,install-linters,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,sandbox:: \
               -- "$@") \
     || { usage; exit 1; }
 eval set -- "$args"
@@ -1201,9 +1194,6 @@ do
         -f|--file)
             shift
             args_files+=("$1")
-            ;;
-        -O|--no-org-repo)
-            unset elisp_org_package_archive
             ;;
         --no-color)
             unset color
