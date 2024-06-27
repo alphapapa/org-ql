@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019 Adam Porter
 
 ;; Author: Adam Porter <adam@alphapapa.net>
-;; Package-Requires: ((buttercup) (with-simulated-input))
+;; Package-Requires: ((buttercup) (with-simulated-input) (xr))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
