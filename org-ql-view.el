@@ -626,7 +626,7 @@ purposes of compatibility with changes in Org 9.4."
                (query (url-unhex-string query))
                (params (when params (url-parse-query-string params)))
                ;; `url-parse-query-string' returns "improper" alists, which makes this awkward.
-               (sort (when-let* ((stored-string (alist-get "sort" params nil nil #'string=))
+               (sort (when-let* ((stored-string (car (alist-get "sort" params nil nil #'string=)))
                                  (read-value (read stored-string)))
                        ;; Ensure the value is either a symbol or list of symbols (which excludes lambdas).
                        (unless (or (symbolp read-value) (cl-every #'symbolp read-value))
@@ -634,11 +634,11 @@ purposes of compatibility with changes in Org 9.4."
                                 read-value))
                        read-value))
                (org-super-agenda-allow-unsafe-groups nil) ; Disallow unsafe group selectors.
-               (groups (--when-let (alist-get "super-groups" params nil nil #'string=)
+               (groups (--when-let (car (alist-get "super-groups" params nil nil #'string=))
                          (read it)))
-               (title (--when-let (alist-get "title" params nil nil #'string=)
+               (title (--when-let (car (alist-get "title" params nil nil #'string=))
                         (read it)))
-               (buffers-files (--if-let (alist-get "buffers-files" params nil nil #'string=)
+               (buffers-files (--if-let (car (alist-get "buffers-files" params nil nil #'string=))
                                   (org-ql-view--expand-buffers-files (read it))
                                 (current-buffer))))
     (unless (or (bufferp buffers-files)
