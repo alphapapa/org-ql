@@ -1099,6 +1099,12 @@ File: README.info,  Node: 089-pre,  Next: 088,  Up: Changelog
      maintaining Buttercup
      (https://github.com/jorgenschaefer/emacs-buttercup).)
 
+   *Compatibility*
+   • Fix compilation error on Emacs 30.  (#433
+     (https://github.com/alphapapa/org-ql/issues/433).  Thanks to Akira
+     Komamura (https://github.com/akirak) and Stefan Monnier
+     (https://github.com/monnier).)
+
 
 File: README.info,  Node: 088,  Next: 087,  Prev: 089-pre,  Up: Changelog
 
@@ -2077,49 +2083,49 @@ Node: Links38939
 Node: Tips39626
 Node: Changelog39950
 Node: 089-pre40900
-Node: 08841801
-Node: 08742881
-Node: 08644109
-Node: 08544343
-Node: 08444999
-Node: 08345451
-Node: 08245792
-Node: 08146185
-Node: 0846606
-Node: 07449332
-Node: 07349557
-Node: 07250291
-Node: 07151212
-Node: 0752023
-Node: 06354889
-Node: 06255422
-Node: 06155729
-Node: 0656299
-Node: 05259355
-Node: 05159657
-Node: 0560082
-Node: 04961613
-Node: 04861895
-Node: 04762244
-Node: 04662653
-Node: 04563061
-Node: 04463422
-Node: 04363781
-Node: 04263984
-Node: 04164145
-Node: 0464392
-Node: 03268493
-Node: 03168896
-Node: 0369093
-Node: 02372393
-Node: 02272627
-Node: 02172907
-Node: 0273112
-Node: 0177190
-Node: Notes77291
-Node: Comparison with Org Agenda searches77453
-Node: org-sidebar78342
-Node: License78621
+Node: 08842039
+Node: 08743119
+Node: 08644347
+Node: 08544581
+Node: 08445237
+Node: 08345689
+Node: 08246030
+Node: 08146423
+Node: 0846844
+Node: 07449570
+Node: 07349795
+Node: 07250529
+Node: 07151450
+Node: 0752261
+Node: 06355127
+Node: 06255660
+Node: 06155967
+Node: 0656537
+Node: 05259593
+Node: 05159895
+Node: 0560320
+Node: 04961851
+Node: 04862133
+Node: 04762482
+Node: 04662891
+Node: 04563299
+Node: 04463660
+Node: 04364019
+Node: 04264222
+Node: 04164383
+Node: 0464630
+Node: 03268731
+Node: 03169134
+Node: 0369331
+Node: 02372631
+Node: 02272865
+Node: 02173145
+Node: 0273350
+Node: 0177428
+Node: Notes77529
+Node: Comparison with Org Agenda searches77691
+Node: org-sidebar78580
+Node: License78859
 
 End Tag Table
 

@@ -560,6 +560,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 + Predicate ~level~'s preamble optimizer allows expressions in place of the numeric argument.  (See [[https://github.com/alphapapa/org-ql/issues/460][#460]].  Thanks to [[https://github.com/Stewmath][Stewmath]] for reporting.)
 + Reading of view settings from Org links in upcoming Emacs version.  ([[https://github.com/alphapapa/org-ql/issues/461][#461]].  Thanks to [[https://github.com/snogge][Ola Nilsson]] for help debugging, and for maintaining [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]].)
 
+*Compatibility*
++ Fix compilation error on Emacs 30.  ([[https://github.com/alphapapa/org-ql/issues/433][#433]].  Thanks to [[https://github.com/akirak][Akira Komamura]] and [[https://github.com/monnier][Stefan Monnier]].)
+
 ** 0.8.8
 
 *Fixes*
