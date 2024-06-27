@@ -2111,21 +2111,31 @@ with keyword arg NOW in PLIST."
         (describe "Buffers/Files"
           :var ((query '(and (todo "TODO") (regexp "heading")))
                 (one-filename (car temp-filenames)))
-          (it "One filename matches"
-            (expect (var-after-bookmark-set-and-jump 'org-ql-view-buffers-files one-filename query)
-                    :to-equal one-filename))
-          (it "A list of filenames matches"
-            (expect (var-after-bookmark-set-and-jump 'org-ql-view-buffers-files temp-filenames query)
-                    :to-equal temp-filenames))
-          ;; NOTE: These actually bookmark the filenames backing the buffers.
-          (it "One buffer matches"
-            (expect (var-after-bookmark-set-and-jump 'org-ql-view-buffers-files
-                                                     (find-file-noselect (car temp-filenames)) query)
-                    :to-equal one-filename))
-          (it "A list of buffers matches"
-            (expect (var-after-bookmark-set-and-jump 'org-ql-view-buffers-files
-                                                     (mapcar #'find-file-noselect temp-filenames) query)
-                    :to-equal temp-filenames)))))
+          ;; NOTE: Inexplicably, on GitHub CI, the filenames are being
+          ;; abbreviated (i.e. "/home/FOO" is replaced with "~/FOO");
+          ;; I can only guess it's something to do with the way the
+          ;; Emacs instance is built in the Nix images we use there.
+          ;; So we have to compare the filenames in abbreviated form.
+          (cl-labels ((filenames-equal-p (a b)
+                        (seq-set-equal-p (mapcar #'abbreviate-file-name a)
+                                         (mapcar #'abbreviate-file-name b))))
+            (it "One filename matches"
+              (should (equal (abbreviate-file-name
+                              (var-after-bookmark-set-and-jump 'org-ql-view-buffers-files one-filename query))
+                             (abbreviate-file-name one-filename))))
+            (it "A list of filenames matches"
+              (should (filenames-equal-p (var-after-bookmark-set-and-jump 'org-ql-view-buffers-files temp-filenames query)
+                                         temp-filenames)))
+            ;; NOTE: These actually bookmark the filenames backing the buffers.
+            (it "One buffer matches"
+              (should (equal (abbreviate-file-name
+                              (var-after-bookmark-set-and-jump 'org-ql-view-buffers-files
+                                                               (find-file-noselect (car temp-filenames)) query))
+                             (abbreviate-file-name one-filename))))
+            (it "A list of buffers matches"
+              (should (filenames-equal-p (var-after-bookmark-set-and-jump 'org-ql-view-buffers-files
+                                                                          (mapcar #'find-file-noselect temp-filenames) query)
+                                         temp-filenames)))))))
 
     (describe "Dynamic blocks"
       (describe "warn about sexp queries"
