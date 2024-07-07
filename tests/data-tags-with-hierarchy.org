@@ -1,0 +1,21 @@
+# This file is currently used to test org-file-tags with tag hierarchies.
+
+#+FILETAGS: :groceries:
+#+TAGS: [ food : produce meat ]
+#+TAGS: [ produce : fruit vegetable ]
+#+TAGS: [ meat : poultry beef fish ]
+
+* Meat
+** Poultry                                                                      :poultry:
+*** Chicken                                                                     :like:
+*** Duck
+** Beef                                                                         :beef:
+** Fish                                                                         :fish:
+*** Tuna
+*** Salmon                                                                      :like:
+* Fruit                                                                         :fruit:
+** Blueberry
+** Strawberry
+* Vegetable                                                                     :vegetable:
+** Broccoli
+** Potato
