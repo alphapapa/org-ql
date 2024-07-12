@@ -59,6 +59,11 @@
   "Face for due dates in `org-ql-view' views."
   :group 'org-ql)
 
+(defface org-ql-view-header-line-key
+  '((t :inherit transient-argument))
+  "Face for header line keys `org-ql-view' buffers."
+  :group 'org-ql)
+
 ;;;; Variables
 
 (defvar org-ql-view-buffer-name-prefix "*Org QL View:"
@@ -458,7 +463,7 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
   "Return `header-line-format' for BUFFERS-FILES and QUERY.
 If TITLE, prepend it to the header."
   (let* ((title (if title
-                    (concat (propertize "View:" 'face 'transient-argument)
+                    (concat (propertize "View:" 'face 'org-ql-view-header-line-key)
                             title " ")
                   ""))
          (query-formatted (when query
@@ -479,11 +484,11 @@ If TITLE, prepend it to the header."
                                                      (s-truncate available-width))
                                                 'help-echo buffers-files-formatted))))
     (concat title
-            (when query (propertize "Query:" 'face 'transient-argument))
+            (when query (propertize "Query:" 'face 'org-ql-view-header-line-key))
             (when query query-propertized)
             (when query "  ")
             (when buffers-files
-              (propertize "In:" 'face 'transient-argument))
+              (propertize "In:" 'face 'org-ql-view-header-line-key))
             (when buffers-files-formatted
               buffers-files-formatted))))
 
