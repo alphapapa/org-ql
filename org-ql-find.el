@@ -54,14 +54,18 @@ See function `display-buffer'."
 ;;;; Commands
 
 ;;;###autoload
-(cl-defun org-ql-find (buffers-files &key query-prefix query-filter
+(cl-defun org-ql-find (buffers-files &key query-prefix query-filter widen
                                      (prompt "Find entry: "))
   "Go to an Org entry in BUFFERS-FILES selected by searching entries with `org-ql'.
 Interactively, search the buffers and files relevant to the
 current buffer (i.e. in `org-agenda-mode', the value of
 `org-ql-view-buffers-files' or `org-agenda-contributing-files';
-in `org-mode', that buffer).  With universal prefix, select
-multiple buffers to search with completion and PROMPT.
+in `org-mode', that buffer).
+
+With one or more universal prefix arguments, WIDEN buffers before
+searching (otherwise, respect any narrowing).  With two universal
+prefix arguments, select multiple buffers to search with
+completion and PROMPT.
 
 QUERY-PREFIX may be a string to prepend to the query (e.g. use
 \"heading:\" to only search headings, easily creating a custom
@@ -72,11 +76,17 @@ types is filtered before execution (e.g. it could replace spaces
 with commas to turn multiple tokens, which would normally be
 treated as multiple predicates, into multiple arguments to a
 single predicate)."
-  (interactive (list (org-ql-find--buffers)))
-  (let ((marker (org-ql-completing-read buffers-files
-                  :query-prefix query-prefix
-                  :query-filter query-filter
-                  :prompt prompt)))
+  (interactive (list (org-ql-find--buffers
+                      :read-buffer-p (equal '(16) current-prefix-arg))
+                     :widen current-prefix-arg))
+  (let ((marker (save-restriction
+                  (when (and widen (equal (current-buffer) buffers-files))
+                    (widen))
+                  (org-ql-completing-read buffers-files
+                    :narrowp (not widen)
+                    :query-prefix query-prefix
+                    :query-filter query-filter
+                    :prompt prompt))))
     (set-buffer (or (buffer-base-buffer (marker-buffer marker))
                     (marker-buffer marker)))
     (pop-to-buffer (current-buffer) org-ql-find-display-buffer-action)
@@ -195,15 +205,15 @@ multiple buffers to search with completion and PROMPT."
 
 ;;;; Functions
 
-(defun org-ql-find--buffers ()
-  "Return list of buffers to search in.
+(cl-defun org-ql-find--buffers (&key read-buffer-p)
+  "Return buffer or list of buffers to search in.
 In a mode derived from `org-agenda-mode', return the value of
 `org-ql-view-buffers-files' or `org-agenda-contributing-files'.
-In a mode derived from `org-mode', return the current buffer.
-When `current-prefix-arg', read a list of buffers in `org-mode'
-with completion.  To be used in `org-ql-find' commands'
-interactive forms."
-  (if current-prefix-arg
+In a mode derived from `org-mode', return the current buffer.  If
+READ-BUFFER-P, read a list of buffers in `org-mode' with
+completion.  To be used in `org-ql-find' commands' interactive
+forms."
+  (if read-buffer-p
       (mapcar #'get-buffer
               (completing-read-multiple
                "Buffers: "

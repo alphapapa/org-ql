@@ -134,7 +134,7 @@ value, or nil."
 
 ;;;###autoload
 (cl-defun org-ql-completing-read
-    (buffers-files &key query-prefix query-filter
+    (buffers-files &key query-prefix query-filter narrowp
                    (action #'org-ql-completing-read-action)
                    ;; FIXME: Unused argument.
                    ;; (annotate #'org-ql-completing-read-snippet)
@@ -144,6 +144,8 @@ value, or nil."
                    (prompt "Find entry: "))
   "Return marker at entry in BUFFERS-FILES selected with `org-ql'.
 PROMPT is shown to the user.
+
+NARROWP is passed to `org-ql-select', which see.
 
 QUERY-PREFIX may be a string to prepend to the query entered by
 the user (e.g. use \"heading:\" to only search headings, easily
@@ -323,6 +325,7 @@ single predicate)."
                                                 bow (or ,@query-tokens) (0+ (not space))
                                                 (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))
                     (org-ql-select buffers-files (org-ql--query-string-to-sexp input)
+                      :narrow narrowp
                       :action #'action))))
       (unless (listp buffers-files)
         ;; Since we map across this argument, we ensure it's a list.
