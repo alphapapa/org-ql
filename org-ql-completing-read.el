@@ -50,12 +50,10 @@
   :type 'boolean)
 
 (defcustom org-ql-completing-read-snippet-function #'org-ql-completing-read--snippet-simple
-  ;; TODO: I'd like to make the -regexp one the default, but with
-  ;; default Emacs completion affixation, it can sometimes be a bit
-  ;; slow, and I don't want that to be a user's first impression.  It
-  ;; may be possible to further optimize the -regexp one so that it
-  ;; can be used by default.  In the meantime, the -simple one seems
-  ;; fast enough for general use.
+  ;; TODO(v0.9): Performance of completion annotations seems to be
+  ;; much improved now (whether due to changes in Emacs, Vertico, or
+  ;; both, I don't know).  It may be reasonable to make the context
+  ;; snippet the default now.
   "Function used to annotate results in `org-ql-completing-read'.
 Function is called at entry beginning.  (When set to
 `org-ql-completing-read--snippet-regexp', it is called with a
@@ -109,11 +107,13 @@ value, or nil."
            ;; responsive as, e.g. Helm while typing, but it seems to
            ;; help a little when using the org-rifle-style snippets.
            (org-with-point-at marker
-             (or (funcall org-ql-completing-read-snippet-function)
+             (or (funcall org-ql-completing-read-snippet-function
+                          org-ql-completing-read-input-regexp)
                  (org-ql-completing-read--snippet-simple))))
     (`t  ;; Interrupted: return nil (which can be concatted).
      nil)
-    (else else)))
+    (else (propertize (concat " " else)
+                      'face 'org-ql-completing-read-snippet))))
 
 (defun org-ql-completing-read-path (marker)
   "Return formatted outline path for entry at MARKER."
@@ -219,15 +219,7 @@ single predicate)."
                     ;; Using `while-no-input' here doesn't make it as responsive as,
                     ;; e.g. Helm while typing, but it seems to help a little when using the
                     ;; org-rifle-style snippets.
-                    (or (snippet (get-text-property 0 'org-marker candidate)) "")))
-                (snippet (marker)
-                  (when-let
-                      ((snippet
-                        (org-with-point-at marker
-                          (or (funcall org-ql-completing-read-snippet-function org-ql-completing-read-input-regexp)
-                              (org-ql-completing-read--snippet-simple)))))
-                    (propertize (concat " " snippet)
-                                'face 'org-ql-completing-read-snippet)))
+                    (or (funcall snippet (get-text-property 0 'org-marker candidate)) "")))
                 (group (candidate transform)
                   (pcase transform
                     (`nil (buffer-name (marker-buffer (get-text-property 0 'org-marker candidate))))
@@ -341,7 +333,8 @@ single predicate)."
       ;; `completing-read'.
       (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-completing-read))
-             (completion-styles-alist (list (list 'org-ql-completing-read #'try #'all "Org QL Find")))
+             (completion-styles-alist (cons (list 'org-ql-completing-read #'try #'all "Org QL Find")
+                                            completion-styles-alist))
              (selected
               (minibuffer-with-setup-hook
                   (lambda ()
@@ -373,7 +366,7 @@ single predicate)."
             (car (hash-table-values table))
             (user-error "No results for input"))))))
 
-(defun org-ql-completing-read--snippet-simple ()
+(defun org-ql-completing-read--snippet-simple (&optional _input-regexp)
   "Return a snippet of the current entry.
 Returns up to `org-ql-completing-read-snippet-length' characters."
   (save-excursion
@@ -387,15 +380,15 @@ Returns up to `org-ql-completing-read-snippet-length' characters."
                                            t t)
                  50 nil nil t))))))
 
-(defun org-ql-completing-read--snippet-regexp (regexp)
-  "Return a snippet of the current entry's matches for REGEXP."
+(defun org-ql-completing-read--snippet-regexp (&optional input-regexp)
+  "Return a snippet of the current entry's matches for INPUT-REGEXP."
   ;; REGEXP may be nil if there are no qualifying tokens in the query.
-  (when regexp
+  (when input-regexp
     (save-excursion
       (org-end-of-meta-data t)
       (unless (org-at-heading-p)
         (let* ((end (org-entry-end-position))
-               (snippets (cl-loop while (re-search-forward regexp end t)
+               (snippets (cl-loop while (re-search-forward input-regexp end t)
                                   concat (match-string 0) concat "…"
                                   do (goto-char (match-end 0)))))
           (unless (string-empty-p snippets)

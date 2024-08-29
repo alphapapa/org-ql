@@ -1144,7 +1144,7 @@ defined in `org-ql-predicates' by calling `org-ql-defpred'."
     (byte-compile 'org-ql--query-preamble)))
 
 (cl-defmacro org-ql-defpred (name args docstring &key body preambles normalizers coalesce)
-  "Define an Org QL selector predicate `org-ql--predicate-NAME'.
+  "Define an Org QL selector predicate \\=`org-ql--predicate-NAME'.
 NAME may be a symbol or a list of symbols: if a list, the first
 is used as NAME and the rest are aliases.  A function is only
 created for NAME, not for aliases, so a normalizer should be used

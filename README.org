@@ -567,6 +567,13 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 Tagged v0.6.2, fixing a compilation warning.
 
+** 0.8.8
+
+*Fixes*
++ Remove text properties from to-do keywords before displaying them in an ~org-ql-view~ buffer.  (Such text properties could cause them to, e.g. display with extra leading spaces, depending on which other modes might be enabled in the source Org buffer.)
++ Binding of ~completion-styles-alist~ in ~org-ql-completing-read~.  (This fixes compatibility with Helm's ~helm~ completion style, as well as default Emacs completion in recursive minibuffers.  [[https://github.com/alphapapa/org-ql/issues/337][#337]].  Thanks to [[https://github.com/progfolio][Nicholas Vollmer]], [[https://github.com/9viz][viz]], and [[https://github.com/karthink][Karthik Chikmagalur]] for reporting and suggesting fixes.)
++ Use of the context snippet function for ~org-ql-completing-read~.  ([[https://github.com/alphapapa/org-ql/issues/419][#419]].  Thanks to [[https://github.com/tpeacock19][tpeacock19]] for reporting.)
+
 ** 0.8.7
 
 *Fixes*
