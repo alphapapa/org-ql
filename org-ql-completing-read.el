@@ -47,12 +47,10 @@
   :type 'boolean)
 
 (defcustom org-ql-completing-read-snippet-function #'org-ql-completing-read--snippet-simple
-  ;; TODO: I'd like to make the -regexp one the default, but with
-  ;; default Emacs completion affixation, it can sometimes be a bit
-  ;; slow, and I don't want that to be a user's first impression.  It
-  ;; may be possible to further optimize the -regexp one so that it
-  ;; can be used by default.  In the meantime, the -simple one seems
-  ;; fast enough for general use.
+  ;; TODO(v0.9): Performance of completion annotations seems to be
+  ;; much improved now (whether due to changes in Emacs, Vertico, or
+  ;; both, I don't know).  It may be reasonable to make the context
+  ;; snippet the default now.
   "Function used to annotate results in `org-ql-completing-read'.
 Function is called at entry beginning.  (When set to
 `org-ql-completing-read--snippet-regexp', it is called with a
