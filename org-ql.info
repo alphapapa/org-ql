@@ -1082,7 +1082,11 @@ File: README.info,  Node: 088-pre,  Next: 087,  Up: Changelog
 5.1 0.8.8-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Remove text properties from to-do keywords before displaying them
+     in an ‘org-ql-view’ buffer.  (Such text properties could cause them
+     to, e.g.  display with extra leading spaces, depending on which
+     other modes might be enabled in the source Org buffer.)
 
 
 File: README.info,  Node: 087,  Next: 086,  Prev: 088-pre,  Up: Changelog
@@ -2040,48 +2044,48 @@ Node: Links38925
 Node: Tips39612
 Node: Changelog39936
 Node: 088-pre40872
-Node: 08740984
-Node: 08642216
-Node: 08542450
-Node: 08443106
-Node: 08343558
-Node: 08243899
-Node: 08144292
-Node: 0844713
-Node: 07447437
-Node: 07347662
-Node: 07248396
-Node: 07149317
-Node: 0750128
-Node: 06352994
-Node: 06253527
-Node: 06153834
-Node: 0654404
-Node: 05257460
-Node: 05157762
-Node: 0558187
-Node: 04959718
-Node: 04860000
-Node: 04760349
-Node: 04660758
-Node: 04561166
-Node: 04461527
-Node: 04361886
-Node: 04262089
-Node: 04162250
-Node: 0462497
-Node: 03266598
-Node: 03167001
-Node: 0367198
-Node: 02370498
-Node: 02270732
-Node: 02171012
-Node: 0271217
-Node: 0175295
-Node: Notes75396
-Node: Comparison with Org Agenda searches75558
-Node: org-sidebar76447
-Node: License76726
+Node: 08741255
+Node: 08642487
+Node: 08542721
+Node: 08443377
+Node: 08343829
+Node: 08244170
+Node: 08144563
+Node: 0844984
+Node: 07447708
+Node: 07347933
+Node: 07248667
+Node: 07149588
+Node: 0750399
+Node: 06353265
+Node: 06253798
+Node: 06154105
+Node: 0654675
+Node: 05257731
+Node: 05158033
+Node: 0558458
+Node: 04959989
+Node: 04860271
+Node: 04760620
+Node: 04661029
+Node: 04561437
+Node: 04461798
+Node: 04362157
+Node: 04262360
+Node: 04162521
+Node: 0462768
+Node: 03266869
+Node: 03167272
+Node: 0367469
+Node: 02370769
+Node: 02271003
+Node: 02171283
+Node: 0271488
+Node: 0175566
+Node: Notes75667
+Node: Comparison with Org Agenda searches75829
+Node: org-sidebar76718
+Node: License76997
 
 End Tag Table
 

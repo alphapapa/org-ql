@@ -872,7 +872,8 @@ return an empty string."
            (title (--> (org-ql-view--add-faces element)
                        (org-element-property :raw-value it)))
            (todo-keyword (-some--> (org-element-property :todo-keyword element)
-                           (org-ql-view--add-todo-face it)))
+                           (org-ql-view--add-todo-face
+                            (substring-no-properties it))))
            (tag-list (if org-use-tag-inheritance
                          ;; MAYBE: Use our own variable instead of `org-use-tag-inheritance'.
                          (if-let ((marker (or (org-element-property :org-hd-marker element)

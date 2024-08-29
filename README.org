@@ -555,7 +555,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.8.8-pre
 
-Nothing new yet.
+*Fixes*
++ Remove text properties from to-do keywords before displaying them in an ~org-ql-view~ buffer.  (Such text properties could cause them to, e.g. display with extra leading spaces, depending on which other modes might be enabled in the source Org buffer.)
 
 ** 0.8.7
 
