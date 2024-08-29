@@ -335,7 +335,8 @@ single predicate)."
       ;; `completing-read'.
       (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-completing-read))
-             (completion-styles-alist (list (list 'org-ql-completing-read #'try #'all "Org QL Find")))
+             (completion-styles-alist (cons (list 'org-ql-completing-read #'try #'all "Org QL Find")
+                                            completion-styles-alist))
              (selected
               (minibuffer-with-setup-hook
                   (lambda ()

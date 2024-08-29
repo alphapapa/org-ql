@@ -1087,6 +1087,13 @@ File: README.info,  Node: 088-pre,  Next: 087,  Up: Changelog
      in an ‘org-ql-view’ buffer.  (Such text properties could cause them
      to, e.g.  display with extra leading spaces, depending on which
      other modes might be enabled in the source Org buffer.)
+   • Binding of ‘completion-styles-alist’ in ‘org-ql-completing-read’.
+     (This fixes compatibility with Helm’s ‘helm’ completion style, as
+     well as default Emacs completion in recursive minibuffers.  #337
+     (https://github.com/alphapapa/org-ql/issues/337).  Thanks to
+     Nicholas Vollmer (https://github.com/progfolio), viz
+     (https://github.com/9viz), and Karthik Chikmagalur
+     (https://github.com/karthink) for reporting and suggesting fixes.)
 
 
 File: README.info,  Node: 087,  Next: 086,  Prev: 088-pre,  Up: Changelog
@@ -2044,48 +2051,48 @@ Node: Links38925
 Node: Tips39612
 Node: Changelog39936
 Node: 088-pre40872
-Node: 08741255
-Node: 08642487
-Node: 08542721
-Node: 08443377
-Node: 08343829
-Node: 08244170
-Node: 08144563
-Node: 0844984
-Node: 07447708
-Node: 07347933
-Node: 07248667
-Node: 07149588
-Node: 0750399
-Node: 06353265
-Node: 06253798
-Node: 06154105
-Node: 0654675
-Node: 05257731
-Node: 05158033
-Node: 0558458
-Node: 04959989
-Node: 04860271
-Node: 04760620
-Node: 04661029
-Node: 04561437
-Node: 04461798
-Node: 04362157
-Node: 04262360
-Node: 04162521
-Node: 0462768
-Node: 03266869
-Node: 03167272
-Node: 0367469
-Node: 02370769
-Node: 02271003
-Node: 02171283
-Node: 0271488
-Node: 0175566
-Node: Notes75667
-Node: Comparison with Org Agenda searches75829
-Node: org-sidebar76718
-Node: License76997
+Node: 08741735
+Node: 08642967
+Node: 08543201
+Node: 08443857
+Node: 08344309
+Node: 08244650
+Node: 08145043
+Node: 0845464
+Node: 07448188
+Node: 07348413
+Node: 07249147
+Node: 07150068
+Node: 0750879
+Node: 06353745
+Node: 06254278
+Node: 06154585
+Node: 0655155
+Node: 05258211
+Node: 05158513
+Node: 0558938
+Node: 04960469
+Node: 04860751
+Node: 04761100
+Node: 04661509
+Node: 04561917
+Node: 04462278
+Node: 04362637
+Node: 04262840
+Node: 04163001
+Node: 0463248
+Node: 03267349
+Node: 03167752
+Node: 0367949
+Node: 02371249
+Node: 02271483
+Node: 02171763
+Node: 0271968
+Node: 0176046
+Node: Notes76147
+Node: Comparison with Org Agenda searches76309
+Node: org-sidebar77198
+Node: License77477
 
 End Tag Table
 
