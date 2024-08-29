@@ -72,7 +72,7 @@ Functions / Macros
 
 Changelog
 
-* 0.8.8-pre: 088-pre.
+* 0.8.8: 088.
 * 0.8.7: 087.
 * 0.8.6: 086.
 * 0.8.5: 085.
@@ -1036,7 +1036,7 @@ releases.
 
 * Menu:
 
-* 0.8.8-pre: 088-pre.
+* 0.8.8: 088.
 * 0.8.7: 087.
 * 0.8.6: 086.
 * 0.8.5: 085.
@@ -1077,10 +1077,10 @@ releases.
 * 0.1: 01.
 
 
-File: README.info,  Node: 088-pre,  Next: 087,  Up: Changelog
+File: README.info,  Node: 088,  Next: 087,  Up: Changelog
 
-5.1 0.8.8-pre
-=============
+5.1 0.8.8
+=========
 
 *Fixes*
    • Remove text properties from to-do keywords before displaying them
@@ -1099,7 +1099,7 @@ File: README.info,  Node: 088-pre,  Next: 087,  Up: Changelog
      tpeacock19 (https://github.com/tpeacock19) for reporting.)
 
 
-File: README.info,  Node: 087,  Next: 086,  Prev: 088-pre,  Up: Changelog
+File: README.info,  Node: 087,  Next: 086,  Prev: 088,  Up: Changelog
 
 5.2 0.8.7
 =========
@@ -2018,84 +2018,84 @@ GPLv3
 
 Tag Table:
 Node: Top225
-Node: Contents1971
-Node: Screenshots2094
-Node: Installation2212
-Node: Quelpa2726
-Node: Helm support3254
-Node: Usage3657
-Node: Commands4055
-Node: org-ql-find4520
-Node: org-ql-open-link5428
-Node: org-ql-refile6283
-Node: org-ql-search6611
-Node: helm-org-ql8542
-Node: org-ql-view8920
-Node: org-ql-view-sidebar9450
-Node: org-ql-view-recent-items9830
-Node: org-ql-sparse-tree10326
-Node: Queries11126
-Node: Non-sexp query syntax12243
-Node: General predicates14002
-Node: Ancestor/descendant predicates20927
-Node: Date/time predicates22055
-Node: Functions / Macros25179
-Node: Agenda-like views25477
-Ref: Function org-ql-block25639
-Node: Listing / acting-on results26900
-Ref: Caching27108
-Ref: Function org-ql-select28021
-Ref: Function org-ql-query30447
-Ref: Macro org-ql (deprecated)32221
-Node: Custom predicates32536
-Ref: Macro org-ql-defpred32760
-Node: Dynamic block36201
-Node: Links38925
-Node: Tips39612
-Node: Changelog39936
-Node: 088-pre40872
-Node: 08741948
-Node: 08643180
-Node: 08543414
-Node: 08444070
-Node: 08344522
-Node: 08244863
-Node: 08145256
-Node: 0845677
-Node: 07448401
-Node: 07348626
-Node: 07249360
-Node: 07150281
-Node: 0751092
-Node: 06353958
-Node: 06254491
-Node: 06154798
-Node: 0655368
-Node: 05258424
-Node: 05158726
-Node: 0559151
-Node: 04960682
-Node: 04860964
-Node: 04761313
-Node: 04661722
-Node: 04562130
-Node: 04462491
-Node: 04362850
-Node: 04263053
-Node: 04163214
-Node: 0463461
-Node: 03267562
-Node: 03167965
-Node: 0368162
-Node: 02371462
-Node: 02271696
-Node: 02171976
-Node: 0272181
-Node: 0176259
-Node: Notes76360
-Node: Comparison with Org Agenda searches76522
-Node: org-sidebar77411
-Node: License77690
+Node: Contents1963
+Node: Screenshots2086
+Node: Installation2204
+Node: Quelpa2718
+Node: Helm support3246
+Node: Usage3649
+Node: Commands4047
+Node: org-ql-find4512
+Node: org-ql-open-link5420
+Node: org-ql-refile6275
+Node: org-ql-search6603
+Node: helm-org-ql8534
+Node: org-ql-view8912
+Node: org-ql-view-sidebar9442
+Node: org-ql-view-recent-items9822
+Node: org-ql-sparse-tree10318
+Node: Queries11118
+Node: Non-sexp query syntax12235
+Node: General predicates13994
+Node: Ancestor/descendant predicates20919
+Node: Date/time predicates22047
+Node: Functions / Macros25171
+Node: Agenda-like views25469
+Ref: Function org-ql-block25631
+Node: Listing / acting-on results26892
+Ref: Caching27100
+Ref: Function org-ql-select28013
+Ref: Function org-ql-query30439
+Ref: Macro org-ql (deprecated)32213
+Node: Custom predicates32528
+Ref: Macro org-ql-defpred32752
+Node: Dynamic block36193
+Node: Links38917
+Node: Tips39604
+Node: Changelog39928
+Node: 08840856
+Node: 08741920
+Node: 08643148
+Node: 08543382
+Node: 08444038
+Node: 08344490
+Node: 08244831
+Node: 08145224
+Node: 0845645
+Node: 07448369
+Node: 07348594
+Node: 07249328
+Node: 07150249
+Node: 0751060
+Node: 06353926
+Node: 06254459
+Node: 06154766
+Node: 0655336
+Node: 05258392
+Node: 05158694
+Node: 0559119
+Node: 04960650
+Node: 04860932
+Node: 04761281
+Node: 04661690
+Node: 04562098
+Node: 04462459
+Node: 04362818
+Node: 04263021
+Node: 04163182
+Node: 0463429
+Node: 03267530
+Node: 03167933
+Node: 0368130
+Node: 02371430
+Node: 02271664
+Node: 02171944
+Node: 0272149
+Node: 0176227
+Node: Notes76328
+Node: Comparison with Org Agenda searches76490
+Node: org-sidebar77379
+Node: License77658
 
 End Tag Table
 
