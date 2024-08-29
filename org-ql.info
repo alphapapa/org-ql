@@ -1094,6 +1094,9 @@ File: README.info,  Node: 088-pre,  Next: 087,  Up: Changelog
      Nicholas Vollmer (https://github.com/progfolio), viz
      (https://github.com/9viz), and Karthik Chikmagalur
      (https://github.com/karthink) for reporting and suggesting fixes.)
+   • Use of the context snippet function for ‘org-ql-completing-read’.
+     (#419 (https://github.com/alphapapa/org-ql/issues/419).  Thanks to
+     tpeacock19 (https://github.com/tpeacock19) for reporting.)
 
 
 File: README.info,  Node: 087,  Next: 086,  Prev: 088-pre,  Up: Changelog
@@ -2051,48 +2054,48 @@ Node: Links38925
 Node: Tips39612
 Node: Changelog39936
 Node: 088-pre40872
-Node: 08741735
-Node: 08642967
-Node: 08543201
-Node: 08443857
-Node: 08344309
-Node: 08244650
-Node: 08145043
-Node: 0845464
-Node: 07448188
-Node: 07348413
-Node: 07249147
-Node: 07150068
-Node: 0750879
-Node: 06353745
-Node: 06254278
-Node: 06154585
-Node: 0655155
-Node: 05258211
-Node: 05158513
-Node: 0558938
-Node: 04960469
-Node: 04860751
-Node: 04761100
-Node: 04661509
-Node: 04561917
-Node: 04462278
-Node: 04362637
-Node: 04262840
-Node: 04163001
-Node: 0463248
-Node: 03267349
-Node: 03167752
-Node: 0367949
-Node: 02371249
-Node: 02271483
-Node: 02171763
-Node: 0271968
-Node: 0176046
-Node: Notes76147
-Node: Comparison with Org Agenda searches76309
-Node: org-sidebar77198
-Node: License77477
+Node: 08741948
+Node: 08643180
+Node: 08543414
+Node: 08444070
+Node: 08344522
+Node: 08244863
+Node: 08145256
+Node: 0845677
+Node: 07448401
+Node: 07348626
+Node: 07249360
+Node: 07150281
+Node: 0751092
+Node: 06353958
+Node: 06254491
+Node: 06154798
+Node: 0655368
+Node: 05258424
+Node: 05158726
+Node: 0559151
+Node: 04960682
+Node: 04860964
+Node: 04761313
+Node: 04661722
+Node: 04562130
+Node: 04462491
+Node: 04362850
+Node: 04263053
+Node: 04163214
+Node: 0463461
+Node: 03267562
+Node: 03167965
+Node: 0368162
+Node: 02371462
+Node: 02271696
+Node: 02171976
+Node: 0272181
+Node: 0176259
+Node: Notes76360
+Node: Comparison with Org Agenda searches76522
+Node: org-sidebar77411
+Node: License77690
 
 End Tag Table
 
