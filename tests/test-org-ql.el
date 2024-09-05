@@ -2011,7 +2011,7 @@ with keyword arg NOW in PLIST."
   (describe "View saving/loading"
     :var* ((temp-dir (make-temp-file "test-org-ql-" 'dir))
            (temp-filenames (cl-loop for file in '("test1.org" "test2.org")
-                                    collect (expand-file-name file temp-dir)))
+                                    collect (abbreviate-file-name (expand-file-name file temp-dir))))
            (file-contents (with-temp-buffer
                             (insert "#+TITLE: Test data\n\n"
                                     "* TODO Heading 1\n"
