@@ -1084,7 +1084,12 @@ File: README.info,  Node: 089-pre,  Next: 088,  Up: Changelog
 5.1 0.8.9-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Reading of view settings from Org links in upcoming Emacs version.
+     (#461 (https://github.com/alphapapa/org-ql/issues/461).  Thanks to
+     Ola Nilsson (https://github.com/snogge) for help debugging, and for
+     maintaining Buttercup
+     (https://github.com/jorgenschaefer/emacs-buttercup).)
 
 
 File: README.info,  Node: 088,  Next: 087,  Prev: 089-pre,  Up: Changelog
@@ -2064,49 +2069,49 @@ Node: Links38939
 Node: Tips39626
 Node: Changelog39950
 Node: 089-pre40900
-Node: 08841012
-Node: 08742092
-Node: 08643320
-Node: 08543554
-Node: 08444210
-Node: 08344662
-Node: 08245003
-Node: 08145396
-Node: 0845817
-Node: 07448543
-Node: 07348768
-Node: 07249502
-Node: 07150423
-Node: 0751234
-Node: 06354100
-Node: 06254633
-Node: 06154940
-Node: 0655510
-Node: 05258566
-Node: 05158868
-Node: 0559293
-Node: 04960824
-Node: 04861106
-Node: 04761455
-Node: 04661864
-Node: 04562272
-Node: 04462633
-Node: 04362992
-Node: 04263195
-Node: 04163356
-Node: 0463603
-Node: 03267704
-Node: 03168107
-Node: 0368304
-Node: 02371604
-Node: 02271838
-Node: 02172118
-Node: 0272323
-Node: 0176401
-Node: Notes76502
-Node: Comparison with Org Agenda searches76664
-Node: org-sidebar77553
-Node: License77832
+Node: 08841308
+Node: 08742388
+Node: 08643616
+Node: 08543850
+Node: 08444506
+Node: 08344958
+Node: 08245299
+Node: 08145692
+Node: 0846113
+Node: 07448839
+Node: 07349064
+Node: 07249798
+Node: 07150719
+Node: 0751530
+Node: 06354396
+Node: 06254929
+Node: 06155236
+Node: 0655806
+Node: 05258862
+Node: 05159164
+Node: 0559589
+Node: 04961120
+Node: 04861402
+Node: 04761751
+Node: 04662160
+Node: 04562568
+Node: 04462929
+Node: 04363288
+Node: 04263491
+Node: 04163652
+Node: 0463899
+Node: 03268000
+Node: 03168403
+Node: 0368600
+Node: 02371900
+Node: 02272134
+Node: 02172414
+Node: 0272619
+Node: 0176697
+Node: Notes76798
+Node: Comparison with Org Agenda searches76960
+Node: org-sidebar77849
+Node: License78128
 
 End Tag Table
 
