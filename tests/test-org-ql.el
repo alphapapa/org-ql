@@ -1337,7 +1337,15 @@ with keyword arg NOW in PLIST."
 
       (org-ql-it "with a property and a value"
         (org-ql-expect ('(property "agenda-group" "plans"))
-          '("Take over the universe" "Write a symphony"))))
+          '("Take over the universe" "Write a symphony")))
+
+      (org-ql-it "with a property and \"nil :inherit t\""
+        (org-ql-expect ('(property "agenda-group" nil :inherit t))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Spaceship lease" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Write a symphony")))
+
+      (org-ql-it "with a property and \":inherit t\""
+        (org-ql-expect ('(property "agenda-group" :inherit t))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Spaceship lease" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Write a symphony"))))
 
     (describe "(regexp)"
 
