@@ -638,6 +638,11 @@ with keyword arg NOW in PLIST."
                   :to-equal (list :query t
                                   :preamble (rx bol (repeat 2 4 "*") " ")
                                   :preamble-case-fold t)))
+        (it "with an expression in level number's place"
+          (expect (org-ql--query-preamble '(level <= (string-to-number (property "PROPERTY"))))
+                  :to-equal (list :query '(level <= (string-to-number (property "PROPERTY")))
+                                  :preamble nil
+                                  :preamble-case-fold t)))
         (it "<"
           (expect (org-ql--query-preamble '(level < 3))
                   :to-equal (list :query t
@@ -1339,7 +1344,15 @@ with keyword arg NOW in PLIST."
 
       (org-ql-it "with a property and a value"
         (org-ql-expect ('(property "agenda-group" "plans"))
-          '("Take over the universe" "Write a symphony"))))
+          '("Take over the universe" "Write a symphony")))
+
+      (org-ql-it "with a property and \"nil :inherit t\""
+        (org-ql-expect ('(property "agenda-group" nil :inherit t))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Spaceship lease" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Write a symphony")))
+
+      (org-ql-it "with a property and \":inherit t\""
+        (org-ql-expect ('(property "agenda-group" :inherit t))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Visit Mars" "Take over the moon" "Visit the moon" "Practice leaping tall buildings in a single bound" "Renew membership in supervillain club" "Learn universal sign language" "Spaceship lease" "Recurring" "/r/emacs" "Shop for groceries" "Sunrise/sunset" "Write a symphony"))))
 
     (describe "(regexp)"
 

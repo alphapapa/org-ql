@@ -560,12 +560,19 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 + Command ~org-ql-find~ respects narrowing of the current buffer by default, allowing searching within the narrowed region.  (Using one ~C-u~ argument widens the current buffer, and using two ~C-u~ arguments prompts for the buffers to search.)
 + Function ~org-ql-completing-read~ accepts a new ~NARROWP~ argument, which is passed to ~org-ql-select~.
 
-*Compatibility*
-+ Fix compilation error on Emacs 30.  ([[https://github.com/alphapapa/org-ql/issues/433][#433]].  Thanks to [[https://github.com/akirak][Akira Komamura]] and [[https://github.com/monnier][Stefan Monnier]].)
-
 *** helm-org-ql
 
 Tagged v0.6.2, fixing a compilation warning.
+
+** 0.8.9
+
+*Fixes*
++ Predicate ~property~ when called with argument form ~(property "PROPERTY-NAME" :inherit t)~.  ([[https://github.com/alphapapa/org-ql/issues/460][#460]].  Thanks to [[https://github.com/Stewmath][Stewmath]] for reporting.)
++ Predicate ~level~'s preamble optimizer allows expressions in place of the numeric argument.  (See [[https://github.com/alphapapa/org-ql/issues/460][#460]].  Thanks to [[https://github.com/Stewmath][Stewmath]] for reporting.)
++ Reading of view settings from Org links in upcoming Emacs version.  ([[https://github.com/alphapapa/org-ql/issues/461][#461]].  Thanks to [[https://github.com/snogge][Ola Nilsson]] for help debugging, and for maintaining [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]].)
+
+*Compatibility*
++ Fix compilation error on Emacs 30.  ([[https://github.com/alphapapa/org-ql/issues/433][#433]].  Thanks to [[https://github.com/akirak][Akira Komamura]] and [[https://github.com/monnier][Stefan Monnier]].)
 
 ** 0.8.8
 
