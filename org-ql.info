@@ -1089,6 +1089,10 @@ File: README.info,  Node: 089-pre,  Next: 088,  Up: Changelog
      "PROPERTY-NAME" :inherit t)’.  (#460
      (https://github.com/alphapapa/org-ql/issues/460).  Thanks to
      Stewmath (https://github.com/Stewmath) for reporting.)
+   • Predicate ‘level’’s preamble optimizer allows expressions in place
+     of the numeric argument.  (See #460
+     (https://github.com/alphapapa/org-ql/issues/460).  Thanks to
+     Stewmath (https://github.com/Stewmath) for reporting.)
    • Reading of view settings from Org links in upcoming Emacs version.
      (#461 (https://github.com/alphapapa/org-ql/issues/461).  Thanks to
      Ola Nilsson (https://github.com/snogge) for help debugging, and for
@@ -2073,49 +2077,49 @@ Node: Links38939
 Node: Tips39626
 Node: Changelog39950
 Node: 089-pre40900
-Node: 08841554
-Node: 08742634
-Node: 08643862
-Node: 08544096
-Node: 08444752
-Node: 08345204
-Node: 08245545
-Node: 08145938
-Node: 0846359
-Node: 07449085
-Node: 07349310
-Node: 07250044
-Node: 07150965
-Node: 0751776
-Node: 06354642
-Node: 06255175
-Node: 06155482
-Node: 0656052
-Node: 05259108
-Node: 05159410
-Node: 0559835
-Node: 04961366
-Node: 04861648
-Node: 04761997
-Node: 04662406
-Node: 04562814
-Node: 04463175
-Node: 04363534
-Node: 04263737
-Node: 04163898
-Node: 0464145
-Node: 03268246
-Node: 03168649
-Node: 0368846
-Node: 02372146
-Node: 02272380
-Node: 02172660
-Node: 0272865
-Node: 0176943
-Node: Notes77044
-Node: Comparison with Org Agenda searches77206
-Node: org-sidebar78095
-Node: License78374
+Node: 08841801
+Node: 08742881
+Node: 08644109
+Node: 08544343
+Node: 08444999
+Node: 08345451
+Node: 08245792
+Node: 08146185
+Node: 0846606
+Node: 07449332
+Node: 07349557
+Node: 07250291
+Node: 07151212
+Node: 0752023
+Node: 06354889
+Node: 06255422
+Node: 06155729
+Node: 0656299
+Node: 05259355
+Node: 05159657
+Node: 0560082
+Node: 04961613
+Node: 04861895
+Node: 04762244
+Node: 04662653
+Node: 04563061
+Node: 04463422
+Node: 04363781
+Node: 04263984
+Node: 04164145
+Node: 0464392
+Node: 03268493
+Node: 03168896
+Node: 0369093
+Node: 02372393
+Node: 02272627
+Node: 02172907
+Node: 0273112
+Node: 0177190
+Node: Notes77291
+Node: Comparison with Org Agenda searches77453
+Node: org-sidebar78342
+Node: License78621
 
 End Tag Table
 

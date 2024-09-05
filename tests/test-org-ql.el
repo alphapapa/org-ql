@@ -636,6 +636,11 @@ with keyword arg NOW in PLIST."
                   :to-equal (list :query t
                                   :preamble (rx bol (repeat 2 4 "*") " ")
                                   :preamble-case-fold t)))
+        (it "with an expression in level number's place"
+          (expect (org-ql--query-preamble '(level <= (string-to-number (property "PROPERTY"))))
+                  :to-equal (list :query '(level <= (string-to-number (property "PROPERTY")))
+                                  :preamble nil
+                                  :preamble-case-fold t)))
         (it "<"
           (expect (org-ql--query-preamble '(level < 3))
                   :to-equal (list :query t

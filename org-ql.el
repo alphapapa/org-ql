@@ -1534,7 +1534,8 @@ COMPARATOR may be `<', `<=', `>', or `>='."
                ;; is "h:" while the user is typing.
                (list :regexp (rx bol (1+ "*") " ")
                      :case-fold t))
-              (`(,predicate-names ,comparator-or-num ,num)
+              ((and `(,predicate-names ,comparator-or-num ,num)
+                    (guard (numberp num)))
                (let ((repeat (pcase comparator-or-num
                                ('< `(repeat 1 ,(1- num) "*"))
                                ('<= `(repeat 1 ,num "*"))
@@ -1543,7 +1544,8 @@ COMPARATOR may be `<', `<=', `>', or `>='."
                                ((pred integerp) `(repeat ,comparator-or-num ,num "*")))))
                  (list :regexp (rx-to-string `(seq bol ,repeat " ") t)
                        :case-fold t)))
-              (`(,predicate-names ,num)
+              ((and `(,predicate-names ,num)
+                    (guard (numberp num)))
                (list :regexp (rx-to-string `(seq bol (repeat ,num "*") " ") t)
                      :case-fold t)))
   ;; NOTE: It might be necessary to take into account `org-odd-levels'; see docstring for
