@@ -1799,34 +1799,62 @@ interpreted as nil or non-nil)."
                  ;; predicate test for whether an entry has local
                  ;; properties when no arguments are given.
                  (list 'property ""))
-                (`(,predicate-names ,property ,value . ,plist)
+                (`(,predicate-names ,property)
                  ;; Convert keyword property arguments to strings.  Non-sexp
                  ;; queries result in keyword property arguments (because to do
                  ;; otherwise would require ugly special-casing in the parsing).
                  (when (keywordp property)
                    (setf property (substring (symbol-name property) 1)))
-                 (list 'property property value
-                       :inherit (cond ((plist-member plist :inherit) (plist-get plist :inherit))
-                                      ((listp org-use-property-inheritance) ''selective)
-                                      (t org-use-property-inheritance)))))
+                 (list 'property property))
+                (`(,predicate-names ,property . ,rest)
+                 (pcase rest
+                   (`(,value)
+                    ;; Convert keyword property arguments to strings.  Non-sexp
+                    ;; queries result in keyword property arguments (because to do
+                    ;; otherwise would require ugly special-casing in the parsing).
+                    (when (keywordp property)
+                      (setf property (substring (symbol-name property) 1)))
+                    (list 'property property value))
+                   ((and `(,value . ,plist)
+                         (guard (not (keywordp value))))
+                    ;; Convert keyword property arguments to strings.  Non-sexp
+                    ;; queries result in keyword property arguments (because to do
+                    ;; otherwise would require ugly special-casing in the parsing).
+                    (when (keywordp property)
+                      (setf property (substring (symbol-name property) 1)))
+                    (list 'property property value
+                          :inherit (cond ((plist-member plist :inherit) (plist-get plist :inherit))
+                                         ((listp org-use-property-inheritance) ''selective)
+                                         (t org-use-property-inheritance))))
+                   ((and plist (guard (keywordp (car rest))))
+                    ;; Convert keyword property arguments to strings.  Non-sexp
+                    ;; queries result in keyword property arguments (because to do
+                    ;; otherwise would require ugly special-casing in the parsing).
+                    (when (keywordp property)
+                      (setf property (substring (symbol-name property) 1)))
+                    (list 'property property nil
+                          :inherit (cond ((plist-member plist :inherit) (plist-get plist :inherit))
+                                         ((listp org-use-property-inheritance) ''selective)
+                                         (t org-use-property-inheritance)))))))
   ;; MAYBE: Should case folding be disabled for properties?  What about values?
   ;; MAYBE: Support (property) without args.
 
   ;; NOTE: When inheritance is enabled, the preamble can't be used,
   ;; which will make the search slower.
-  :preambles ((`(,predicate-names ,property ,value . ,(map :inherit))
+  :preambles (((and `(,predicate-names ,property ,value)
+                    (guard (atom value)))
                ;; We do NOT return nil, because the predicate still needs to be tested,
                ;; because the regexp could match a string not inside a property drawer.
-               (list :regexp (unless inherit
-                               (rx-to-string `(seq bol (0+ space) ":" ,property ":"
-                                                   (1+ space) ,value (0+ space) eol)))
+               (list :regexp (rx-to-string `(seq bol (0+ space) ":" ,property ":"
+                                                 (1+ space) ,value (0+ space) eol))
                      :query query))
-              (`(,predicate-names ,property . ,(map :inherit))
-               ;; We do NOT return nil, because the predicate still needs to be tested,
+              ((and `(,predicate-names ,property ,value . ,plist)
+                    (guard (keywordp (car plist))))
+               ;; WE do NOT return nil, because the predicate still needs to be tested,
                ;; because the regexp could match a string not inside a property drawer.
                ;; NOTE: The preamble only matches if there appears to be a value.
                ;; A line like ":ID: " without any other text does not match.
-               (list :regexp (unless inherit
+               (list :regexp (unless (plist-get plist :inherit)
                                (rx-to-string `(seq bol (0+ space) ":" ,property ":" (1+ space)
                                                    (minimal-match (1+ not-newline)) eol)))
                      :query query)))
@@ -1838,7 +1866,7 @@ interpreted as nil or non-nil)."
           ;; Check that PROPERTY exists
           (org-ql--value-at
            (point) (lambda ()
-                     (org-entry-get (point) property))))
+                     (org-entry-get (point) property inherit))))
          (_
           ;; Check that PROPERTY has VALUE.
 
