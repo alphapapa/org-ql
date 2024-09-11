@@ -1986,13 +1986,13 @@ with keyword arg NOW in PLIST."
                 (expression-link "[[org-ql-search:todo:?title%3D%28error%20%22UNSAFE%22%29]]"))
           (it "Errors for a quoted lambda"
             (expect (open-link quoted-lambda-link)
-                    :to-throw 'wrong-type-argument '(characterp lambda)))
+                    :to-throw 'error '("CAUTION: Link not opened because unsafe title parameter detected: (lambda (_ _) (error \"UNSAFE\"))")))
           (it "Errors for an unquoted lambda"
             (expect (open-link unquoted-lambda-link)
-                    :to-throw 'wrong-type-argument '(characterp lambda)))
+                    :to-throw 'error '("CAUTION: Link not opened because unsafe title parameter detected: (lambda (_ _) (error \"UNSAFE\"))")))
           (it "Errors for an expression"
             (expect (open-link expression-link)
-                    :to-throw 'wrong-type-argument '(characterp error))))
+                    :to-throw 'error '("CAUTION: Link not opened because unsafe title parameter detected: (error \"UNSAFE\")"))))
 
         (describe "sort parameter"
           :var ((quoted-lambda-link "[[org-ql-search:todo:?sort%3D%28lambda%20%28_%20_%29%20%28error%20%22UNSAFE%22%29%29]]")

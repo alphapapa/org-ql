@@ -59,6 +59,10 @@
   "Face for due dates in `org-ql-view' views."
   :group 'org-ql)
 
+(defface org-ql-view-title '((t :weight bold))
+  "View title in header line."
+  :group 'org-ql-view)
+
 ;;;; Variables
 
 (defvar org-ql-view-buffer-name-prefix "*Org QL View:"
@@ -459,7 +463,8 @@ subsequent refreshing of the buffer: `org-ql-view-buffers-files',
 If TITLE, prepend it to the header."
   (let* ((title (if title
                     (concat (propertize "View:" 'face 'transient-argument)
-                            title " ")
+                            (propertize title 'face 'org-ql-view-title)
+                            " ")
                   ""))
          (query-formatted (when query
                             (org-ql-view--format-query query)))
@@ -645,6 +650,8 @@ purposes of compatibility with changes in Org 9.4."
                 (stringp buffers-files)
                 (cl-every #'stringp buffers-files))
       (error "CAUTION: Link not opened because unsafe buffers-files parameter detected: %s" buffers-files))
+    (unless (or (stringp title) (null title))
+      (error "CAUTION: Link not opened because unsafe title parameter detected: %S" title))
     (when (or (listp query)
               (string-match (rx bol (0+ space) "(") query))
       ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.

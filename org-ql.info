@@ -1095,7 +1095,10 @@ File: README.info,  Node: 09-pre,  Next: 089,  Up: Changelog
 5.1 0.9-pre
 ===========
 
-*Changes*
+*Additions*
+   • Face ‘org-ql-view-title’, applied to view titles in header line.
+
+   *Changes*
    • Command ‘org-ql-find’ respects narrowing of the current buffer by
      default, allowing searching within the narrowed region.  (Using one
      ‘C-u’ argument widens the current buffer, and using two ‘C-u’
@@ -2147,53 +2150,53 @@ Node: Links39051
 Node: Tips39738
 Node: Changelog40062
 Node: 09-pre41029
-Node: helm-org-ql (1)41575
-Node: 08941716
-Node: 08842858
-Node: 08743934
-Node: 08645162
-Node: 08545396
-Node: 08446052
-Node: 08346504
-Node: 08246845
-Node: 08147238
-Node: 0847661
-Node: 07450387
-Node: 07350612
-Node: 07251346
-Node: 07152267
-Node: 0753078
-Node: 06355944
-Node: 06256477
-Node: 06156784
-Node: 0657354
-Node: 05260410
-Node: 05160712
-Node: 0561137
-Node: 04962668
-Node: 04862950
-Node: 04763299
-Node: 04663708
-Node: 04564116
-Node: 04464477
-Node: 04364836
-Node: 04265039
-Node: 04165200
-Node: 0465447
-Node: 03269548
-Node: 03169951
-Node: 0370148
-Node: 02373448
-Node: 02273682
-Node: 02173962
-Node: 0274167
-Node: 0178245
-Node: Development78346
-Node: Copyright assignment78579
-Node: Notes79169
-Node: Comparison with Org Agenda searches79333
-Node: org-sidebar80222
-Node: License80501
+Node: helm-org-ql (1)41667
+Node: 08941808
+Node: 08842950
+Node: 08744026
+Node: 08645254
+Node: 08545488
+Node: 08446144
+Node: 08346596
+Node: 08246937
+Node: 08147330
+Node: 0847753
+Node: 07450479
+Node: 07350704
+Node: 07251438
+Node: 07152359
+Node: 0753170
+Node: 06356036
+Node: 06256569
+Node: 06156876
+Node: 0657446
+Node: 05260502
+Node: 05160804
+Node: 0561229
+Node: 04962760
+Node: 04863042
+Node: 04763391
+Node: 04663800
+Node: 04564208
+Node: 04464569
+Node: 04364928
+Node: 04265131
+Node: 04165292
+Node: 0465539
+Node: 03269640
+Node: 03170043
+Node: 0370240
+Node: 02373540
+Node: 02273774
+Node: 02174054
+Node: 0274259
+Node: 0178337
+Node: Development78438
+Node: Copyright assignment78671
+Node: Notes79261
+Node: Comparison with Org Agenda searches79425
+Node: org-sidebar80314
+Node: License80593
 
 End Tag Table
 

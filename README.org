@@ -556,6 +556,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.9-pre
 
+*Additions*
++ Face ~org-ql-view-title~, applied to view titles in header line.
+
 *Changes*
 + Command ~org-ql-find~ respects narrowing of the current buffer by default, allowing searching within the narrowed region.  (Using one ~C-u~ argument widens the current buffer, and using two ~C-u~ arguments prompts for the buffers to search.)
 + Function ~org-ql-completing-read~ accepts a new ~NARROWP~ argument, which is passed to ~org-ql-select~.
