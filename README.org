@@ -557,6 +557,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 ** 0.9-pre
 
 *Additions*
++ Face ~org-ql-view-query~, applied to view queries in header line.
 + Face ~org-ql-view-title~, applied to view titles in header line.
 + Option ~org-ql-view-relative-deadline-prefix~.
 

@@ -59,6 +59,13 @@
   "Face for due dates in `org-ql-view' views."
   :group 'org-ql-view)
 
+(defface org-ql-view-query nil
+  "View query in header line.
+This face is added to the formatted query after font-lock faces
+are applied to it.  It may be used, e.g. to reduce the height so
+more of it is visible."
+  :group 'org-ql-view)
+
 (defface org-ql-view-title '((t :weight bold))
   "View title in header line."
   :group 'org-ql-view)
@@ -489,6 +496,7 @@ If TITLE, prepend it to the header."
                                                      (org-ql-view--font-lock-string 'emacs-lisp-mode)
                                                      (s-truncate available-width))
                                                 'help-echo buffers-files-formatted))))
+    (add-face-text-property 0 (length query-propertized) 'org-ql-view-query 'append query-propertized)
     (concat title
             (when query (propertize "Query:" 'face 'transient-argument))
             (when query query-propertized)
