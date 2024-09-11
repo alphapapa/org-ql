@@ -242,6 +242,12 @@ See info node `(elisp)Cyclic Window Ordering'."
                                       (sexp :tag "org-super-agenda grouping expression")
                                       (variable :tag "Variable holding org-super-agenda  grouping expression"))))))))
 
+(defcustom org-ql-view-relative-deadline-prefix "due "
+  ;; TODO(v0.9): Add one for scheduled, too.
+  "Prefix for relative deadlines.
+Relative deadlines are, e.g. \"in 5d\", \"5d ago\"."
+  :type 'string)
+
 ;;;; Commands
 
 ;;;###autoload
@@ -1021,7 +1027,9 @@ property."
              (deadline-day-number (org-time-string-to-absolute
                                    (org-element-timestamp-interpreter deadline-date 'ignore)))
              (difference-days (- today-day-number deadline-day-number))
-             (relative-due-date (org-add-props (org-ql-view--format-relative-date difference-days) nil
+             (relative-due-date (org-add-props
+                                    (concat org-ql-view-relative-deadline-prefix
+                                            (org-ql-view--format-relative-date difference-days)) nil
                                   'help-echo (org-element-property :raw-value deadline-date)))
              ;; FIXME: Unused for now: (todo-keyword (org-element-property :todo-keyword element))
              ;; FIXME: Unused for now: (done-p (member todo-keyword org-done-keywords))

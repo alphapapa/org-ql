@@ -558,6 +558,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Additions*
 + Face ~org-ql-view-title~, applied to view titles in header line.
++ Option ~org-ql-view-relative-deadline-prefix~.
 
 *Changes*
 + Command ~org-ql-find~ respects narrowing of the current buffer by default, allowing searching within the narrowed region.  (Using one ~C-u~ argument widens the current buffer, and using two ~C-u~ arguments prompts for the buffers to search.)

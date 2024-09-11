@@ -1097,6 +1097,7 @@ File: README.info,  Node: 09-pre,  Next: 089,  Up: Changelog
 
 *Additions*
    • Face ‘org-ql-view-title’, applied to view titles in header line.
+   • Option ‘org-ql-view-relative-deadline-prefix’.
 
    *Changes*
    • Command ‘org-ql-find’ respects narrowing of the current buffer by
@@ -2153,53 +2154,53 @@ Node: Links39051
 Node: Tips39738
 Node: Changelog40062
 Node: 09-pre41029
-Node: helm-org-ql (1)41743
-Node: 08941884
-Node: 08843026
-Node: 08744102
-Node: 08645330
-Node: 08545564
-Node: 08446220
-Node: 08346672
-Node: 08247013
-Node: 08147406
-Node: 0847829
-Node: 07450555
-Node: 07350780
-Node: 07251514
-Node: 07152435
-Node: 0753246
-Node: 06356112
-Node: 06256645
-Node: 06156952
-Node: 0657522
-Node: 05260578
-Node: 05160880
-Node: 0561305
-Node: 04962836
-Node: 04863118
-Node: 04763467
-Node: 04663876
-Node: 04564284
-Node: 04464645
-Node: 04365004
-Node: 04265207
-Node: 04165368
-Node: 0465615
-Node: 03269716
-Node: 03170119
-Node: 0370316
-Node: 02373616
-Node: 02273850
-Node: 02174130
-Node: 0274335
-Node: 0178413
-Node: Development78514
-Node: Copyright assignment78747
-Node: Notes79337
-Node: Comparison with Org Agenda searches79501
-Node: org-sidebar80390
-Node: License80669
+Node: helm-org-ql (1)41801
+Node: 08941942
+Node: 08843084
+Node: 08744160
+Node: 08645388
+Node: 08545622
+Node: 08446278
+Node: 08346730
+Node: 08247071
+Node: 08147464
+Node: 0847887
+Node: 07450613
+Node: 07350838
+Node: 07251572
+Node: 07152493
+Node: 0753304
+Node: 06356170
+Node: 06256703
+Node: 06157010
+Node: 0657580
+Node: 05260636
+Node: 05160938
+Node: 0561363
+Node: 04962894
+Node: 04863176
+Node: 04763525
+Node: 04663934
+Node: 04564342
+Node: 04464703
+Node: 04365062
+Node: 04265265
+Node: 04165426
+Node: 0465673
+Node: 03269774
+Node: 03170177
+Node: 0370374
+Node: 02373674
+Node: 02273908
+Node: 02174188
+Node: 0274393
+Node: 0178471
+Node: Development78572
+Node: Copyright assignment78805
+Node: Notes79395
+Node: Comparison with Org Agenda searches79559
+Node: org-sidebar80448
+Node: License80727
 
 End Tag Table
 
