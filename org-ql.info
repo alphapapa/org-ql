@@ -1106,6 +1106,9 @@ File: README.info,  Node: 09-pre,  Next: 089,  Up: Changelog
    • Function ‘org-ql-completing-read’ accepts a new ‘NARROWP’ argument,
      which is passed to ‘org-ql-select’.
 
+   *Fixes*
+   • Customization group for face ‘org-ql-view-due-date’.
+
 * Menu:
 
 * helm-org-ql: helm-org-ql (1).
@@ -2150,53 +2153,53 @@ Node: Links39051
 Node: Tips39738
 Node: Changelog40062
 Node: 09-pre41029
-Node: helm-org-ql (1)41667
-Node: 08941808
-Node: 08842950
-Node: 08744026
-Node: 08645254
-Node: 08545488
-Node: 08446144
-Node: 08346596
-Node: 08246937
-Node: 08147330
-Node: 0847753
-Node: 07450479
-Node: 07350704
-Node: 07251438
-Node: 07152359
-Node: 0753170
-Node: 06356036
-Node: 06256569
-Node: 06156876
-Node: 0657446
-Node: 05260502
-Node: 05160804
-Node: 0561229
-Node: 04962760
-Node: 04863042
-Node: 04763391
-Node: 04663800
-Node: 04564208
-Node: 04464569
-Node: 04364928
-Node: 04265131
-Node: 04165292
-Node: 0465539
-Node: 03269640
-Node: 03170043
-Node: 0370240
-Node: 02373540
-Node: 02273774
-Node: 02174054
-Node: 0274259
-Node: 0178337
-Node: Development78438
-Node: Copyright assignment78671
-Node: Notes79261
-Node: Comparison with Org Agenda searches79425
-Node: org-sidebar80314
-Node: License80593
+Node: helm-org-ql (1)41743
+Node: 08941884
+Node: 08843026
+Node: 08744102
+Node: 08645330
+Node: 08545564
+Node: 08446220
+Node: 08346672
+Node: 08247013
+Node: 08147406
+Node: 0847829
+Node: 07450555
+Node: 07350780
+Node: 07251514
+Node: 07152435
+Node: 0753246
+Node: 06356112
+Node: 06256645
+Node: 06156952
+Node: 0657522
+Node: 05260578
+Node: 05160880
+Node: 0561305
+Node: 04962836
+Node: 04863118
+Node: 04763467
+Node: 04663876
+Node: 04564284
+Node: 04464645
+Node: 04365004
+Node: 04265207
+Node: 04165368
+Node: 0465615
+Node: 03269716
+Node: 03170119
+Node: 0370316
+Node: 02373616
+Node: 02273850
+Node: 02174130
+Node: 0274335
+Node: 0178413
+Node: Development78514
+Node: Copyright assignment78747
+Node: Notes79337
+Node: Comparison with Org Agenda searches79501
+Node: org-sidebar80390
+Node: License80669
 
 End Tag Table
 

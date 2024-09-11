@@ -563,6 +563,9 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 + Command ~org-ql-find~ respects narrowing of the current buffer by default, allowing searching within the narrowed region.  (Using one ~C-u~ argument widens the current buffer, and using two ~C-u~ arguments prompts for the buffers to search.)
 + Function ~org-ql-completing-read~ accepts a new ~NARROWP~ argument, which is passed to ~org-ql-select~.
 
+*Fixes*
++ Customization group for face ~org-ql-view-due-date~.
+
 *** helm-org-ql
 
 Tagged v0.6.2, fixing a compilation warning.

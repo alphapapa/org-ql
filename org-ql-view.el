@@ -57,7 +57,7 @@
 (defface org-ql-view-due-date
   '((t (:slant italic :weight bold)))
   "Face for due dates in `org-ql-view' views."
-  :group 'org-ql)
+  :group 'org-ql-view)
 
 (defface org-ql-view-title '((t :weight bold))
   "View title in header line."
