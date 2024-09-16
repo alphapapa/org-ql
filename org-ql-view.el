@@ -528,6 +528,22 @@ with human-readable strings."
       (font-lock-ensure)
       (buffer-string))))
 
+(defun org-ql-view--font-lock-as-org (s)
+  "Return string S font-locked as in `org-mode'."
+  ;; This works like `org-fontify-like-in-org-mode', but uses a single
+  ;; buffer instead of a new one every time.
+  ;; TODO(C): Submit these improvements upstream.
+  (let ((buffer (or (get-buffer " *org-ql-view--font-lock-as-org*")
+                    (with-current-buffer (get-buffer-create " *org-ql-view--font-lock-as-org*")
+                      (buffer-disable-undo)
+                      (org-mode)
+                      (current-buffer)))))
+    (with-current-buffer buffer
+      (insert s)
+      (font-lock-ensure)
+      (prog1 (buffer-string)
+        (erase-buffer)))))
+
 (defun org-ql-view--buffer (&optional name)
   "Return `org-ql-view' buffer, creating it if necessary.
 If NAME is non-nil, return buffer by that name instead of using
@@ -898,6 +914,11 @@ return an empty string."
            ;; (which would also make it easier to do it independently of faces, etc).
            (title (--> (org-ql-view--add-faces element)
                        (org-element-property :raw-value it)))
+           ;; TODO(B): Needs refactoring.  A function like `org-ql-view--add-faces'
+           ;; should return a list of faces to be added.
+           (title-faces (get-text-property 0 'face title))
+           (title (org-ql-view--font-lock-as-org title))
+           (_ (add-face-text-property 0 (length title) title-faces t title))
            (todo-keyword (-some--> (org-element-property :todo-keyword element)
                            (org-ql-view--add-todo-face
                             (substring-no-properties it))))

@@ -1112,6 +1112,7 @@ File: README.info,  Node: 09-pre,  Next: 089,  Up: Changelog
    • Customization group for face ‘org-ql-view-due-date’.
    • Command ‘org-ql-refile’ uses the base buffer when refiling to an
      indirect buffer.
+   • Apply Org syntax font-locking to items in ‘org-ql-view’ buffers.
 
 * Menu:
 
@@ -2157,53 +2158,53 @@ Node: Links39051
 Node: Tips39738
 Node: Changelog40062
 Node: 09-pre41029
-Node: helm-org-ql (1)41976
-Node: 08942117
-Node: 08843259
-Node: 08744335
-Node: 08645563
-Node: 08545797
-Node: 08446453
-Node: 08346905
-Node: 08247246
-Node: 08147639
-Node: 0848062
-Node: 07450788
-Node: 07351013
-Node: 07251747
-Node: 07152668
-Node: 0753479
-Node: 06356345
-Node: 06256878
-Node: 06157185
-Node: 0657755
-Node: 05260811
-Node: 05161113
-Node: 0561538
-Node: 04963069
-Node: 04863351
-Node: 04763700
-Node: 04664109
-Node: 04564517
-Node: 04464878
-Node: 04365237
-Node: 04265440
-Node: 04165601
-Node: 0465848
-Node: 03269949
-Node: 03170352
-Node: 0370549
-Node: 02373849
-Node: 02274083
-Node: 02174363
-Node: 0274568
-Node: 0178646
-Node: Development78747
-Node: Copyright assignment78980
-Node: Notes79570
-Node: Comparison with Org Agenda searches79734
-Node: org-sidebar80623
-Node: License80902
+Node: helm-org-ql (1)42052
+Node: 08942193
+Node: 08843335
+Node: 08744411
+Node: 08645639
+Node: 08545873
+Node: 08446529
+Node: 08346981
+Node: 08247322
+Node: 08147715
+Node: 0848138
+Node: 07450864
+Node: 07351089
+Node: 07251823
+Node: 07152744
+Node: 0753555
+Node: 06356421
+Node: 06256954
+Node: 06157261
+Node: 0657831
+Node: 05260887
+Node: 05161189
+Node: 0561614
+Node: 04963145
+Node: 04863427
+Node: 04763776
+Node: 04664185
+Node: 04564593
+Node: 04464954
+Node: 04365313
+Node: 04265516
+Node: 04165677
+Node: 0465924
+Node: 03270025
+Node: 03170428
+Node: 0370625
+Node: 02373925
+Node: 02274159
+Node: 02174439
+Node: 0274644
+Node: 0178722
+Node: Development78823
+Node: Copyright assignment79056
+Node: Notes79646
+Node: Comparison with Org Agenda searches79810
+Node: org-sidebar80699
+Node: License80978
 
 End Tag Table
 
