@@ -567,6 +567,7 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Fixes*
 + Customization group for face ~org-ql-view-due-date~.
++ Command ~org-ql-refile~ uses the base buffer when refiling to an indirect buffer.
 
 *** helm-org-ql
 

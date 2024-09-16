@@ -1110,6 +1110,8 @@ File: README.info,  Node: 09-pre,  Next: 089,  Up: Changelog
 
    *Fixes*
    • Customization group for face ‘org-ql-view-due-date’.
+   • Command ‘org-ql-refile’ uses the base buffer when refiling to an
+     indirect buffer.
 
 * Menu:
 
@@ -2155,53 +2157,53 @@ Node: Links39051
 Node: Tips39738
 Node: Changelog40062
 Node: 09-pre41029
-Node: helm-org-ql (1)41878
-Node: 08942019
-Node: 08843161
-Node: 08744237
-Node: 08645465
-Node: 08545699
-Node: 08446355
-Node: 08346807
-Node: 08247148
-Node: 08147541
-Node: 0847964
-Node: 07450690
-Node: 07350915
-Node: 07251649
-Node: 07152570
-Node: 0753381
-Node: 06356247
-Node: 06256780
-Node: 06157087
-Node: 0657657
-Node: 05260713
-Node: 05161015
-Node: 0561440
-Node: 04962971
-Node: 04863253
-Node: 04763602
-Node: 04664011
-Node: 04564419
-Node: 04464780
-Node: 04365139
-Node: 04265342
-Node: 04165503
-Node: 0465750
-Node: 03269851
-Node: 03170254
-Node: 0370451
-Node: 02373751
-Node: 02273985
-Node: 02174265
-Node: 0274470
-Node: 0178548
-Node: Development78649
-Node: Copyright assignment78882
-Node: Notes79472
-Node: Comparison with Org Agenda searches79636
-Node: org-sidebar80525
-Node: License80804
+Node: helm-org-ql (1)41976
+Node: 08942117
+Node: 08843259
+Node: 08744335
+Node: 08645563
+Node: 08545797
+Node: 08446453
+Node: 08346905
+Node: 08247246
+Node: 08147639
+Node: 0848062
+Node: 07450788
+Node: 07351013
+Node: 07251747
+Node: 07152668
+Node: 0753479
+Node: 06356345
+Node: 06256878
+Node: 06157185
+Node: 0657755
+Node: 05260811
+Node: 05161113
+Node: 0561538
+Node: 04963069
+Node: 04863351
+Node: 04763700
+Node: 04664109
+Node: 04564517
+Node: 04464878
+Node: 04365237
+Node: 04265440
+Node: 04165601
+Node: 0465848
+Node: 03269949
+Node: 03170352
+Node: 0370549
+Node: 02373849
+Node: 02274083
+Node: 02174363
+Node: 0274568
+Node: 0178646
+Node: Development78747
+Node: Copyright assignment78980
+Node: Notes79570
+Node: Comparison with Org Agenda searches79734
+Node: org-sidebar80623
+Node: License80902
 
 End Tag Table
 
