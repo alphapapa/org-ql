@@ -110,18 +110,20 @@ which see (but only the files are used)."
                                                                        ((and (pred listp) files) files)))
                                                              (list files-spec)))))))
                  (list (org-ql-completing-read buffers-files :prompt "Refile to: "))))
-  (org-refile nil nil
-              ;; The RFLOC argument:
-              (list
-               ;; Name
-               (org-with-point-at marker
-                 (nth 4 (org-heading-components)))
-               ;; File
-               (buffer-file-name (marker-buffer marker))
-               ;; nil
-               nil
-               ;; Position
-               marker)))
+  (let ((buffer (or (buffer-base-buffer (marker-buffer marker))
+                    (marker-buffer marker))))
+    (org-refile nil nil
+                ;; The RFLOC argument:
+                (list
+                 ;; Name
+                 (org-with-point-at marker
+                   (nth 4 (org-heading-components)))
+                 ;; File
+                 (buffer-file-name buffer)
+                 ;; nil
+                 nil
+                 ;; Position
+                 marker))))
 
 ;;;###autoload
 (defun org-ql-find-in-agenda ()
