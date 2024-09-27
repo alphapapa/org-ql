@@ -189,24 +189,29 @@ Is transformed into this query:
 (cl-defun helm-org-ql-source (buffers-files &key (name "helm-org-ql"))
   "Return Helm source named NAME to search BUFFERS-FILES with `helm-org-ql'."
   ;; Expansion of `helm-build-sync-source' macro.
-  (helm-make-source name 'helm-source-sync
-    :candidates (lambda ()
-                  (let* ((query (org-ql--query-string-to-sexp helm-pattern))
-                         (window-width (window-width (helm-window))))
-                    (when query
-                      (with-current-buffer (helm-buffer-get)
-                        (setq helm-org-ql-buffers-files buffers-files))
-                      (ignore-errors
-                        ;; Ignore errors that might be caused by partially typed queries.
-                        (org-ql-select buffers-files query
-                          :action `(helm-org-ql--heading ,window-width))))))
-    :match #'identity
-    :fuzzy-match nil
-    :multimatch nil
-    :nohighlight t
-    :volatile t
-    :keymap helm-org-ql-map
-    :action helm-org-ql-actions))
+  (let ((window-width (window-width (helm-window))))
+    (helm-make-source name 'helm-source-sync
+      :filtered-candidate-transformer (lambda (candidate-markers _)
+                                        (mapcar (lambda (candidate-marker)
+                                                  (org-with-point-at candidate-marker
+                                                    (helm-org-ql--heading window-width)))
+                                                candidate-markers))
+      :candidates (lambda ()
+                    (let* ((query (org-ql--query-string-to-sexp helm-pattern)))
+                      (when query
+                        (with-current-buffer (helm-buffer-get)
+                          (setq helm-org-ql-buffers-files buffers-files))
+                        (ignore-errors
+                          ;; Ignore errors that might be caused by partially typed queries.
+                          (org-ql-select buffers-files query
+                            :action `(point-marker))))))
+      :match #'identity
+      :fuzzy-match nil
+      :multimatch nil
+      :nohighlight t
+      :match-dynamic t
+      :keymap helm-org-ql-map
+      :action helm-org-ql-actions)))
 
 (defun helm-org-ql--heading (window-width)
   "Return string for Helm for heading at point.
