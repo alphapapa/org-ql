@@ -542,7 +542,8 @@ with human-readable strings."
       (insert s)
       (font-lock-ensure)
       (prog1 (buffer-string)
-        (erase-buffer)))))
+        (erase-buffer)
+        (set-buffer-modified-p nil)))))
 
 (defun org-ql-view--buffer (&optional name)
   "Return `org-ql-view' buffer, creating it if necessary.
