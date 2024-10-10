@@ -537,13 +537,13 @@ with human-readable strings."
                     (with-current-buffer (get-buffer-create " *org-ql-view--font-lock-as-org*")
                       (buffer-disable-undo)
                       (org-mode)
+                      (setq buffer-save-without-query nil)
                       (current-buffer)))))
     (with-current-buffer buffer
       (insert s)
       (font-lock-ensure)
       (prog1 (buffer-string)
-        (erase-buffer)
-        (set-buffer-modified-p nil)))))
+        (erase-buffer)))))
 
 (defun org-ql-view--buffer (&optional name)
   "Return `org-ql-view' buffer, creating it if necessary.
