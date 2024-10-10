@@ -537,6 +537,7 @@ with human-readable strings."
                     (with-current-buffer (get-buffer-create " *org-ql-view--font-lock-as-org*")
                       (buffer-disable-undo)
                       (org-mode)
+                      (setq buffer-save-without-query nil)
                       (current-buffer)))))
     (with-current-buffer buffer
       (insert s)
