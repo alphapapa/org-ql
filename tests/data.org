@@ -62,12 +62,12 @@ SCHEDULED: <2017-07-05 Wed 18:00>
 :Effort:   5
 :END:
 
-* TODO [#C] Get haircut                                      :personal:@town:
+* TODO [#Z] Get haircut :personal:@town:
 SCHEDULED: <2017-07-05 Wed>
 
 Should probably do this before I take over the world.  Want to look my best.  (Not that it will matter once I'm in charge.)
 
-* TODO [#B] Internet                                                  :bills:
+* TODO [#1] Internet :bills:
 DEADLINE: <2017-07-21 Fri -1m>
 
 * TODO [#A] Spaceship lease                                 :bills:spaceship:
@@ -76,7 +76,7 @@ DEADLINE: <2017-08-01 Tue -1m>
 :agenda-group: bills
 :END:
 
-* TODO [#B] Fix flux capacitor                 :spaceship:shopping:@computer:
+* TODO [#9] Fix flux capacitor :spaceship:shopping:@computer:
 SCHEDULED: <2017-07-05 Wed>
 
 If I don't, the frobnicator will probably fall off halfway to Mars...
