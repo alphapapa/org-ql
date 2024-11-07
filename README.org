@@ -567,12 +567,17 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 *Fixes*
 + Customization group for face ~org-ql-view-due-date~.
-+ Command ~org-ql-refile~ uses the base buffer when refiling to an indirect buffer.
 + Apply Org syntax font-locking to items in ~org-ql-view~ buffers.
 
 *** helm-org-ql
 
 Tagged v0.6.2, fixing a compilation warning.
+
+** 0.8.10
+
+*Fixes*
++ Command ~org-ql-refile~ uses the base buffer when refiling to an indirect buffer.  ([[https://github.com/alphapapa/org-ql/issues/466][#466]].)
++ Predicate ~link~ could signal an error when searching text that is mistakenly recognized as an Org link (e.g. Bash double-bracket constructs in a source block).  (Thanks to [[https://github.com/jwiegley][John Wiegley]] for reporting.)
 
 ** 0.8.9
 
