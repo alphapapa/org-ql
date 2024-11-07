@@ -1626,11 +1626,15 @@ any link is found."
                          (or (null description)
                              (string-match-p description (match-string org-ql-link-description-group)))))
               (_ (if (and description target)
-                     (and (string-match-p target (match-string 1))
-                          (string-match-p description (match-string org-ql-link-description-group)))
-                   (or (string-match-p description-or-target (match-string 1))
-                       (string-match-p description-or-target
-                                       (match-string org-ql-link-description-group)))))))))
+                     (and (and (match-string 1)
+                               (string-match-p target (match-string 1)))
+                          (and (match-string org-ql-link-description-group)
+                               (string-match-p description (match-string org-ql-link-description-group))))
+                   (or (and (match-string 1)
+                            (string-match-p description-or-target (match-string 1)))
+                       (and (match-string org-ql-link-description-group)
+                            (string-match-p description-or-target
+                                            (match-string org-ql-link-description-group))))))))))
 
 (org-ql-defpred (rifle smart) (&rest strings)
   "Return non-nil if each of strings is found in the entry or its outline path.

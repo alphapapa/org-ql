@@ -555,7 +555,8 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 ** 0.8.10-pre
 
-Nothing new yet.
+*Fixes*
++ Predicate ~link~ could signal an error when searching text that is mistakenly recognized as an Org link (e.g. Bash double-bracket constructs in a source block).  (Thanks to [[https://github.com/jwiegley][John Wiegley]] for reporting.)
 
 ** 0.8.9
 
