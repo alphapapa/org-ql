@@ -553,6 +553,10 @@ Simple links may also be written manually in either sexp or non-sexp form, like:
 
 /Note:/ Breaking changes may be made before version 1.0, but in the event of major changes, attempts at backward compatibility will be made with obsolescence declarations, translation of arguments, etc.  Users who need stability guarantees before 1.0 may choose to use tagged stable releases.
 
+** 0.8.10-pre
+
+Nothing new yet.
+
 ** 0.8.9
 
 *Fixes*
