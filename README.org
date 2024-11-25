@@ -233,7 +233,7 @@ Note that the =effort=, =level=, and =priority= predicates do not support compar
 Arguments are listed next to predicate names, where applicable.
 
 +  =blocked= :: Return non-nil if current heading is blocked.  Calls ~org-entry-blocked-p~, which see.
-+  =category (&optional categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
++  =category (&rest categories)= :: Return non-nil if current heading is in one or more of ~CATEGORIES~ (a list of strings).
 +  =done= :: Return non-nil if entry's ~TODO~ keyword is in ~org-done-keywords~.
 +  =effort (&optional effort-or-comparator effort)= :: Return non-nil if current heading's effort property matches arguments.  The following forms are accepted: ~(effort DURATION)~: Matches if effort is ~DURATION~.  ~(effort DURATION DURATION)~: Matches if effort is between DURATIONs, inclusive.  ~(effort COMPARATOR DURATION)~: Matches if effort compares to ~DURATION~ with ~COMPARATOR~.  ~COMPARATOR~ may be ~<~, ~<=~, ~>~, or ~>=~.  ~DURATION~ should be an Org effort string, like =5= or =0:05=.
 +  =habit= :: Return non-nil if entry is a habit.
@@ -256,16 +256,16 @@ Arguments are listed next to predicate names, where applicable.
      - Aliases: ~smart~.
      - *Note:* By default, this is the default predicate used for plain-string query tokens (i.e. given without a specified predicate).  This can be customized with the option ~org-ql-default-predicate~.
 +  ~src (&key lang regexps)~ :: Return non-nil if current entry contains an Org Babel source block.  If ~LANG~ is non-nil, match blocks of that language.  If ~REGEXPS~ is non-nil, require that block's contents match all regexps.  Matching is done case-insensitively.
-+  =tags (&optional tags)= :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
-+  =tags-inherited (&optional tags)= :: Return non-nil if current heading's inherited tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any inherited tags.
++  =tags (&rest tags)= :: Return non-nil if current heading has one or more of ~TAGS~ (a list of strings).  Tests both inherited and local tags.
++  =tags-inherited (&rest tags)= :: Return non-nil if current heading's inherited tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any inherited tags.
      -  Aliases: ~inherited-tags~, ~tags-i~, ~itags~.
-+  =tags-local (&optional tags)= :: Return non-nil if current heading's local tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any local tags.
++  =tags-local (&rest tags)= :: Return non-nil if current heading's local tags include one or more of ~TAGS~ (a list of strings).  If ~TAGS~ is nil, return non-nil if heading has any local tags.
      -  Aliases: ~local-tags~, ~tags-l~, ~ltags~.
-+  =tags-all (tags)= :: Return non-nil if current heading includes all of ~TAGS~.  Tests both inherited and local tags.
++  =tags-all (&rest tags)= :: Return non-nil if current heading includes all of ~TAGS~.  Tests both inherited and local tags.
      -  Aliases: ~tags&~.
 +  =tags-regexp (&rest regexps)= :: Return non-nil if current heading has tags matching one or more of ~REGEXPS~.  Tests both inherited and local tags.
      -  Aliases: ~tags*~.
-+  =todo (&optional keywords)= :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
++  =todo (&rest keywords)= :: Return non-nil if current heading is a ~TODO~ item.  With ~KEYWORDS~, return non-nil if its keyword is one of ~KEYWORDS~ (a list of strings).  When called without arguments, only matches non-done tasks (i.e. does not match keywords in ~org-done-keywords~).
 
 *** Ancestor/descendant predicates
 
