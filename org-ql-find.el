@@ -205,6 +205,21 @@ multiple buffers to search with completion and PROMPT."
     (org-with-point-at marker
       (org-open-at-point))))
 
+;;;###autoload
+(defun org-ql-open-link-in-agenda ()
+  "Call `org-ql-open-link' on `org-agenda-files'."
+  (interactive)
+  (org-ql-open-link (org-agenda-files)))
+
+;;;###autoload
+(defun org-ql-open-link-in-org-directory ()
+  "Call `org-ql-open-link' on files in `org-directory'. Set variable
+`org-ql-search-directories-files-recursive' to `t' to search the
+directory recursively."
+  (interactive)
+  (org-ql-open-link (org-ql-search-directories-files)))
+
+
 ;;;; Functions
 
 (cl-defun org-ql-find--buffers (&key read-buffer-p)
