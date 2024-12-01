@@ -44,9 +44,9 @@ After installation, you can use the commands without additional configuration.  
 
 ** Quelpa
 
-Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
+Installing with [[https://github.com/quelpa/quelpa][Quelpa]] is easy:
 
-1.  Install [[https://framagit.org/steckerhalter/quelpa-use-package#installation][quelpa-use-package]] (which can be installed directly from MELPA).
+1.  Install [[https://github.com/quelpa/quelpa-use-package#installation][quelpa-use-package]] (which can be installed directly from MELPA).
 2.  Add this form to your init file:
 
 #+BEGIN_SRC elisp
