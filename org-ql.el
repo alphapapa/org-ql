@@ -64,6 +64,11 @@
 Like `org-clock-line-re', but matches the timestamp range in a
 match group.")
 
+(defconst org-ql-log-done-regexp
+  (rx bol "- State \"DONE\"" (1+ blank) "from \"WAITING\"" (1+ blank) (group (1+ not-newline)))
+  ;; TODO: Remove hardcoded states, i.e DONE & WAITING
+  "Regular expression matching state changes")
+
 (defconst org-ql-planning-regexp
   (rx bol (0+ blank) (or "CLOSED" "DEADLINE" "SCHEDULED") ":" (1+ blank) (group (1+ not-newline)))
   "Regular expression matching Org \"planning\" lines.
@@ -2241,6 +2246,24 @@ ignored."
                (list :regexp org-ql-clock-regexp :query t)))
   :body
   (org-ql--predicate-ts :from from :to to :regexp org-ql-clock-regexp :match-group 1))
+
+(org-ql-defpred log-done (&key from to _on)
+  "Return non-nil if current entry contains DONE state change in given period."
+  :normalizers ((`(,predicate-names ,(and num-days (pred numberp)))
+                 ;; (clocked) and (closed) implicitly look into the past.
+                 (let* ((from-day (* -1 num-days))
+                        (rest (list :from from-day)))
+                   (org-ql--normalize-from-to-on
+                     `(log-done :from ,from))))
+                (`(,predicate-names . ,rest)
+                 (org-ql--normalize-from-to-on
+                   `(log-done :from ,from :to ,to))))
+  :preambles ((`(,predicate-names ,(pred numberp))
+               (list :regexp org-ql-log-done-regexp :query t))
+              (`(,predicate-names)
+               (list :regexp org-ql-log-done-regexp :query t)))
+  :body
+  (org-ql--predicate-ts :from from :to to :regexp org-ql-log-done-regexp :match-group 1))
 
 (org-ql-defpred closed (&key from to _on)
   ;; MAYBE: Use the new org-ql-regexps?
