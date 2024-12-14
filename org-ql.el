@@ -1003,7 +1003,8 @@ value of `org-ql-predicates')."
                                          (peg-run (peg ,(caar pexs))
                                                   (lambda (failures)
                                                     (when org-ql-signal-peg-failure
-                                                      (peg-signal-failure failures)))))))))
+                                                      (peg-signal-failure failures)))))
+                                      t))))
                         (pcase parsed-sexp
                           (`(,one-predicate) one-predicate)
                           (`(,_ . ,_) (cons boolean (reverse parsed-sexp)))
