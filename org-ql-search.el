@@ -279,6 +279,7 @@ automatically from the query."
 
 (require 'org-table)
 
+;;;###autoload
 (cl-defun org-dblock-write:org-ql (params)
   "Insert content for org-ql dynamic block at point according to PARAMS.
 Valid parameters include:
