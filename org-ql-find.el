@@ -117,9 +117,12 @@ which see (but only the files are used)."
                                            (cl-loop for (files-spec . _candidate-spec) in org-refile-targets
                                                     append (cl-typecase files-spec
                                                              (null (list (current-buffer)))
-                                                             (symbol (pcase (funcall files-spec)
+                                                             (function (pcase (funcall files-spec)
+                                                                         ((and (pred stringp) file) (list file))
+                                                                         ((and (pred listp) files) files)))
+                                                             (symbol (pcase (eval files-spec)
                                                                        ((and (pred stringp) file) (list file))
-                                                                       ((and (pred listp) files) files)))
+                                                                         ((and (pred listp) files) files)))
                                                              (list files-spec)))))))
                  (list (org-ql-completing-read buffers-files :prompt "Refile to: "))))
   (let ((buffer (or (buffer-base-buffer (marker-buffer marker))
@@ -136,7 +139,6 @@ which see (but only the files are used)."
                  nil
                  ;; Position
                  marker))))
-
 ;;;###autoload
 (defun org-ql-find-in-agenda ()
   "Call `org-ql-find' on `org-agenda-files'."
