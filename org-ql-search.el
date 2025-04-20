@@ -235,7 +235,7 @@ Like other agenda block commands, it searches files returned by
 function `org-agenda-files'.  Inserts a newline after the block.
 
 If `org-ql-block-header' is non-nil, it is used as the header
-string for the block, otherwise a the header is formed
+string for the block, otherwise the header is formed
 automatically from the query."
   (let (narrow-p old-beg old-end)
     (when-let* ((from (pcase org-agenda-restrict
