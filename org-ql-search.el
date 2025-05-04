@@ -309,13 +309,17 @@ Valid parameters include:
   :ts-format  Optional format string used to format
               timestamp-based columns.
 
+  :link     Optional flag. Defaults to `t`. When non-nil, links
+            are displayed as links, otherwise they are displayed
+            as plain text.
+
 For example, an org-ql dynamic block header could look like
 this (must be a single line in the Org buffer):
 
   #+BEGIN: org-ql :query (todo \"UNDERWAY\")
 :columns (priority todo heading) :sort (priority date)
-:ts-format \"%Y-%m-%d %H:%M\""
-  (-let* (((&plist :query :columns :sort :ts-format :take) params)
+:ts-format \"%Y-%m-%d %H:%M\" :link t"
+  (-let* (((&plist :query :columns :sort :ts-format :take :link) params)
           (query (cl-etypecase query
                    (string (org-ql--query-string-to-sexp query))
                    (list ;; SAFETY: Query is in sexp form: ask for confirmation, because it could contain arbitrary code.
@@ -331,7 +335,9 @@ this (must be a single line in the Org buffer):
                  (cons 'heading (lambda (element)
                                   (let ((normalized-heading
                                          (org-ql-search--link-heading-search-string (org-element-property :raw-value element))))
-                                    (org-ql-search--org-make-link-string normalized-heading (org-link-display-format normalized-heading)))))
+                                    (pcase links
+                                      (t (org-ql-search--org-make-link-string normalized-heading (org-link-display-format normalized-heading)))
+                                      (nil normalized-heading)))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
