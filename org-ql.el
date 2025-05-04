@@ -123,8 +123,16 @@ hash table, keyed by arguments passed to
   "Per-buffer tags cache.
 Keyed by buffer.  Each value is a cons of the buffer's modified
 tick, and another hash table keyed on buffer position, whose
-values are a list of two lists, inherited tags and local tags, as
-strings.")
+values are a list of four lists, namely inherited tags, local tags,
+group tags an entry matches owing to local tags and
+group tags an entry matches owing to inherited tags,
+all as strings.")
+
+(defvar org-ql-tag-groups-cache (make-hash-table :weakness 'key)
+  "Per-buffer tag groups cache.
+Keyed by buffer.  Each value is a cons of the buffer's tag group hierarchy and
+another hash table keyed on tags, whose values are the list group tags also
+matched due to tag hierarchy, as strings.")
 
 (defvar org-ql-node-value-cache (make-hash-table :weakness 'key)
   "Per-buffer node cache.
@@ -575,7 +583,7 @@ readable file, `find-file-noselect' it into a buffer."
 (defun org-ql--tags-at (position)
   ;; FIXME: This function actually assumes that point is already at POSITION.
   "Return tags for POSITION in current buffer.
-Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
+Returns cons (INHERITED-TAGS LOCAL-TAGS INHERITED-GROUP-TAGS LOCAL-GROUP-TAGS)."
   ;; I'd like to use `-if-let*', but it doesn't leave non-nil variables
   ;; bound in the else clause, so destructured variables that are non-nil,
   ;; like found caches, are not available in the else clause.
@@ -617,7 +625,43 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
                                      ;; Top-level heading: use file tags.
                                      org-file-tags)))
                                'org-ql-nil))
-           (all-tags (list inherited-tags local-tags)))
+           (local-group-tags nil)
+           (inherited-group-tags nil)
+           all-tags)
+      ;; If group hierarchy is enabled and there are tag definitions,
+      ;; then compute sets of group tags implicitly matched by
+      ;; local and inherited tags.
+      (when (and org-group-tags org-current-tag-alist)
+        (let* ((buffer-tag-groups-cache (gethash (current-buffer)
+                                                 org-ql-tag-groups-cache))
+               tag-hierarchy
+               matching-group-tags-cache)
+          ;; If buffer has no cache yet or
+          ;; if it has been modified since the last time accessing the cache,
+          ;; we need to reset the cache.
+          (unless (and buffer-tag-groups-cache buffer-unmodified-p)
+            (setq buffer-tag-groups-cache
+                  (cons (org-tag-alist-to-groups org-current-tag-alist)
+                        (make-hash-table :test 'equal)))
+            (puthash (current-buffer)
+                     buffer-tag-groups-cache
+                     org-ql-tag-groups-cache))
+          (setq tag-hierarchy (car buffer-tag-groups-cache)
+                matching-group-tags-cache (cdr buffer-tag-groups-cache))
+          ;; If there are tag groups defined,
+          ;; then get the group tags implicitly matched along with local and inherited ones.
+          (when tag-hierarchy
+            (unless (eq local-tags 'org-ql-nil)
+              (setq local-group-tags
+                    (org-ql--expand-tag-hierarchy local-tags
+                                                  tag-hierarchy
+                                                  matching-group-tags-cache)))
+            (unless (eq inherited-tags 'org-ql-nil)
+              (setq inherited-group-tags
+                    (org-ql--expand-tag-hierarchy inherited-tags
+                                                  tag-hierarchy
+                                                  matching-group-tags-cache))))))
+      (setq all-tags (list inherited-tags local-tags inherited-group-tags local-group-tags))
       ;; Check caches again, because they may have been set now.
       ;; TODO: Is there a clever way we could avoid doing this, or is it inherently necessary?
       (setf buffer-cache (gethash (current-buffer) org-ql-tags-cache)
@@ -631,6 +675,62 @@ Returns cons (INHERITED-TAGS . LOCAL-TAGS)."
                  (cons (buffer-chars-modified-tick) tags-cache)
                  org-ql-tags-cache))
       (puthash position all-tags tags-cache))))
+
+(defun org-ql--expand-tag-hierarchy (tags &optional groups cache exclude)
+  "Return group tags of groups that TAGS belong to.
+
+Particularly, this function recursively searches for groups in GROUPS that
+each tag belongs to and includes the corresponding group tags to the result,
+unless explicitly excluded.
+
+TAGS should be a list of tags (i.e., strings).
+If GROUPS is non-nil, then it must be a list of tag group definitions of
+the form (tag member1 member2 ...).  Otherwise, it defaults to the buffer's
+current tag hierarchy.
+
+If non-nil, EXCLUDE should be a list of group tags that will neither
+be included to the results nor futher expanded.
+
+If CACHE is non-nil, it should be a hash table which maps tags to
+readily computed group tags."
+  (let ((groups (or groups (org-tag-alist-to-groups org-current-tag-alist)))
+        (exclude (-uniq (append tags exclude)))
+        result)
+    ;; Iterate over the tags and check if they belong to any of the groups.
+    (dolist (tag tags)
+      ;; Check if the groups this tag belongs to have already been cached.
+      ;; If so, add them to the results. Otherwise, compute and cache them.
+      (let ((cached-matches (gethash tag cache 'org-ql-nil)))
+        (if (eq cached-matches 'org-ql-nil)
+            (let (matching-group-tags
+                  matching-group-tags-expansion)
+              (pcase-dolist (`(,group-tag . ,group-members) groups)
+                ;; Check if one of the members in the group matches this tag.
+                ;; Notice that each member may be a plain string or
+                ;; a regexp pattern (enclosed between curly brackets).
+                (when (and (not (member group-tag exclude))
+                           (--some (if (string-match-p "^[{].+[}]$" it)
+                                       ;; If pattern (it) is a regexp, remove the brackets and
+                                       ;; make sure that it either matches the whole tag or not.
+                                       (string-match-p (concat "^" (substring it 1 -1) "$") tag)
+                                     ;; Check if member (it) is identical to tag.
+                                     (string= it tag))
+                                   group-members))
+                  (push group-tag matching-group-tags)))
+              ;; If matching group tags have been found, expand them as well.
+              (when matching-group-tags
+                (setq matching-group-tags-expansion
+                      (append matching-group-tags
+                              (org-ql--expand-tag-hierarchy matching-group-tags groups cache exclude))))
+              ;; If a cache has been provided, cache the result.
+              ;; Then add it to the results.
+              (when cache
+                (puthash tag matching-group-tags-expansion cache))
+              (setq result (-uniq (append matching-group-tags-expansion result))
+                    exclude (-uniq (append matching-group-tags-expansion exclude))))
+          (setq result (-uniq (append cached-matches result))
+                exclude (-uniq (append cached-matches exclude))))))
+    result))
 
 (defun org-ql--outline-path ()
   "Return outline path for heading at point."
@@ -2013,6 +2113,26 @@ Tests both inherited and local tags."
                              (when (tags-p local)
                                (seq-intersection tags local))))))))
 
+(org-ql-defpred (group-tags) (&rest tags)
+  "Return non-nil if current heading has one or more of TAGS (a list of strings).
+Tests both inherited and local tags as well as group tags by expanding hierarchy."
+  ;; MAYBE: -all versions for inherited and local.
+  :body (cl-macrolet ((tags-p (tags)
+                              `(and ,tags
+                                    (not (eq 'org-ql-nil ,tags)))))
+          (-let* (((inherited local inherited-groups local-groups) (org-ql--tags-at (point))))
+            (cl-typecase tags
+              (null (or (tags-p inherited)
+                        (tags-p local)))
+              (otherwise (or (when (tags-p inherited)
+                               (seq-intersection tags (if (tags-p inherited-groups)
+                                                          (append inherited inherited-groups)
+                                                        inherited)))
+                             (when (tags-p local)
+                               (seq-intersection tags (if (tags-p local-groups)
+                                                          (append local local-groups)
+                                                        local)))))))))
+
 (org-ql-defpred (tags-all tags&) (&rest tags)
   "Return non-nil if current heading has all of TAGS (a list of strings).
 Tests both inherited and local tags."
@@ -2021,6 +2141,14 @@ Tests both inherited and local tags."
   :normalizers ((`(,predicate-names . ,tags)
                  `(and ,@(--map `(tags ,it) tags))))
   :body (apply #'org-ql--predicate-tags tags))
+
+(org-ql-defpred (group-tags-all group-tags&) (&rest tags)
+  "Return non-nil if current heading has all of TAGS (a list of strings).
+Tests both inherited and local tags as well as group tags by expanding hierarchy."
+  ;; MAYBE: -all versions for inherited and local.
+  :normalizers ((`(,predicate-names) `(tags))
+                (`(,predicate-names . ,tags) `(and ,@(--map `(group-tags ,it) tags))))
+  :body (apply #'org-ql--predicate-group-tags tags))
 
 (org-ql-defpred (tags-inherited inherited-tags tags-i itags) (&rest tags)
   "Return non-nil if current heading's inherited tags include any of TAGS.
@@ -2075,6 +2203,31 @@ Tests both inherited and local tags."
                                                          thereis (string-match regexp tag))))
                              (when (tags-p local)
                                (cl-loop for tag in local
+                                        thereis (cl-loop for regexp in regexps
+                                                         thereis (string-match regexp tag))))))))))
+
+(org-ql-defpred (group-tags-regexp group-tags*) (&rest regexps)
+  "Return non-nil if current heading has tags matching one or more of REGEXPS.
+Tests both inherited and local tags as well as group tags by expanding hierarchy."
+  :normalizers ((`(,predicate-names . ,regexps)
+                 `(group-tags-regexp ,@regexps)))
+  :body (cl-macrolet ((tags-p (tags)
+                              `(and ,tags
+                                    (not (eq 'org-ql-nil ,tags)))))
+          (-let* (((inherited local inherited-groups local-groups) (org-ql--tags-at (point))))
+            (cl-typecase regexps
+              (null (or (tags-p inherited)
+                        (tags-p local)))
+              (otherwise (or (when (tags-p inherited)
+                               (cl-loop for tag in (if (tags-p inherited-groups)
+                                                       (append inherited inherited-groups)
+                                                     inherited)
+                                        thereis (cl-loop for regexp in regexps
+                                                         thereis (string-match regexp tag))))
+                             (when (tags-p local)
+                               (cl-loop for tag in (if (tags-p local-groups)
+                                                       (append local local-groups)
+                                                     local)
                                         thereis (cl-loop for regexp in regexps
                                                          thereis (string-match regexp tag))))))))))
 
