@@ -1324,13 +1324,19 @@ with keyword arg NOW in PLIST."
           '("Take over the moon" "Get haircut")))
       (org-ql-it "<= a priority"
         (org-ql-expect ('(priority <= "B"))
-          '("Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Get haircut" "Internet" "Fix flux capacitor")))
+          '("Take over Mars" "Take over the moon" "Renew membership in supervillain club" "Learn universal sign language" "Get haircut")))
       (org-ql-it "> a priority"
         (org-ql-expect ('(priority > "B"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Spaceship lease")))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Internet" "Spaceship lease" "Fix flux capacitor")))
       (org-ql-it ">= a priority"
         (org-ql-expect ('(priority >= "B"))
-          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Renew membership in supervillain club" "Learn universal sign language" "Internet" "Spaceship lease" "Fix flux capacitor"))))
+          '("Take over the universe" "Take over the world" "Skype with president of Antarctica" "Take over Mars" "Renew membership in supervillain club" "Learn universal sign language" "Internet" "Spaceship lease" "Fix flux capacitor")))
+      (org-ql-it "compare numerical priorities"
+        (org-ql-expect ('(priority > "5"))
+          '("Internet")))
+      (org-ql-it "compare double-digit numerical priorities"
+        (org-ql-expect ('(priority > "60"))
+          '("Internet" "Fix flux capacitor"))))
 
     (describe "(property)"
 

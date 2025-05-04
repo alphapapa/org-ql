@@ -1739,29 +1739,28 @@ priority B)."
     `(priority ',comparator ,letter)))
 
   :preambles
-  (;; NOTE: This only accepts A, B, or C.  I haven't seen
-   ;; other priorities in the wild, so this will do for now.
-   (`(,predicate-names)
+  ((`(,predicate-names)
     ;; Any priority cookie.
-    (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl) "[#" (in "ABC") "]") t)))
+    (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (0+ nonl) "[#" (or (in "A-Z") (1+ (in "0-9"))) "]") t)))
    (`(,predicate-names ,(and (or ''= ''< ''> ''<= ''>=) comparator) ,letter)
     ;; Comparator and priority letter.
     ;; NOTE: The double-quoted comparators.  See below.
-    (let* ((priority-letters '("A" "B" "C"))
+    (let* ((priority-letters (append (mapcar #'number-to-string (number-sequence 0 64))
+                                     (mapcar #'string (number-sequence ?A ?Z))))
            (index (-elem-index letter priority-letters))
            ;; NOTE: Higher priority == lower number.
            ;; NOTE: Because we need to support both preamble-based queries and
            ;; regular predicate ones, we work around an idiosyncrasy of query
            ;; pre-processing by accepting both quoted and double-quoted comparator
            ;; function symbols.  Not the most elegant solution, but it works.
-           (priorities (s-join "" (pcase comparator
-                                    ((or '= ''=) (list letter))
-                                    ((or '> ''>) (cl-subseq priority-letters 0 index))
-                                    ((or '>= ''>=) (cl-subseq priority-letters 0 (1+ index)))
-                                    ((or '< ''<) (cl-subseq priority-letters (1+ index)))
-                                    ((or '<= ''<=) (cl-subseq priority-letters index))))))
+           (priorities (pcase comparator
+                         ((or '= ''=) (list letter))
+                         ((or '> ''>) (cl-subseq priority-letters 0 index))
+                         ((or '>= ''>=) (cl-subseq priority-letters 0 (1+ index)))
+                         ((or '< ''<) (cl-subseq priority-letters (1+ index)))
+                         ((or '<= ''<=) (cl-subseq priority-letters index)))))
       (list :regexp (rx-to-string `(seq bol (1+ "*") (1+ blank) (optional (1+ upper) (1+ blank))
-                                        "[#" (in ,priorities) "]") t))))
+                                        "[#" (or ,@priorities) "]") t))))
    (`(,predicate-names . ,letters)
     ;; One or more priorities.
     ;; MAYBE: Disable case-folding.
@@ -1784,11 +1783,11 @@ priority B)."
       (`(,(and (or '= '< '> '<= '>=) comparator) ,priority-arg)
        ;; Comparator and priority arguments given: compare item priority using them.
        (funcall comparator item-priority
-                (* 1000 (- org-lowest-priority (string-to-char priority-arg)))))
+                (org-get-priority (format "[#%s]" priority-arg))))
       (_
        ;; List of priorities given as arguments: compare each of them to item priority using =.
        (cl-loop for priority-arg in args
-                thereis (= item-priority (* 1000 (- org-lowest-priority (string-to-char priority-arg)))))))))
+                thereis (= item-priority (org-get-priority (format "[#%s]" priority-arg))))))))
 
 (org-ql-defpred property (property &optional value &key inherit)
   "Return non-nil if current entry has PROPERTY, and optionally VALUE.
@@ -2505,11 +2504,20 @@ A and B are Org timestamp elements."
             (a-ts t)
             (b-ts nil)))))
 
+(defun org-ql--priority-to-value (el)
+  "Return an integer suitable for sorting priorities."
+  (let ((prio (org-element-property :priority el)))
+    (cond
+     ((not prio) (org-priority-to-value (org-element-property :raw-value el)))
+     ((not (integerp prio)) nil)
+     ((<= ?0 prio ?9) (- prio ?0))
+     (t prio))))
+
 (defun org-ql--priority< (a b)
   "Return non-nil if A's priority is higher than B's.
 A and B are Org headline elements."
   (cl-macrolet ((priority (item)
-                  `(org-element-property :priority ,item)))
+                  `(org-ql--priority-to-value ,item)))
     ;; NOTE: Priorities are numbers in Org elements.  This might differ from the priority selector logic.
     (let ((a-priority (priority a))
           (b-priority (priority b)))
