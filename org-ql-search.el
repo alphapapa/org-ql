@@ -329,9 +329,12 @@ this (must be a single line in the Org buffer):
            (list (cons 'todo (lambda (element)
                                (org-element-property :todo-keyword element)))
                  (cons 'heading (lambda (element)
-                                  (let ((normalized-heading
-                                         (org-ql-search--link-heading-search-string (org-element-property :raw-value element))))
-                                    (org-ql-search--org-make-link-string normalized-heading (org-link-display-format normalized-heading)))))
+                                  (let* ((normalized-heading
+                                          (org-ql-search--link-heading-search-string (org-element-property :raw-value element)))
+					 (id-value (org-element-property :ID element))
+					 (link-value (or (and id-value (format "id:%s" id-value))
+							 normalized-heading)))
+                                    (org-ql-search--org-make-link-string link-value (org-link-display-format normalized-heading)))))
                  (cons 'priority (lambda (element)
                                    (--when-let (org-element-property :priority element)
                                      (char-to-string it))))
